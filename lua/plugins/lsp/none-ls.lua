@@ -22,23 +22,22 @@ return {
 		"nvim-lua/plenary.nvim",
 	},
 	config = function()
-		local null_ls = require("none-ls")
-
-		-- Import formatters and linters
-		local formatting = null_ls.builtins.formatting
-		local diagnostics = null_ls.builtins.diagnostics
-		local code_actions = null_ls.builtins.code_actions
+		local null_ls_ok, null_ls = pcall(require, "none-ls")
+		if not null_ls_ok then
+			vim.notify("none-ls not found. Install with :Lazy install", vim.log.levels.WARN)
+			return
+		end
 
 		-- List of sources organized by language
 		local sources = {
 			-- Lua
-			formatting.stylua,
-			diagnostics.luacheck.with({
+			null_ls.builtins.formatting.stylua,
+			null_ls.builtins.diagnostics.luacheck.with({
 				extra_args = { "--globals", "vim", "--no-max-line-length" },
 			}),
 
 			-- JavaScript/TypeScript
-			formatting.prettier.with({
+			null_ls.builtins.formatting.prettier.with({
 				filetypes = {
 					"javascript",
 					"javascriptreact",
@@ -58,35 +57,35 @@ return {
 				},
 				extra_args = { "--single-quote", "--jsx-single-quote" },
 			}),
-			diagnostics.eslint_d,
-			code_actions.eslint_d,
+			null_ls.builtins.diagnostics.eslint_d,
+			null_ls.builtins.code_actions.eslint_d,
 
 			-- Python
-			formatting.black,
-			formatting.isort,
-			diagnostics.flake8.with({
+			null_ls.builtins.formatting.black,
+			null_ls.builtins.formatting.isort,
+			null_ls.builtins.diagnostics.flake8.with({
 				extra_args = { "--max-line-length", "88", "--extend-ignore", "E203" },
 			}),
-			diagnostics.mypy,
+			null_ls.builtins.diagnostics.mypy,
 
 			-- Go
-			formatting.gofmt,
-			formatting.goimports,
+			null_ls.builtins.formatting.gofmt,
+			null_ls.builtins.formatting.goimports,
 
 			-- Rust
-			formatting.rustfmt,
+			null_ls.builtins.formatting.rustfmt,
 
 			-- Shell
-			formatting.shfmt,
-			diagnostics.shellcheck,
-			code_actions.shellcheck,
+			null_ls.builtins.formatting.shfmt,
+			null_ls.builtins.diagnostics.shellcheck,
+			null_ls.builtins.code_actions.shellcheck,
 
 			-- Markdown
-			formatting.markdownlint,
-			diagnostics.markdownlint,
+			null_ls.builtins.formatting.markdownlint,
+			null_ls.builtins.diagnostics.markdownlint,
 
 			-- General
-			diagnostics.codespell.with({
+			null_ls.builtins.diagnostics.codespell.with({
 				filetypes = {
 					"javascript",
 					"typescript",
@@ -101,7 +100,7 @@ return {
 					"text",
 				},
 			}),
-			code_actions.gitsigns,
+			null_ls.builtins.code_actions.gitsigns,
 		}
 
 		-- Setup null-ls with sources

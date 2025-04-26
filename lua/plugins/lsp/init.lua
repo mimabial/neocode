@@ -37,7 +37,7 @@ return {
 	{ import = "plugins.lsp.linters" },
 	{ import = "plugins.lsp.keymaps" },
 	{ import = "plugins.lsp.ui" },
-	{ import = "plugins.lsp.none-ls" },
+	{ import = "plugins.lsp.none-ls" }, -- Make sure this line is present to load none-ls.lua
 
 	-- Mason for installing LSP servers, formatters, linters, and DAP
 	{
@@ -56,6 +56,8 @@ return {
 				"flake8", -- Python
 				"prettier", -- Web
 				"eslint_d", -- JavaScript/TypeScript
+				-- Add none-ls here to ensure it gets installed
+				"none-ls.nvim",
 			},
 		},
 		config = function(_, opts)

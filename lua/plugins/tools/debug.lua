@@ -456,11 +456,31 @@ return {
     opts = {
       -- Common test adapter configuration
       adapters = {
-        require("neotest-python")({
-          dap = { justMyCode = false },
-          runner = "pytest",
-          args = { "-xvs" },
-        }),
+	vim.list_extend(opts.adapters or {}, {
+	  -- Replace the direct require with a pcall to safely load the module
+	  function()
+	    local ok, neotest_python = pcall(require, "neotest-python")
+	    if ok then
+	      return neotest_python({
+		dap = { justMyCode = false },
+		python = function()
+		  -- Try to find python in virtualenv
+		  local venv_python = vim.fn.findfile(".venv/bin/python", vim.fn.getcwd() .. ";")
+		  if venv_python ~= "" then
+		    return venv_python
+		  end
+		  -- Fallback to system python
+		  return vim.fn.exepath("python3") or vim.fn.exepath("python")
+		end,
+		args = { "-v", "--color=yes" },
+		runner = "pytest",
+	      })
+	    else
+	      vim.notify("neotest-python not found, skipping configuration", vim.log.levels.WARN)
+	      return {}
+	    end
+	  end(),
+	})
         require("neotest-jest")({
           jestCommand = "npm test --",
           jestConfigFile = "jest.config.js",
