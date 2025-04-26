@@ -45,7 +45,7 @@ function M.setup_diagnostics()
 		severity_sort = true,
 		float = {
 			border = "rounded",
-			source = "always",
+			source = true,
 			header = "",
 			prefix = "",
 		},

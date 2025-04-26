@@ -189,6 +189,34 @@ function M.maximize_window()
 	end
 end
 
+function M.toggle_diagnostic_hints(bufnr)
+	bufnr = bufnr or vim.api.nvim_get_current_buf()
+	local is_enabled = vim.diagnostic.is_enabled({ bufnr = bufnr })
+	vim.diagnostic.enable(not is_enabled, { bufnr = bufnr })
+	vim.notify(
+		("Diagnostics %s for buffer %d"):format(is_enabled and "disabled" or "enabled", bufnr),
+		vim.log.levels.INFO
+	)
+end
+
+function M.toggle_inlay_hints(bufnr)
+	bufnr = bufnr or vim.api.nvim_get_current_buf()
+	-- Check if inlay hints are enabled
+	local ok, res = pcall(vim.lsp.inlay_hint.is_enabled, { bufnr = bufnr })
+	if not ok then
+		res = vim.lsp.inlay_hint.is_enabled(bufnr)
+	end
+
+	-- Determine the new state
+	local enable = not (res == true or res == 1)
+
+	-- Set the new state with the correct parameters
+	ok = pcall(vim.lsp.inlay_hint.enable, bufnr, { enabled = enable })
+	if not ok then
+		vim.lsp.inlay_hint.enable(bufnr, { enabled = enable })
+	end
+end
+
 --------------------------------------------------------------------------------
 -- Command Helpers
 --------------------------------------------------------------------------------

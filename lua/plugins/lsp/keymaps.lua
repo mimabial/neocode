@@ -14,6 +14,8 @@
 -- These keymaps are applied to buffers when an LSP server attaches.
 --------------------------------------------------------------------------------
 
+local utils = require("core.utils")
+
 local M = {}
 
 -- Applies keymaps when an LSP attaches to a buffer
@@ -41,27 +43,33 @@ function M.on_attach(client, bufnr)
   -- Find references to symbol under cursor
   map("n", "gr", vim.lsp.buf.references, "Go to References")
 
-  -- Jump to the next/previous diagnostic in the buffer
-  map("n", "]d", vim.diagnostic.goto_next, "Next Diagnostic")
-  map("n", "[d", vim.diagnostic.goto_prev, "Previous Diagnostic")
+  -- Jump to the next/previous diagnostic
+  map("n", "]d", function()
+    vim.diagnostic.goto({ direction = "next" })
+  end, "Next Diagnostic")
 
-  -- Jump to the next/previous error specifically
+  map("n", "[d", function()
+    vim.diagnostic.goto({ direction = "prev" })
+  end, "Previous Diagnostic")
+
+  -- Jump to the next/previous ERROR diagnostic
   map("n", "]e", function()
-    vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
+    vim.diagnostic.goto({ severity = vim.diagnostic.severity.ERROR, direction = "next" })
   end, "Next Error")
 
   map("n", "[e", function()
-    vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
+    vim.diagnostic.goto({ severity = vim.diagnostic.severity.ERROR, direction = "prev" })
   end, "Previous Error")
 
-  -- Jump to the next/previous warning
+  -- Jump to the next/previous WARNING diagnostic
   map("n", "]w", function()
-    vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.WARN })
+    vim.diagnostic.goto({ severity = vim.diagnostic.severity.WARN, direction = "next" })
   end, "Next Warning")
 
   map("n", "[w", function()
-    vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.WARN })
+    vim.diagnostic.goto({ severity = vim.diagnostic.severity.WARN, direction = "prev" })
   end, "Previous Warning")
+
 
   --------------------------------------------------------------------------------
   -- Information (hover, signature, etc.)
@@ -75,13 +83,9 @@ function M.on_attach(client, bufnr)
   map("i", "<C-k>", vim.lsp.buf.signature_help, "Show Signature Help")
 
   -- Toggle inlay hints (if available - Neovim 0.10+)
-  if vim.lsp.inlay_hint then
-    map("n", "<leader>lh", function()
-      local current = vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr })
-      vim.lsp.inlay_hint.enable(bufnr, not current)
-      vim.notify("Inlay hints " .. (not current and "enabled" or "disabled"), vim.log.levels.INFO)
-    end, "Toggle Inlay Hints")
-  end
+  vim.keymap.set('n', '<leader>lh', function()
+    utils.toggle_inlay_hints()
+  end, { noremap = true, silent = true })
 
   -- Show diagnostics in hover window
   map("n", "<leader>ld", function()
@@ -127,14 +131,7 @@ function M.on_attach(client, bufnr)
 
   -- Toggle diagnostics display on/off (useful when diagnostics are distracting)
   map("n", "<leader>xt", function()
-    local current = vim.diagnostic.is_disabled({ bufnr = bufnr })
-    if current then
-      vim.diagnostic.enable(bufnr)
-      vim.notify("Diagnostics enabled", vim.log.levels.INFO)
-    else
-      vim.diagnostic.disable(bufnr)
-      vim.notify("Diagnostics disabled", vim.log.levels.INFO)
-    end
+    utils.toggle_diagnostic_hints()
   end, "Toggle Diagnostics")
 
   --------------------------------------------------------------------------------
