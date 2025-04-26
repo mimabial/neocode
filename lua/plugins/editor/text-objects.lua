@@ -21,6 +21,13 @@ return {
 		dependencies = "nvim-treesitter/nvim-treesitter",
 		config = function()
 			require("nvim-treesitter.configs").setup({
+				-- Ensure you add the missing required fields here
+				modules = {}, -- Add the necessary modules if any
+				sync_install = false, -- Set to true if you want to install parsers synchronously
+				ensure_installed = {}, -- List of parsers to be installed
+				ignore_install = {}, -- List of parsers to be ignored
+				auto_install = false, -- Set to true if you want to automatically install missing parsers
+
 				textobjects = {
 					select = {
 						enable = true,
@@ -55,21 +62,19 @@ return {
 						},
 						include_surrounding_whitespace = true,
 					},
-
 					swap = {
 						enable = true,
 						swap_next = {
-							["<leader>a"] = "@parameter.inner",
-							["<leader>f"] = "@function.outer",
-							["<leader>m"] = "@statement.outer",
+							["a"] = "@parameter.inner",
+							["f"] = "@function.outer",
+							["m"] = "@statement.outer",
 						},
 						swap_previous = {
-							["<leader>A"] = "@parameter.inner",
-							["<leader>F"] = "@function.outer",
-							["<leader>M"] = "@statement.outer",
+							["A"] = "@parameter.inner",
+							["F"] = "@function.outer",
+							["M"] = "@statement.outer",
 						},
 					},
-
 					move = {
 						enable = true,
 						set_jumps = true, -- whether to set jumps in the jumplist
@@ -112,14 +117,13 @@ return {
 							["[B"] = "@block.outer",
 						},
 					},
-
 					lsp_interop = {
 						enable = true,
 						border = "rounded",
 						floating_preview_opts = {},
 						peek_definition_code = {
-							["<leader>pf"] = "@function.outer",
-							["<leader>pc"] = "@class.outer",
+							["pf"] = "@function.outer",
+							["pc"] = "@class.outer",
 						},
 					},
 				},
@@ -261,6 +265,13 @@ return {
 			vim.g.matchup_matchparen_insert_timeout = 30
 
 			require("nvim-treesitter.configs").setup({
+				-- Ensure you add the missing required fields here
+				modules = {}, -- Add the necessary modules if any
+				sync_install = false, -- Set to true if you want to install parsers synchronously
+				ensure_installed = {}, -- List of parsers to be installed
+				ignore_install = {}, -- List of parsers to be ignored
+				auto_install = false, -- Set to true if you want to automatically install missing parsers
+
 				matchup = {
 					enable = true,
 					disable_virtual_text = false,
