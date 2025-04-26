@@ -1,4 +1,4 @@
---------------------------------------------------------------------------------
+﻿--------------------------------------------------------------------------------
 -- Web Development Configuration
 --------------------------------------------------------------------------------
 --
@@ -30,6 +30,10 @@ return {
   -- TypeScript/JavaScript language support
   {
     "neovim/nvim-lspconfig",
+    dependencies = { 
+    -- Schema store for JSON/YAML validation 
+    "b0o/schemastore.nvim", 
+    },
     opts = {
       servers = {
         -- TypeScript/JavaScript server
@@ -136,12 +140,85 @@ return {
           },
         },
 
-        -- JSON with schema validation
+	  -- JSON with schema validation
         jsonls = {
           settings = {
             json = {
-              schemas = require("schemastore").json.schemas(),
+              schemas = function()
+                -- Try to use schemastore if available, otherwise use manual schemas
+                local status_ok, schemastore = pcall(require, "schemastore")
+                if status_ok then
+                  return schemastore.json.schemas()
+                else
+                  -- Fallback to manually defined schemas
+                  return {
+                    {
+                      fileMatch = { "package.json" },
+                      url = "https://json.schemastore.org/package.json",
+                    },
+                    {
+                      fileMatch = { "tsconfig.json", "tsconfig.*.json" },
+                      url = "https://json.schemastore.org/tsconfig.json",
+                    },
+                    {
+                      fileMatch = { ".prettierrc", ".prettierrc.json", "prettier.config.json" },
+                      url = "https://json.schemastore.org/prettierrc.json",
+                    },
+                    {
+                      fileMatch = { ".eslintrc", ".eslintrc.json" },
+                      url = "https://json.schemastore.org/eslintrc.json",
+                    },
+                    {
+                      fileMatch = { "lerna.json" },
+                      url = "https://json.schemastore.org/lerna.json",
+                    },
+                    {
+                      fileMatch = { "babel.config.json", ".babelrc", ".babelrc.json" },
+                      url = "https://json.schemastore.org/babelrc.json",
+                    },
+                    {
+                      fileMatch = { "jest.config.json" },
+                      url = "https://json.schemastore.org/jest.json",
+                    },
+                  }
+                end
+              end,
               validate = { enable = true },
+            },
+          },
+        },
+
+        -- YAML with schema support
+        yamlls = {
+          settings = {
+            yaml = {
+              schemaStore = {
+                enable = true,
+                url = "https://www.schemastore.org/api/json/catalog.json",
+              },
+              schemas = function()
+                -- Try to use schemastore if available, otherwise use manual schemas
+                local status_ok, schemastore = pcall(require, "schemastore")
+                if status_ok then
+                  return schemastore.yaml.schemas()
+                else
+                  -- Fallback to manually defined schemas
+                  return {
+                    ["https://json.schemastore.org/github-workflow.json"] = ".github/workflows/*.{yml,yaml}",
+                    ["https://json.schemastore.org/github-action.json"] = ".github/action.{yml,yaml}",
+                    ["https://json.schemastore.org/prettierrc.json"] = ".prettierrc.{yml,yaml}",
+                    ["https://json.schemastore.org/kustomization.json"] = "kustomization.{yml,yaml}",
+                    ["https://json.schemastore.org/ansible-playbook.json"] = "*play*.{yml,yaml}",
+                    ["https://json.schemastore.org/chart.json"] = "Chart.{yml,yaml}",
+                    ["https://json.schemastore.org/docker-compose.json"] = "docker-compose*.{yml,yaml}",
+                    ["https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json"] = "*docker-compose*.{yml,yaml}",
+                    ["https://kubernetes-schemas.devbu.io/helm.toolkit.fluxcd.io/helmrelease_v2beta1.json"] = "*helmrelease.{yml,yaml}",
+                  }
+                end
+              end,
+              format = { enable = true },
+              validate = true,
+              completion = true,
             },
           },
         },
