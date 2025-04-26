@@ -56,8 +56,6 @@ return {
 				"flake8", -- Python
 				"prettier", -- Web
 				"eslint_d", -- JavaScript/TypeScript
-				-- Add none-ls here to ensure it gets installed
-				"none-ls.nvim",
 			},
 		},
 		config = function(_, opts)
@@ -94,6 +92,32 @@ return {
 			require("mason-lspconfig").setup({
 				ensure_installed = require("plugins.lsp.servers").ensure_installed,
 				automatic_installation = true,
+				handlers = {
+					function(server_name)
+						local server_config = require("plugins.lsp.servers").settings[server_name] or {}
+
+						-- Add common on_attach and capabilities
+						server_config.on_attach = server_config.on_attach
+							or function(client, bufnr)
+								require("plugins.lsp.keymaps").on_attach(client, bufnr)
+								-- Add optional navic integration if available
+								if client.server_capabilities.documentSymbolProvider then
+									pcall(function()
+										require("nvim-navic").attach(client, bufnr)
+									end)
+								end
+							end
+
+						server_config.capabilities = server_config.capabilities
+							or vim.lsp.protocol.make_client_capabilities()
+						if pcall(require, "cmp_nvim_lsp") then
+							server_config.capabilities =
+								require("cmp_nvim_lsp").default_capabilities(server_config.capabilities)
+						end
+
+						require("lspconfig")[server_name].setup(server_config)
+					end,
+				},
 			})
 		end,
 	},

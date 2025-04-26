@@ -2,7 +2,7 @@
 -- NeoCode - Advanced Neovim Configuration
 -- Author: Your Name
 -- License: MIT
--- Repository: https://github.com/yourusername/neocode
+-- Repository: https://github.com/mimabial/neocode
 --------------------------------------------------------------------------------
 --
 -- This is the main entry point for the NeoCode configuration.
@@ -23,17 +23,18 @@ vim.g.maplocalleader = " "
 --------------------------------------------------------------------------------
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
-  -- Auto-install lazy.nvim if not present
-  vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    "https://github.com/folke/lazy.nvim.git",
-    "--branch=stable",
-    lazypath,
-  })
-  print("Installed lazy.nvim!")
+if not (vim.uv or vim.loop).fs_stat(lazypath) then
+	local lazyrepo = "https://github.com/folke/lazy.nvim.git"
+	local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
+	if vim.v.shell_error ~= 0 then
+		vim.api.nvim_echo({
+			{ "Failed to clone lazy.nvim:\n", "ErrorMsg" },
+			{ out, "WarningMsg" },
+			{ "\nPress any key to exit..." },
+		}, true, {})
+		vim.fn.getchar()
+		os.exit(1)
+	end
 end
 vim.opt.rtp:prepend(lazypath)
 
@@ -45,8 +46,8 @@ vim.opt.rtp:prepend(lazypath)
 require("core.options") -- Global Neovim options
 require("core.keymaps") -- Global keymappings
 require("core.autocmds") -- Autocommands
--- Core utility functions are available but only loaded when needed
--- require("core.utils")
+-- Load utils module so it's initialized properly
+require("core.utils")
 
 --------------------------------------------------------------------------------
 -- Initialize plugin system
@@ -54,75 +55,78 @@ require("core.autocmds") -- Autocommands
 
 -- This loads all plugins and their configurations from lua/plugins/
 require("lazy").setup({
-  -- Load all plugin specifications from the plugins directory
-  spec = {
-    -- Include all .lua files from the plugins directory
-    { import = "plugins" },
+	-- Load all plugin specifications from the plugins directory
+	spec = {
+		-- Include all .lua files from the plugins directory
+		{ import = "plugins" },
 
-    -- Load user settings last to allow overriding defaults
-    { import = "config.settings" },
-  },
+		-- Load user settings last to allow overriding defaults
+		{ import = "config.settings" },
+	},
 
-  -- UI configuration for lazy.nvim
-  ui = {
-    border = "rounded", -- Display borders on lazy.nvim windows
-    icons = {
-      cmd = "⌘",
-      config = "🛠",
-      event = "📅",
-      ft = "📂",
-      init = "⚙",
-      keys = "🔑",
-      plugin = "🔌",
-      runtime = "💻",
-      require = "🔍",
-      source = "📄",
-      start = "🚀",
-      task = "📌",
-      lazy = "💤 ",
-    },
-  },
+	-- UI configuration for lazy.nvim
+	ui = {
+		border = "rounded", -- Display borders on lazy.nvim windows
+		icons = {
+			cmd = "⌘",
+			config = "🛠",
+			event = "📅",
+			ft = "📂",
+			init = "⚙",
+			keys = "🔑",
+			plugin = "🔌",
+			runtime = "💻",
+			require = "🔍",
+			source = "📄",
+			start = "🚀",
+			task = "📌",
+			lazy = "💤 ",
+		},
+	},
 
-  -- Install options
-  install = {
-    -- Try these colorschemes when starting for the first time
-    colorscheme = { "tokyonight", "catppuccin", "habamax" },
-    -- Don't install until :w (we'll install right away)
-    missing = true,
-  },
+	-- Install options
+	install = {
+		-- Try these colorschemes when starting for the first time
+		colorscheme = { "kanagawa", "gruvbox-material", "rose-pine", "everforest" },
+		-- Don't install until :w (we'll install right away)
+		missing = true,
+	},
 
-  -- Performance settings
-  performance = {
-    rtp = {
-      -- Disable some built-in Neovim plugins that we don't need
-      disabled_plugins = {
-        "gzip",
-        "tarPlugin",
-        "tohtml",
-        "tutor",
-        "zipPlugin",
-      },
-    },
-  },
+	-- Performance settings
+	performance = {
+		rtp = {
+			-- Disable some built-in Neovim plugins that we don't need
+			disabled_plugins = {
+				"gzip",
+				-- "matchit",
+				-- "matchparen",
+				-- "netrwPlugin",
+				"tarPlugin",
+				"tohtml",
+				"tutor",
+				-- "zipPlugin",
+			},
+		},
+	},
 
-  -- Lazy can automatically check for plugin updates
-  checker = {
-    enabled = true, -- Auto-check for updates
-    notify = false, -- Don't show notifications for updates
-    frequency = 86400, -- Check once per day
-  },
+	-- Lazy can automatically check for plugin updates
+	checker = {
+		enabled = true, -- Auto-check for updates
+		notify = false, -- Don't show notifications for updates
+		frequency = 86400, -- Check once per day
+	},
 
-  -- Auto-reload configuration when changes are detected
-  change_detection = {
-    enabled = true,
-    notify = false, -- Don't show notifications for config changes
-  },
+	-- Auto-reload configuration when changes are detected
+	change_detection = {
+		enabled = true,
+		notify = false, -- Don't show notifications for config changes
+	},
 })
 
 -- Print a welcome message when Neovim starts
 vim.api.nvim_create_autocmd("User", {
-  pattern = "LazyDone",
-  callback = function()
-    vim.notify("NeoCode is ready! 🚀", vim.log.levels.INFO)
-  end,
+	pattern = "LazyDone",
+	callback = function()
+		vim.notify("NeoCode is ready! 🚀", vim.log.levels.INFO)
+	end,
 })

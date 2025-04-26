@@ -22,14 +22,14 @@
 local M = {}
 
 -- Safe loading of none-ls
-local null_ls_ok, null_ls = pcall(require, "none-ls")
-if not null_ls_ok then
+local none_ls_ok, none_ls = pcall(require, "none-ls")
+if not none_ls_ok then
 	vim.notify("none-ls not found. Install with :Lazy install", vim.log.levels.WARN)
 	return M
 end
 
-local diagnostics = null_ls.builtins.diagnostics
-local code_actions = null_ls.builtins.code_actions
+local diagnostics = none_ls.builtins.diagnostics
+local code_actions = none_ls.builtins.code_actions
 
 -- List of all linter sources
 M.sources = {

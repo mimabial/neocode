@@ -22,8 +22,8 @@ return {
 		"nvim-lua/plenary.nvim",
 	},
 	config = function()
-		local null_ls_ok, null_ls = pcall(require, "none-ls")
-		if not null_ls_ok then
+		local none_ls_ok, none_ls = pcall(require, "none-ls")
+		if not none_ls_ok then
 			vim.notify("none-ls not found. Install with :Lazy install", vim.log.levels.WARN)
 			return
 		end
@@ -31,13 +31,13 @@ return {
 		-- List of sources organized by language
 		local sources = {
 			-- Lua
-			null_ls.builtins.formatting.stylua,
-			null_ls.builtins.diagnostics.luacheck.with({
+			none_ls.builtins.formatting.stylua,
+			none_ls.builtins.diagnostics.luacheck.with({
 				extra_args = { "--globals", "vim", "--no-max-line-length" },
 			}),
 
 			-- JavaScript/TypeScript
-			null_ls.builtins.formatting.prettier.with({
+			none_ls.builtins.formatting.prettier.with({
 				filetypes = {
 					"javascript",
 					"javascriptreact",
@@ -57,35 +57,35 @@ return {
 				},
 				extra_args = { "--single-quote", "--jsx-single-quote" },
 			}),
-			null_ls.builtins.diagnostics.eslint_d,
-			null_ls.builtins.code_actions.eslint_d,
+			none_ls.builtins.diagnostics.eslint_d,
+			none_ls.builtins.code_actions.eslint_d,
 
 			-- Python
-			null_ls.builtins.formatting.black,
-			null_ls.builtins.formatting.isort,
-			null_ls.builtins.diagnostics.flake8.with({
+			none_ls.builtins.formatting.black,
+			none_ls.builtins.formatting.isort,
+			none_ls.builtins.diagnostics.flake8.with({
 				extra_args = { "--max-line-length", "88", "--extend-ignore", "E203" },
 			}),
-			null_ls.builtins.diagnostics.mypy,
+			none_ls.builtins.diagnostics.mypy,
 
 			-- Go
-			null_ls.builtins.formatting.gofmt,
-			null_ls.builtins.formatting.goimports,
+			none_ls.builtins.formatting.gofmt,
+			none_ls.builtins.formatting.goimports,
 
 			-- Rust
-			null_ls.builtins.formatting.rustfmt,
+			none_ls.builtins.formatting.rustfmt,
 
 			-- Shell
-			null_ls.builtins.formatting.shfmt,
-			null_ls.builtins.diagnostics.shellcheck,
-			null_ls.builtins.code_actions.shellcheck,
+			none_ls.builtins.formatting.shfmt,
+			none_ls.builtins.diagnostics.shellcheck,
+			none_ls.builtins.code_actions.shellcheck,
 
 			-- Markdown
-			null_ls.builtins.formatting.markdownlint,
-			null_ls.builtins.diagnostics.markdownlint,
+			none_ls.builtins.formatting.markdownlint,
+			none_ls.builtins.diagnostics.markdownlint,
 
 			-- General
-			null_ls.builtins.diagnostics.codespell.with({
+			none_ls.builtins.diagnostics.codespell.with({
 				filetypes = {
 					"javascript",
 					"typescript",
@@ -100,11 +100,11 @@ return {
 					"text",
 				},
 			}),
-			null_ls.builtins.code_actions.gitsigns,
+			none_ls.builtins.code_actions.gitsigns,
 		}
 
-		-- Setup null-ls with sources
-		null_ls.setup({
+		-- Setup none-ls with sources
+		none_ls.setup({
 			debug = false,
 			sources = sources,
 
@@ -127,8 +127,8 @@ return {
 							vim.lsp.buf.format({
 								bufnr = bufnr,
 								filter = function(fmt_client)
-									-- Use null-ls for formatting if available
-									return fmt_client.name == "null-ls"
+									-- Use none-ls for formatting if available
+									return fmt_client.name == "none-ls"
 								end,
 							})
 						end,

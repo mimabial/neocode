@@ -19,13 +19,13 @@
 local M = {}
 
 -- Safe loading of none-ls
-local null_ls_ok, null_ls = pcall(require, "none-ls")
-if not null_ls_ok then
+local none_ls_ok, none_ls = pcall(require, "none-ls")
+if not none_ls_ok then
 	vim.notify("none-ls not found. Install with :Lazy install", vim.log.levels.WARN)
 	return M
 end
 
-local formatting = null_ls.builtins.formatting
+local formatting = none_ls.builtins.formatting
 
 -- List of all formatter sources
 M.sources = {

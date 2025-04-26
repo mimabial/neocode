@@ -46,6 +46,12 @@ return {
 		lazy = true,
 	},
 
+	-- Nui.nvim (UI components used by many plugins)
+	{
+		"MunifTanjim/nui.nvim",
+		lazy = true,
+	},
+
 	-- Improved UI for messages, cmdline, and popup
 	{
 		"folke/noice.nvim",
@@ -298,12 +304,6 @@ return {
 			require("notify").setup(opts)
 			vim.notify = require("notify")
 		end,
-	},
-
-	-- Better vim.ui.select and vim.ui.input
-	{
-		"MunifTanjim/nui.nvim",
-		lazy = true,
 	},
 
 	-- Which-key for keybinding hints

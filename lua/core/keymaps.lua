@@ -25,6 +25,12 @@ vim.g.maplocalleader = " "
 -- General Mappings
 --------------------------------------------------------------------------------
 
+-- Better up/down
+map({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
+map({ "n", "x" }, "<Down>", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
+map({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, silent = true })
+map({ "n", "x" }, "<Up>", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, silent = true })
+
 -- Save and quit
 map("n", "<leader>w", "<cmd>w<cr>", { desc = "Save" })
 map("n", "<leader>q", "<cmd>q<cr>", { desc = "Quit" })
@@ -43,9 +49,13 @@ map("n", "<Esc>", "<cmd>noh<cr>", { desc = "Clear highlights" })
 map("v", "<", "<gv", { desc = "Indent left and stay in visual" })
 map("v", ">", ">gv", { desc = "Indent right and stay in visual" })
 
--- Move selected lines up and down
-map("v", "J", ":m '>+1<CR>gv=gv", { desc = "Move selection down" })
-map("v", "K", ":m '<-2<CR>gv=gv", { desc = "Move selection up" })
+-- Move lines up and down
+map("n", "<A-j>", "<cmd>execute 'move .+' . v:count1<cr>==", { desc = "Move Down" })
+map("n", "<A-k>", "<cmd>execute 'move .-' . (v:count1 + 1)<cr>==", { desc = "Move Up" })
+map("i", "<A-j>", "<esc><cmd>m .+1<cr>==gi", { desc = "Move Down" })
+map("i", "<A-k>", "<esc><cmd>m .-2<cr>==gi", { desc = "Move Up" })
+map("v", "<A-j>", ":<C-u>execute \"'<,'>move '>+\" . v:count1<cr>gv=gv", { desc = "Move Down" })
+map("v", "<A-k>", ":<C-u>execute \"'<,'>move '<-\" . (v:count1 + 1)<cr>gv=gv", { desc = "Move Up" })
 
 -- Keep cursor centered when scrolling
 map("n", "<C-d>", "<C-d>zz", { desc = "Scroll down and center" })
@@ -65,6 +75,15 @@ map({ "n", "v" }, "<leader>d", [["_d]], { desc = "Delete without yanking" })
 -- Yank to system clipboard
 map({ "n", "v" }, "<leader>y", [["+y]], { desc = "Yank to system clipboard" })
 map("n", "<leader>Y", [["+Y]], { desc = "Yank line to system clipboard" })
+
+-- Add undo break-points
+map("i", ",", ",<c-g>u")
+map("i", ".", ".<c-g>u")
+map("i", ";", ";<c-g>u")
+
+-- commenting
+map("n", "gco", "o<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", { desc = "Add Comment Below" })
+map("n", "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", { desc = "Add Comment Above" })
 
 --------------------------------------------------------------------------------
 -- Navigation Mappings
@@ -91,7 +110,7 @@ map("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to other buffer" })
 map("n", "<leader>`", "<cmd>e #<cr>", { desc = "Switch to other buffer" })
 
 -- Split windows
-map("n", "<leader>-", "<cmd>split<cr>", { desc = "Split window horizontally" })
+map("n", "<leader>_", "<cmd>split<cr>", { desc = "Split window horizontally" })
 map("n", "<leader>|", "<cmd>vsplit<cr>", { desc = "Split window vertically" })
 
 -- Close current buffer
@@ -129,6 +148,15 @@ end, { desc = "Format document" })
 -- Duplicate line or selection
 map("n", "<leader>dl", "yyp", { desc = "Duplicate line" })
 map("v", "<leader>dl", "y'>p", { desc = "Duplicate selection" })
+
+-- Save file
+map({ "i", "x", "n", "s" }, "<C-s>", "<cmd>w<cr><esc>", { desc = "Save File" })
+
+-- lazy
+map("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy" })
+
+-- new file
+map("n", "<leader>fn", "<cmd>enew<cr>", { desc = "New File" })
 
 --------------------------------------------------------------------------------
 -- UI Mappings
@@ -186,12 +214,21 @@ end, { desc = "Rename symbol" })
 -- Diagnostics
 map("n", "<leader>xx", "<cmd>TroubleToggle document_diagnostics<cr>", { desc = "Document diagnostics" })
 map("n", "<leader>xX", "<cmd>TroubleToggle workspace_diagnostics<cr>", { desc = "Workspace diagnostics" })
-map("n", "[d", function()
-	vim.diagnostic.goto_prev()
-end, { desc = "Previous diagnostic" })
-map("n", "]d", function()
-	vim.diagnostic.goto_next()
-end, { desc = "Next diagnostic" })
+
+local diagnostic_goto = function(next, severity)
+	local go = next and vim.diagnostic.goto_next or vim.diagnostic.goto_prev
+	severity = severity and vim.diagnostic.severity[severity] or nil
+	return function()
+		go({ severity = severity })
+	end
+end
+map("n", "<leader>cd", vim.diagnostic.open_float, { desc = "Line Diagnostics" })
+map("n", "]d", diagnostic_goto(true), { desc = "Next Diagnostic" })
+map("n", "[d", diagnostic_goto(false), { desc = "Prev Diagnostic" })
+map("n", "]e", diagnostic_goto(true, "ERROR"), { desc = "Next Error" })
+map("n", "[e", diagnostic_goto(false, "ERROR"), { desc = "Prev Error" })
+map("n", "]w", diagnostic_goto(true, "WARN"), { desc = "Next Warning" })
+map("n", "[w", diagnostic_goto(false, "WARN"), { desc = "Prev Warning" })
 
 -- Comments (these will be overridden by Comment.nvim if installed)
 map("n", "<leader>/", function()
@@ -203,3 +240,60 @@ map(
 	"<ESC><cmd>lua require('Comment.api').toggle.linewise(vim.fn.visualmode())<cr>",
 	{ desc = "Toggle comment" }
 )
+
+--------------------------------------------------------------------------------
+-- Search Mappings
+--------------------------------------------------------------------------------
+
+-- Clear search and stop snippet on escape
+vim.keymap.set({ "i", "n", "s" }, "<esc>", function()
+	-- Clear persistent search highlighting
+	vim.cmd("noh")
+	-- Stop snippet expansion if a snippet plugin (like luasnip) is running
+	-- This check prevents errors if no snippet engine is active
+	if pcall(require, "luasnip") and require("luasnip").running() then
+		require("luasnip").jump(0) -- Exit the current snippet
+	end
+	-- Return <esc> to allow the default escape behavior (e.g., exiting insert mode)
+	return "<esc>"
+end, { expr = true, desc = "Escape and Clear hlsearch and stop snippet" })
+
+-- Clear search, diff update and redraw
+-- taken from runtime/lua/_editor.lua
+map(
+	"n",
+	"<leader>ur",
+	"<Cmd>nohlsearch<Bar>diffupdate<Bar>normal! <C-L><CR>",
+	{ desc = "Redraw / Clear hlsearch / Diff Update" }
+)
+
+-- https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n
+map("n", "n", "'Nn'[v:searchforward].'zv'", { expr = true, desc = "Next Search Result" })
+map("x", "n", "'Nn'[v:searchforward]", { expr = true, desc = "Next Search Result" })
+map("o", "n", "'Nn'[v:searchforward]", { expr = true, desc = "Next Search Result" })
+map("n", "N", "'nN'[v:searchforward].'zv'", { expr = true, desc = "Prev Search Result" })
+map("x", "N", "'nN'[v:searchforward]", { expr = true, desc = "Prev Search Result" })
+map("o", "N", "'nN'[v:searchforward]", { expr = true, desc = "Prev Search Result" })
+
+--------------------------------------------------------------------------------
+-- List Mappings
+--------------------------------------------------------------------------------
+
+-- location list
+map("n", "<leader>xl", function()
+	local success, err = pcall(vim.fn.getloclist(0, { winid = 0 }).winid ~= 0 and vim.cmd.lclose or vim.cmd.lopen)
+	if not success and err then
+		vim.notify(err, vim.log.levels.ERROR)
+	end
+end, { desc = "Location List" })
+
+-- quickfix list
+map("n", "<leader>xq", function()
+	local success, err = pcall(vim.fn.getqflist({ winid = 0 }).winid ~= 0 and vim.cmd.cclose or vim.cmd.copen)
+	if not success and err then
+		vim.notify(err, vim.log.levels.ERROR)
+	end
+end, { desc = "Quickfix List" })
+
+map("n", "[q", vim.cmd.cprev, { desc = "Previous Quickfix" })
+map("n", "]q", vim.cmd.cnext, { desc = "Next Quickfix" })

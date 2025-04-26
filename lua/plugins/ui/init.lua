@@ -197,5 +197,225 @@ return {
 		},
 	},
 
-	-- Rest of UI components as before...
+	-- File explorer
+	{
+		"nvim-neo-tree/neo-tree.nvim",
+		branch = "v3.x",
+		cmd = "Neotree",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-tree/nvim-web-devicons",
+			"MunifTanjim/nui.nvim",
+		},
+		keys = {
+			{
+				"<leader>e",
+				function()
+					require("neo-tree.command").execute({ toggle = true, dir = vim.loop.cwd() })
+				end,
+				desc = "Explorer NeoTree (cwd)",
+			},
+			{
+				"<leader>fe",
+				"<cmd>Neotree toggle<cr>",
+				desc = "Explorer NeoTree",
+			},
+		},
+		opts = {
+			sources = { "filesystem", "buffers", "git_status", "document_symbols" },
+			open_files_do_not_replace_types = { "terminal", "trouble", "qf" },
+			filesystem = {
+				bind_to_cwd = false,
+				follow_current_file = { enabled = true },
+				use_libuv_file_watcher = true,
+			},
+			window = {
+				position = "left",
+				width = 30,
+				mappings = {
+					["<space>"] = "none",
+				},
+			},
+			default_component_configs = {
+				indent = {
+					with_expanders = true, -- if nil and file nesting is enabled, will enable expanders
+					expander_collapsed = "",
+					expander_expanded = "",
+					expander_highlight = "NeoTreeExpander",
+				},
+			},
+		},
+		config = function(_, opts)
+			require("neo-tree").setup(opts)
+		end,
+	},
+
+	-- Buffer line
+	{
+		"akinsho/bufferline.nvim",
+		event = "VeryLazy",
+		keys = {
+			{ "<leader>bp", "<Cmd>BufferLineTogglePin<CR>", desc = "Toggle pin" },
+			{ "<leader>bP", "<Cmd>BufferLineGroupClose ungrouped<CR>", desc = "Delete non-pinned buffers" },
+		},
+		opts = {
+			options = {
+				diagnostics = "nvim_lsp",
+				always_show_bufferline = false,
+				offsets = {
+					{
+						filetype = "neo-tree",
+						text = "Neo-tree",
+						highlight = "Directory",
+						text_align = "left",
+					},
+				},
+			},
+		},
+	},
+
+	-- Active indent guide and indent text objects
+	{
+		"echasnovski/mini.indentscope",
+		version = false, -- wait till new 0.7.0 release to put it back on semver
+		event = { "BufReadPre", "BufNewFile" },
+		opts = {
+			-- symbol = "▏",
+			symbol = "│",
+			options = { try_as_border = true },
+		},
+		init = function()
+			vim.api.nvim_create_autocmd("FileType", {
+				pattern = {
+					"help",
+					"alpha",
+					"dashboard",
+					"neo-tree",
+					"Trouble",
+					"lazy",
+					"mason",
+					"notify",
+					"toggleterm",
+					"lazyterm",
+				},
+				callback = function()
+					vim.b.miniindentscope_disable = true
+				end,
+			})
+		end,
+	},
+
+	-- Improved folds with pretty UI
+	{
+		"kevinhwang91/nvim-ufo",
+		dependencies = {
+			"kevinhwang91/promise-async",
+			{
+				"luukvbaal/statuscol.nvim",
+				config = function()
+					local builtin = require("statuscol.builtin")
+					require("statuscol").setup({
+						relculright = true,
+						segments = {
+							{ text = { builtin.foldfunc }, click = "v:lua.ScFa" },
+							{ text = { "%s" }, click = "v:lua.ScSa" },
+							{ text = { builtin.lnumfunc, " " }, click = "v:lua.ScLa" },
+						},
+					})
+				end,
+			},
+		},
+		event = "BufReadPost",
+		opts = {
+			provider_selector = function()
+				return { "treesitter", "indent" }
+			end,
+			open_fold_hl_timeout = 150,
+			preview = {
+				win_config = {
+					border = { "", "─", "", "", "", "─", "", "" },
+					winhighlight = "Normal:Folded",
+					winblend = 0,
+				},
+				mappings = {
+					scrollU = "<C-u>",
+					scrollD = "<C-d>",
+					jumpTop = "[",
+					jumpBot = "]",
+				},
+			},
+		},
+		init = function()
+			vim.o.foldcolumn = "1" -- '0' is not bad
+			vim.o.foldlevel = 99 -- Using ufo provider need a large value
+			vim.o.foldlevelstart = 99
+			vim.o.foldenable = true
+
+			vim.keymap.set("n", "zR", require("ufo").openAllFolds)
+			vim.keymap.set("n", "zM", require("ufo").closeAllFolds)
+			vim.keymap.set("n", "zr", require("ufo").openFoldsExceptKinds)
+			vim.keymap.set("n", "K", function()
+				local winid = require("ufo").peekFoldedLinesUnderCursor()
+				if not winid then
+					-- If no fold found, use normal K command or other hover mechanism
+					vim.lsp.buf.hover()
+				end
+			end)
+		end,
+	},
+
+	-- Scrollbar with integration for diagnostics, search, git, etc.
+	{
+		"petertriho/nvim-scrollbar",
+		event = "BufReadPost",
+		opts = {
+			show = true,
+			handle = {
+				text = " ",
+				color = "#44475a",
+				cterm = nil,
+				highlight = "CursorColumn",
+				hide_if_all_visible = true,
+			},
+			marks = {
+				Search = {
+					text = { "-", "=" },
+					priority = 0,
+					color = "#ff9e64",
+				},
+				Error = {
+					text = { "-", "=" },
+					priority = 1,
+					color = "#f7768e",
+				},
+				Warn = {
+					text = { "-", "=" },
+					priority = 2,
+					color = "#e0af68",
+				},
+				Info = {
+					text = { "-", "=" },
+					priority = 3,
+					color = "#7aa2f7",
+				},
+				Hint = {
+					text = { "-", "=" },
+					priority = 4,
+					color = "#1abc9c",
+				},
+				Misc = {
+					text = { "-", "=" },
+					priority = 5,
+					color = "#9d7cd8",
+				},
+			},
+			handlers = {
+				cursor = true,
+				diagnostic = true,
+				gitsigns = true,
+				handle = true,
+				search = true,
+			},
+		},
+	},
 }
