@@ -31,7 +31,7 @@ return {
       { "<leader>gc", "<cmd>Git commit<CR>", desc = "Git Commit" },
       { "<leader>gp", "<cmd>Git push<CR>", desc = "Git Push" },
       { "<leader>gl", "<cmd>Git pull<CR>", desc = "Git Pull" },
-      { "<leader>go", "<cmd>GBrowse<CR>", desc = "Open in GitHub", mode = { "n", "v" } },
+      { "<leader>go", "<cmd>GBrowse<CR>", desc = "Open in GitHub", mode = { "n", "v" } }
     },
     config = function()
       vim.api.nvim_create_user_command("GCommit", function(opts)
@@ -59,7 +59,7 @@ return {
         delete = { text = "▁" },
         topdelete = { text = "▔" },
         changedelete = { text = "▎" },
-        untracked = { text = "▎" },
+        untracked = { text = "▎" }
       },
       signcolumn = true, -- Toggle with `:Gitsigns toggle_signs`
       numhl = false,     -- Toggle with `:Gitsigns toggle_numhl`
@@ -97,7 +97,6 @@ return {
       on_attach = function(bufnr)
         local gs = package.loaded.gitsigns
 
-        local function map(mode, l, r, opts)
         local function map(mode, l, r, opts)
           opts = opts or {}
           opts.buffer = bufnr
@@ -150,8 +149,8 @@ return {
 
         -- Text object
         map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", { desc = "Select Hunk" })
-      end,
-    },
+      end
+    }
   },
 
   -- Advanced diff view
@@ -161,7 +160,7 @@ return {
     keys = {
       { "<leader>gD", "<cmd>DiffviewOpen<CR>", desc = "DiffView Open" },
       { "<leader>gf", "<cmd>DiffviewFileHistory %<CR>", desc = "File History" },
-      { "<leader>gF", "<cmd>DiffviewFileHistory<CR>", desc = "Repo File History" },
+      { "<leader>gF", "<cmd>DiffviewFileHistory<CR>", desc = "Repo File History" }
     },
     config = function()
       require("diffview").setup({
@@ -307,7 +306,7 @@ return {
       { "<leader>gcn", "<cmd>GitConflictChooseNone<CR>", desc = "Choose None" },
       { "<leader>gcj", "<cmd>GitConflictNextConflict<CR>", desc = "Next Conflict" },
       { "<leader>gck", "<cmd>GitConflictPrevConflict<CR>", desc = "Prev Conflict" },
-      { "<leader>gcl", "<cmd>GitConflictListQf<CR>", desc = "List Conflicts" },
+      { "<leader>gcl", "<cmd>GitConflictListQf<CR>", desc = "List Conflicts" }
     },
     opts = {
       default_mappings = false,
@@ -317,8 +316,8 @@ return {
         current = "DiffText",
         incoming = "DiffAdd",
         ancestor = "DiffChange",
-      },
-    },
+      }
+    }
   },
 
   -- Git blame
@@ -326,7 +325,7 @@ return {
     "f-person/git-blame.nvim",
     cmd = { "GitBlameToggle" },
     keys = {
-      { "<leader>gtb", "<cmd>GitBlameToggle<CR>", desc = "Toggle Git Blame" },
+      { "<leader>gtb", "<cmd>GitBlameToggle<CR>", desc = "Toggle Git Blame" }
     },
     config = function()
       require("gitblame").setup({
@@ -337,7 +336,7 @@ return {
         highlight_group = "LineNr",
         display_virtual_text = true,
         delay = 1000,
-        set_extmark_options = {},
+        set_extmark_options = {}
       })
     end,
   },
@@ -355,7 +354,7 @@ return {
       { "<leader>go", "<cmd>Octo<CR>", desc = "Octo" },
       { "<leader>goi", "<cmd>Octo issue list<CR>", desc = "Issue List" },
       { "<leader>gop", "<cmd>Octo pr list<CR>", desc = "PR List" },
-      { "<leader>gor", "<cmd>Octo repo list<CR>", desc = "Repo List" },
+      { "<leader>gor", "<cmd>Octo repo list<CR>", desc = "Repo List" }
     },
     config = function()
       require("octo").setup({
@@ -483,8 +482,8 @@ return {
             select_prev_entry = { lhs = "[q", desc = "move to next changed file" },
             close_review_tab = { lhs = "<C-c>", desc = "close review tab" },
             toggle_viewed = { lhs = "<leader>v", desc = "toggle viewed state" },
-          },
-        },
+          }
+        }
       })
     end,
   },
@@ -497,7 +496,7 @@ return {
     },
     keys = {
       { "<leader>gw", "<cmd>lua require('telescope').extensions.git_worktree.git_worktrees()<CR>", desc = "Git Worktrees" },
-      { "<leader>gW", "<cmd>lua require('telescope').extensions.git_worktree.create_git_worktree()<CR>", desc = "Create Worktree" },
+      { "<leader>gW", "<cmd>lua require('telescope').extensions.git_worktree.create_git_worktree()<CR>", desc = "Create Worktree" }
     },
     config = function()
       require("git-worktree").setup({
@@ -506,7 +505,7 @@ return {
         update_on_change_command = "e .",
         clearjunk = false,
         autopush = false,
-        autopull = false,
+        autopull = false
       })
 
       require("telescope").load_extension("git_worktree")
@@ -538,8 +537,8 @@ return {
           enabled = true,
           command = "black ${file}",
           pattern = "**/*.py",
-        },
-      },
-    },
-  },
+        }
+      }
+    }
+  }
 }

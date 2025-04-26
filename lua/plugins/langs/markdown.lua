@@ -1,15 +1,15 @@
--- lua/plugins/langs/cpp.lua
+-- lua/plugins/langs/markdown.lua
 return {
-	-- C/C++ development support will be configured here
+	-- Markdown support will be configured here
 	-- This is a minimal placeholder to avoid loading errors
 	{
 		"neovim/nvim-lspconfig",
 		opts = function(_, opts)
-			-- Add clangd to ensure_installed
+			-- Add marksman to ensure_installed
 			if not opts.servers then
 				opts.servers = {}
 			end
-			opts.servers.clangd = {}
+			opts.servers.marksman = {}
 		end,
 	},
 }
