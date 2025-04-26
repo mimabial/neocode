@@ -52,18 +52,41 @@ function M.setup_diagnostics()
 	})
 
 	-- Configure handler for hover windows
-	vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
-		border = "rounded",
-		width = 60,
-		-- Add additional styling to hover windows
-		stylize_markdown = true,
-	})
+	vim.lsp.handlers["textDocument/hover"] = function(err, result, ctx, config)
+		if err then
+			return nil, err
+		end
+		if not (result and result.contents) then
+			return nil, err
+		end
+
+		config = config or {}
+		config.border = config.border or "rounded"
+
+		-- Convert input to markdown lines
+		local markdown_lines = vim.lsp.util.convert_input_to_markdown_lines(result.contents)
+
+		-- Remove empty lines by joining the table into a string and splitting while omitting empty ones
+		markdown_lines = vim.split(table.concat(markdown_lines, "\n"), "\n", { trimempty = true })
+
+		return vim.lsp.util.open_floating_preview(markdown_lines, "markdown", config)
+	end
 
 	-- Configure handler for signature help
-	vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
-		border = "rounded",
-		close_events = { "CursorMoved", "BufHidden", "InsertCharPre" },
-	})
+	-- Save the original signature_help handler
+	local orig_signature_help = vim.lsp.handlers["textDocument/signatureHelp"]
+
+	vim.lsp.handlers["textDocument/signatureHelp"] = function(err, result, ctx, config)
+		if err then
+			return nil, err
+		end
+
+		config = config or {}
+		config.border = config.border or "rounded"
+		config.close_events = config.close_events or { "CursorMoved", "BufHidden", "InsertCharPre" }
+
+		return orig_signature_help(err, result, ctx, config)
+	end
 end
 
 -- Configure LSP symbols in winbar (breadcrumbs)
@@ -194,16 +217,36 @@ function M.setup_trouble()
 
 	-- Configure trouble.nvim
 	trouble.setup({
-		position = "bottom",
-		height = 10,
-		width = 50,
-		icons = true,
-		mode = "workspace_diagnostics",
-		fold_open = "",
-		fold_closed = "",
-		group = true,
-		padding = true,
-		action_keys = {
+		position = "bottom", -- Position of the list (bottom, top, left, right)
+		height = 10, -- Height of the trouble list when position is top or bottom
+		width = 50, -- Width of the list when position is left or right
+		icons = true, -- Use devicons for filenames
+		mode = "workspace_diagnostics", -- Modes: "workspace_diagnostics", "document_diagnostics", "quickfix", "lsp_references"
+		fold_open = "", -- Icon used for open folds
+		fold_closed = "", -- Icon used for closed folds
+		group = true, -- Group results by file
+		padding = true, -- Add extra new line on top of the list
+		debug = false, -- Enable or disable debug mode
+		auto_refresh = true, -- Automatically refresh diagnostics on change
+		focus = true, -- Focus the Trouble window when opened
+		restore = true, -- Restore previous window settings after closing Trouble
+		follow = true, -- Automatically follow the current file
+		indent_guides = true, -- Show indent guides in the list
+		max_items = 100, -- Maximum number of items to show in the list
+		multiline = true, -- Allow multiline diagnostics
+		pinned = false, -- Pin the current window
+		warn_no_results = true, -- Show a warning when no results are found
+		open_no_results = false, -- Automatically open the Trouble window even if there are no results
+		win = {}, -- Configurations for the Trouble window (e.g., border, style)
+		preview = true, -- Enable or disable preview for diagnostics
+		throttle = 100, -- Throttle time in milliseconds for refreshing
+		keys = {}, -- Custom key mappings for Trouble actions
+		modes = {}, -- Define custom modes for Trouble
+		auto_close = false, -- Automatically close the Trouble window when no diagnostics are present
+		auto_open = false, -- Automatically open the Trouble window when diagnostics appear
+		auto_preview = true, -- Automatically preview locations when navigating
+		auto_jump = { "lsp_definitions" }, -- Jump to specific modes automatically
+		action_keys = { -- Key mappings for actions in the Trouble list
 			close = "q",
 			cancel = "<esc>",
 			refresh = "r",
@@ -222,20 +265,14 @@ function M.setup_trouble()
 			previous = "k",
 			next = "j",
 		},
-		indent_lines = true,
-		auto_open = false,
-		auto_close = false,
-		auto_preview = true,
-		auto_fold = false,
-		auto_jump = { "lsp_definitions" },
 		signs = {
-			error = "",
-			warning = "",
+			error = "",
+			warning = "",
 			hint = "󰌵",
-			information = "",
+			information = "",
 			other = "﫠",
 		},
-		use_diagnostic_signs = false,
+		use_diagnostic_signs = false, -- Use signs defined in the LSP client
 	})
 
 	-- Configure keymaps
