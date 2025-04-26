@@ -3,11 +3,10 @@
 ```
 ~/.config/nvim/
 ├── init.lua                     # Main entry point
-├── README.md                    # Documentation
 ├── lua/
 │   ├── core/                    # Core configuration
-│   │   ├── autocmds.lua         # Auto-commands
-│   │   ├── keymaps.lua          # Global keymaps
+│   │   ├── autocmds.lua         # Auto-commands (fixed)
+│   │   ├── keymaps.lua          # Global keymaps (fixed)
 │   │   ├── options.lua          # Neovim options
 │   │   └── utils.lua            # Utility functions
 │   ├── plugins/                 # Plugin configurations
@@ -18,6 +17,7 @@
 │   │   │   ├── formatters.lua   # Formatting configs
 │   │   │   ├── linters.lua      # Linter configs
 │   │   │   ├── keymaps.lua      # LSP keymaps
+│   │   │   ├── none-ls.lua      # none-ls integration (added)
 │   │   │   └── ui.lua           # LSP UI configuration
 │   │   ├── coding/              # Coding assistance
 │   │   │   ├── init.lua         # Coding loader
@@ -29,7 +29,7 @@
 │   │   │   ├── init.lua         # Languages loader
 │   │   │   ├── web.lua          # Web development
 │   │   │   ├── python.lua       # Python
-│   │   │   ├── go.lua           # Go
+│   │   │   ├── go.lua           # Go (fixed)
 │   │   │   ├── rust.lua         # Rust
 │   │   │   └── ... other languages
 │   │   ├── editor/              # Editor enhancements
@@ -40,11 +40,12 @@
 │   │   │   ├── init.lua         # UI loader
 │   │   │   ├── colorscheme.lua  # Color scheme
 │   │   │   ├── statusline.lua   # Status line
-│   │   │   └── dashboard.lua    # Dashboard
+│   │   │   ├── dashboard.lua    # Dashboard
+│   │   │   └── navic.lua        # Navigation breadcrumbs (added)
 │   │   ├── tools/               # Development tools
 │   │   │   ├── init.lua         # Tools loader
 │   │   │   ├── git.lua          # Git integrations
-│   │   │   ├── terminal.lua     # Terminal integration
+│   │   │   ├── terminal.lua     # Terminal integration (fixed)
 │   │   │   ├── debug.lua        # Debugging with DAP
 │   │   │   └── database.lua     # Database tools
 │   │   └── util/                # Utility plugins
@@ -52,5 +53,4 @@
 │   │       ├── telescope.lua    # Telescope fuzzy finder
 │   │       └── treesitter.lua   # Treesitter config
 │   └── config/                  # User configuration
-│       └── settings.lua         # User-specific settings
-```
+│       └── settings.lua         # User-specific settings```
