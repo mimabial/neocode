@@ -5,18 +5,18 @@
 -- This module provides enhanced navigation capabilities:
 --
 -- Features:
--- 1. Quick jumping within the buffer
--- 2. Buffer and tab navigation
--- 3. File browsing
--- 4. Visualization aids
--- 5. Session management
+-- 1. Quick jumping within the buffer with flash.nvim (modern leap replacement)
+-- 2. File browsing with oil.nvim (buffer-based explorer)
+-- 3. Harpoon for quick file navigation
+-- 4. Better marks and bookmarks
+-- 5. Enhanced motion commands
 --
 -- These plugins make it easier to navigate within and between files,
 -- enhancing movement efficiency throughout your codebase.
 --------------------------------------------------------------------------------
 
 return {
-	-- Quick navigation - EasyMotion/Hop replacement
+	-- Quick navigation with flash.nvim (modern replacement for hop/leap)
 	{
 		"folke/flash.nvim",
 		event = "VeryLazy",
@@ -127,7 +127,63 @@ return {
 		},
 	},
 
-	-- Enhanced folder/file browser
+	-- Quick file navigation with Harpoon
+	{
+		"ThePrimeagen/harpoon",
+		branch = "harpoon2", -- Use the new version
+		dependencies = { "nvim-lua/plenary.nvim" },
+		config = function()
+			local harpoon = require("harpoon")
+
+			-- Setup harpoon
+			harpoon:setup({
+				settings = {
+					save_on_toggle = true,
+					sync_on_ui_close = true,
+					key = function()
+						-- Get a unique key per project
+						return vim.loop.cwd()
+					end,
+				},
+				-- Configuration for the Harpoon UI menu
+				menu = {
+					width = math.floor(vim.api.nvim_win_get_width(0) * 0.6),
+					height = math.floor(vim.api.nvim_win_get_height(0) * 0.6),
+					borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
+				},
+			})
+
+			-- Set keymaps for harpoon
+			vim.keymap.set("n", "<leader>ha", function() harpoon:list():append() end,
+				{ desc = "Harpoon Add File" })
+			vim.keymap.set("n", "<leader>hh", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end,
+				{ desc = "Harpoon Menu" })
+
+			-- Quick navigation to the first 4 harpoon marks
+			vim.keymap.set("n", "<leader>h1", function() harpoon:list():select(1) end,
+				{ desc = "Harpoon File 1" })
+			vim.keymap.set("n", "<leader>h2", function() harpoon:list():select(2) end,
+				{ desc = "Harpoon File 2" })
+			vim.keymap.set("n", "<leader>h3", function() harpoon:list():select(3) end,
+				{ desc = "Harpoon File 3" })
+			vim.keymap.set("n", "<leader>h4", function() harpoon:list():select(4) end,
+				{ desc = "Harpoon File 4" })
+
+			-- Navigate through harpoon marks
+			vim.keymap.set("n", "<leader>hp", function() harpoon:list():prev() end,
+				{ desc = "Harpoon Prev File" })
+			vim.keymap.set("n", "<leader>hn", function() harpoon:list():next() end,
+				{ desc = "Harpoon Next File" })
+
+			-- Add Telescope extension for harpoon
+			require("telescope").load_extension("harpoon")
+		end,
+		keys = {
+			{ "<leader>hf", "<cmd>Telescope harpoon marks<cr>", desc = "Harpoon Find" },
+		},
+	},
+
+	-- Buffer-based file explorer with oil.nvim
 	{
 		"stevearc/oil.nvim",
 		dependencies = { "nvim-tree/nvim-web-devicons" },
@@ -213,279 +269,21 @@ return {
 					winblend = 0,
 				},
 			},
-			progress = {
-				max_width = 0.3,
-				min_width = { 20, 0.2 },
-				width = nil,
-				max_height = 0.3,
-				min_height = { 5, 0.1 },
-				height = nil,
-				border = "rounded",
-				minimized_border = "none",
-				win_options = {
-					winblend = 0,
-				},
-			},
 		},
-	},
+		config = function(_, opts)
+			require("oil").setup(opts)
 
-	-- File browser with telescope integration
-	{
-		"nvim-telescope/telescope-file-browser.nvim",
-		dependencies = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" },
-		config = function()
-			require("telescope").load_extension("file_browser")
-		end,
-		keys = {
-			{
-				"<leader>fB",
-				"<cmd>Telescope file_browser path=%:p:h select_buffer=true<cr>",
-				desc = "File Browser (current dir)",
-			},
-		},
-	},
+			-- Add command to toggle between float and normal modes
+			vim.api.nvim_create_user_command("OilFloat", function()
+				require("oil").open_float()
+			end, { desc = "Open Oil in float mode" })
 
-	-- Advanced search and replace
-	{
-		"nvim-pack/nvim-spectre",
-		dependencies = {
-			"nvim-lua/plenary.nvim",
-		},
-		keys = {
-			{
-				"<leader>sr",
-				function()
-					require("spectre").open()
-				end,
-				desc = "Replace in files (Spectre)",
-			},
-		},
-		config = function()
-			require("spectre").setup({
-				color_devicons = true,
-				open_cmd = "vnew",
-				live_update = true,
-				line_sep_start = "┌─────────────────────────────────────────────────────────",
-				result_padding = "│  ",
-				line_sep = "└─────────────────────────────────────────────────────────",
-				highlight = {
-					ui = "String",
-					search = "DiffChange",
-					replace = "DiffDelete",
-				},
-			})
+			-- Add keybinding for the float mode
+			vim.keymap.set("n", "<leader>fo", "<cmd>OilFloat<cr>", { desc = "Float File Explorer" })
 		end,
 	},
 
-	-- Buffer and tab management
-	{
-		"akinsho/bufferline.nvim",
-		event = "VeryLazy",
-		dependencies = { "nvim-tree/nvim-web-devicons" },
-		opts = {
-			options = {
-				mode = "buffers",
-				numbers = "none",
-				close_command = "bdelete! %d",
-				right_mouse_command = "bdelete! %d",
-				left_mouse_command = "buffer %d",
-				middle_mouse_command = nil,
-				indicator = {
-					icon = "▎",
-					style = "icon",
-				},
-				buffer_close_icon = "",
-				modified_icon = "●",
-				close_icon = "",
-				left_trunc_marker = "",
-				right_trunc_marker = "",
-				max_name_length = 18,
-				max_prefix_length = 15,
-				tab_size = 18,
-				diagnostics = "nvim_lsp",
-				diagnostics_update_in_insert = false,
-				diagnostics_indicator = function(count, level)
-					local icon = level:match("error") and " " or " "
-					return " " .. icon .. count
-				end,
-				offsets = {
-					{
-						filetype = "NvimTree",
-						text = "File Explorer",
-						text_align = "center",
-						separator = true,
-					},
-				},
-				color_icons = true,
-				show_buffer_icons = true,
-				show_buffer_close_icons = true,
-				show_close_icon = true,
-				show_tab_indicators = true,
-				separator_style = "thin",
-				enforce_regular_tabs = false,
-				always_show_bufferline = true,
-				sort_by = "insert_after_current",
-			},
-		},
-		keys = {
-			{ "<leader>bp", "<cmd>BufferLinePick<cr>", desc = "Pick buffer" },
-			{ "<leader>bc", "<cmd>BufferLinePickClose<cr>", desc = "Pick & close buffer" },
-			{ "<leader>bP", "<cmd>BufferLineTogglePin<cr>", desc = "Toggle pin buffer" },
-			{ "<leader>bC", "<cmd>BufferLineGroupClose ungrouped<cr>", desc = "Close all unpinned buffers" },
-		},
-	},
-
-	-- Remember last location in files
-	{
-		"ethanholz/nvim-lastplace",
-		event = "BufReadPre",
-		config = function()
-			require("nvim-lastplace").setup({
-				lastplace_ignore_buftype = { "quickfix", "nofile", "help" },
-				lastplace_ignore_filetype = { "gitcommit", "gitrebase" },
-				lastplace_open_folds = true,
-			})
-		end,
-	},
-
-	-- UI for tabs
-	{
-		"nanozuki/tabby.nvim",
-		event = "VeryLazy",
-		config = function()
-			local util = require("tabby.util")
-			local filename = require("tabby.filename")
-			local cwd = function()
-				return " " .. vim.fn.fnamemodify(vim.fn.getcwd(), ":t") .. " "
-			end
-
-			require("tabby.tabline").set(function(line)
-				return {
-					{
-						{ cwd(), hl = "TabLineSel" },
-						line.sep("", "TabLineSel", "TabLine"),
-					},
-					line.tabs().foreach(function(tab)
-						local hl = tab.is_current() and "TabLineSel" or "TabLine"
-						return {
-							line.sep("", hl, "TabLine"),
-							tab.is_current() and "" or "",
-							tab.number(),
-							tab.name(),
-							tab.close_btn(""),
-							line.sep("", hl, "TabLine"),
-							hl = hl,
-							margin = " ",
-						}
-					end),
-					line.spacer(),
-					line.wins_in_tab(line.api.get_current_tab()).foreach(function(win)
-						local hl = win.is_current() and "TabLineSel" or "TabLine"
-						return {
-							line.sep("", hl, "TabLine"),
-							win.is_current() and "" or "",
-							filename.unique(win.buf_name()),
-							line.sep("", hl, "TabLine"),
-							hl = hl,
-							margin = " ",
-						}
-					end),
-					{
-						line.sep("", "TabLineSel", "TabLine"),
-						{ "  ", hl = "TabLineSel" },
-					},
-					hl = "TabLine",
-				}
-			end)
-		end,
-	},
-
-	-- Scrollbar with diagnostics and git status
-	{
-				marks = {
-					Search = {
-						text = { "-", "=" },
-						priority = 0,
-						color = colors.orange,
-						cterm = nil,
-						highlight = "Search",
-					},
-					Error = {
-						text = { "-", "=" },
-						priority = 1,
-						color = colors.error,
-						cterm = nil,
-						highlight = "DiagnosticVirtualTextError",
-					},
-					Warn = {
-						text = { "-", "=" },
-						priority = 2,
-						color = colors.warning,
-						cterm = nil,
-						highlight = "DiagnosticVirtualTextWarn",
-					},
-					Info = {
-						text = { "-", "=" },
-						priority = 3,
-						color = colors.info,
-						cterm = nil,
-						highlight = "DiagnosticVirtualTextInfo",
-					},
-					Hint = {
-						text = { "-", "=" },
-						priority = 4,
-						color = colors.hint,
-						cterm = nil,
-						highlight = "DiagnosticVirtualTextHint",
-					},
-					Misc = {
-						text = { "-", "=" },
-						priority = 5,
-						color = colors.purple,
-						cterm = nil,
-						highlight = "Normal",
-					},
-				},
-				excluded_buftypes = {
-					"terminal",
-				},
-				excluded_filetypes = {
-					"prompt",
-					"TelescopePrompt",
-					"noice",
-					"NvimTree",
-					"neo-tree",
-				},
-				autocmd = {
-					render = {
-						"BufWinEnter",
-						"TabEnter",
-						"TermEnter",
-						"WinEnter",
-						"CmdwinLeave",
-						"TextChanged",
-						"VimResized",
-						"WinScrolled",
-					},
-					clear = {
-						"BufWinLeave",
-						"TabLeave",
-						"TermLeave",
-						"WinLeave",
-					},
-				},
-				handlers = {
-					cursor = true,
-					diagnostic = true,
-					gitsigns = true,
-					handle = true,
-					search = true,
-				},
-			})
-		end,
-	},
-
-	-- Better marks
+	-- Better marks and bookmark management
 	{
 		"chentoast/marks.nvim",
 		event = "BufReadPost",
@@ -500,18 +298,65 @@ return {
 				excluded_filetypes = {},
 				bookmark_0 = {
 					sign = "⚑",
-					virt_text = "hello world",
+					virt_text = "bookmark",
 					annotate = false,
 				},
-				mappings = {},
+				mappings = {
+					set = "m",
+					set_next = "m,",
+					toggle = "m;",
+					next = "m]",
+					prev = "m[",
+					preview = "m:",
+					next_bookmark = "m}",
+					prev_bookmark = "m{",
+					delete = "dm",
+					delete_line = "dm-",
+					delete_bookmark = "dm=",
+					delete_buf = "dm<space>",
+				},
 			})
 		end,
+		keys = {
+			{ "m",  desc = "Set mark" },
+			{ "m]", desc = "Next mark" },
+			{ "m[", desc = "Previous mark" },
+			{ "m;", desc = "Toggle mark" },
+			{ "m:", desc = "Preview mark" },
+			{ "dm", desc = "Delete mark" },
+		},
 	},
 
 	-- Session management
 	{
-			pre_save = nil,
-			save_empty = false,
+		"folke/persistence.nvim",
+		event = "BufReadPre",
+		opts = {
+			-- Directory where session files are stored
+			dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/"),
+			-- Options to save
+			options = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp" },
+			-- Don't save buffers for certain filetypes
+			pre_save = function()
+				-- Don't save these filetypes
+				local ignored_filetypes = { "gitcommit" }
+				-- Close floating windows before saving
+				for _, win in ipairs(vim.api.nvim_list_wins()) do
+					if vim.api.nvim_win_get_config(win).relative ~= "" then
+						vim.api.nvim_win_close(win, false)
+					end
+				end
+				-- Close unwanted buffers
+				for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+					if vim.api.nvim_buf_is_loaded(buf) then
+						local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
+						local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
+						if buftype == "nofile" or vim.tbl_contains(ignored_filetypes, filetype) then
+							vim.api.nvim_buf_delete(buf, { force = true })
+						end
+					end
+				end
+			end,
 		},
 		keys = {
 			{

@@ -5,154 +5,44 @@
 -- This module provides enhanced text objects for more precise editing:
 --
 -- Features:
--- 1. Treesitter-based text objects for language constructs
--- 2. Additional text objects like entire buffer, line, indentation
--- 3. Custom text objects for specific languages
--- 4. Mappings to select, delete, and operate on text objects
+-- 1. TreeSitter-based text objects for language constructs
+-- 2. Enhanced motions with mini.ai
+-- 3. Better surrounding management
+-- 4. Smart pair manipulation
+-- 5. Advanced targetting with flash.nvim
 --
 -- Text objects make it easier to select and manipulate specific
 -- elements in your code, enhancing editing efficiency.
 --------------------------------------------------------------------------------
 
 return {
-	-- Treesitter text objects
-	{
-		"nvim-treesitter/nvim-treesitter-textobjects",
-		dependencies = "nvim-treesitter/nvim-treesitter",
-		config = function()
-			require("nvim-treesitter.configs").setup({
-				-- Ensure you add the missing required fields here
-				modules = {}, -- Add the necessary modules if any
-				sync_install = false, -- Set to true if you want to install parsers synchronously
-				ensure_installed = {}, -- List of parsers to be installed
-				ignore_install = {}, -- List of parsers to be ignored
-				auto_install = false, -- Set to true if you want to automatically install missing parsers
-
-				textobjects = {
-					select = {
-						enable = true,
-						lookahead = true, -- Automatically jump forward to textobj
-						keymaps = {
-							-- You can use the capture groups defined in textobjects.scm
-							["af"] = "@function.outer",
-							["if"] = "@function.inner",
-							["ac"] = "@class.outer",
-							["ic"] = "@class.inner",
-							["aa"] = "@parameter.outer",
-							["ia"] = "@parameter.inner",
-							["al"] = "@loop.outer",
-							["il"] = "@loop.inner",
-							["ai"] = "@conditional.outer",
-							["ii"] = "@conditional.inner",
-							["ab"] = "@block.outer",
-							["ib"] = "@block.inner",
-							["as"] = "@statement.outer",
-							["is"] = "@statement.inner",
-							["aB"] = "@block.outer", -- Alias for block
-							["iB"] = "@block.inner",
-							["aS"] = "@scope.outer", -- Scope (e.g., function body)
-							["iS"] = "@scope.inner",
-							["aC"] = "@comment.outer",
-							["iC"] = "@comment.outer",
-						},
-						selection_modes = {
-							["@parameter.outer"] = "v", -- charwise
-							["@function.outer"] = "V", -- linewise
-							["@class.outer"] = "V", -- linewise
-						},
-						include_surrounding_whitespace = true,
-					},
-					swap = {
-						enable = true,
-						swap_next = {
-							["a"] = "@parameter.inner",
-							["f"] = "@function.outer",
-							["m"] = "@statement.outer",
-						},
-						swap_previous = {
-							["A"] = "@parameter.inner",
-							["F"] = "@function.outer",
-							["M"] = "@statement.outer",
-						},
-					},
-					move = {
-						enable = true,
-						set_jumps = true, -- whether to set jumps in the jumplist
-						goto_next_start = {
-							["]f"] = "@function.outer",
-							["]c"] = "@class.outer",
-							["]p"] = "@parameter.inner",
-							["]i"] = "@conditional.outer",
-							["]l"] = "@loop.outer",
-							["]s"] = "@statement.outer",
-							["]b"] = "@block.outer",
-							["]z"] = { query = "@fold", query_group = "folds", desc = "Next fold" },
-						},
-						goto_next_end = {
-							["]F"] = "@function.outer",
-							["]C"] = "@class.outer",
-							["]P"] = "@parameter.inner",
-							["]I"] = "@conditional.outer",
-							["]L"] = "@loop.outer",
-							["]S"] = "@statement.outer",
-							["]B"] = "@block.outer",
-						},
-						goto_previous_start = {
-							["[f"] = "@function.outer",
-							["[c"] = "@class.outer",
-							["[p"] = "@parameter.inner",
-							["[i"] = "@conditional.outer",
-							["[l"] = "@loop.outer",
-							["[s"] = "@statement.outer",
-							["[b"] = "@block.outer",
-							["[z"] = { query = "@fold", query_group = "folds", desc = "Previous fold" },
-						},
-						goto_previous_end = {
-							["[F"] = "@function.outer",
-							["[C"] = "@class.outer",
-							["[P"] = "@parameter.inner",
-							["[I"] = "@conditional.outer",
-							["[L"] = "@loop.outer",
-							["[S"] = "@statement.outer",
-							["[B"] = "@block.outer",
-						},
-					},
-					lsp_interop = {
-						enable = true,
-						border = "rounded",
-						floating_preview_opts = {},
-						peek_definition_code = {
-							["pf"] = "@function.outer",
-							["pc"] = "@class.outer",
-						},
-					},
-				},
-			})
-		end,
-	},
-
-	-- Additional text objects
+	-- Enhanced text objects with mini.ai
 	{
 		"echasnovski/mini.ai",
+		version = false,
 		event = "VeryLazy",
-		dependencies = { "nvim-treesitter-textobjects" },
+		dependencies = {
+			-- Optional TreeSitter integration
+			"nvim-treesitter/nvim-treesitter-textobjects",
+		},
 		opts = function()
 			local ai = require("mini.ai")
 			return {
-				n_lines = 500,
+				n_lines = 500, -- Maximum number of lines to look for text objects
 				custom_textobjects = {
+					-- Add custom text objects or override built-ins
 					o = ai.gen_spec.treesitter({
 						a = { "@block.outer", "@conditional.outer", "@loop.outer" },
 						i = { "@block.inner", "@conditional.inner", "@loop.inner" },
 					}, {}),
 					f = ai.gen_spec.treesitter({ a = "@function.outer", i = "@function.inner" }, {}),
 					c = ai.gen_spec.treesitter({ a = "@class.outer", i = "@class.inner" }, {}),
-					t = { "<([%p%w]-)%f[^<%w][^<>]->.-</%1>", "^<.->().*()</[^>]+>" }, -- HTML/XML tag
+					t = { "<([%p%w]-)%f[^<%w][^<>]->.-</%1>", "^<.->().*()</[^>]+>" }, -- HTML tag
 
-					-- Custom text objects
-					d = { "%f[%d]%d+" }, -- Digits
-					w = { "%f[%w]%w+" }, -- Word
-					h = { "^#[^\n]+" }, -- Markdown/code headers
+					-- Additional useful text objects
+					d = { "%f[%d]%d+" },                 -- Digits
+					w = { "%f[%w]%w+" },                 -- Single word
+					h = { "^#[^\n]+" },                  -- Markdown headers
 					b = { "^```.-\n(.-)```", "^```(.-)```" }, -- Markdown code blocks
 					q = { "%f[%p'\"]%p['\"].-['\"]%p" }, -- Quoted text with punctuation
 				},
@@ -171,12 +61,168 @@ return {
 					goto_left = "g[",
 					goto_right = "g]",
 				},
+				-- Options for showing window with textobject info
+				silent = false,
+				-- Array of custom textobject eager captures
+				search_method = "cover_or_nearest",
 			}
 		end,
-		config = function(_, opts)
-			require("mini.ai").setup(opts)
+	},
 
-			-- Add treesitter groups for `B` (block) text objects
+	-- Better surrounding manipulation
+	{
+		"kylechui/nvim-surround",
+		version = "*", -- Use latest release
+		event = "VeryLazy",
+		opts = {
+			keymaps = {
+				insert = "<C-g>s",   -- Insert surround in insert mode
+				insert_line = "<C-g>S", -- Insert surround on new lines
+				normal = "ys",       -- Add surround in normal mode
+				normal_cur = "yss",  -- Add surround to current line
+				normal_line = "yS",  -- Add surround to current line on new lines
+				normal_cur_line = "ySS", -- Add surround to current line on new lines
+				visual = "S",        -- Add surround in visual mode
+				visual_line = "gS",  -- Add surround to selection on new lines
+				delete = "ds",       -- Delete surround
+				change = "cs",       -- Change surround
+				change_line = "cS",  -- Change surround with new lines
+			},
+			aliases = {
+				["a"] = ">",                               -- alias for angle brackets
+				["b"] = ")",                               -- alias for brackets
+				["B"] = "}",                               -- alias for braces
+				["q"] = { "'", '"', "`" },                 -- quotes
+				["s"] = { "}", "]", ")", ">", "'", '"', "`" }, -- Any surrounding
+			},
+			highlight = {
+				duration = 150,   -- Highlight duration in milliseconds
+			},
+			move_cursor = "begin", -- Move cursor after adding surrounding
+			indent_lines = function(start, stop)
+				-- Only indent if more than one line is affected
+				if start + 1 < stop then
+					vim.cmd(string.format("silent %d,%d normal! >>", start + 1, stop))
+				end
+			end,
+		},
+	},
+
+	-- Better targets (comma-separated arguments, doc comments, more)
+	{
+		"wellle/targets.vim",
+		event = "VeryLazy",
+		init = function()
+			-- Configure targets.vim
+			vim.g.targets_aiAI = { 'a', 'i', 'A', 'I' }
+			vim.g.targets_nlNL = { 'n', 'l', 'N', 'L' }
+
+			-- Set targets to seek backward first then forward
+			vim.g.targets_seekRanges = 'bc cr cb cB lc ac Ac lr rr ll lb ar ab lB Ar aB Ab AB rb rB al Al'
+		end,
+	},
+
+	-- Enhanced treesitter textobjects support
+	{
+		"nvim-treesitter/nvim-treesitter-textobjects",
+		dependencies = "nvim-treesitter/nvim-treesitter",
+		lazy = true,
+		config = function()
+			require("nvim-treesitter.configs").setup({
+				textobjects = {
+					select = {
+						enable = true,
+						lookahead = true, -- Auto-jump to textobj
+						keymaps = {
+							-- You can use the capture groups defined in textobjects.scm
+							["af"] = "@function.outer",
+							["if"] = "@function.inner",
+							["ac"] = "@class.outer",
+							["ic"] = "@class.inner",
+							["aa"] = "@parameter.outer",
+							["ia"] = "@parameter.inner",
+							["al"] = "@loop.outer",
+							["il"] = "@loop.inner",
+							["ai"] = "@conditional.outer",
+							["ii"] = "@conditional.inner",
+							["ab"] = "@block.outer",
+							["ib"] = "@block.inner",
+							["as"] = "@statement.outer",
+							["is"] = "@statement.inner",
+							["aC"] = "@comment.outer",
+							["iC"] = "@comment.inner",
+						},
+						selection_modes = {
+							['@parameter.outer'] = 'v', -- charwise
+							['@function.outer'] = 'V', -- linewise
+							['@class.outer'] = 'V', -- linewise
+						},
+						include_surrounding_whitespace = false,
+					},
+					move = {
+						enable = true,
+						set_jumps = true, -- Add to jumplist
+						goto_next_start = {
+							["]f"] = "@function.outer",
+							["]c"] = "@class.outer",
+							["]a"] = "@parameter.inner",
+							["]l"] = "@loop.outer",
+							["]s"] = "@statement.outer",
+							["]b"] = "@block.outer",
+							["]C"] = "@comment.outer",
+						},
+						goto_next_end = {
+							["]F"] = "@function.outer",
+							["]C"] = "@class.outer",
+							["]A"] = "@parameter.inner",
+							["]L"] = "@loop.outer",
+							["]S"] = "@statement.outer",
+							["]B"] = "@block.outer",
+						},
+						goto_previous_start = {
+							["[f"] = "@function.outer",
+							["[c"] = "@class.outer",
+							["[a"] = "@parameter.inner",
+							["[l"] = "@loop.outer",
+							["[s"] = "@statement.outer",
+							["[b"] = "@block.outer",
+							["[C"] = "@comment.outer",
+						},
+						goto_previous_end = {
+							["[F"] = "@function.outer",
+							["[C"] = "@class.outer",
+							["[A"] = "@parameter.inner",
+							["[L"] = "@loop.outer",
+							["[S"] = "@statement.outer",
+							["[B"] = "@block.outer",
+						},
+					},
+					swap = {
+						enable = true,
+						swap_next = {
+							["<leader>sa"] = "@parameter.inner", -- Swap with next parameter
+							["<leader>sf"] = "@function.outer", -- Swap with next function
+							["<leader>sm"] = "@statement.outer", -- Swap with next statement
+						},
+						swap_previous = {
+							["<leader>sA"] = "@parameter.inner", -- Swap with previous parameter
+							["<leader>sF"] = "@function.outer", -- Swap with previous function
+							["<leader>sM"] = "@statement.outer", -- Swap with previous statement
+						},
+					},
+					lsp_interop = {
+						enable = true,
+						border = "rounded",
+						floating_preview_opts = {},
+						peek_definition_code = {
+							["<leader>pf"] = "@function.outer",
+							["<leader>pc"] = "@class.outer",
+						},
+					},
+				},
+			})
+
+			-- Enable repeatable jumps with ; and ,
 			local ts_repeat_move = require("nvim-treesitter.textobjects.repeatable_move")
 
 			-- Make builtin f, F, t, T, etc. repeatable with ; and ,
@@ -186,6 +232,7 @@ return {
 				vim.cmd("normal! ,")
 			end)
 
+			-- Map ; and , to repeat the last f, t, F, or T
 			vim.keymap.set({ "n", "x", "o" }, ";", next_func, { desc = "Repeat latest f, t, F, or T" })
 			vim.keymap.set(
 				{ "n", "x", "o" },
@@ -193,62 +240,19 @@ return {
 				prev_func,
 				{ desc = "Repeat latest f, t, F, or T in opposite direction" }
 			)
-		end,
-	},
 
-	-- Extend and enhance f/t motions
-	{
-		"ggandor/flit.nvim",
-		keys = function()
-			-- Generate key mappings for f, F, t, T with a repeat option
-			local ret = {}
-			for _, key in ipairs({ "f", "F", "t", "T" }) do
-				ret[#ret + 1] = { key, mode = { "n", "x", "o" }, desc = key }
-			end
-			return ret
-		end,
-		opts = {
-			keys = { f = "f", F = "F", t = "t", T = "T" },
-			labeled_modes = "nx",
-			multiline = true,
-			opts = {},
-		},
-	},
+			-- Make TreeSitter textobject motions repeatable with ; and ,
+			local ts_repeat_move = require("nvim-treesitter.textobjects.repeatable_move")
 
-	-- Enhanced f/t motions with labels
-	{
-		"ggandor/leap.nvim",
-		keys = {
-			{ "s", mode = { "n", "x", "o" }, desc = "Leap forward to" },
-			{ "S", mode = { "n", "x", "o" }, desc = "Leap backward to" },
-			{ "gs", mode = { "n", "x", "o" }, desc = "Leap from windows" },
-		},
-		config = function()
-			local leap = require("leap")
-			leap.add_default_mappings()
+			-- Repeat movement between functions, classes, etc.
+			vim.keymap.set({ "n", "x", "o" }, ";", ts_repeat_move.repeat_last_move)
+			vim.keymap.set({ "n", "x", "o" }, ",", ts_repeat_move.repeat_last_move_opposite)
 
-			-- Use native highlighting
-			leap.opts.highlight_unlabeled_phase_one_targets = true
-
-			-- Define custom colors
-			vim.api.nvim_set_hl(0, "LeapBackdrop", { link = "Comment" })
-			vim.api.nvim_set_hl(0, "LeapMatch", { fg = "white", bold = true, nocombine = true })
-			vim.api.nvim_set_hl(0, "LeapLabelPrimary", { fg = "#ff007c", bold = true, nocombine = true })
-			vim.api.nvim_set_hl(0, "LeapLabelSecondary", { fg = "#00dfff", bold = true, nocombine = true })
-
-			-- Integrate with other plugins
-			-- Smart-looking bidirectional search
-			vim.keymap.set("n", "<Leader>J", function()
-				local current_window = vim.fn.win_getid()
-				require("leap").leap({
-					target_windows = { current_window },
-					action = function(target)
-						target = target or {}
-						local line, column = target.pos[1], target.pos[2]
-						require("leap-search").leap_to_line(line, column)
-					end,
-				})
-			end, { desc = "Leap search" })
+			-- Make f, t, F, T work with ; and , (in case of conflict with ts motions)
+			vim.keymap.set({ "n", "x", "o" }, "f", ts_repeat_move.builtin_f)
+			vim.keymap.set({ "n", "x", "o" }, "F", ts_repeat_move.builtin_F)
+			vim.keymap.set({ "n", "x", "o" }, "t", ts_repeat_move.builtin_t)
+			vim.keymap.set({ "n", "x", "o" }, "T", ts_repeat_move.builtin_T)
 		end,
 	},
 
@@ -265,13 +269,6 @@ return {
 			vim.g.matchup_matchparen_insert_timeout = 30
 
 			require("nvim-treesitter.configs").setup({
-				-- Ensure you add the missing required fields here
-				modules = {}, -- Add the necessary modules if any
-				sync_install = false, -- Set to true if you want to install parsers synchronously
-				ensure_installed = {}, -- List of parsers to be installed
-				ignore_install = {}, -- List of parsers to be ignored
-				auto_install = false, -- Set to true if you want to automatically install missing parsers
-
 				matchup = {
 					enable = true,
 					disable_virtual_text = false,
@@ -281,14 +278,14 @@ return {
 		end,
 	},
 
-	-- Enhanced keybindings for yanking and pasting
+	-- Enhanced yanking and history
 	{
 		"gbprod/yanky.nvim",
-		dependencies = { "kkharji/sqlite.lua" },
+		dependencies = { { "kkharji/sqlite.lua", optional = true } },
 		opts = {
 			ring = {
 				history_length = 100,
-				storage = "sqlite",
+				storage = "memory", -- or "sqlite" if sqlite.lua is available
 				storage_path = vim.fn.stdpath("data") .. "/databases/yanky.db",
 				sync_with_numbered_registers = true,
 				cancel_event = "update",
@@ -314,14 +311,45 @@ return {
 			},
 		},
 		keys = {
-			{ "y", "<Plug>(YankyYank)", mode = { "n", "x" }, desc = "Yank text" },
-			{ "p", "<Plug>(YankyPutAfter)", mode = { "n", "x" }, desc = "Put after cursor" },
-			{ "P", "<Plug>(YankyPutBefore)", mode = { "n", "x" }, desc = "Put before cursor" },
-			{ "gp", "<Plug>(YankyGPutAfter)", mode = { "n", "x" }, desc = "Put after cursor and leave cursor after" },
-			{ "gP", "<Plug>(YankyGPutBefore)", mode = { "n", "x" }, desc = "Put before cursor and leave cursor after" },
-			{ "<c-n>", "<Plug>(YankyCycleForward)", desc = "Cycle forward through yank history" },
-			{ "<c-p>", "<Plug>(YankyCycleBackward)", desc = "Cycle backward through yank history" },
+			{ "y",          "<Plug>(YankyYank)",               mode = { "n", "x" },                         desc = "Yank text" },
+			{ "p",          "<Plug>(YankyPutAfter)",           mode = { "n", "x" },                         desc = "Put after cursor" },
+			{ "P",          "<Plug>(YankyPutBefore)",          mode = { "n", "x" },                         desc = "Put before cursor" },
+			{ "gp",         "<Plug>(YankyGPutAfter)",          mode = { "n", "x" },                         desc = "Put after cursor and leave cursor after" },
+			{ "gP",         "<Plug>(YankyGPutBefore)",         mode = { "n", "x" },                         desc = "Put before cursor and leave cursor after" },
+			{ "<c-n>",      "<Plug>(YankyCycleForward)",       desc = "Cycle forward through yank history" },
+			{ "<c-p>",      "<Plug>(YankyCycleBackward)",      desc = "Cycle backward through yank history" },
 			{ "<leader>fy", "<cmd>Telescope yank_history<CR>", desc = "Yank history" },
 		},
+		config = function(_, opts)
+			require("yanky").setup(opts)
+
+			-- Setup Telescope extension if available
+			require("telescope").load_extension("yank_history")
+		end,
+	},
+
+	-- Split/join blocks of code
+	{
+		"Wansmer/treesj",
+		keys = {
+			{ "gJ", "<cmd>TSJJoin<cr>",   desc = "Join Block" },
+			{ "gS", "<cmd>TSJSplit<cr>",  desc = "Split Block" },
+			{ "gT", "<cmd>TSJToggle<cr>", desc = "Toggle Block" },
+		},
+		dependencies = { "nvim-treesitter/nvim-treesitter" },
+		config = function()
+			require("treesj").setup({
+				use_default_keymaps = false,
+				check_syntax_error = true,
+				max_join_length = 120,
+				cursor_behavior = "hold",
+				notify = true,
+				-- Common formats for languages
+				langs = {
+					-- For all languages where TreeSitter is available
+					['*'] = require('treesj.langs.utils').merge_preset_langs({}),
+				},
+			})
+		end,
 	},
 }

@@ -2,18 +2,20 @@
 -- Statusline Configuration
 --------------------------------------------------------------------------------
 --
--- This module configures a feature-rich, customizable statusline:
+-- This module configures lualine, a feature-rich and extensible statusline.
 --
 -- Features:
--- 1. Mode indicator with color changes
+-- 1. Mode indicator with color changes based on current mode
 -- 2. Git information (branch, changes)
--- 3. Filename and modification status
--- 4. LSP diagnostics counters
--- 5. File type and encoding information
+-- 3. LSP diagnostics counters and indicators
+-- 4. Filename with modification status
+-- 5. File type, encoding, and format information
 -- 6. Position information
 -- 7. Code context via navic integration
+-- 8. Easily customizable sections
 --
--- The statusline provides important contextual information at a glance.
+-- The statusline provides valuable context while maintaining clean aesthetics
+-- and good performance.
 --------------------------------------------------------------------------------
 
 return {
@@ -37,8 +39,9 @@ return {
 			magenta = "#c678dd",
 			blue = "#51afef",
 			red = "#ec5f67",
+			-- Custom color categories
 			git = {
-				add = "#98be65", -- green
+				add = "#98be65",  -- green
 				change = "#51afef", -- blue
 				delete = "#ec5f67", -- red
 				conflict = "#ECBE7B", -- yellow
@@ -55,8 +58,12 @@ return {
 		local ok, theme = pcall(function()
 			if vim.g.colors_name == "tokyonight" then
 				return require("tokyonight.colors").setup()
-			elseif vim.g.colors_name == "catppuccin" then
+			elseif vim.g.colors_name:match("^catppuccin") then
 				return require("catppuccin.palettes").get_palette()
+			elseif vim.g.colors_name == "kanagawa" then
+				return require("kanagawa.colors").setup()
+			elseif vim.g.colors_name == "nightfox" or vim.g.colors_name:match("fox$") then
+				return require("nightfox.palette").load(vim.g.colors_name)
 			end
 			return nil
 		end)
@@ -76,18 +83,19 @@ return {
 			colors.red = theme.red or colors.red
 
 			-- Diagnostics colors
-			colors.diagnostics.error = theme.red or colors.diagnostics.error
-			colors.diagnostics.warn = theme.yellow or colors.diagnostics.warn
-			colors.diagnostics.info = theme.blue or colors.diagnostics.info
-			colors.diagnostics.hint = theme.green or colors.diagnostics.hint
+			colors.diagnostics.error = theme.red or theme.error or colors.diagnostics.error
+			colors.diagnostics.warn = theme.yellow or theme.warning or colors.diagnostics.warn
+			colors.diagnostics.info = theme.blue or theme.info or colors.diagnostics.info
+			colors.diagnostics.hint = theme.green or theme.hint or colors.diagnostics.hint
 
 			-- Git colors
-			colors.git.add = theme.green or colors.git.add
-			colors.git.change = theme.blue or colors.git.change
-			colors.git.delete = theme.red or colors.git.delete
+			colors.git.add = theme.green or theme.git_add or colors.git.add
+			colors.git.change = theme.blue or theme.git_change or colors.git.change
+			colors.git.delete = theme.red or theme.git_delete or colors.git.delete
 		end
 
 		local conditions = {
+			-- Helper conditions for components
 			buffer_not_empty = function()
 				return vim.fn.empty(vim.fn.expand("%:t")) ~= 1
 			end,
@@ -101,7 +109,7 @@ return {
 			end,
 		}
 
-		-- Find out current mode name
+		-- Mode color mapping
 		local mode_color = {
 			n = colors.blue,
 			i = colors.green,
@@ -125,7 +133,7 @@ return {
 			t = colors.red,
 		}
 
-		-- Configure icons for various parts of the statusline
+		-- Icons for various parts of the statusline
 		local icons = {
 			diagnostics = {
 				Error = " ",
@@ -178,11 +186,11 @@ return {
 
 		return {
 			options = {
-				-- General status line options
+				-- General statusline options
 				theme = "auto",
 				component_separators = "",
 				section_separators = "",
-				globalstatus = true, -- Use single statusline for all windows
+				globalstatus = true, -- Use single statusline for all windows (Neovim 0.7+)
 				disabled_filetypes = {
 					statusline = { "dashboard", "alpha", "starter" },
 					winbar = {
@@ -207,8 +215,8 @@ return {
 				-- Left sections
 				lualine_a = {
 					{
+						-- Mode indicator with decorative edge
 						function()
-							-- Add a decorative edge at the start
 							return "▊"
 						end,
 						color = function()
@@ -220,6 +228,7 @@ return {
 					{
 						-- Show mode name with icon
 						function()
+							-- Define mode names and icons
 							local mode_map = {
 								n = "NORMAL",
 								i = "INSERT",
@@ -332,7 +341,14 @@ return {
 					{
 						-- Show code navigation context
 						function()
-							return require("nvim-navic").get_location()
+							local navic = require("nvim-navic")
+							if navic.is_available() then
+								local context = navic.get_location()
+								if context ~= "" then
+									return context
+								end
+							end
+							return ""
 						end,
 						cond = function()
 							return package.loaded["nvim-navic"] and require("nvim-navic").is_available()
@@ -475,6 +491,7 @@ return {
 						color = { fg = colors.fg, gui = "bold" },
 					},
 					{
+						-- Show code context in winbar
 						function()
 							return require("nvim-navic").get_location()
 						end,
@@ -518,6 +535,7 @@ return {
 				"trouble",
 				"nvim-dap-ui",
 				"toggleterm",
+				"oil",
 			},
 		}
 	end,
@@ -551,6 +569,23 @@ return {
 				vim.notify("Switched to minimal statusline style")
 			end
 		end, {})
+
+		-- Add command to toggle global statusline (Neovim 0.7+)
+		if vim.fn.has("nvim-0.7") == 1 then
+			vim.api.nvim_create_user_command("StatuslineToggleGlobal", function()
+				local lualine = require("lualine")
+				local config = require("lualine.config").get_config()
+
+				-- Toggle global statusline
+				config.options.globalstatus = not config.options.globalstatus
+				lualine.setup(config)
+
+				-- Apply the setting to Neovim as well
+				vim.opt.laststatus = config.options.globalstatus and 3 or 2
+
+				vim.notify("Global statusline " .. (config.options.globalstatus and "enabled" or "disabled"))
+			end, {})
+		end
 
 		-- Add keymapping for toggling the statusline style
 		vim.keymap.set("n", "<leader>us", "<cmd>StatuslineToggleStyle<cr>", { desc = "Toggle statusline style" })
