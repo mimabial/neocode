@@ -5,8 +5,15 @@ return {
     plugins = { spelling = true },
     defaults = {
       mode = { "n", "v" },
-      ["g"] = { name = "+goto" },
-      ["gs"] = { name = "+surround" },
+    },
+  },
+  config = function(_, opts)
+    local wk = require("which-key")
+    wk.setup(opts)
+    -- Register key groups
+    wk.add({
+      g = { name = "+goto" },
+      gs = { name = "+surround" },
       ["]"] = { name = "+next" },
       ["["] = { name = "+prev" },
       ["<leader>b"] = { name = "+buffer" },
@@ -19,12 +26,7 @@ return {
       ["<leader>u"] = { name = "+ui" },
       ["<leader>w"] = { name = "+windows" },
       ["<leader>x"] = { name = "+diagnostics/quickfix" },
-    },
-  },
-  config = function(_, opts)
-    local wk = require("which-key")
-    wk.setup(opts)
-    wk.add(opts.defaults)
+    })
 
     -- Basic keymaps
     vim.keymap.set({ "n", "v" }, "<Space>", "<Nop>", { silent = true })

@@ -135,8 +135,13 @@ return {
           },
           -- lazy updates
           {
-            require("lazy.status").updates,
-            cond = require("lazy.status").has_updates,
+            function()
+              local lazy_status = require("lazy.status")
+              return lazy_status.has_updates() and lazy_status.updates() or ""
+            end,
+            cond = function()
+              return package.loaded["lazy.status"] and require("lazy.status").has_updates()
+            end,
             color = function()
               return { fg = get_highlight_color("Special") }
             end,

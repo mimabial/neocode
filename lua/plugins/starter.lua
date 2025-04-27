@@ -44,7 +44,7 @@ return {
     require("mini.starter").setup(opts)
 
     vim.api.nvim_create_autocmd("User", {
-      pattern = "LazyVimStarted",
+      pattern = "LazyDone",
       callback = function()
         local stats = require("lazy").stats()
         local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
