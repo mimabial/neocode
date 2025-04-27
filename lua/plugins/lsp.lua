@@ -4,41 +4,6 @@ return {
   dependencies = {
     -- Automatically install LSPs and related tools to stdpath for neovim
     { "williamboman/mason.nvim", config = true },
-    -- Useful status updates for LSP
-    { "j-hui/fidget.nvim", tag = "legacy", opts = {} },
-    -- Additional lua configuration specifically for working on neovim config
-    { "folke/neodev.nvim" },
-  },
-  opts = {
-    -- options for vim.diagnostic.config()
-    diagnostics = {
-      underline = true,
-      update_in_insert = false,
-      virtual_text = {
-        spacing = 4,
-        source = "if_many",
-        prefix = "●",
-      },
-      severity_sort = true,
-      float = {
-        border = "rounded",
-        source = "always",
-      },
-    },
-    -- LSP Server Settings
-    servers = {
-      lua_ls = {
-        settings = {
-          Lua = {
-            workspace = {
-              checkThirdParty = false,
-            },
-            completion = return {
-  "neovim/nvim-lspconfig",
-  event = { "BufReadPre", "BufNewFile" },
-  dependencies = {
-    -- Automatically install LSPs and related tools to stdpath for neovim
-    { "williamboman/mason.nvim", config = true },
     "williamboman/mason-lspconfig.nvim", -- Add the missing dependency
     -- Useful status updates for LSP
     { "j-hui/fidget.nvim", tag = "legacy", opts = {} },
@@ -210,4 +175,4 @@ return {
       vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
     end
   end,
-}{
+}

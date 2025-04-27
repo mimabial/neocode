@@ -2,7 +2,13 @@ return {
   "mfussenegger/nvim-dap",
   dependencies = {
     -- Creates a beautiful debugger UI
-    "rcarriga/nvim-dap-ui",
+    {
+      "rcarriga/nvim-dap-ui",
+      dependencies = {
+        -- Required dependency for nvim-dap-ui
+        "nvim-neotest/nvim-nio"
+      }
+    },
     -- Virtual text for the debugger
     "theHamsta/nvim-dap-virtual-text",
     -- Mason integration
@@ -132,28 +138,28 @@ return {
       function()
         require("dap").continue()
       end,
-      desc = "Continue",
+      desc = "Debug: Continue",
     },
     {
       "<F10>",
       function()
         require("dap").step_over()
       end,
-      desc = "Step Over",
+      desc = "Debug: Step Over",
     },
     {
       "<F11>",
       function()
         require("dap").step_into()
       end,
-      desc = "Step Into",
+      desc = "Debug: Step Into",
     },
     {
       "<F12>",
       function()
         require("dap").step_out()
       end,
-      desc = "Step Out",
+      desc = "Debug: Step Out",
     },
     {
       "<leader>du",

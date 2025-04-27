@@ -12,7 +12,13 @@ return {
     "nvim-telescope/telescope-file-browser.nvim",
     "nvim-telescope/telescope-project.nvim",
     "nvim-telescope/telescope-frecency.nvim",
-    "nvim-telescope/telescope-dap.nvim",
+    -- Make sure this is loaded only if nvim-dap is available
+    {
+      "nvim-telescope/telescope-dap.nvim",
+      dependencies = {
+        "mfussenegger/nvim-dap",
+      },
+    },
     "kkharji/sqlite.lua", -- needed for frecency
     "nvim-tree/nvim-web-devicons",
   },
@@ -270,11 +276,26 @@ return {
     -- Load extensions
     local telescope = require("telescope")
     
-    pcall(telescope.load_extension, "fzf")
-    pcall(telescope.load_extension, "ui-select")
-    pcall(telescope.load_extension, "file_browser")
-    pcall(telescope.load_extension, "project")
-    pcall(telescope.load_extension, "frecency")
-    pcall(telescope.load_extension, "dap")
+    -- Load available extensions and safely handle errors
+    local function safe_load_extension(name)
+      local status_ok, _ = pcall(telescope.load_extension, name)
+      if not status_ok then
+        vim.notify("Could not load telescope extension: " .. name, vim.log.levels.WARN)
+      end
+    end
+    
+    -- Core extensions
+    safe_load_extension("fzf")
+    safe_load_extension("ui-select")
+    
+    -- File and project navigation
+    safe_load_extension("file_browser")
+    safe_load_extension("project")
+    safe_load_extension("frecency")
+    
+    -- Only load dap if nvim-dap is installed and loaded
+    if package.loaded["dap"] then
+      safe_load_extension("dap")
+    end
   end,
 }
