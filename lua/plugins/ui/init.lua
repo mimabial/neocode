@@ -6,192 +6,96 @@
 -- 1. Colorscheme (colorscheme.lua)
 -- 2. Status line (statusline.lua)
 -- 3. Dashboard (dashboard.lua)
--- 4. Navigation breadcrumbs (navic.lua)
--- 5. Various UI enhancements
+-- 4. Notification system (notify.lua)
+-- 5. Command line enhancements (noice.lua)
+-- 6. UI input improvements (dressing.lua)
+-- 7. Animations (animate.lua)
+-- 8. Document headlines (headlines.lua)
+-- 9. Minimap (codewindow.lua)
+-- 10. Navigation breadcrumbs (navic.lua)
 --
--- These plugins improve the visual appearance and user interface of Neovim.
+-- These plugins improve the visual appearance and interface of Neovim while
+-- maintaining performance and responsiveness.
 --------------------------------------------------------------------------------
 
 return {
 	-- Import UI modules
-	{ import = "plugins.ui.colorscheme" },
-	{ import = "plugins.ui.statusline" },
-	{ import = "plugins.ui.dashboard" },
-	{ import = "plugins.ui.navic" },
-
-	-- Improved Vim UI
+	{ import = "plugins.ui.colorscheme" }, -- Color themes
+	{ import = "plugins.ui.statusline" }, -- Status line
+	{ import = "plugins.ui.dashboard" }, -- Welcome screen
+	{ import = "plugins.ui.notify" }, -- Notification system
+	{ import = "plugins.ui.noice" }, -- Command line and messages
+	{ import = "plugins.ui.dressing" }, -- Input UI
+	{ import = "plugins.ui.animate" }, -- Smooth animations
+	{ import = "plugins.ui.headlines" }, -- Document headlines
+	{ import = "plugins.ui.codewindow" }, -- Minimap
+	{ import = "plugins.ui.navic" }, -- Code context
+	{ import = "plugins.ui.bufferline" }, -- buffer line
+	-- File icons
 	{
-		"stevearc/dressing.nvim",
+		"nvim-tree/nvim-web-devicons",
 		lazy = true,
-		init = function()
-			---@diagnostic disable-next-line: duplicate-set-field
-			vim.ui.select = function(...)
-				require("lazy").load({ plugins = { "dressing.nvim" } })
-				return vim.ui.select(...)
-			end
-			---@diagnostic disable-next-line: duplicate-set-field
-			vim.ui.input = function(...)
-				require("lazy").load({ plugins = { "dressing.nvim" } })
-				return vim.ui.input(...)
-			end
-		end,
 		opts = {
-			input = {
-				enabled = true,
-				default_prompt = "Input:",
-				prompt_align = "left",
-				insert_only = true,
-				border = "rounded",
-				relative = "cursor",
-				prefer_width = 40,
-				width = nil,
-				max_width = { 140, 0.9 },
-				min_width = { 20, 0.2 },
-				win_options = {
-					winblend = 10,
-					winhighlight = "Normal:Normal,NormalNC:NormalNC",
+			strict = true,
+			override_by_extension = {
+				-- Custom icons for specific file extensions
+				["json"] = {
+					icon = "",
+					color = "#cbcb41",
+					name = "JSON",
 				},
-				mappings = {
-					n = {
-						["<Esc>"] = "Close",
-						["<CR>"] = "Confirm",
-					},
-					i = {
-						["<C-c>"] = "Close",
-						["<CR>"] = "Confirm",
-						["<Up>"] = "HistoryPrev",
-						["<Down>"] = "HistoryNext",
-					},
+				["js"] = {
+					icon = "",
+					color = "#cbcb41",
+					name = "JavaScript",
 				},
-			},
-			select = {
-				enabled = true,
-				backend = { "telescope", "fzf_lua", "fzf", "builtin", "nui" },
-				trim_prompt = true,
-				telescope = {
-					layout_strategy = "center",
-					layout_config = {
-						width = 0.5,
-						height = 0.35,
-						prompt_position = "top",
-						preview_cutoff = 120,
-					},
+				["ts"] = {
+					icon = "ﯤ",
+					color = "#519aba",
+					name = "TypeScript",
 				},
-				nui = {
-					position = "50%",
-					size = nil,
-					relative = "editor",
-					border = {
-						style = "rounded",
-					},
-					win_options = {
-						winblend = 10,
-					},
+				["py"] = {
+					icon = "",
+					color = "#3572A5",
+					name = "Python",
 				},
-				builtin = {
-					border = "rounded",
-					relative = "editor",
-					win_options = {
-						winblend = 10,
-						winhighlight = "Normal:Normal,NormalNC:NormalNC",
-					},
-					width = nil,
-					max_width = { 140, 0.8 },
-					min_width = { 40, 0.2 },
-					height = nil,
-					max_height = 0.9,
-					min_height = { 10, 0.2 },
+				["go"] = {
+					icon = "ﳑ",
+					color = "#519aba",
+					name = "Go",
+				},
+				["rs"] = {
+					icon = "",
+					color = "#dea584",
+					name = "Rust",
 				},
 			},
-		},
-	},
-
-	-- Better UI notifications
-	{
-		"rcarriga/nvim-notify",
-		keys = {
-			{
-				"<leader>un",
-				function()
-					require("notify").dismiss({ silent = true, pending = true })
-				end,
-				desc = "Dismiss all Notifications",
-			},
-		},
-		opts = {
-			timeout = 3000,
-			max_height = function()
-				return math.floor(vim.o.lines * 0.75)
-			end,
-			max_width = function()
-				return math.floor(vim.o.columns * 0.75)
-			end,
-			on_open = function(win)
-				vim.api.nvim_win_set_config(win, { zindex = 100 })
-			end,
-			background_colour = "#000000",
-			stages = "fade",
-			top_down = true,
-		},
-		init = function()
-			-- When noice is not enabled, install notify on VeryLazy
-			local Util = require("core.utils")
-			if not Util.has_plugin("noice.nvim") then
-				Util.on_very_lazy(function()
-					vim.notify = require("notify")
-				end)
-			end
-		end,
-	},
-
-	-- Better UI for code actions, rename, etc.
-	{
-		"folke/noice.nvim",
-		event = "VeryLazy",
-		dependencies = {
-			"MunifTanjim/nui.nvim",
-			"rcarriga/nvim-notify",
-		},
-		opts = {
-			lsp = {
-				override = {
-					["vim.lsp.util.convert_input_to_markdown_lines"] = true,
-					["vim.lsp.util.stylize_markdown"] = true,
-					["cmp.entry.get_documentation"] = true,
+			override_by_filename = {
+				-- Custom icons for specific filenames
+				[".gitignore"] = {
+					icon = "",
+					color = "#f1502f",
+					name = "Gitignore",
 				},
-				hover = {
-					enabled = true,
-					silent = false, -- set to true to not show a message if hover is not available
-					view = nil, -- when nil, use defaults from documentation
-					opts = {}, -- specific opts for this method
+				["package.json"] = {
+					icon = "",
+					color = "#8bc34a",
+					name = "PackageJson",
 				},
-				signature = {
-					enabled = true,
-					auto_open = {
-						enabled = true,
-						trigger = true, -- Automatically show signature help when typing a trigger character from the LSP
-						luasnip = true, -- Will open signature help when jumping to Luasnip insert nodes
-						throttle = 50, -- Debounce lsp signature help request by 50ms
-					},
-					view = nil, -- when nil, use defaults from documentation
-					opts = {}, -- merged with defaults from documentation
+				["tsconfig.json"] = {
+					icon = "ﯤ",
+					color = "#519aba",
+					name = "TSConfig",
 				},
-			},
-			presets = {
-				bottom_search = true,
-				command_palette = true,
-				long_message_to_split = true,
-				inc_rename = true,
-				lsp_doc_border = true,
-			},
-			routes = {
-				{
-					filter = {
-						event = "msg_show",
-						kind = "",
-						find = "written",
-					},
-					opts = { skip = true },
+				["dockerfile"] = {
+					icon = "",
+					color = "#458ee6",
+					name = "Dockerfile",
+				},
+				["docker-compose.yml"] = {
+					icon = "",
+					color = "#458ee6",
+					name = "DockerCompose",
 				},
 			},
 		},
@@ -228,12 +132,49 @@ return {
 				bind_to_cwd = false,
 				follow_current_file = { enabled = true },
 				use_libuv_file_watcher = true,
+				filtered_items = {
+					visible = false,
+					hide_dotfiles = false,
+					hide_gitignored = false,
+					hide_hidden = false,
+					hide_by_name = {
+						".git",
+						"node_modules",
+						".cache",
+					},
+					never_show = {
+						".DS_Store",
+						"__pycache__",
+					},
+				},
 			},
 			window = {
 				position = "left",
 				width = 30,
 				mappings = {
 					["<space>"] = "none",
+					["o"] = "open",
+					["H"] = "navigate_up",
+					["h"] = function(state)
+						local node = state.tree:get_node()
+						if node.type == "directory" and node:is_expanded() then
+							require("neo-tree.sources.filesystem").toggle_directory(state, node)
+						else
+							require("neo-tree.ui.renderer").focus_node(state, node:get_parent_id())
+						end
+					end,
+					["l"] = function(state)
+						local node = state.tree:get_node()
+						if node.type == "directory" then
+							if not node:is_expanded() then
+								require("neo-tree.sources.filesystem").toggle_directory(state, node)
+							elseif node:has_children() then
+								require("neo-tree.ui.renderer").focus_node(state, node:get_child_ids()[1])
+							end
+						else
+							require("neo-tree.actions.custom").open(state)
+						end
+					end,
 				},
 			},
 			default_component_configs = {
@@ -243,40 +184,35 @@ return {
 					expander_expanded = "",
 					expander_highlight = "NeoTreeExpander",
 				},
-			},
-		},
-		config = function(_, opts)
-			require("neo-tree").setup(opts)
-		end,
-	},
-
-	-- Buffer line
-	{
-			{ "<leader>bP", "<Cmd>BufferLineGroupClose ungrouped<CR>", desc = "Delete non-pinned buffers" },
-		},
-		opts = {
-			options = {
-				diagnostics = "nvim_lsp",
-				always_show_bufferline = false,
-				offsets = {
-					{
-						filetype = "neo-tree",
-						text = "Neo-tree",
-						highlight = "Directory",
-						text_align = "left",
+				icon = {
+					folder_closed = "",
+					folder_open = "",
+					folder_empty = "",
+					default = "",
+				},
+				git_status = {
+					symbols = {
+						added = "",
+						modified = "",
+						deleted = "✖",
+						renamed = "➜",
+						untracked = "★",
+						ignored = "◌",
+						unstaged = "✗",
+						staged = "✓",
+						conflict = "",
 					},
 				},
 			},
 		},
 	},
 
-	-- Active indent guide and indent text objects
+	-- Active indent guides and indent text objects
 	{
 		"echasnovski/mini.indentscope",
 		version = false, -- wait till new 0.7.0 release to put it back on semver
-		event = { "BufReadPre", "BufNewFile" },
+		event = { "BufReadPost", "BufNewFile" },
 		opts = {
-			-- symbol = "▏",
 			symbol = "│",
 			options = { try_as_border = true },
 		},
@@ -298,65 +234,6 @@ return {
 					vim.b.miniindentscope_disable = true
 				end,
 			})
-		end,
-	},
-
-	-- Improved folds with pretty UI
-	{
-		"kevinhwang91/nvim-ufo",
-		dependencies = {
-			"kevinhwang91/promise-async",
-			{
-				"luukvbaal/statuscol.nvim",
-				config = function()
-					local builtin = require("statuscol.builtin")
-					require("statuscol").setup({
-						relculright = true,
-						segments = {
-							{ text = { builtin.foldfunc }, click = "v:lua.ScFa" },
-							{ text = { "%s" }, click = "v:lua.ScSa" },
-							{ text = { builtin.lnumfunc, " " }, click = "v:lua.ScLa" },
-						},
-					})
-				end,
-			},
-		},
-		event = "BufReadPost",
-		opts = {
-			provider_selector = function()
-				return { "treesitter", "indent" }
-			end,
-			open_fold_hl_timeout = 150,
-			preview = {
-				win_config = {
-					border = { "", "─", "", "", "", "─", "", "" },
-					winhighlight = "Normal:Folded",
-					winblend = 0,
-				},
-				mappings = {
-					scrollU = "<C-u>",
-					scrollD = "<C-d>",
-					jumpTop = "[",
-					jumpBot = "]",
-				},
-			},
-		},
-		init = function()
-			vim.o.foldcolumn = "1" -- '0' is not bad
-			vim.o.foldlevel = 99 -- Using ufo provider need a large value
-			vim.o.foldlevelstart = 99
-			vim.o.foldenable = true
-
-			vim.keymap.set("n", "zR", require("ufo").openAllFolds)
-			vim.keymap.set("n", "zM", require("ufo").closeAllFolds)
-			vim.keymap.set("n", "zr", require("ufo").openFoldsExceptKinds)
-			vim.keymap.set("n", "K", function()
-				local winid = require("ufo").peekFoldedLinesUnderCursor()
-				if not winid then
-					-- If no fold found, use normal K command or other hover mechanism
-					vim.lsp.buf.hover()
-				end
-			end)
 		end,
 	},
 
@@ -413,5 +290,63 @@ return {
 				search = true,
 			},
 		},
+	},
+
+	-- Improved folds with pretty UI
+	{
+		"kevinhwang91/nvim-ufo",
+		dependencies = {
+			"kevinhwang91/promise-async",
+			{
+				"luukvbaal/statuscol.nvim",
+				config = function()
+					local builtin = require("statuscol.builtin")
+					require("statuscol").setup({
+						relculright = true,
+						segments = {
+							{ text = { builtin.foldfunc }, click = "v:lua.ScFa" },
+							{ text = { "%s" }, click = "v:lua.ScSa" },
+							{ text = { builtin.lnumfunc, " " }, click = "v:lua.ScLa" },
+						},
+					})
+				end,
+			},
+		},
+		event = "BufReadPost",
+		opts = {
+			provider_selector = function()
+				return { "treesitter", "indent" }
+			end,
+			open_fold_hl_timeout = 150,
+			preview = {
+				win_config = {
+					border = { "", "─", "", "", "", "─", "", "" },
+					winhighlight = "Normal:Folded",
+					winblend = 0,
+				},
+				mappings = {
+					scrollU = "<C-u>",
+					scrollD = "<C-d>",
+					jumpTop = "[",
+					jumpBot = "]",
+				},
+			},
+		},
+		init = function()
+			vim.o.foldcolumn = "1"
+			vim.o.foldlevel = 99
+			vim.o.foldlevelstart = 99
+			vim.o.foldenable = true
+
+			vim.keymap.set("n", "zR", require("ufo").openAllFolds)
+			vim.keymap.set("n", "zM", require("ufo").closeAllFolds)
+			vim.keymap.set("n", "zr", require("ufo").openFoldsExceptKinds)
+			vim.keymap.set("n", "K", function()
+				local winid = require("ufo").peekFoldedLinesUnderCursor()
+				if not winid then
+					vim.lsp.buf.hover()
+				end
+			end)
+		end,
 	},
 }

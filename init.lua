@@ -25,13 +25,13 @@ vim.g.maplocalleader = " "
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = "https://github.com/folke/lazy.nvim.git"
-  vim.fn.system({ 
-    "git", 
-    "clone", 
-    "--filter=blob:none", 
-    "--branch=stable", 
-    lazyrepo, 
-    lazypath 
+  vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "--branch=stable",
+    lazyrepo,
+    lazypath
   })
 end
 vim.opt.rtp:prepend(lazypath)
@@ -41,10 +41,10 @@ vim.opt.rtp:prepend(lazypath)
 --------------------------------------------------------------------------------
 
 -- These modules set up fundamental Neovim settings and behaviors
-require("core.options") -- Global Neovim options
-require("core.keymaps") -- Global key mappings
+require("core.options")  -- Global Neovim options
+require("core.keymaps")  -- Global key mappings
 require("core.autocmds") -- Autocommands
-require("core.utils") -- Utility functions
+require("core.utils")    -- Utility functions
 
 --------------------------------------------------------------------------------
 -- Initialize plugin system
@@ -104,8 +104,8 @@ require("lazy").setup({
 
   -- Lazy can automatically check for plugin updates
   checker = {
-    enabled = true, -- Auto-check for updates
-    notify = false, -- Don't show notifications for updates
+    enabled = true,    -- Auto-check for updates
+    notify = false,    -- Don't show notifications for updates
     frequency = 86400, -- Check once per day
   },
 
