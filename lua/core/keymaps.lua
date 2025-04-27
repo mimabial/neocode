@@ -9,7 +9,7 @@
 -- 2. Navigation (files, buffers, windows)
 -- 3. Editing operations
 -- 4. UI toggles and operations
--- 5. Plugin-specific mappings
+-- 5. Diagnostics and LSP (basic)
 --
 -- Most plugin-specific mappings are defined in their respective plugin files.
 --------------------------------------------------------------------------------
@@ -17,7 +17,7 @@
 -- Shorthand for mapping
 local map = vim.keymap.set
 
--- Set leader key (defined in init.lua and options.lua, but here for clarity)
+-- Set leader key (defined in init.lua, but here for clarity)
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
@@ -25,11 +25,11 @@ vim.g.maplocalleader = " "
 -- General Mappings
 --------------------------------------------------------------------------------
 
--- Better up/down
-map({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
-map({ "n", "x" }, "<Down>", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
-map({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, silent = true })
-map({ "n", "x" }, "<Up>", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, silent = true })
+-- Better up/down for wrapped lines
+map({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true, desc = "Down (respect wrap)" })
+map({ "n", "x" }, "<Down>", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true, desc = "Down (respect wrap)" })
+map({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true, desc = "Up (respect wrap)" })
+map({ "n", "x" }, "<Up>", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true, desc = "Up (respect wrap)" })
 
 -- Save and quit
 map("n", "<leader>w", "<cmd>w<cr>", { desc = "Save" })
@@ -50,12 +50,12 @@ map("v", "<", "<gv", { desc = "Indent left and stay in visual" })
 map("v", ">", ">gv", { desc = "Indent right and stay in visual" })
 
 -- Move lines up and down
-map("n", "<A-j>", "<cmd>execute 'move .+' . v:count1<cr>==", { desc = "Move Down" })
-map("n", "<A-k>", "<cmd>execute 'move .-' . (v:count1 + 1)<cr>==", { desc = "Move Up" })
-map("i", "<A-j>", "<esc><cmd>m .+1<cr>==gi", { desc = "Move Down" })
-map("i", "<A-k>", "<esc><cmd>m .-2<cr>==gi", { desc = "Move Up" })
-map("v", "<A-j>", ":<C-u>execute \"'<,'>move '>+\" . v:count1<cr>gv=gv", { desc = "Move Down" })
-map("v", "<A-k>", ":<C-u>execute \"'<,'>move '<-\" . (v:count1 + 1)<cr>gv=gv", { desc = "Move Up" })
+map("n", "<A-j>", "<cmd>move .+1<cr>==", { desc = "Move line down" })
+map("n", "<A-k>", "<cmd>move .-2<cr>==", { desc = "Move line up" })
+map("i", "<A-j>", "<esc><cmd>move .+1<cr>==gi", { desc = "Move line down" })
+map("i", "<A-k>", "<esc><cmd>move .-2<cr>==gi", { desc = "Move line up" })
+map("v", "<A-j>", ":move '>+1<cr>gv=gv", { desc = "Move selection down" })
+map("v", "<A-k>", ":move '<-2<cr>gv=gv", { desc = "Move selection up" })
 
 -- Keep cursor centered when scrolling
 map("n", "<C-d>", "<C-d>zz", { desc = "Scroll down and center" })
@@ -76,14 +76,10 @@ map({ "n", "v" }, "<leader>d", [["_d]], { desc = "Delete without yanking" })
 map({ "n", "v" }, "<leader>y", [["+y]], { desc = "Yank to system clipboard" })
 map("n", "<leader>Y", [["+Y]], { desc = "Yank line to system clipboard" })
 
--- Add undo break-points
+-- Add undo break-points (creates undo points at punctuation)
 map("i", ",", ",<c-g>u")
 map("i", ".", ".<c-g>u")
 map("i", ";", ";<c-g>u")
-
--- commenting
-map("n", "gco", "o<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", { desc = "Add Comment Below" })
-map("n", "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", { desc = "Add Comment Above" })
 
 --------------------------------------------------------------------------------
 -- Navigation Mappings
@@ -107,7 +103,6 @@ map("n", "<S-l>", "<cmd>bnext<cr>", { desc = "Next buffer" })
 map("n", "[b", "<cmd>bprevious<cr>", { desc = "Previous buffer" })
 map("n", "]b", "<cmd>bnext<cr>", { desc = "Next buffer" })
 map("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to other buffer" })
-map("n", "<leader>`", "<cmd>e #<cr>", { desc = "Switch to other buffer" })
 
 -- Split windows
 map("n", "<leader>_", "<cmd>split<cr>", { desc = "Split window horizontally" })
@@ -115,7 +110,6 @@ map("n", "<leader>|", "<cmd>vsplit<cr>", { desc = "Split window vertically" })
 
 -- Close current buffer
 map("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Delete buffer" })
-map("n", "<leader>bD", "<cmd>bdelete!<cr>", { desc = "Delete buffer (force)" })
 
 -- Tab navigation
 map("n", "<leader>tn", "<cmd>tabnew<cr>", { desc = "New tab" })
@@ -140,23 +134,12 @@ map("n", "<leader>S", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { 
 -- Make file executable
 map("n", "<leader>x", "<cmd>!chmod +x %<cr>", { desc = "Make file executable", silent = true })
 
--- Format document
-map("n", "<leader>cf", function()
-	vim.lsp.buf.format({ async = true })
-end, { desc = "Format document" })
-
 -- Duplicate line or selection
 map("n", "<leader>dl", "yyp", { desc = "Duplicate line" })
 map("v", "<leader>dl", "y'>p", { desc = "Duplicate selection" })
 
 -- Save file
 map({ "i", "x", "n", "s" }, "<C-s>", "<cmd>w<cr><esc>", { desc = "Save File" })
-
--- lazy
-map("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy" })
-
--- new file
-map("n", "<leader>fn", "<cmd>enew<cr>", { desc = "New File" })
 
 --------------------------------------------------------------------------------
 -- UI Mappings
@@ -167,61 +150,26 @@ map("n", "<leader>uw", "<cmd>set wrap!<cr>", { desc = "Toggle word wrap" })
 map("n", "<leader>ul", "<cmd>set list!<cr>", { desc = "Toggle show invisible chars" })
 map("n", "<leader>uL", "<cmd>set relativenumber!<cr>", { desc = "Toggle relative line numbers" })
 map("n", "<leader>us", "<cmd>set spell!<cr>", { desc = "Toggle spell check" })
-map("n", "<leader>up", "<cmd>set paste!<cr>", { desc = "Toggle paste mode" })
 
--- Toggle autoformatting
+-- Toggle autoformatting (uses global variable checked in autocmds)
 map("n", "<leader>uf", function()
-	vim.g.disable_autoformat = not vim.g.disable_autoformat
-	vim.notify("Autoformatting " .. (vim.g.disable_autoformat and "disabled" or "enabled"), vim.log.levels.INFO)
+  vim.g.disable_autoformat = not vim.g.disable_autoformat
+  vim.notify("Autoformatting " .. (vim.g.disable_autoformat and "disabled" or "enabled"), vim.log.levels.INFO)
 end, { desc = "Toggle autoformatting" })
 
 -- Help for word under cursor
 map("n", "gh", "<cmd>help <C-r><C-w><cr>", { desc = "Help for word under cursor" })
 
 --------------------------------------------------------------------------------
--- Plugin-Specific Mappings
+-- Basic LSP and Diagnostics Mappings
 --------------------------------------------------------------------------------
 
--- Notes: Most plugin-specific mappings are defined in their respective plugin configuration files,
--- However, here are some common ones that might be useful:
-
--- Telescope
-map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", { desc = "Find files" })
-map("n", "<leader>fg", "<cmd>Telescope live_grep<cr>", { desc = "Find text" })
-map("n", "<leader>fb", "<cmd>Telescope buffers<cr>", { desc = "Buffers" })
-map("n", "<leader>fh", "<cmd>Telescope help_tags<cr>", { desc = "Help tags" })
-
--- NeoTree
-map("n", "<leader>e", "<cmd>Neotree toggle<cr>", { desc = "Toggle file explorer" })
-
--- Terminal
-map({ "n", "t" }, "<F7>", "<cmd>ToggleTerm<cr>", { desc = "Toggle terminal" })
-
--- LSP (Basic; more defined in lsp/keymaps.lua)
-map("n", "K", function()
-	vim.lsp.buf.hover()
-end, { desc = "Show hover documentation" })
-map("n", "gd", function()
-	vim.lsp.buf.definition()
-end, { desc = "Go to definition" })
-map("n", "<leader>ca", function()
-	vim.lsp.buf.code_action()
-end, { desc = "Code actions" })
-map("n", "<leader>rn", function()
-	vim.lsp.buf.rename()
-end, { desc = "Rename symbol" })
-
--- Diagnostics
-map("n", "<leader>xx", "<cmd>TroubleToggle document_diagnostics<cr>", { desc = "Document diagnostics" })
-map("n", "<leader>xX", "<cmd>TroubleToggle workspace_diagnostics<cr>", { desc = "Workspace diagnostics" })
-
-
-local diagnostic_goto = function(next, severity)
+-- Diagnostics navigation
+local function diagnostic_goto(next, severity)
   return function()
-    vim.diagnostic.goto({
-      severity = severity and vim.diagnostic.severity[severity] or nil,
-      direction = next and "next" or "prev",
-    })
+    local go = next and vim.diagnostic.goto_next or vim.diagnostic.goto_prev
+    severity = severity and vim.diagnostic.severity[severity] or nil
+    return go({ severity = severity })
   end
 end
 
@@ -233,44 +181,21 @@ map("n", "[e", diagnostic_goto(false, "ERROR"), { desc = "Prev Error" })
 map("n", "]w", diagnostic_goto(true, "WARN"), { desc = "Next Warning" })
 map("n", "[w", diagnostic_goto(false, "WARN"), { desc = "Prev Warning" })
 
--- Comments (these will be overridden by Comment.nvim if installed)
-map("n", "<leader>/", function()
-	require("Comment.api").toggle.linewise.current()
-end, { desc = "Toggle comment" })
-map(
-	"v",
-	"<leader>/",
-	"<ESC><cmd>lua require('Comment.api').toggle.linewise(vim.fn.visualmode())<cr>",
-	{ desc = "Toggle comment" }
-)
+-- Basic LSP mappings (more defined in lsp/keymaps.lua)
+map("n", "K", function() vim.lsp.buf.hover() end, { desc = "Show hover documentation" })
+map("n", "gd", function() vim.lsp.buf.definition() end, { desc = "Go to definition" })
+map("n", "<leader>ca", function() vim.lsp.buf.code_action() end, { desc = "Code actions" })
+map("n", "<leader>rn", function() vim.lsp.buf.rename() end, { desc = "Rename symbol" })
 
 --------------------------------------------------------------------------------
 -- Search Mappings
 --------------------------------------------------------------------------------
 
--- Clear search and stop snippet on escape
-vim.keymap.set({ "i", "n", "s" }, "<esc>", function()
-	-- Clear persistent search highlighting
-	vim.cmd("noh")
-	-- Stop snippet expansion if a snippet plugin (like luasnip) is running
-	-- This check prevents errors if no snippet engine is active
-	if pcall(require, "luasnip") and require("luasnip").running() then
-		require("luasnip").jump(0) -- Exit the current snippet
-	end
-	-- Return <esc> to allow the default escape behavior (e.g., exiting insert mode)
-	return "<esc>"
-end, { expr = true, desc = "Escape and Clear hlsearch and stop snippet" })
+-- Clear search and redraw screen
+map("n", "<leader>ur", "<Cmd>nohlsearch<Bar>diffupdate<Bar>normal! <C-L><CR>", 
+  { desc = "Redraw / Clear hlsearch / Diff Update" })
 
--- Clear search, diff update and redraw
--- taken from runtime/lua/_editor.lua
-map(
-	"n",
-	"<leader>ur",
-	"<Cmd>nohlsearch<Bar>diffupdate<Bar>normal! <C-L><CR>",
-	{ desc = "Redraw / Clear hlsearch / Diff Update" }
-)
-
--- https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n
+-- Better search behavior for n/N
 map("n", "n", "'Nn'[v:searchforward].'zv'", { expr = true, desc = "Next Search Result" })
 map("x", "n", "'Nn'[v:searchforward]", { expr = true, desc = "Next Search Result" })
 map("o", "n", "'Nn'[v:searchforward]", { expr = true, desc = "Next Search Result" })
@@ -279,24 +204,52 @@ map("x", "N", "'nN'[v:searchforward]", { expr = true, desc = "Prev Search Result
 map("o", "N", "'nN'[v:searchforward]", { expr = true, desc = "Prev Search Result" })
 
 --------------------------------------------------------------------------------
--- List Mappings
+-- Quickfix List Mappings
 --------------------------------------------------------------------------------
 
--- location list
-map("n", "<leader>xl", function()
-	local success, err = pcall(vim.fn.getloclist(0, { winid = 0 }).winid ~= 0 and vim.cmd.lclose or vim.cmd.lopen)
-	if not success and err then
-		vim.notify(err, vim.log.levels.ERROR)
-	end
-end, { desc = "Location List" })
-
--- quickfix list
+-- Toggle quickfix list
 map("n", "<leader>xq", function()
-	local success, err = pcall(vim.fn.getqflist({ winid = 0 }).winid ~= 0 and vim.cmd.cclose or vim.cmd.copen)
-	if not success and err then
-		vim.notify(err, vim.log.levels.ERROR)
-	end
-end, { desc = "Quickfix List" })
+  local qf_exists = false
+  for _, win in pairs(vim.fn.getwininfo()) do
+    if win["quickfix"] == 1 then
+      qf_exists = true
+    end
+  end
+  if qf_exists == true then
+    vim.cmd("cclose")
+  else
+    vim.cmd("copen")
+  end
+end, { desc = "Toggle Quickfix List" })
 
-map("n", "[q", vim.cmd.cprev, { desc = "Previous Quickfix" })
-map("n", "]q", vim.cmd.cnext, { desc = "Next Quickfix" })
+-- Navigation through the quickfix list
+map("n", "[q", vim.cmd.cprev, { desc = "Previous Quickfix Item" })
+map("n", "]q", vim.cmd.cnext, { desc = "Next Quickfix Item" })
+
+-- Quick definition of common leader groups for which-key
+-- (Plugin will flesh these out fully)
+if not vim.g.keys_defined then
+  vim.g.keys_defined = true
+  
+  -- Define namespaces for leader key groups
+  local leader_groups = {
+    b = "Buffer",
+    c = "Code",
+    d = "Debug/Diagnostics",
+    f = "Find/File",
+    g = "Git",
+    l = "LSP",
+    q = "Quit/Session",
+    r = "Refactor",
+    s = "Search",
+    t = "Terminal/Test",
+    u = "UI/Toggle",
+    w = "Window",
+    x = "Diagnostics/Quickfix",
+  }
+  
+  -- Create stub mappings to define the leader groups
+  for key, name in pairs(leader_groups) do
+    map("n", "<leader>" .. key, "<Nop>", { desc = name })
+  end
+end
