@@ -34,7 +34,7 @@ function M.get_root()
   if not root then
     path = path and vim.fs.dirname(path) or vim.loop.cwd()
     ---@type string?
-    root = vim.fs.find({ ".git", "lua" }, { path = path, upward = true })[1]
+    root = vim.fs.find({ ".git", "go.mod", "package.json", "tsconfig.json", "Makefile" }, { path = path, upward = true })[1]
     root = root and vim.fs.dirname(root) or vim.loop.cwd()
   end
   ---@cast root string
@@ -266,28 +266,6 @@ function M.format_buffer()
   end
 end
 
--- Create custom log levels for noice.nvim
-function M.create_log_levels()
-  local log_levels = {}
-  if vim.fn.exists("vim.log.levels") == 1 then
-    log_levels = vim.log.levels
-  else
-    -- Create log levels if not available
-    log_levels = {
-      DEBUG = 1,
-      INFO = 2,
-      WARN = 3,
-      ERROR = 4,
-    }
-  end
-  
-  -- These are required by noice.nvim custom routes
-  log_levels.TRACE = 0
-  log_levels.OFF = 5
-  
-  return log_levels
-end
-
 -- Strip whitespace from start and end of string
 function M.trim(s)
   return s:match("^%s*(.-)%s*$")
@@ -397,6 +375,153 @@ function M.neo_tree_items()
   end
   
   return table.concat(items, ", ")
+end
+
+-- Generate a new Next.js component
+function M.new_nextjs_component(type)
+  type = type or "client" -- Default to client component
+  
+  -- Get the component name from user input
+  local component_name = vim.fn.input("Component Name: ")
+  if component_name == "" then
+    vim.notify("Component name cannot be empty", vim.log.levels.ERROR)
+    return
+  end
+  
+  -- Create a new buffer
+  local bufnr = vim.api.nvim_create_buf(true, false)
+  
+  -- Set buffer name
+  vim.api.nvim_buf_set_name(bufnr, component_name .. ".tsx")
+  
+  -- Set filetype
+  vim.api.nvim_buf_set_option(bufnr, "filetype", "typescriptreact")
+  
+  -- Generate component content based on type
+  local content = {}
+  if type == "client" then
+    table.insert(content, "'use client';")
+    table.insert(content, "")
+    table.insert(content, "import React from 'react';")
+    table.insert(content, "")
+    table.insert(content, "interface " .. component_name .. "Props {")
+    table.insert(content, "  // Props go here")
+    table.insert(content, "}")
+    table.insert(content, "")
+    table.insert(content, "export default function " .. component_name .. "({ }: " .. component_name .. "Props) {")
+    table.insert(content, "  return (")
+    table.insert(content, "    <div>")
+    table.insert(content, "      " .. component_name .. " Component")
+    table.insert(content, "    </div>")
+    table.insert(content, "  );")
+    table.insert(content, "}")
+  elseif type == "server" then
+    table.insert(content, "import React from 'react';")
+    table.insert(content, "")
+    table.insert(content, "interface " .. component_name .. "Props {")
+    table.insert(content, "  // Props go here")
+    table.insert(content, "}")
+    table.insert(content, "")
+    table.insert(content, "export default async function " .. component_name .. "({ }: " .. component_name .. "Props) {")
+    table.insert(content, "  // Server-side logic here")
+    table.insert(content, "  return (")
+    table.insert(content, "    <div>")
+    table.insert(content, "      " .. component_name .. " Server Component")
+    table.insert(content, "    </div>")
+    table.insert(content, "  );")
+    table.insert(content, "}")
+  elseif type == "page" then
+    table.insert(content, "import React from 'react';")
+    table.insert(content, "")
+    table.insert(content, "export default function Page() {")
+    table.insert(content, "  return (")
+    table.insert(content, "    <main className=\"p-4\">")
+    table.insert(content, "      <h1 className=\"text-2xl font-bold\">" .. component_name .. " Page</h1>")
+    table.insert(content, "    </main>")
+    table.insert(content, "  );")
+    table.insert(content, "}")
+  elseif type == "layout" then
+    table.insert(content, "import React from 'react';")
+    table.insert(content, "")
+    table.insert(content, "export default function " .. component_name .. "Layout({")
+    table.insert(content, "  children,")
+    table.insert(content, "}: {")
+    table.insert(content, "  children: React.ReactNode;")
+    table.insert(content, "}) {")
+    table.insert(content, "  return (")
+    table.insert(content, "    <div className=\"layout\">")
+    table.insert(content, "      {children}")
+    table.insert(content, "    </div>")
+    table.insert(content, "  );")
+    table.insert(content, "}")
+  end
+  
+  -- Set buffer content
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
+  
+  -- Open the buffer in the current window
+  vim.api.nvim_win_set_buf(0, bufnr)
+  
+  -- Position cursor
+  if type == "client" then
+    vim.api.nvim_win_set_cursor(0, {7, 0}) -- Position at props
+  elseif type == "server" then
+    vim.api.nvim_win_set_cursor(0, {7, 0}) -- Position at props
+  elseif type == "page" then
+    vim.api.nvim_win_set_cursor(0, {6, 0}) -- Position at page content
+  elseif type == "layout" then
+    vim.api.nvim_win_set_cursor(0, {9, 0}) -- Position at layout
+  end
+  
+  -- Enter insert mode
+  vim.cmd("startinsert!")
+end
+
+-- Generate a new Go Templ component
+function M.new_templ_component()
+  -- Get the component name from user input
+  local component_name = vim.fn.input("Component Name: ")
+  if component_name == "" then
+    vim.notify("Component name cannot be empty", vim.log.levels.ERROR)
+    return
+  end
+  
+  -- Create a new buffer
+  local bufnr = vim.api.nvim_create_buf(true, false)
+  
+  -- Set buffer name
+  vim.api.nvim_buf_set_name(bufnr, component_name .. ".templ")
+  
+  -- Set filetype
+  vim.api.nvim_buf_set_option(bufnr, "filetype", "templ")
+  
+  -- Generate component content
+  local content = {
+    "package components",
+    "",
+    "type " .. component_name .. "Props struct {",
+    "  // Add props here",
+    "}",
+    "",
+    "templ " .. component_name .. "(props " .. component_name .. "Props) {",
+    "  <div>",
+    "    <h1>" .. component_name .. " Component</h1>",
+    "    <p>Content goes here</p>",
+    "  </div>",
+    "}"
+  }
+  
+  -- Set buffer content
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
+  
+  -- Open the buffer in the current window
+  vim.api.nvim_win_set_buf(0, bufnr)
+  
+  -- Position cursor at the props section
+  vim.api.nvim_win_set_cursor(0, {4, 0})
+  
+  -- Enter insert mode
+  vim.cmd("startinsert!")
 end
 
 return M

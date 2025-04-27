@@ -18,6 +18,9 @@ return {
     vim.g.gruvbox_material_current_word = "bold"
     vim.g.gruvbox_material_disable_italic_comment = 0
     
+    -- Enhance colors for web development with HTMX and Go
+    vim.g.gruvbox_material_better_performance = 1
+    
     -- Special highlight groups
     vim.g.gruvbox_material_colors_override = {
       bg0 = { "#282828", "235" },
@@ -55,6 +58,47 @@ return {
         -- Make folders in tree have better visibility
         vim.api.nvim_set_hl(0, "NeoTreeDirectoryName", { fg = "#a89984", bold = true })
         vim.api.nvim_set_hl(0, "NeoTreeDirectoryIcon", { fg = "#a89984" })
+        
+        -- Enhance syntax highlighting for web development
+        vim.api.nvim_set_hl(0, "htmlTag", { fg = "#7daea3", bold = true })
+        vim.api.nvim_set_hl(0, "htmlEndTag", { fg = "#7daea3", bold = true })
+        vim.api.nvim_set_hl(0, "htmlArg", { fg = "#d8a657", italic = true })
+        vim.api.nvim_set_hl(0, "htmlTagName", { fg = "#ea6962" })
+        
+        -- HTMX specific highlights (for treesitter)
+        vim.api.nvim_set_hl(0, "@attribute.htmx", { fg = "#89b482", italic = true, bold = true })
+        vim.api.nvim_set_hl(0, "@tag.attribute.htmx", { fg = "#89b482", italic = true, bold = true })
+        
+        -- Go specific highlights
+        vim.api.nvim_set_hl(0, "@type.go", { fg = "#89b482" })
+        vim.api.nvim_set_hl(0, "@function.go", { fg = "#7daea3" })
+        vim.api.nvim_set_hl(0, "@variable.go", { fg = "#d3869b" })
+        
+        -- NextJS/React specific highlights
+        vim.api.nvim_set_hl(0, "@tag.jsx", { fg = "#ea6962" })
+        vim.api.nvim_set_hl(0, "@tag.tsx", { fg = "#ea6962" })
+        vim.api.nvim_set_hl(0, "@constructor.jsx", { fg = "#7daea3" })
+        vim.api.nvim_set_hl(0, "@constructor.tsx", { fg = "#7daea3" })
+      end,
+    })
+    
+    -- Add custom filetype detection for .templ files (Go templates)
+    vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+      pattern = "*.templ",
+      callback = function()
+        vim.bo.filetype = "templ"
+      end,
+    })
+    
+    -- Add custom highlighting for HTMX attributes
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = { "html", "templ" },
+      callback = function()
+        -- Match HTMX attributes for syntax highlighting
+        vim.cmd([[
+          syntax match htmlArg contained "\<hx-[a-zA-Z\-]\+\>" 
+          highlight link htmlArg @attribute.htmx
+        ]])
       end,
     })
   end,

@@ -77,6 +77,8 @@ return {
         theme = "gruvbox-material",
         globalstatus = vim.o.laststatus == 3,
         disabled_filetypes = { statusline = { "dashboard", "alpha", "neo-tree", "lazy" } },
+        component_separators = '',
+        section_separators = '',
       },
       sections = {
         lualine_a = { "mode" },

@@ -193,7 +193,7 @@ vim.api.nvim_create_autocmd("VimResized", {
 -- Automatically set indent settings based on file type
 vim.api.nvim_create_autocmd("FileType", {
   group = autocmd_group,
-  pattern = {"javascript", "typescript", "typescriptreact", "javascriptreact", "json", "html", "css", "scss"},
+  pattern = {"javascript", "typescript", "typescriptreact", "javascriptreact", "json", "html", "css", "scss", "templ"},
   callback = function()
     vim.bo.tabstop = 2
     vim.bo.shiftwidth = 2
@@ -285,10 +285,6 @@ vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Go to next diagnos
 vim.keymap.set("n", "<leader>cd", vim.diagnostic.open_float, { desc = "Open floating diagnostic message" })
 vim.keymap.set("n", "<leader>xq", vim.diagnostic.setloclist, { desc = "Open diagnostics list" })
 
--- Stay in indent mode
-vim.keymap.set("v", "<", "<gv", { desc = "Decrease indent" })
-vim.keymap.set("v", ">", ">gv", { desc = "Increase indent" })
-
 -- Maintain cursor position when joining lines
 vim.keymap.set("n", "J", "mzJ`z", { desc = "Join lines and maintain cursor position" })
 
@@ -297,8 +293,6 @@ vim.keymap.set("n", "<C-d>", "<C-d>zz", { desc = "Scroll down half a page and ce
 vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "Scroll up half a page and center" })
 vim.keymap.set("n", "n", "nzzzv", { desc = "Next search result and center" })
 vim.keymap.set("n", "N", "Nzzzv", { desc = "Previous search result and center" })
-
--- LSP related keymaps will be added by LSP on_attach in the LSP configuration
 
 -- Print a startup message
 vim.api.nvim_create_autocmd("User", {
@@ -318,3 +312,14 @@ vim.api.nvim_create_autocmd("User", {
     ), vim.log.levels.INFO, { title = "Neovim Loaded" })
   end,
 })
+
+-- Add custom commands
+vim.api.nvim_create_user_command("ReloadConfig", function()
+  for name, _ in pairs(package.loaded) do
+    if name:match("^config") or name:match("^plugins") then
+      package.loaded[name] = nil
+    end
+  end
+  dofile(vim.fn.stdpath("config") .. "/init.lua")
+  vim.notify("Nvim configuration reloaded!", vim.log.levels.INFO, { title = "Config" })
+end, { desc = "Reload Neovim configuration" })

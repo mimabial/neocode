@@ -30,21 +30,16 @@ require("lazy").setup({
   spec = {
     -- Import all plugins from lua/plugins directory
     { import = "plugins" },
-    -- Uncomment these if you want to load specific plugin groups
-    -- { import = "plugins.extras.lang.typescript" },
-    -- { import = "plugins.extras.lang.json" },
-    -- { import = "plugins.extras.lang.python" },
-    -- { import = "plugins.extras.lang.rust" },
-    -- { import = "plugins.extras.lang.go" },
-    -- { import = "plugins.extras.ui.mini-starter" },
-    -- { import = "plugins.extras.coding.copilot" },
+    -- Stack-specific configurations
+    { import = "plugins.goth" },    -- Go + Templ + HTMX stack
+    { import = "plugins.nextjs" },  -- Next.js stack
   },
   defaults = {
     lazy = false, -- Load plugins eagerly instead of lazy-loading by default
     version = false, -- Always use the latest git commit
   },
   install = {
-    colorscheme = { "gruvbox-material" }, -- Try to load this colorscheme first
+    colorscheme = { "gruvbox-material", "tokyonight" }, -- Try to load these colorschemes in order
     missing = true, -- Install missing plugins on startup
   },
   ui = {
@@ -126,7 +121,21 @@ vim.api.nvim_create_user_command("LazyGit", function()
     if _G.toggle_lazygit then
       _G.toggle_lazygit()
     else
-      vim.notify("Lazygit is not properly configured.", vim.log.levels.WARN)
+      -- Create lazygit terminal if doesn't exist
+      local Terminal = require("toggleterm.terminal").Terminal
+      _G.toggle_lazygit = Terminal:new({
+        cmd = "lazygit",
+        hidden = true,
+        direction = "float",
+        float_opts = {
+          border = "rounded",
+        },
+        on_open = function(term)
+          vim.cmd("startinsert!")
+          vim.api.nvim_buf_set_keymap(term.bufnr, "n", "q", "<cmd>close<CR>", {noremap = true, silent = true})
+        end,
+      }).toggle
+      _G.toggle_lazygit()
     end
   else
     -- Fallback to system command if toggleterm is not available
@@ -159,3 +168,109 @@ vim.api.nvim_create_user_command("Profile", function()
   plenary_profile.start("profile.log")
   vim.notify("Profiling started, restart Neovim to generate profile.log", vim.log.levels.INFO)
 end, { desc = "Start profiling Neovim" })
+
+-- Create a command for switching between stacks
+vim.api.nvim_create_user_command("StackFocus", function(opts)
+  local stack = opts.args
+  if stack == "" or not (stack == "goth" or stack == "nextjs") then
+    vim.notify("Please specify a valid stack: 'goth' or 'nextjs'", vim.log.levels.ERROR)
+    return
+  end
+  
+  -- Store the current stack preference
+  vim.g.current_stack = stack
+  
+  -- Configure specific settings for the selected stack
+  if stack == "goth" then
+    -- Go + Templ + HTMX stack settings
+    vim.notify("Focused on GOTH stack (Go + Templ + HTMX)", vim.log.levels.INFO)
+    
+    -- Set specific configuration for Go development
+    vim.g.go_highlight_types = 1
+    vim.g.go_highlight_fields = 1
+    vim.g.go_highlight_functions = 1
+    vim.g.go_highlight_function_calls = 1
+    
+    -- Configure linters and formatters
+    if _G.utils.has_plugin("null-ls.nvim") then
+      local null_ls = require("null-ls")
+      null_ls.setup({
+        sources = {
+          null_ls.builtins.formatting.goimports,
+          null_ls.builtins.formatting.templ,
+        }
+      })
+    end
+    
+  elseif stack == "nextjs" then
+    -- Next.js stack settings
+    vim.notify("Focused on Next.js stack", vim.log.levels.INFO)
+    
+    -- Set specific configuration for JavaScript/TypeScript development
+    vim.g.typescript_indent_disable = 1
+    
+    -- Configure linters and formatters for JS/TS
+    if _G.utils.has_plugin("null-ls.nvim") then
+      local null_ls = require("null-ls")
+      null_ls.setup({
+        sources = {
+          null_ls.builtins.formatting.prettier,
+          null_ls.builtins.diagnostics.eslint,
+        }
+      })
+    end
+  end
+  
+  -- Reload relevant configurations
+  vim.cmd("LspRestart")
+  
+end, { nargs = "?", desc = "Focus on a specific tech stack", complete = function()
+  return { "goth", "nextjs" }
+end})
+
+-- Create a command to toggle transparency
+vim.api.nvim_create_user_command("ToggleTransparency", function()
+  -- For gruvbox-material
+  if vim.g.gruvbox_material_transparent_background == 1 then
+    vim.g.gruvbox_material_transparent_background = 0
+    vim.notify("Transparency disabled", vim.log.levels.INFO)
+  else
+    vim.g.gruvbox_material_transparent_background = 1
+    vim.notify("Transparency enabled", vim.log.levels.INFO)
+  end
+  
+  -- Re-apply colorscheme
+  vim.cmd("colorscheme " .. vim.g.colors_name)
+end, { desc = "Toggle background transparency" })
+
+-- Add a keymap for transparency toggle
+vim.keymap.set("n", "<leader>uT", "<cmd>ToggleTransparency<cr>", { desc = "Toggle Transparency" })
+
+-- Create a command to quickly switch between common layouts
+vim.api.nvim_create_user_command("Layout", function(opts)
+  local layout = opts.args
+  
+  if layout == "coding" then
+    -- Setup a coding layout with NeoTree and main buffer
+    vim.cmd("Neotree show left")
+    vim.cmd("wincmd l") -- Move to the right window (main buffer)
+  elseif layout == "terminal" then
+    -- Setup for terminal work with main editor and terminal
+    vim.cmd("Neotree close")
+    vim.cmd("ToggleTerm direction=horizontal")
+  elseif layout == "writing" then
+    -- Distraction-free writing layout
+    vim.cmd("Neotree close")
+    vim.cmd("set wrap linebreak")
+    -- Center buffer content
+    _G.utils.center_buffer()
+  elseif layout == "debug" then
+    -- Debug layout
+    vim.cmd("Neotree close")
+    require("dapui").open()
+  else
+    vim.notify("Available layouts: coding, terminal, writing, debug", vim.log.levels.INFO)
+  end
+end, { nargs = "?", desc = "Switch workspace layout", complete = function()
+  return { "coding", "terminal", "writing", "debug" }
+end})
