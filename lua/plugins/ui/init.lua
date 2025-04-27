@@ -25,6 +25,14 @@ return {
 	{ import = "plugins.ui.noice" },      -- Command line and messages
 	{ import = "plugins.ui.explorer" },   -- Consolidated file explorer
 	{ import = "plugins.ui.navic" },      -- Code context
+	{ import = "plugins.ui.animate" },
+	{ import = "plugins.ui.bufferline" },
+	{ import = "plugins.ui.codewindows" },
+	{ import = "plugins.ui.dressing" },
+	{ import = "plugins.ui.headlines" },
+	{ import = "plugins.ui.noice" },
+	{ import = "plugins.ui.notify" },
+	{ import = "plugins.ui.statusline" },
 
 	-- Better UI components
 	{
