@@ -32,7 +32,7 @@ return {
     })
 
     -- Register Codeium specific keybindings
-    wk.register({
+    wk.add({
       ["<leader>cc"] = {
         name = "+codeium",
         c = { "<cmd>Codeium<CR>", "Codeium Menu" },
@@ -107,15 +107,6 @@ return {
 
     -- Paste over currently selected text without yanking it
     vim.keymap.set("v", "p", '"_dP', { desc = "Better paste" })
-
-    -- Cancel search highlighting with ESC
-    vim.keymap.set("n", "<ESC>", "<cmd>nohlsearch<Bar>echo<CR>")
-
-    -- Move to window using the <ctrl> hjkl keys
-    vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "Go to left window", remap = true })
-    vim.keymap.set("n", "<C-j>", "<C-w>j", { desc = "Go to lower window", remap = true })
-    vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "Go to upper window", remap = true })
-    vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "Go to right window", remap = true })
 
     -- Diagnostic keymaps
     vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Go to previous diagnostic message" })
