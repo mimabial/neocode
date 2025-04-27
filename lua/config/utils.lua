@@ -97,4 +97,306 @@ function M.toggle_term()
   end
 end
 
+-- Opens a floating terminal
+function M.float_term(cmd, opts)
+  opts = vim.tbl_deep_extend("force", {
+    size = { width = 0.8, height = 0.8 },
+    border = "rounded",
+    on_create = function() end,
+  }, opts or {})
+  
+  local Terminal = require("toggleterm.terminal").Terminal
+  local float = Terminal:new({
+    cmd = cmd,
+    hidden = true,
+    direction = "float",
+    float_opts = {
+      border = opts.border,
+      width = math.floor(vim.o.columns * opts.size.width),
+      height = math.floor(vim.o.lines * opts.size.height),
+    },
+    on_create = opts.on_create,
+  })
+  
+  float:toggle()
+end
+
+-- Add border to LspInfo window
+function M.lspinfo_border()
+  local old_lspinfo = vim.lsp.util.open_floating_preview
+  function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
+    opts = opts or {}
+    opts.border = opts.border or "rounded"
+    return old_lspinfo(contents, syntax, opts, ...)
+  end
+end
+
+-- Check if a plugin is installed
+function M.has_plugin(name)
+  return require("lazy.core.config").plugins[name] ~= nil
+end
+
+-- Check if a file exists
+function M.file_exists(name)
+  local f = io.open(name, "r")
+  if f ~= nil then
+    io.close(f)
+    return true
+  else
+    return false
+  end
+end
+
+-- Join all the arguments passed into a single path
+-- Handles leading/trailing/duplicate slashes
+function M.join_paths(...)
+  local args = {...}
+  if #args == 0 then
+    return ""
+  end
+  
+  local result = args[1]
+  for i = 2, #args do
+    if result:sub(-1) ~= "/" and args[i]:sub(1, 1) ~= "/" then
+      result = result .. "/" .. args[i]
+    elseif result:sub(-1) == "/" and args[i]:sub(1, 1) == "/" then
+      result = result .. args[i]:sub(2)
+    else
+      result = result .. args[i]
+    end
+  end
+  
+  return result
+end
+
+-- Get a formatted date string
+function M.get_date()
+  return os.date("%Y-%m-%d")
+end
+
+-- Get the visual selection text
+function M.get_visual_selection()
+  local save_reg = vim.fn.getreg('"')
+  local save_regtype = vim.fn.getregtype('"')
+  
+  vim.cmd('noau normal! "vy"')
+  
+  local text = vim.fn.getreg('v')
+  vim.fn.setreg('v', save_reg, save_regtype)
+  
+  -- Replace any newlines with actual newlines
+  text = string.gsub(text, "\\n", "\n")
+  return text
+end
+
+-- Generate a UUID (v4)
+function M.uuid()
+  local random = math.random
+  local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+  return string.gsub(template, '[xy]', function (c)
+    local v = (c == 'x') and random(0, 0xf) or random(8, 0xb)
+    return string.format('%x', v)
+  end)
+end
+
+-- Returns a function that debounces fn by ms milliseconds
+function M.debounce(fn, ms)
+  local timer = vim.loop.new_timer()
+  local is_debouncing = false
+  
+  return function(...)
+    local args = { ... }
+    local wrapped = function()
+      fn(unpack(args))
+      is_debouncing = false
+    end
+    
+    if is_debouncing then
+      timer:stop()
+    end
+    
+    is_debouncing = true
+    timer:start(ms, 0, vim.schedule_wrap(wrapped))
+  end
+end
+
+-- Extend a table but ignore keys that already exist
+function M.extend_tbl(default, opts)
+  opts = opts or {}
+  local tbl = vim.deepcopy(default)
+  
+  for k, v in pairs(opts) do
+    if type(v) == "table" and type(tbl[k]) == "table" then
+      tbl[k] = M.extend_tbl(tbl[k], v)
+    else
+      tbl[k] = v
+    end
+  end
+  
+  return tbl
+end
+
+-- Get a list of all installed LSP servers
+function M.get_lsp_servers()
+  local servers = {}
+  if vim.fn.exists("*mason_lspconfig#get_installed_servers") == 1 then
+    servers = vim.tbl_keys(require("mason-lspconfig.mappings.server").lspconfig_to_package)
+  end
+  return servers
+end
+
+-- Utility function to reload modules
+function M.reload_module(module_name)
+  package.loaded[module_name] = nil
+  return require(module_name)
+end
+
+-- Format current buffer
+function M.format_buffer()
+  -- Check if there are formatters available
+  local has_conform = pcall(require, "conform")
+  local has_formatter = pcall(require, "formatter")
+  
+  if has_conform then
+    require("conform").format({ async = false, lsp_fallback = true })
+  elseif has_formatter then
+    vim.cmd("Format")
+  else
+    vim.lsp.buf.format({ async = false })
+  end
+end
+
+-- Create custom log levels for noice.nvim
+function M.create_log_levels()
+  local log_levels = {}
+  if vim.fn.exists("vim.log.levels") == 1 then
+    log_levels = vim.log.levels
+  else
+    -- Create log levels if not available
+    log_levels = {
+      DEBUG = 1,
+      INFO = 2,
+      WARN = 3,
+      ERROR = 4,
+    }
+  end
+  
+  -- These are required by noice.nvim custom routes
+  log_levels.TRACE = 0
+  log_levels.OFF = 5
+  
+  return log_levels
+end
+
+-- Strip whitespace from start and end of string
+function M.trim(s)
+  return s:match("^%s*(.-)%s*$")
+end
+
+-- Add current git branch to statusline 
+function M.git_branch()
+  local branch = vim.fn.system("git branch --show-current 2>/dev/null | tr -d '\n'")
+  if branch ~= "" then
+    return " " .. branch
+  else
+    return ""
+  end
+end
+
+-- Get current filename or [No Name]
+function M.filename()
+  local filename = vim.fn.expand("%:t")
+  if filename == "" then
+    return "[No Name]"
+  end
+  return filename
+end
+
+-- Get file's modified status
+function M.modified()
+  if vim.bo.modified then
+    return "+"
+  elseif vim.bo.modifiable == false or vim.bo.readonly == true then
+    return "-"
+  end
+  return ""
+end
+
+-- Get formated file location
+function M.fileinfo()
+  local encode = vim.bo.fileencoding
+  if encode == "" then
+    encode = vim.o.encoding
+  end
+  local format = vim.bo.fileformat
+  return format .. " | " .. encode
+end
+
+-- Toggle quickfix list
+function M.toggle_qf()
+  local qf_exists = false
+  for _, win in pairs(vim.fn.getwininfo()) do
+    if win["quickfix"] == 1 then
+      qf_exists = true
+    end
+  end
+  if qf_exists then
+    vim.cmd("cclose")
+    return
+  end
+  if not vim.tbl_isempty(vim.fn.getqflist()) then
+    vim.cmd("copen")
+  end
+end
+
+-- Toggle colorcolumn
+function M.toggle_colorcolumn()
+  if vim.wo.colorcolumn == "" then
+    vim.wo.colorcolumn = "80,100,120"
+  else
+    vim.wo.colorcolumn = ""
+  end
+end
+
+-- Execute shell command and return output
+function M.exec_cmd(cmd)
+  local handle = io.popen(cmd)
+  if not handle then
+    return ""
+  end
+  
+  local result = handle:read("*a")
+  handle:close()
+  
+  return M.trim(result)
+end
+
+-- Get current working directory name (just the last component)
+function M.cwd_name()
+  return vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+end
+
+-- Return only icons and filenames for neo-tree
+function M.neo_tree_items()
+  if vim.bo.filetype ~= "neo-tree" then
+    return ""
+  end
+  
+  local utils = require("neo-tree.utils")
+  local state = require("neo-tree.sources.filesystem.state")
+  local items = {}
+  
+  local context = (state.current_position or {}).search_pattern or ""
+  local tree =  state.tree
+  if tree then
+    for _, node in ipairs(tree:get_nodes()) do
+      local name = utils.basename(node.path)
+      local icon = node.icon or (node:get_icon() or {}).icon or ""
+      table.insert(items, icon .. " " .. name)
+    end
+  end
+  
+  return table.concat(items, ", ")
+end
+
 return M

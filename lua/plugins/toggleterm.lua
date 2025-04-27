@@ -28,6 +28,7 @@ return {
     direction = "float",
     close_on_exit = true,
     shell = vim.o.shell,
+    auto_scroll = true,
     float_opts = {
       border = "curved",
       winblend = 0,
@@ -54,5 +55,51 @@ return {
 
     -- if you only want these mappings for toggle term use term://*toggleterm#* instead
     vim.cmd("autocmd! TermOpen term://* lua set_terminal_keymaps()")
+
+    -- Custom terminal commands
+    local Terminal = require("toggleterm.terminal").Terminal
+
+    -- Lazygit terminal
+    local lazygit = Terminal:new({
+      cmd = "lazygit",
+      dir = "git_dir",
+      hidden = true,
+      direction = "float",
+      float_opts = {
+        border = "curved",
+      },
+    })
+
+    -- Function to toggle lazygit
+    function _G.toggle_lazygit()
+      lazygit:toggle()
+    end
+
+    -- Node terminal
+    local node = Terminal:new({
+      cmd = "node",
+      hidden = true,
+      direction = "float",
+    })
+
+    function _G.toggle_node()
+      node:toggle()
+    end
+
+    -- Python terminal
+    local python = Terminal:new({
+      cmd = "python",
+      hidden = true,
+      direction = "float",
+    })
+
+    function _G.toggle_python()
+      python:toggle()
+    end
+
+    -- Register keymaps for these terminals
+    vim.api.nvim_set_keymap("n", "<leader>gg", "<cmd>lua toggle_lazygit()<CR>", { noremap = true, silent = true })
+    vim.api.nvim_set_keymap("n", "<leader>tn", "<cmd>lua toggle_node()<CR>", { noremap = true, silent = true })
+    vim.api.nvim_set_keymap("n", "<leader>tp", "<cmd>lua toggle_python()<CR>", { noremap = true, silent = true })
   end,
 }

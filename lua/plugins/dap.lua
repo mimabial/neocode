@@ -5,35 +5,21 @@ return {
     "rcarriga/nvim-dap-ui",
     -- Virtual text for the debugger
     "theHamsta/nvim-dap-virtual-text",
+    -- Mason integration
+    "jay-babu/mason-nvim-dap.nvim",
+    -- Installs the debug adapters for you
+    "williamboman/mason.nvim",
+    -- Add your own adapters here
+    "leoluz/nvim-dap-go",
+    "mfussenegger/nvim-dap-python",
   },
   keys = {
     {
-      "<F5>",
+      "<leader>dB",
       function()
-        require("dap").continue()
+        require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
       end,
-      desc = "Debug: Start/Continue",
-    },
-    {
-      "<F10>",
-      function()
-        require("dap").step_over()
-      end,
-      desc = "Debug: Step Over",
-    },
-    {
-      "<F11>",
-      function()
-        require("dap").step_into()
-      end,
-      desc = "Debug: Step Into",
-    },
-    {
-      "<F12>",
-      function()
-        require("dap").step_out()
-      end,
-      desc = "Debug: Step Out",
+      desc = "Breakpoint Condition",
     },
     {
       "<leader>db",
@@ -43,25 +29,18 @@ return {
       desc = "Toggle Breakpoint",
     },
     {
-      "<leader>dB",
+      "<leader>dC",
       function()
-        require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
+        require("dap").run_to_cursor()
       end,
-      desc = "Breakpoint Condition",
+      desc = "Run to Cursor",
     },
     {
       "<leader>dc",
       function()
         require("dap").continue()
       end,
-      desc = "Start/Continue",
-    },
-    {
-      "<leader>dC",
-      function()
-        require("dap").run_to_cursor()
-      end,
-      desc = "Run to Cursor",
+      desc = "Continue",
     },
     {
       "<leader>dg",
@@ -147,10 +126,117 @@ return {
       end,
       desc = "Widgets",
     },
+    -- Function Keys
+    {
+      "<F5>",
+      function()
+        require("dap").continue()
+      end,
+      desc = "Continue",
+    },
+    {
+      "<F10>",
+      function()
+        require("dap").step_over()
+      end,
+      desc = "Step Over",
+    },
+    {
+      "<F11>",
+      function()
+        require("dap").step_into()
+      end,
+      desc = "Step Into",
+    },
+    {
+      "<F12>",
+      function()
+        require("dap").step_out()
+      end,
+      desc = "Step Out",
+    },
+    {
+      "<leader>du",
+      function()
+        require("dapui").toggle()
+      end,
+      desc = "Toggle UI",
+    },
+    {
+      "<leader>de",
+      function()
+        require("dapui").eval()
+      end,
+      desc = "Evaluate",
+    },
   },
   config = function()
     local dap = require("dap")
     local dapui = require("dapui")
+    local mason_dap = require("mason-nvim-dap")
+    
+    -- Configure mason-nvim-dap
+    mason_dap.setup({
+      -- Makes a best effort to setup the various debuggers with
+      -- reasonable debug configurations
+      automatic_setup = true,
+      -- You can provide additional configuration to the handlers,
+      -- see mason-nvim-dap README for more information
+      handlers = {
+        function(config)
+          -- Default setup handler
+          mason_dap.default_setup(config)
+        end,
+        -- Specific setup for different languages
+        python = function(config)
+          config.configurations = {
+            {
+              -- Setup for python debugging with arguments
+              type = "python",
+              request = "launch",
+              name = "Launch file with arguments",
+              program = "${file}",
+              args = function()
+                local args_string = vim.fn.input("Arguments: ")
+                return vim.split(args_string, " ")
+              end,
+              console = "integratedTerminal",
+            },
+            {
+              -- Basic setup
+              type = "python",
+              request = "launch",
+              name = "Launch file",
+              program = "${file}",
+              pythonPath = function()
+                -- Find and use the activated virtual environment
+                local venv = os.getenv("VIRTUAL_ENV")
+                if venv then
+                  return venv .. "/bin/python"
+                else
+                  return "/usr/bin/python"
+                end
+              end,
+            },
+          }
+          mason_dap.default_setup(config) -- Use default setup for everything else
+        end,
+        php = function(config)
+          config.configurations = {
+            {
+              type = "php",
+              request = "launch",
+              name = "Listen for Xdebug",
+              port = 9003,
+              pathMappings = {
+                ["/var/www/html"] = "${workspaceFolder}",
+              },
+            },
+          }
+          mason_dap.default_setup(config)
+        end,
+      },
+    })
 
     -- Set up dapui
     dapui.setup({
@@ -234,11 +320,15 @@ return {
       highlight_new_as_changed = false,
       show_stop_reason = true,
       commented = false,
-      virt_text_pos = "eol",
+      virt_text_pos = "inline",
       all_frames = false,
       virt_lines = false,
       virt_text_win_col = nil,
     })
+
+    -- Language specific setups
+    require("dap-go").setup()
+    require("dap-python").setup("~/.virtualenvs/debugpy/bin/python")
 
     -- Auto open/close dapui
     dap.listeners.after.event_initialized["dapui_config"] = function()
@@ -250,5 +340,66 @@ return {
     dap.listeners.before.event_exited["dapui_config"] = function()
       dapui.close()
     end
+
+    -- Set up specific DAP configurations
+    
+    -- Node.js
+    dap.adapters.node2 = {
+      type = "executable",
+      command = "node",
+      args = { vim.fn.stdpath("data") .. "/mason/packages/node-debug2-adapter/out/src/nodeDebug.js" },
+    }
+    dap.configurations.javascript = {
+      {
+        type = "node2",
+        request = "launch",
+        program = "${file}",
+        cwd = vim.fn.getcwd(),
+        sourceMaps = true,
+        protocol = "inspector",
+        console = "integratedTerminal",
+      },
+    }
+    dap.configurations.typescript = {
+      {
+        type = "node2",
+        request = "launch",
+        program = "${file}",
+        cwd = vim.fn.getcwd(),
+        sourceMaps = true,
+        protocol = "inspector",
+        console = "integratedTerminal",
+      },
+    }
+
+    -- C/C++/Rust (lldb)
+    dap.adapters.lldb = {
+      type = "executable",
+      command = "/usr/bin/lldb-vscode",
+      name = "lldb",
+    }
+    dap.configurations.cpp = {
+      {
+        name = "Launch",
+        type = "lldb",
+        request = "launch",
+        program = function()
+          return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+        end,
+        cwd = "${workspaceFolder}",
+        stopOnEntry = false,
+        args = {},
+        runInTerminal = false,
+      },
+    }
+    dap.configurations.c = dap.configurations.cpp
+    dap.configurations.rust = dap.configurations.cpp
+
+    -- Set up sign icons
+    vim.fn.sign_define("DapBreakpoint", { text = "", texthl = "DiagnosticSignError", linehl = "", numhl = "" })
+    vim.fn.sign_define("DapBreakpointCondition", { text = "", texthl = "DiagnosticSignWarn", linehl = "", numhl = "" })
+    vim.fn.sign_define("DapLogPoint", { text = "", texthl = "DiagnosticSignInfo", linehl = "", numhl = "" })
+    vim.fn.sign_define("DapStopped", { text = "", texthl = "DiagnosticSignWarn", linehl = "DapStopped", numhl = "DapStopped" })
+    vim.fn.sign_define("DapBreakpointRejected", { text = "", texthl = "DiagnosticSignHint", linehl = "", numhl = "" })
   end,
 }

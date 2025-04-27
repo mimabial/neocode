@@ -19,17 +19,57 @@ return {
     },
     "saadparwaiz1/cmp_luasnip",
     "onsails/lspkind.nvim",
+    -- Add these for more sources
+    "hrsh7th/cmp-nvim-lua",
+    "hrsh7th/cmp-emoji",
+    "zbirenbaum/copilot-cmp",
   },
   opts = function()
     local cmp = require("cmp")
     local luasnip = require("luasnip")
     local lspkind = require("lspkind")
 
+    -- Load friendly-snippets
+    require("luasnip.loaders.from_vscode").lazy_load()
+
+    -- Utility functions
     local has_words_before = function()
       unpack = unpack or table.unpack
       local line, col = unpack(vim.api.nvim_win_get_cursor(0))
       return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
     end
+
+    local kind_icons = {
+      Text = "",
+      Method = "󰆧",
+      Function = "󰊕",
+      Constructor = "",
+      Field = "󰇽",
+      Variable = "󰂡",
+      Class = "󰠱",
+      Interface = "",
+      Module = "",
+      Property = "󰜢",
+      Unit = "",
+      Value = "󰎠",
+      Enum = "",
+      Keyword = "󰌋",
+      Snippet = "",
+      Color = "󰏘",
+      File = "󰈙",
+      Reference = "",
+      Folder = "󰉋",
+      EnumMember = "",
+      Constant = "󰏿",
+      Struct = "",
+      Event = "",
+      Operator = "󰆕",
+      TypeParameter = "󰅲",
+      Copilot = "",
+    }
+
+    -- Add borders to documentation float window
+    local winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder,CursorLine:PmenuSel,Search:None"
 
     return {
       completion = {
@@ -39,6 +79,14 @@ return {
         expand = function(args)
           luasnip.lsp_expand(args.body)
         end,
+      },
+      window = {
+        completion = cmp.config.window.bordered({
+          winhighlight = winhighlight,
+        }),
+        documentation = cmp.config.window.bordered({
+          winhighlight = winhighlight,
+        }),
       },
       mapping = cmp.mapping.preset.insert({
         ["<C-n>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
@@ -70,21 +118,42 @@ return {
         end, { "i", "s" }),
       }),
       sources = cmp.config.sources({
-        { name = "nvim_lsp" },
-        { name = "luasnip" },
-        { name = "buffer" },
-        { name = "path" },
+        { name = "copilot", group_index = 1, priority = 100 },
+        { name = "nvim_lsp", group_index = 1, priority = 90 },
+        { name = "luasnip", group_index = 1, priority = 80 },
+        { name = "nvim_lua", group_index = 1, priority = 70 },
+        { name = "buffer", group_index = 2, priority = 50, keyword_length = 3 },
+        { name = "path", group_index = 2, priority = 40 },
+        { name = "emoji", group_index = 3, priority = 30 },
       }),
+      sorting = {
+        priority_weight = 2,
+        comparators = {
+          cmp.config.compare.offset,
+          cmp.config.compare.exact,
+          cmp.config.compare.score,
+          cmp.config.compare.recently_used,
+          cmp.config.compare.locality,
+          cmp.config.compare.kind,
+          cmp.config.compare.sort_text,
+          cmp.config.compare.length,
+          cmp.config.compare.order,
+        },
+      },
       formatting = {
         format = lspkind.cmp_format({
           mode = "symbol_text",
           maxwidth = 50,
           ellipsis_char = "...",
+          symbol_map = kind_icons,
           menu = {
             buffer = "[Buffer]",
             nvim_lsp = "[LSP]",
             luasnip = "[Snippet]",
+            nvim_lua = "[Lua]",
             path = "[Path]",
+            emoji = "[Emoji]",
+            copilot = "[Copilot]",
           },
         }),
       },
@@ -99,7 +168,7 @@ return {
     local cmp = require("cmp")
     cmp.setup(opts)
 
-    -- Set up cmdline completion
+    -- Set up specific configs for different filetypes or cmdline
     cmp.setup.cmdline(":", {
       mapping = cmp.mapping.preset.cmdline(),
       sources = cmp.config.sources({
@@ -116,5 +185,10 @@ return {
         { name = "buffer" },
       },
     })
+    
+    -- Load Copilot if available
+    pcall(function()
+      require("copilot_cmp").setup()
+    end)
   end,
 }

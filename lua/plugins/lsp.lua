@@ -2,12 +2,12 @@ return {
   "neovim/nvim-lspconfig",
   event = { "BufReadPre", "BufNewFile" },
   dependencies = {
-    -- Automatically install LSPs and related tools to stdpath for Neovim
+    -- Automatically install LSPs and related tools to stdpath for neovim
     { "williamboman/mason.nvim", config = true },
-    "williamboman/mason-lspconfig.nvim",
-    "folke/neodev.nvim", -- Adds extra configuration for lua_ls specifically for working on Neovim config
     -- Useful status updates for LSP
-    { "j-hui/fidget.nvim", opts = {} },
+    { "j-hui/fidget.nvim", tag = "legacy", opts = {} },
+    -- Additional lua configuration specifically for working on neovim config
+    { "folke/neodev.nvim" },
   },
   opts = {
     -- options for vim.diagnostic.config()
@@ -17,8 +17,13 @@ return {
       virtual_text = {
         spacing = 4,
         source = "if_many",
+        prefix = "●",
       },
       severity_sort = true,
+      float = {
+        border = "rounded",
+        source = "always",
+      },
     },
     -- LSP Server Settings
     servers = {
@@ -38,6 +43,27 @@ return {
           },
         },
       },
+      -- Frontend
+      tsserver = {},
+      cssls = {},
+      tailwindcss = {},
+      eslint = {},
+      html = {},
+      jsonls = {},
+      -- Backend
+      pyright = {},
+      gopls = {},
+      rust_analyzer = {},
+      -- DevOps
+      yamlls = {
+        settings = {
+          yaml = {
+            keyOrdering = false,
+          },
+        },
+      },
+      dockerls = {},
+      bashls = {},
     },
     -- you can do any additional lsp server setup here
     -- return true if you don't want this server to be setup with lspconfig
@@ -52,7 +78,7 @@ return {
     },
   },
   config = function(_, opts)
-    -- setup neodev for neovim config development
+    -- Setup neovim lua configuration
     require("neodev").setup()
 
     -- Setup keymaps when an LSP connects to a buffer
@@ -93,6 +119,9 @@ return {
       end, { desc = "Format current buffer with LSP" })
 
       nmap("<leader>cf", vim.lsp.buf.format, "Format")
+      
+      -- Show diagnostics in a floating window
+      nmap("<leader>cd", vim.diagnostic.open_float, "Line Diagnostics")
     end
 
     -- nvim-cmp supports additional completion capabilities, so broadcast that to servers
@@ -136,5 +165,12 @@ return {
 
     -- Configure diagnostic display
     vim.diagnostic.config(opts.diagnostics)
+
+    -- Configure signs
+    local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }
+    for type, icon in pairs(signs) do
+      local hl = "DiagnosticSign" .. type
+      vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
+    end
   end,
 }
