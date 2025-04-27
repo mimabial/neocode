@@ -14,162 +14,165 @@
 -- These keymaps are applied to buffers when an LSP server attaches.
 --------------------------------------------------------------------------------
 
-local utils = require("core.utils")
+return {
+	-- Exports the on_attach function for use in LSP setup
+	on_attach = function(client, bufnr)
+		local opts = { noremap = true, silent = true, buffer = bufnr }
 
-local M = {}
+		-- Helper function for setting keymaps
+		local function map(mode, lhs, rhs, desc)
+			opts.desc = desc
+			vim.keymap.set(mode, lhs, rhs, opts)
+		end
 
--- Applies keymaps when an LSP attaches to a buffer
----@param client table The LSP client
----@param bufnr number The buffer number
-function M.on_attach(client, bufnr)
-  local opts = { noremap = true, silent = true, buffer = bufnr }
+		--------------------------------------------------------------------------------
+		-- Navigation (definitions, references, etc.)
+		--------------------------------------------------------------------------------
 
-  -- Helper function for setting keymaps
-  local function map(mode, lhs, rhs, desc)
-    opts.desc = desc
-    vim.keymap.set(mode, lhs, rhs, opts)
-  end
+		-- Go to definition, declaration, type definition, and implementation
+		map("n", "gd", vim.lsp.buf.definition, "Go to Definition")
+		map("n", "gD", vim.lsp.buf.declaration, "Go to Declaration")
+		map("n", "gy", vim.lsp.buf.type_definition, "Go to Type Definition")
+		map("n", "gi", vim.lsp.buf.implementation, "Go to Implementation")
 
-  --------------------------------------------------------------------------------
-  -- Navigation (definitions, references, etc.)
-  --------------------------------------------------------------------------------
+		-- Find references to symbol under cursor
+		map("n", "gr", vim.lsp.buf.references, "Go to References")
 
-  -- Go to definition, declaration, type definition, and implementation
-  map("n", "gd", vim.lsp.buf.definition, "Go to Definition")
-  map("n", "gD", vim.lsp.buf.declaration, "Go to Declaration")
-  map("n", "gy", vim.lsp.buf.type_definition, "Go to Type Definition")
-  map("n", "gi", vim.lsp.buf.implementation, "Go to Implementation")
+		-- Jump to the next/previous diagnostic
+		map("n", "]d", function()
+			vim.diagnostic.goto_next()
+		end, "Next Diagnostic")
 
-  -- Find references to symbol under cursor
-  map("n", "gr", vim.lsp.buf.references, "Go to References")
+		map("n", "[d", function()
+			vim.diagnostic.goto_prev()
+		end, "Previous Diagnostic")
 
-  -- Jump to the next/previous diagnostic
-  map("n", "]d", function()
-    vim.diagnostic.goto({ direction = "next" })
-  end, "Next Diagnostic")
+		-- Jump to the next/previous ERROR diagnostic
+		map("n", "]e", function()
+			vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
+		end, "Next Error")
 
-  map("n", "[d", function()
-    vim.diagnostic.goto({ direction = "prev" })
-  end, "Previous Diagnostic")
+		map("n", "[e", function()
+			vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
+		end, "Previous Error")
 
-  -- Jump to the next/previous ERROR diagnostic
-  map("n", "]e", function()
-    vim.diagnostic.goto({ severity = vim.diagnostic.severity.ERROR, direction = "next" })
-  end, "Next Error")
+		-- Jump to the next/previous WARNING diagnostic
+		map("n", "]w", function()
+			vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.WARN })
+		end, "Next Warning")
 
-  map("n", "[e", function()
-    vim.diagnostic.goto({ severity = vim.diagnostic.severity.ERROR, direction = "prev" })
-  end, "Previous Error")
+		map("n", "[w", function()
+			vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.WARN })
+		end, "Previous Warning")
 
-  -- Jump to the next/previous WARNING diagnostic
-  map("n", "]w", function()
-    vim.diagnostic.goto({ severity = vim.diagnostic.severity.WARN, direction = "next" })
-  end, "Next Warning")
+		--------------------------------------------------------------------------------
+		-- Information (hover, signature, etc.)
+		--------------------------------------------------------------------------------
 
-  map("n", "[w", function()
-    vim.diagnostic.goto({ severity = vim.diagnostic.severity.WARN, direction = "prev" })
-  end, "Previous Warning")
+		-- Show documentation for what is under cursor
+		map("n", "K", vim.lsp.buf.hover, "Show Hover Documentation")
 
+		-- Show signature help (parameter info)
+		map("n", "<C-k>", vim.lsp.buf.signature_help, "Show Signature Help")
+		map("i", "<C-k>", vim.lsp.buf.signature_help, "Show Signature Help")
 
-  --------------------------------------------------------------------------------
-  -- Information (hover, signature, etc.)
-  --------------------------------------------------------------------------------
+		-- Toggle inlay hints (if available - Neovim 0.10+)
+		if vim.lsp.inlay_hint then
+			map("n", "<leader>lh", function()
+				local current_value = vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr })
+				vim.lsp.inlay_hint.enable(bufnr, not current_value)
+			end, "Toggle Inlay Hints")
+		end
 
-  -- Show documentation for what is under cursor
-  map("n", "K", vim.lsp.buf.hover, "Show Hover Documentation")
+		-- Show diagnostics in hover window
+		map("n", "<leader>ld", function()
+			vim.diagnostic.open_float({ border = "rounded" })
+		end, "Show Diagnostics")
 
-  -- Show signature help (parameter info)
-  map("n", "<C-k>", vim.lsp.buf.signature_help, "Show Signature Help")
-  map("i", "<C-k>", vim.lsp.buf.signature_help, "Show Signature Help")
+		--------------------------------------------------------------------------------
+		-- Code modification (rename, code actions, etc.)
+		--------------------------------------------------------------------------------
 
-  -- Toggle inlay hints (if available - Neovim 0.10+)
-  vim.keymap.set('n', '<leader>lh', function()
-    utils.toggle_inlay_hints()
-  end, { noremap = true, silent = true })
+		-- Rename symbol under cursor
+		map("n", "<leader>rn", vim.lsp.buf.rename, "Rename Symbol")
 
-  -- Show diagnostics in hover window
-  map("n", "<leader>ld", function()
-    vim.diagnostic.open_float({ border = "rounded" })
-  end, "Show Diagnostics")
+		-- Code actions (organize imports, fix errors, etc.)
+		map("n", "<leader>ca", vim.lsp.buf.code_action, "Code Actions")
+		map("v", "<leader>ca", vim.lsp.buf.code_action, "Code Actions (Range)")
 
-  --------------------------------------------------------------------------------
-  -- Code modification (rename, code actions, etc.)
-  --------------------------------------------------------------------------------
+		-- Format document
+		if client.server_capabilities.documentFormattingProvider then
+			map("n", "<leader>cf", function()
+				vim.lsp.buf.format({ async = true })
+				vim.notify("Formatted document", vim.log.levels.INFO)
+			end, "Format Document")
+		end
 
-  -- Rename symbol under cursor
-  map("n", "<leader>rn", vim.lsp.buf.rename, "Rename Symbol")
+		-- Format selection
+		if client.server_capabilities.documentRangeFormattingProvider then
+			map("v", "<leader>cf", function()
+				vim.lsp.buf.format({ async = true })
+				vim.notify("Formatted selection", vim.log.levels.INFO)
+			end, "Format Selection")
+		end
 
-  -- Code actions (organize imports, fix errors, etc.)
-  map("n", "<leader>ca", vim.lsp.buf.code_action, "Code Actions")
-  map("v", "<leader>ca", vim.lsp.buf.code_action, "Code Actions (Range)")
+		--------------------------------------------------------------------------------
+		-- Diagnostics (errors, warnings, etc.)
+		--------------------------------------------------------------------------------
 
-  -- Format document
-  if client.server_capabilities.documentFormattingProvider then
-    map("n", "<leader>cf", function()
-      vim.lsp.buf.format({ async = true })
-      vim.notify("Formatted document", vim.log.levels.INFO)
-    end, "Format Document")
-  end
+		-- Show all diagnostics in the current buffer in a list
+		map("n", "<leader>xx", "<cmd>Trouble document_diagnostics<cr>", "Document Diagnostics (Trouble)")
 
-  -- Format selection
-  if client.server_capabilities.documentRangeFormattingProvider then
-    map("v", "<leader>cf", function()
-      vim.lsp.buf.format({ async = true })
-      vim.notify("Formatted selection", vim.log.levels.INFO)
-    end, "Format Selection")
-  end
+		-- Show all diagnostics in the workspace in a list
+		map("n", "<leader>xX", "<cmd>Trouble workspace_diagnostics<cr>", "Workspace Diagnostics (Trouble)")
 
-  --------------------------------------------------------------------------------
-  -- Diagnostics (errors, warnings, etc.)
-  --------------------------------------------------------------------------------
+		-- Toggle diagnostics display on/off (useful when diagnostics are distracting)
+		map("n", "<leader>xt", function()
+			local diagnostics_enabled = vim.diagnostic.is_enabled()
+			if diagnostics_enabled then
+				vim.diagnostic.disable()
+				vim.notify("Diagnostics disabled", vim.log.levels.INFO)
+			else
+				vim.diagnostic.enable()
+				vim.notify("Diagnostics enabled", vim.log.levels.INFO)
+			end
+		end, "Toggle Diagnostics")
 
-  -- Show all diagnostics in the current buffer in a list
-  map("n", "<leader>xx", "<cmd>Trouble document_diagnostics<cr>", "Document Diagnostics (Trouble)")
+		--------------------------------------------------------------------------------
+		-- Workspace (folders, symbols, etc.)
+		--------------------------------------------------------------------------------
 
-  -- Show all diagnostics in the workspace in a list
-  map("n", "<leader>xX", "<cmd>Trouble workspace_diagnostics<cr>", "Workspace Diagnostics (Trouble)")
+		-- List all symbols in document
+		map("n", "<leader>ls", "<cmd>Telescope lsp_document_symbols<cr>", "Document Symbols")
 
-  -- Toggle diagnostics display on/off (useful when diagnostics are distracting)
-  map("n", "<leader>xt", function()
-    utils.toggle_diagnostic_hints()
-  end, "Toggle Diagnostics")
+		-- List all symbols in workspace
+		map("n", "<leader>lS", "<cmd>Telescope lsp_workspace_symbols<cr>", "Workspace Symbols")
 
-  --------------------------------------------------------------------------------
-  -- Workspace (folders, symbols, etc.)
-  --------------------------------------------------------------------------------
+		-- Show symbol outline (sidebar with document structure)
+		map("n", "<leader>lo", "<cmd>SymbolsOutline<cr>", "Symbols Outline")
 
-  -- List all symbols in document
-  map("n", "<leader>ls", "<cmd>Telescope lsp_document_symbols<cr>", "Document Symbols")
+		-- List references to symbol under cursor
+		map("n", "<leader>lr", "<cmd>Telescope lsp_references<cr>", "References")
 
-  -- List all symbols in workspace
-  map("n", "<leader>lS", "<cmd>Telescope lsp_workspace_symbols<cr>", "Workspace Symbols")
+		-- Add workspace folder
+		map("n", "<leader>la", vim.lsp.buf.add_workspace_folder, "Add Workspace Folder")
 
-  -- Show symbol outline (sidebar with document structure)
-  map("n", "<leader>lo", "<cmd>SymbolsOutline<cr>", "Symbols Outline")
+		-- Remove workspace folder
+		map("n", "<leader>lR", vim.lsp.buf.remove_workspace_folder, "Remove Workspace Folder")
 
-  -- List references to symbol under cursor
-  map("n", "<leader>lr", "<cmd>Telescope lsp_references<cr>", "References")
+		-- List workspace folders
+		map("n", "<leader>ll", function()
+			vim.notify("Workspace folders: " .. vim.inspect(vim.lsp.buf.list_workspace_folders()), vim.log.levels.INFO)
+		end, "List Workspace Folders")
 
-  -- Add workspace folder
-  map("n", "<leader>la", vim.lsp.buf.add_workspace_folder, "Add Workspace Folder")
+		--------------------------------------------------------------------------------
+		-- LSP Information
+		--------------------------------------------------------------------------------
 
-  -- Remove workspace folder
-  map("n", "<leader>lR", vim.lsp.buf.remove_workspace_folder, "Remove Workspace Folder")
+		-- Show info about LSP clients attached to the current buffer
+		map("n", "<leader>li", "<cmd>LspInfo<cr>", "LSP Info")
 
-  -- List workspace folders
-  map("n", "<leader>ll", function()
-    vim.notify("Workspace folders: " .. vim.inspect(vim.lsp.buf.list_workspace_folders()), vim.log.levels.INFO)
-  end, "List Workspace Folders")
-
-  --------------------------------------------------------------------------------
-  -- LSP Information
-  --------------------------------------------------------------------------------
-
-  -- Show info about LSP clients attached to the current buffer
-  map("n", "<leader>li", "<cmd>LspInfo<cr>", "LSP Info")
-
-  -- Show Mason (installer) UI
-  map("n", "<leader>lm", "<cmd>Mason<cr>", "LSP Installer (Mason)")
-end
-
-return M
+		-- Show Mason (installer) UI
+		map("n", "<leader>lm", "<cmd>Mason<cr>", "LSP Installer (Mason)")
+	end,
+}

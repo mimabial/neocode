@@ -3,8 +3,7 @@
 --------------------------------------------------------------------------------
 --
 -- This module configures code formatters for different languages.
--- We use none-ls to integrate formatters that don't have Language Server Protocol
--- support directly.
+-- We use conform.nvim to integrate formatters with Neovim.
 --
 -- Each formatter is configured with:
 -- 1. The file types it supports
@@ -12,182 +11,210 @@
 -- 3. Any command-line arguments to customize behavior
 --
 -- To add a new formatter:
--- 1. Check if it's available in none-ls.builtins.formatting
--- 2. Add it to the sources list with any required configuration
+-- 1. Check if it's available in conform.formatters
+-- 2. Add it to the formatters_by_ft table
 --------------------------------------------------------------------------------
 
-local M = {}
-
--- Safe loading of none-ls
-local none_ls_ok, none_ls = pcall(require, "none-ls")
-if not none_ls_ok then
-	vim.notify("none-ls not found. Install with :Lazy install", vim.log.levels.WARN)
-	return M
-end
-
-local formatting = none_ls.builtins.formatting
-
--- List of all formatter sources
-M.sources = {
-	--------------------------------------------------------------------------------
-	-- General Purpose Formatters
-	--------------------------------------------------------------------------------
-
-	-- Prettier for web development files
-	formatting.prettier.with({
-		-- Recognize more file types than the default
-		filetypes = {
-			"javascript",
-			"javascriptreact",
-			"typescript",
-			"typescriptreact",
-			"vue",
-			"svelte",
-			"css",
-			"scss",
-			"less",
-			"html",
-			"json",
-			"jsonc",
-			"yaml",
-			"markdown",
-			"markdown.mdx",
-			"graphql",
-			"handlebars",
+return {
+	{
+		"stevearc/conform.nvim",
+		event = { "BufWritePre" },
+		cmd = { "ConformInfo" },
+		keys = {
+			{
+				"<leader>cf",
+				function()
+					require("conform").format({ async = true, lsp_fallback = true })
+				end,
+				desc = "Format Document",
+				mode = { "n" },
+			},
+			{
+				"<leader>cf",
+				function()
+					require("conform").format({ async = true, lsp_fallback = true })
+				end,
+				desc = "Format Selection",
+				mode = { "v" },
+			},
 		},
-		extra_args = { "--prose-wrap", "always" },
-		prefer_local = "node_modules/.bin", -- Use local project version of prettier if available
-	}),
+		opts = {
+			-- Define formatters by filetype
+			formatters_by_ft = {
+				-- Lua
+				lua = { "stylua" },
 
-	--------------------------------------------------------------------------------
-	-- Language Specific Formatters
-	--------------------------------------------------------------------------------
+				-- Python
+				python = { "ruff_format", "black", "isort" },
 
-	-- Lua
-	formatting.stylua.with({
-		condition = function(utils)
-			-- Only use if stylua.toml or .stylua.toml exists
-			return utils.root_has_file({ "stylua.toml", ".stylua.toml" })
-		end,
-		extra_args = { "--indent-type", "Spaces", "--indent-width", "2" },
-	}),
+				-- JavaScript/TypeScript
+				javascript = { { "prettierd", "prettier" } },
+				typescript = { { "prettierd", "prettier" } },
+				javascriptreact = { { "prettierd", "prettier" } },
+				typescriptreact = { { "prettierd", "prettier" } },
 
-	-- Python
-	formatting.black.with({
-		extra_args = { "--line-length", "88", "--preview" },
-		prefer_local = ".venv/bin", -- Use local virtual environment if available
-	}),
-	formatting.isort.with({
-		extra_args = { "--profile", "black" },
-		prefer_local = ".venv/bin",
-	}),
-	formatting.ruff.with({
-		extra_args = { "--fix" },
-		prefer_local = ".venv/bin",
-	}),
+				-- Frontend
+				html = { { "prettierd", "prettier" } },
+				css = { { "prettierd", "prettier" } },
+				scss = { { "prettierd", "prettier" } },
+				less = { { "prettierd", "prettier" } },
 
-	-- Shell
-	formatting.shfmt.with({
-		extra_args = { "-i", "2", "-ci", "-bn" },
-	}),
+				-- Other web formats
+				json = { { "prettierd", "prettier" } },
+				jsonc = { { "prettierd", "prettier" } },
+				yaml = { { "prettierd", "prettier" } },
+				markdown = { { "prettierd", "prettier" } },
+				graphql = { { "prettierd", "prettier" } },
 
-	-- Rust
-	formatting.rustfmt.with({
-		extra_args = { "--edition", "2021" },
-	}),
+				-- Frameworks
+				svelte = { { "prettierd", "prettier" } },
+				vue = { { "prettierd", "prettier" } },
+				astro = { { "prettierd", "prettier" } },
 
-	-- Go
-	formatting.gofmt,
-	formatting.goimports,
+				-- Rust
+				rust = { "rustfmt" },
 
-	-- C/C++/Java etc.
-	formatting.clang_format.with({
-		filetypes = { "c", "cpp", "cs", "java", "cuda", "proto" },
-		extra_args = { "-style=file:.clang-format" },
-	}),
+				-- Go
+				go = { "gofmt", "goimports" },
 
-	-- Web development
-	formatting.prettierd.with({ -- Daemon version of prettier (faster)
-		condition = function(utils)
-			return utils.has_exec("prettierd")
-		end,
-		filetypes = {
-			"javascript",
-			"javascriptreact",
-			"typescript",
-			"typescriptreact",
-			"vue",
-			"svelte",
-			"css",
-			"scss",
-			"less",
-			"html",
-			"json",
-			"jsonc",
-			"yaml",
-			"markdown",
-			"markdown.mdx",
-			"graphql",
-			"handlebars",
+				-- C/C++/Java etc.
+				c = { "clang_format" },
+				cpp = { "clang_format" },
+				cs = { "clang_format" },
+				java = { "clang_format" },
+				cuda = { "clang_format" },
+				proto = { "clang_format" },
+
+				-- Shell
+				sh = { "shfmt" },
+				bash = { "shfmt" },
+				zsh = { "shfmt" },
+
+				-- SQL
+				sql = { "sql_formatter" },
+
+				-- XML/HTML
+				xml = { "xmlformat" },
+
+				-- Format multiple filetypes with one formatter
+				["_"] = { "trim_whitespace", "trim_newlines" },
+			},
+
+			-- Formatter-specific configuration
+			formatters = {
+				-- Lua
+				stylua = {
+					args = { "--indent-type", "Spaces", "--indent-width", "2" },
+					condition = function(ctx)
+						-- Only use if stylua.toml or .stylua.toml exists
+						return vim.fs.find({ "stylua.toml", ".stylua.toml" }, { path = ctx.filename, upward = true })[1]
+					end,
+				},
+
+				-- Python
+				black = {
+					args = { "--line-length", "88", "--preview" },
+					-- Try to use local virtualenv if available
+					prepend_args = function()
+						local venv = os.getenv("VIRTUAL_ENV")
+						if venv then
+							return { "--quiet" }
+						end
+						return {}
+					end,
+				},
+				isort = {
+					args = { "--profile", "black" },
+				},
+				ruff_format = {
+					-- Uses ruff.toml if available
+				},
+
+				-- Web development
+				prettierd = {
+					-- Uses .prettierrc if available
+					condition = function()
+						return vim.fn.executable("prettierd") > 0
+					end,
+				},
+				prettier = {
+					-- Fallback if prettierd is not available
+					args = { "--prose-wrap", "always" },
+				},
+
+				-- Go
+				gofmt = {},
+				goimports = {},
+
+				-- Shell
+				shfmt = {
+					args = { "-i", "2", "-ci", "-bn" },
+				},
+
+				-- Rust
+				rustfmt = {
+					args = { "--edition", "2021" },
+				},
+
+				-- C/C++/Java
+				clang_format = {
+					args = { "-style=file:.clang-format", "-fallback-style=Google" },
+				},
+
+				-- SQL
+				sql_formatter = {
+					args = { "--language", "postgresql" },
+				},
+
+				-- Common utility formatters for all files
+				trim_whitespace = {
+					command = "sed",
+					args = { "-E", "s/[[:space:]]+$//g" },
+				},
+				trim_newlines = {
+					command = "sed",
+					args = { "-E", "s/\\n\\n\\n+/\\n\\n/g" },
+				},
+			},
+
+			-- Format on save settings
+			format_on_save = {
+				-- I recommend these options with format on save
+				lsp_fallback = true,
+				async = false,
+				timeout_ms = 500,
+			},
+
+			-- Notify on formatting errors
+			notify_on_error = true,
+
+			-- Respect .editorconfig
+			respect_editor_config = true,
 		},
-	}),
 
-	-- JSON & YAML with schema validation
-	formatting.fixjson,
-	formatting.yamlfmt,
+		-- Additional setup code
+		config = function(_, opts)
+			local conform = require("conform")
 
-	-- SQL
-	formatting.sql_formatter.with({
-		extra_args = { "--language", "postgresql" },
-	}),
+			-- Setup conform.nvim with the provided options
+			conform.setup(opts)
 
-	-- XML/HTML
-	formatting.xmlformat,
-	formatting.djlint.with({
-		filetypes = { "html", "htmldjango", "jinja", "jinja.html" },
-	}),
+			-- Add commands to toggle format_on_save
+			vim.api.nvim_create_user_command("FormatToggle", function()
+				vim.b.disable_autoformat = not vim.b.disable_autoformat
+				vim.notify(
+					"Format on save " .. (vim.b.disable_autoformat and "disabled" or "enabled") .. " for current buffer",
+					vim.log.levels.INFO
+				)
+			end, { desc = "Toggle format on save for current buffer" })
 
-	-- Markdown/Text
-	formatting.markdownlint,
-	formatting.cbfmt.with({
-		filetypes = { "markdown" },
-	}),
-
-	-- PHP
-	formatting.phpcbf,
-
-	-- Ruby
-	formatting.rubocop,
-
-	-- XML
-	formatting.xmllint,
-
-	-- Elixir
-	formatting.mix,
+			vim.api.nvim_create_user_command("FormatToggleGlobal", function()
+				vim.g.disable_autoformat = not vim.g.disable_autoformat
+				vim.notify(
+					"Format on save " .. (vim.g.disable_autoformat and "disabled" or "enabled") .. " globally",
+					vim.log.levels.INFO
+				)
+			end, { desc = "Toggle format on save globally" })
+		end,
+	},
 }
-
---------------------------------------------------------------------------------
--- Functions to manually format code
---------------------------------------------------------------------------------
-
--- Format the current buffer using available formatters
-function M.format_buffer()
-	vim.lsp.buf.format({
-		async = true,
-		timeout_ms = 2000,
-	})
-end
-
--- Format a visual selection using available formatters
-function M.format_range()
-	vim.lsp.buf.format({
-		async = true,
-		timeout_ms = 2000,
-		range = {
-			["start"] = vim.api.nvim_buf_get_mark(0, "<"),
-			["end"] = vim.api.nvim_buf_get_mark(0, ">"),
-		},
-	})
-end
-
-return M

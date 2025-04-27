@@ -16,494 +16,361 @@
 -- and provide better information display.
 --------------------------------------------------------------------------------
 
-local M = {}
-
--- Configure diagnostic display
-function M.setup_diagnostics()
-	-- Define diagnostic signs
-	local signs = {
-		{ name = "DiagnosticSignError", text = " ", texthl = "DiagnosticSignError" },
-		{ name = "DiagnosticSignWarn", text = " ", texthl = "DiagnosticSignWarn" },
-		{ name = "DiagnosticSignHint", text = "󰌵 ", texthl = "DiagnosticSignHint" },
-		{ name = "DiagnosticSignInfo", text = " ", texthl = "DiagnosticSignInfo" },
-	}
-
-	-- Register signs
-	for _, sign in ipairs(signs) do
-		vim.fn.sign_define(sign.name, { texthl = sign.texthl, text = sign.text, numhl = sign.texthl })
-	end
-
-	-- Configure diagnostics display
-	vim.diagnostic.config({
-		underline = true,
-		update_in_insert = false,
-		virtual_text = {
-			spacing = 4,
-			prefix = "●",
-			source = "if_many",
+return {
+	-- Better UI for LSP hover and signature help
+	{
+		"ray-x/lsp_signature.nvim",
+		event = "LspAttach",
+		opts = {
+			bind = true, -- Automatically setup bindings
+			handler_opts = {
+				border = "rounded",
+			},
+			hint_enable = true, -- Show hints about parameter names
+			hint_prefix = "🔍 ",
+			hint_scheme = "String", -- Highlight group for hints
+			hi_parameter = "Search", -- Highlight group for active parameter
+			max_height = 12, -- Max height of signature help window
+			max_width = 120, -- Max width of signature help window
+			padding = " ", -- Additional padding for the signature window
+			transparency = nil, -- 0 = fully opaque, 100 = fully transparent
+			toggle_key = "<C-k>", -- Toggle signature on and off in insert mode
+			select_signature_key = "<C-n>", -- Cycle between signatures
+			floating_window = true, -- Show floating window
+			floating_window_above_cur_line = true, -- Show above current line when possible
+			zindex = 200, -- Z-index of the popup
+			always_trigger = false, -- Trigger signature even if there's no completion item
+			timer_interval = 100, -- Debounce timer
 		},
-		severity_sort = true,
-		float = {
-			border = "rounded",
-			source = true,
-			header = "",
-			prefix = "",
+	},
+
+	-- LSP progress indicator
+	{
+		"j-hui/fidget.nvim",
+		opts = {
+			notification = {
+				window = {
+					winblend = 0, -- No transparency
+					border = "none", -- No border
+				},
+				view = {
+					stack_upwards = true, -- Newest at the top
+					icon_separator = " ", -- Icon separator
+					group_separator = "---", -- Group separator
+				},
+				-- Customize the appearance of the fidget notification window
+				rust_analyzer = {
+					-- Override the default notification settings for a specific LSP client
+					view = {
+						icon = "🦀", -- Use a crab for rust_analyzer notifications
+					},
+				},
+			},
+			progress = {
+				poll_rate = 0, -- No polling when not in a focused state
+				ignore_done_already = true, -- Ignore tasks that were already done when Neovim starts up
+				ignore_empty_message = true, -- Skip displaying notifications with empty messages
+				clear_on_detach = function(client_id)
+					local client = vim.lsp.get_client_by_id(client_id)
+					return client and client.name or nil
+				end,
+				notification_group = function(msg)
+					-- Put rust_analyzer build notifs in a group to de-clutter things
+					if msg.lsp_client.name == "rust_analyzer" then
+						if msg.title:find("build") then
+							return "rust-build"
+						end
+					end
+					-- Default: use LSP client name
+					return msg.lsp_client.name
+				end,
+			},
+			integration = {
+				["nvim-tree"] = {
+					enable = true, -- Integrate with nvim-tree
+				},
+			},
+			logger = {
+				level = vim.log.levels.WARN, -- Minimum logging level
+				float_precision = 0.01, -- Floating point precision in seconds
+				path = string.format("%s/fidget.nvim.log", vim.fn.stdpath("cache")), -- Log path
+			},
 		},
-	})
+	},
 
-	-- Configure handler for hover windows
-	vim.lsp.handlers["textDocument/hover"] = function(err, result, ctx, config)
-		if err then
-			return nil, err
-		end
-		if not (result and result.contents) then
-			return nil, err
-		end
-
-		config = config or {}
-		config.border = config.border or "rounded"
-
-		-- Convert input to markdown lines
-		local markdown_lines = vim.lsp.util.convert_input_to_markdown_lines(result.contents)
-
-		-- Remove empty lines by joining the table into a string and splitting while omitting empty ones
-		markdown_lines = vim.split(table.concat(markdown_lines, "\n"), "\n", { trimempty = true })
-
-		return vim.lsp.util.open_floating_preview(markdown_lines, "markdown", config)
-	end
-
-	-- Configure handler for signature help
-	-- Save the original signature_help handler
-	local orig_signature_help = vim.lsp.handlers["textDocument/signatureHelp"]
-
-	vim.lsp.handlers["textDocument/signatureHelp"] = function(err, result, ctx, config)
-		if err then
-			return nil, err
-		end
-
-		config = config or {}
-		config.border = config.border or "rounded"
-		config.close_events = config.close_events or { "CursorMoved", "BufHidden", "InsertCharPre" }
-
-		return orig_signature_help(err, result, ctx, config)
-	end
-end
-
--- Configure LSP symbols in winbar (breadcrumbs)
-function M.setup_winbar()
-	-- Only setup if navic is available
-	local ok, navic = pcall(require, "nvim-navic")
-	if not ok then
-		return
-	end
-
-	-- Configure appearance
-	navic.setup({
-		icons = {
-			File = " ",
-			Module = " ",
-			Namespace = " ",
-			Package = " ",
-			Class = " ",
-			Method = " ",
-			Property = " ",
-			Field = " ",
-			Constructor = " ",
-			Enum = " ",
-			Interface = " ",
-			Function = " ",
-			Variable = " ",
-			Constant = " ",
-			String = " ",
-			Number = " ",
-			Boolean = " ",
-			Array = " ",
-			Object = " ",
-			Key = " ",
-			Null = " ",
-			EnumMember = " ",
-			Struct = " ",
-			Event = " ",
-			Operator = " ",
-			TypeParameter = " ",
+	-- Code outline/structure view
+	{
+		"simrat39/symbols-outline.nvim",
+		cmd = { "SymbolsOutline", "SymbolsOutlineOpen", "SymbolsOutlineClose" },
+		keys = {
+			{ "<leader>lo", "<cmd>SymbolsOutline<cr>", desc = "Symbols Outline" },
 		},
-		highlight = true,
-		separator = " › ",
-		depth_limit = 0,
-		depth_limit_indicator = "...",
-		safe_output = true,
-	})
-
-	-- Add winbar to certain file types
-	local exclude_filetypes = {
-		"help",
-		"dashboard",
-		"lazy",
-		"mason",
-		"notify",
-		"toggleterm",
-		"lazyterm",
-		"Trouble",
-		"spectre_panel",
-		"TelescopePrompt",
-		"NvimTree",
-		"neo-tree",
-		"oil",
-	}
-
-	-- Create winbar using navic
-	local create_winbar = function()
-		if vim.tbl_contains(exclude_filetypes, vim.bo.filetype) then
-			return
-		end
-
-		-- Don't show in special buffers
-		local buftype = vim.bo.buftype
-		if buftype == "terminal" or buftype == "prompt" or buftype == "nofile" or buftype == "quickfix" then
-			return
-		end
-
-		-- Get current file name
-		local filename = vim.fn.expand("%:t")
-		if filename == "" then
-			filename = "[No Name]"
-		end
-
-		-- Get file icon
-		local file_icon = ""
-		local extension = vim.fn.expand("%:e")
-		if extension and extension ~= "" then
-			-- Use devicons if available
-			local devicons_ok, devicons = pcall(require, "nvim-web-devicons")
-			if devicons_ok then
-				file_icon, _ = devicons.get_icon_by_filetype(vim.bo.filetype) or devicons.get_icon(filename, extension)
-				if file_icon then
-					file_icon = file_icon .. " "
-				end
-			end
-		end
-
-		-- Create the winbar
-		local winbar = " " .. file_icon .. filename
-
-		-- Add navic location if available
-		if navic.is_available() then
-			local location = navic.get_location()
-			if location and location ~= "" then
-				winbar = winbar .. " › " .. location
-			end
-		end
-
-		-- Set the winbar
-		vim.wo.winbar = winbar
-	end
-
-	-- Set up autocommand to update winbar
-	vim.api.nvim_create_autocmd({ "CursorMoved", "BufWinEnter", "BufFilePost" }, {
-		callback = create_winbar,
-	})
-
-	-- Also create on initial setup
-	create_winbar()
-end
-
--- Setup trouble.nvim for better diagnostics display
-function M.setup_trouble()
-	-- Only setup if available
-	local ok, trouble = pcall(require, "trouble")
-	if not ok then
-		return
-	end
-
-	-- Configure trouble.nvim
-	trouble.setup({
-		position = "bottom", -- Position of the list (bottom, top, left, right)
-		height = 10, -- Height of the trouble list when position is top or bottom
-		width = 50, -- Width of the list when position is left or right
-		icons = true, -- Use devicons for filenames
-		mode = "workspace_diagnostics", -- Modes: "workspace_diagnostics", "document_diagnostics", "quickfix", "lsp_references"
-		fold_open = "", -- Icon used for open folds
-		fold_closed = "", -- Icon used for closed folds
-		group = true, -- Group results by file
-		padding = true, -- Add extra new line on top of the list
-		debug = false, -- Enable or disable debug mode
-		auto_refresh = true, -- Automatically refresh diagnostics on change
-		focus = true, -- Focus the Trouble window when opened
-		restore = true, -- Restore previous window settings after closing Trouble
-		follow = true, -- Automatically follow the current file
-		indent_guides = true, -- Show indent guides in the list
-		max_items = 100, -- Maximum number of items to show in the list
-		multiline = true, -- Allow multiline diagnostics
-		pinned = false, -- Pin the current window
-		warn_no_results = true, -- Show a warning when no results are found
-		open_no_results = false, -- Automatically open the Trouble window even if there are no results
-		win = {}, -- Configurations for the Trouble window (e.g., border, style)
-		preview = true, -- Enable or disable preview for diagnostics
-		throttle = 100, -- Throttle time in milliseconds for refreshing
-		keys = {}, -- Custom key mappings for Trouble actions
-		modes = {}, -- Define custom modes for Trouble
-		auto_close = false, -- Automatically close the Trouble window when no diagnostics are present
-		auto_open = false, -- Automatically open the Trouble window when diagnostics appear
-		auto_preview = true, -- Automatically preview locations when navigating
-		auto_jump = { "lsp_definitions" }, -- Jump to specific modes automatically
-		action_keys = { -- Key mappings for actions in the Trouble list
-			close = "q",
-			cancel = "<esc>",
-			refresh = "r",
-			jump = { "<cr>", "<tab>" },
-			open_split = { "<c-x>" },
-			open_vsplit = { "<c-v>" },
-			open_tab = { "<c-t>" },
-			jump_close = { "o" },
-			toggle_mode = "m",
-			toggle_preview = "P",
-			hover = "K",
-			preview = "p",
-			close_folds = { "zM", "zm" },
-			open_folds = { "zR", "zr" },
-			toggle_fold = { "zA", "za" },
-			previous = "k",
-			next = "j",
+		opts = {
+			highlight_hovered_item = true,
+			show_guides = true,
+			auto_preview = false, -- Don't automatically preview symbol
+			position = "right",
+			relative_width = true,
+			width = 25,
+			auto_close = false,
+			show_numbers = false,
+			show_relative_numbers = false,
+			show_symbol_details = true,
+			preview_bg_highlight = "Pmenu",
+			autofold_depth = nil,
+			auto_unfold_hover = true,
+			fold_markers = { "", "" },
+			wrap = false,
+			keymaps = {
+				close = { "<Esc>", "q" },
+				goto_location = "<Cr>",
+				focus_location = "o",
+				hover_symbol = "<C-space>",
+				toggle_preview = "K",
+				rename_symbol = "r",
+				code_actions = "a",
+				fold = "h",
+				unfold = "l",
+				fold_all = "W",
+				unfold_all = "E",
+				fold_reset = "R",
+			},
+			lsp_blacklist = {}, -- LSP servers to ignore
+			symbol_blacklist = {}, -- Symbols to ignore
+			symbols = {
+				File = { icon = "", hl = "@text.uri" },
+				Module = { icon = "", hl = "@namespace" },
+				Namespace = { icon = "", hl = "@namespace" },
+				Package = { icon = "", hl = "@namespace" },
+				Class = { icon = "󰠱", hl = "@type" },
+				Method = { icon = "󰆧", hl = "@method" },
+				Property = { icon = "󰜢", hl = "@method" },
+				Field = { icon = "󰜢", hl = "@field" },
+				Constructor = { icon = "", hl = "@constructor" },
+				Enum = { icon = "", hl = "@type" },
+				Interface = { icon = "", hl = "@type" },
+				Function = { icon = "󰊕", hl = "@function" },
+				Variable = { icon = "󰀫", hl = "@constant" },
+				Constant = { icon = "󰏿", hl = "@constant" },
+				String = { icon = "󰀬", hl = "@string" },
+				Number = { icon = "", hl = "@number" },
+				Boolean = { icon = "", hl = "@boolean" },
+				Array = { icon = "[]", hl = "@constant" },
+				Object = { icon = "󰅩", hl = "@type" },
+				Key = { icon = "󰌋", hl = "@type" },
+				Null = { icon = "󰟢", hl = "@type" },
+				EnumMember = { icon = "", hl = "@field" },
+				Struct = { icon = "󰙅", hl = "@type" },
+				Event = { icon = "", hl = "@type" },
+				Operator = { icon = "󰆕", hl = "@operator" },
+				TypeParameter = { icon = "", hl = "@parameter" },
+				Component = { icon = "󰅴", hl = "@function" },
+				Fragment = { icon = "󰅴", hl = "@constant" },
+			},
 		},
-		signs = {
-			error = "",
-			warning = "",
-			hint = "󰌵",
-			information = "",
-			other = "﫠",
+	},
+
+	-- Improved LSP user interface
+	{
+		"nvimdev/lspsaga.nvim",
+		event = "LspAttach",
+		dependencies = {
+			"nvim-treesitter/nvim-treesitter",
+			"nvim-tree/nvim-web-devicons",
 		},
-		use_diagnostic_signs = false, -- Use signs defined in the LSP client
-	})
-
-	-- Configure keymaps
-	vim.keymap.set("n", "<leader>xx", "<cmd>TroubleToggle<cr>", { desc = "Toggle Trouble" })
-	vim.keymap.set("n", "<leader>xd", "<cmd>TroubleToggle document_diagnostics<cr>", { desc = "Document Diagnostics" })
-	vim.keymap.set(
-		"n",
-		"<leader>xw",
-		"<cmd>TroubleToggle workspace_diagnostics<cr>",
-		{ desc = "Workspace Diagnostics" }
-	)
-	vim.keymap.set("n", "<leader>xl", "<cmd>TroubleToggle loclist<cr>", { desc = "Location List" })
-	vim.keymap.set("n", "<leader>xq", "<cmd>TroubleToggle quickfix<cr>", { desc = "Quickfix List" })
-	vim.keymap.set("n", "gR", "<cmd>TroubleToggle lsp_references<cr>", { desc = "LSP References" })
-	vim.keymap.set("n", "gD", "<cmd>TroubleToggle lsp_definitions<cr>", { desc = "LSP Definitions" })
-	vim.keymap.set("n", "gT", "<cmd>TroubleToggle lsp_type_definitions<cr>", { desc = "LSP Type Definitions" })
-end
-
--- Setup LSP kind icons for completion and UI
-function M.setup_lspkind()
-	local present, lspkind = pcall(require, "lspkind")
-	if not present then
-		return
-	end
-
-	lspkind.init({
-		mode = "symbol_text",
-		preset = "codicons",
-		symbol_map = {
-			Text = "󰉿",
-			Method = "󰆧",
-			Function = "󰊕",
-			Constructor = "",
-			Field = "󰜢",
-			Variable = "󰀫",
-			Class = "󰠱",
-			Interface = "",
-			Module = "",
-			Property = "󰜢",
-			Unit = "󰑭",
-			Value = "󰎠",
-			Enum = "",
-			Keyword = "󰌋",
-			Snippet = "",
-			Color = "󰏘",
-			File = "󰈙",
-			Reference = "󰈇",
-			Folder = "󰉋",
-			EnumMember = "",
-			Constant = "󰏿",
-			Struct = "󰙅",
-			Event = "",
-			Operator = "󰆕",
-			TypeParameter = "",
-			Table = "",
-			Object = "󰅩",
-			Tag = "",
-			Array = "[]",
-			Boolean = "",
-			Number = "",
-			Null = "󰟢",
-			String = "󰀬",
-			Calendar = "",
-			Watch = "󰥔",
-			Package = "",
-			Copilot = "",
-			Codeium = "",
+		keys = {
+			{ "K", "<cmd>Lspsaga hover_doc<CR>", desc = "Hover Doc" },
+			{ "<leader>la", "<cmd>Lspsaga code_action<CR>", desc = "Code Action" },
+			{ "<leader>lr", "<cmd>Lspsaga rename<CR>", desc = "Rename" },
+			{ "<leader>lp", "<cmd>Lspsaga peek_definition<CR>", desc = "Peek Definition" },
+			{ "<leader>ld", "<cmd>Lspsaga show_line_diagnostics<CR>", desc = "Line Diagnostics" },
+			{ "<leader>lo", "<cmd>Lspsaga outline<CR>", desc = "Outline" },
+			{ "[e", "<cmd>Lspsaga diagnostic_jump_prev<CR>", desc = "Previous Diagnostic" },
+			{ "]e", "<cmd>Lspsaga diagnostic_jump_next<CR>", desc = "Next Diagnostic" },
 		},
-	})
-end
-
--- Setup fidget.nvim for LSP progress display
-function M.setup_fidget()
-	local ok, fidget = pcall(require, "fidget")
-	if not ok then
-		return
-	end
-
-	fidget.setup({
-		text = {
-			spinner = "moon",
-			done = "✓",
-			commenced = "Started",
-			completed = "Completed",
+		opts = {
+			ui = {
+				border = "rounded",
+				winblend = 0, -- No transparency
+				theme = "round",
+				title = true,
+				devicon = true, -- Show devicons in code actions
+				kind = true, -- Show kind in completion menu
+			},
+			symbol_in_winbar = {
+				enable = false, -- We use nvim-navic instead
+			},
+			lightbulb = {
+				enable = true, -- Show lightbulb for code actions
+				sign = true, -- Show sign column
+				virtual_text = false, -- Don't show virtual text
+				debounce = 100, -- Debounce time
+			},
+			outline = {
+				win_width = 30,
+				auto_preview = false,
+				auto_close = true,
+				keys = {
+					jump = "o",
+					expand_collapse = "u",
+					quit = "q",
+				},
+			},
+			beacon = {
+				enable = true, -- Show animated beacon when jumping to locations
+				frequency = 8, -- Animation frequency
+			},
+			code_action = {
+				show_server_name = true, -- Show where code action is coming from
+				extend_gitsigns = true, -- Show actions from gitsigns
+				keys = {
+					quit = "q",
+					exec = "<CR>",
+				},
+			},
+			diagnostic = {
+				show_code_action = true,
+				show_source = true,
+				jump_num_shortcut = true,
+				keys = {
+					exec_action = "o",
+					quit = "q",
+					go_action = "g",
+				},
+			},
+			rename = {
+				auto_save = true, -- Automatically save after rename
+				keys = {
+					quit = "<C-c>",
+					exec = "<CR>",
+					select = "x",
+				},
+			},
+			finder = {
+				max_height = 0.8,
+				keys = {
+					jump_to = "o",
+					edit = "e",
+					vsplit = "s",
+					split = "i",
+					tabe = "t",
+					quit = { "q", "<ESC>" },
+				},
+			},
+			definition = {
+				keys = {
+					edit = "o",
+					vsplit = "s",
+					split = "i",
+					tabe = "t",
+					quit = "q",
+				},
+			},
 		},
-		align = {
-			bottom = true,
-			right = true,
+	},
+
+	-- Better UI for diagnostics
+	{
+		"folke/trouble.nvim",
+		cmd = { "Trouble", "TroubleToggle", "TroubleClose", "TroubleRefresh" },
+		opts = {
+			position = "bottom", -- Position of trouble list
+			height = 10, -- Height of the trouble list
+			width = 50, -- Width of the list when position is left or right
+			icons = true, -- Use icons
+			mode = "workspace_diagnostics", -- Default mode
+			fold_open = "", -- Icon for open folds
+			fold_closed = "", -- Icon for closed folds
+			group = true, -- Group results by file
+			padding = true, -- Add extra padding
+			action_keys = { -- Key mappings for actions in the trouble list
+				close = "q", -- Close the list
+				cancel = "<esc>", -- Cancel
+				refresh = "r", -- Manually refresh
+				jump = { "<cr>", "<tab>" }, -- Jump to the diagnostic or open / close folds
+				open_split = { "<c-x>" }, -- Open buffer in new split
+				open_vsplit = { "<c-v>" }, -- Open buffer in new vsplit
+				open_tab = { "<c-t>" }, -- Open buffer in new tab
+				jump_close = { "o" }, -- Jump to the diagnostic and close the list
+				toggle_mode = "m", -- Toggle between "workspace" and "document" diagnostics mode
+				toggle_preview = "P", -- Toggle auto_preview
+				hover = "K", -- Opens a small popup with the full multiline message
+				preview = "p", -- Preview the diagnostic location
+				close_folds = { "zM", "zm" }, -- Close all folds
+				open_folds = { "zR", "zr" }, -- Open all folds
+				toggle_fold = { "zA", "za" }, -- Toggle fold of current file
+				previous = "k", -- Previous item
+				next = "j", -- Next item
+			},
+			indent_lines = true, -- Add an indent guide below the fold icons
+			auto_open = false, -- Automatically open the list when you have diagnostics
+			auto_close = false, -- Automatically close the list when you have no diagnostics
+			auto_preview = true, -- Automatically preview the location of the diagnostic
+			auto_fold = false, -- Automatically fold a file trouble list at creation
+			auto_jump = { "lsp_definitions" }, -- For the given modes, automatically jump if there is only a single result
+			signs = {
+				-- Icons / text used for a diagnostic
+				error = "",
+				warning = "",
+				hint = "󰌵",
+				information = "",
+				other = "﫠",
+			},
+			use_diagnostic_signs = false, -- enabling this will use the signs defined in your lsp client
 		},
-		timer = {
-			spinner_rate = 125,
-			fidget_decay = 2000,
-			task_decay = 1000,
+		keys = {
+			{ "<leader>xx", "<cmd>TroubleToggle<cr>", desc = "Toggle Trouble" },
+			{ "<leader>xd", "<cmd>TroubleToggle document_diagnostics<cr>", desc = "Document Diagnostics" },
+			{ "<leader>xw", "<cmd>TroubleToggle workspace_diagnostics<cr>", desc = "Workspace Diagnostics" },
+			{ "<leader>xl", "<cmd>TroubleToggle loclist<cr>", desc = "Location List" },
+			{ "<leader>xq", "<cmd>TroubleToggle quickfix<cr>", desc = "Quickfix List" },
+			{ "gR", "<cmd>TroubleToggle lsp_references<cr>", desc = "LSP References" },
+			{ "gD", "<cmd>TroubleToggle lsp_definitions<cr>", desc = "LSP Definitions" },
+			{ "gT", "<cmd>TroubleToggle lsp_type_definitions<cr>", desc = "LSP Type Definitions" },
 		},
-		window = {
-			relative = "editor",
-			blend = 0,
-			zindex = 50,
-			border = "rounded",
+	},
+
+	-- Breadcrumbs in winbar
+	{
+		"SmiteshP/nvim-navic",
+		lazy = true,
+		init = function()
+			vim.g.navic_silence = true
+		end,
+		opts = {
+			icons = {
+				File = " ",
+				Module = " ",
+				Namespace = " ",
+				Package = " ",
+				Class = " ",
+				Method = " ",
+				Property = " ",
+				Field = " ",
+				Constructor = " ",
+				Enum = " ",
+				Interface = " ",
+				Function = " ",
+				Variable = " ",
+				Constant = " ",
+				String = " ",
+				Number = " ",
+				Boolean = " ",
+				Array = " ",
+				Object = " ",
+				Key = " ",
+				Null = " ",
+				EnumMember = " ",
+				Struct = " ",
+				Event = " ",
+				Operator = " ",
+				TypeParameter = " ",
+			},
+			highlight = true,
+			separator = " › ",
+			depth_limit = 0,
+			depth_limit_indicator = "..",
+			safe_output = true,
 		},
-		fmt = {
-			max_width = 0,
-			task = function(task_name, message, percentage)
-				if task_name:match("code_action") or task_name:match("diagnostics") then
-					return false
-				end
-				return string.format(
-					"%s%s [%s]",
-					message,
-					percentage and string.format(" (%s%%)", percentage) or "",
-					task_name
-				)
-			end,
-		},
-	})
-end
-
--- Setup symbols-outline.nvim for code outline
-function M.setup_symbols_outline()
-	local ok, outline = pcall(require, "symbols-outline")
-	if not ok then
-		return
-	end
-
-	outline.setup({
-		highlight_hovered_item = true,
-		show_guides = true,
-		auto_preview = false,
-		position = "right",
-		relative_width = true,
-		width = 25,
-		auto_close = false,
-		show_numbers = false,
-		show_relative_numbers = false,
-		show_symbol_details = true,
-		preview_bg_highlight = "Pmenu",
-		autofold_depth = nil,
-		auto_unfold_hover = true,
-		fold_markers = { "", "" },
-		wrap = false,
-		keymaps = {
-			close = { "<Esc>", "q" },
-			goto_location = "<Cr>",
-			focus_location = "o",
-			hover_symbol = "<C-space>",
-			toggle_preview = "K",
-			rename_symbol = "r",
-			code_actions = "a",
-			fold = "h",
-			unfold = "l",
-			fold_all = "W",
-			unfold_all = "E",
-			fold_reset = "R",
-		},
-		lsp_blacklist = {},
-		symbol_blacklist = {},
-		symbols = {
-			File = { icon = "", hl = "@text.uri" },
-			Module = { icon = "", hl = "@namespace" },
-			Namespace = { icon = "", hl = "@namespace" },
-			Package = { icon = "", hl = "@namespace" },
-			Class = { icon = "󰠱", hl = "@type" },
-			Method = { icon = "󰆧", hl = "@method" },
-			Property = { icon = "󰜢", hl = "@method" },
-			Field = { icon = "󰜢", hl = "@field" },
-			Constructor = { icon = "", hl = "@constructor" },
-			Enum = { icon = "", hl = "@type" },
-			Interface = { icon = "", hl = "@type" },
-			Function = { icon = "󰊕", hl = "@function" },
-			Variable = { icon = "󰀫", hl = "@constant" },
-			Constant = { icon = "󰏿", hl = "@constant" },
-			String = { icon = "󰀬", hl = "@string" },
-			Number = { icon = "", hl = "@number" },
-			Boolean = { icon = "", hl = "@boolean" },
-			Array = { icon = "[]", hl = "@constant" },
-			Object = { icon = "󰅩", hl = "@type" },
-			Key = { icon = "󰌋", hl = "@type" },
-			Null = { icon = "󰟢", hl = "@type" },
-			EnumMember = { icon = "", hl = "@field" },
-			Struct = { icon = "󰙅", hl = "@type" },
-			Event = { icon = "", hl = "@type" },
-			Operator = { icon = "󰆕", hl = "@operator" },
-			TypeParameter = { icon = "", hl = "@parameter" },
-			Component = { icon = "󰅴", hl = "@function" },
-			Fragment = { icon = "󰅴", hl = "@constant" },
-		},
-	})
-
-	vim.keymap.set("n", "<leader>lo", "<cmd>SymbolsOutline<CR>", { desc = "Toggle Symbols Outline" })
-end
-
--- Setup LSP colors
-function M.setup_colors()
-	-- Set LSP diagnostic colors
-	vim.api.nvim_set_hl(0, "DiagnosticError", { fg = "#F44747" })
-	vim.api.nvim_set_hl(0, "DiagnosticWarn", { fg = "#FF8800" })
-	vim.api.nvim_set_hl(0, "DiagnosticInfo", { fg = "#01AEFA" })
-	vim.api.nvim_set_hl(0, "DiagnosticHint", { fg = "#15AABF" })
-
-	-- Set virtual text colors
-	vim.api.nvim_set_hl(0, "DiagnosticVirtualTextError", { fg = "#F44747", bg = "#342C30" })
-	vim.api.nvim_set_hl(0, "DiagnosticVirtualTextWarn", { fg = "#FF8800", bg = "#2D2A27" })
-	vim.api.nvim_set_hl(0, "DiagnosticVirtualTextInfo", { fg = "#01AEFA", bg = "#24283B" })
-	vim.api.nvim_set_hl(0, "DiagnosticVirtualTextHint", { fg = "#15AABF", bg = "#262D35" })
-
-	-- Set underline colors
-	vim.api.nvim_set_hl(0, "DiagnosticUnderlineError", { undercurl = true, sp = "#F44747" })
-	vim.api.nvim_set_hl(0, "DiagnosticUnderlineWarn", { undercurl = true, sp = "#FF8800" })
-	vim.api.nvim_set_hl(0, "DiagnosticUnderlineInfo", { undercurl = true, sp = "#01AEFA" })
-	vim.api.nvim_set_hl(0, "DiagnosticUnderlineHint", { undercurl = true, sp = "#15AABF" })
-
-	-- Set floating window colors
-	vim.api.nvim_set_hl(0, "LspFloatWinBorder", { fg = "#6D6F7B" })
-	vim.api.nvim_set_hl(0, "LspFloatWinNormal", { bg = "#22252B" })
-
-	-- Set sign colors
-	vim.api.nvim_set_hl(0, "DiagnosticSignError", { fg = "#F44747", bg = "NONE" })
-	vim.api.nvim_set_hl(0, "DiagnosticSignWarn", { fg = "#FF8800", bg = "NONE" })
-	vim.api.nvim_set_hl(0, "DiagnosticSignInfo", { fg = "#01AEFA", bg = "NONE" })
-	vim.api.nvim_set_hl(0, "DiagnosticSignHint", { fg = "#15AABF", bg = "NONE" })
-end
-
--- Master function to setup all LSP UI components
-function M.setup()
-	M.setup_diagnostics()
-	M.setup_winbar()
-	M.setup_trouble()
-	M.setup_lspkind()
-	M.setup_fidget()
-	M.setup_symbols_outline()
-	M.setup_colors()
-end
-
-return M
+	},
+}
