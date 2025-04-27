@@ -109,13 +109,6 @@ return {
 
 	-- Add/delete comments
 	{
-		"echasnovski/mini.comment",
-		event = "BufReadPost",
-		opts = {
-			-- Options
-			hooks = {
-				pre = function()
-					require("ts_context_commentstring.internal").update_commentstring({})
 				end,
 			},
 		},
@@ -161,15 +154,6 @@ return {
 
 	-- Motion
 	{
-		"folke/flash.nvim",
-		event = "VeryLazy",
-		vscode = true,
-		opts = {
-			labels = "asdfghjklqwertyuiopzxcvbnm",
-			search = {
-				-- Disable incremental highlighting for search
-				incremental = false,
-			},
 			label = {
 				style = "overlay",
 				reuse = "all",
@@ -251,15 +235,6 @@ return {
 
 	-- Search/replace in visual selection
 	{
-		"nvim-pack/nvim-spectre",
-		keys = {
-			{
-				"<leader>sr",
-				function()
-					require("spectre").open()
-				end,
-				desc = "Replace in files",
-			},
 		},
 	},
 
@@ -339,11 +314,6 @@ return {
 
 	-- Session management
 	{
-		"folke/persistence.nvim",
-		event = "BufReadPre",
-		opts = {
-			dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/"),
-			options = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp" },
 			pre_save = nil,
 			save_empty = false,
 		},

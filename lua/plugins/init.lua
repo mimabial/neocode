@@ -308,10 +308,6 @@ return {
 
 	-- Which-key for keybinding hints
 	{
-		"folke/which-key.nvim",
-		event = "VeryLazy",
-		opts = {
-			plugins = { spelling = true },
 			defaults = {
 				mode = { "n", "v" },
 				["g"] = { name = "+goto" },

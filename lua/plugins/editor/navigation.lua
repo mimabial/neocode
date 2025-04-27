@@ -402,21 +402,6 @@ return {
 
 	-- Scrollbar with diagnostics and git status
 	{
-		"petertriho/nvim-scrollbar",
-		event = "BufReadPost",
-		config = function()
-			local colors = require("tokyonight.colors").setup()
-			require("scrollbar").setup({
-				show = true,
-				show_in_active_only = false,
-				set_highlights = true,
-				handle = {
-					text = " ",
-					color = colors.bg_highlight,
-					cterm = nil,
-					highlight = "CursorColumn",
-					hide_if_all_visible = true,
-				},
 				marks = {
 					Search = {
 						text = { "-", "=" },
@@ -525,11 +510,6 @@ return {
 
 	-- Session management
 	{
-		"folke/persistence.nvim",
-		event = "BufReadPre",
-		opts = {
-			dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/"),
-			options = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp" },
 			pre_save = nil,
 			save_empty = false,
 		},
