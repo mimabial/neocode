@@ -1,132 +1,104 @@
---------------------------------------------------------------------------------
--- NeoCode - Enhanced Neovim Configuration
--- Author: Your Name
--- License: MIT
--- Repository: https://github.com/mimabial/neocode
---------------------------------------------------------------------------------
---
--- This is the main entry point for the NeoCode configuration.
--- It bootstraps the configuration and lazy.nvim plugin manager.
---
--- Structure:
--- 1. Set leader keys early
--- 2. Bootstrap lazy.nvim if not already installed
--- 3. Load core modules (options, keymaps, autocmds)
--- 4. Initialize plugin system
-
--- Set leader keys before anything else to avoid mappings using the wrong leader
+-- Set leader key before anything else
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
---------------------------------------------------------------------------------
--- Bootstrap package manager (lazy.nvim)
---------------------------------------------------------------------------------
+-- Basic Neovim settings
+vim.opt.number = true -- Show line numbers
+vim.opt.relativenumber = true -- Show relative line numbers
+vim.opt.mouse = "a" -- Enable mouse support
+vim.opt.ignorecase = true -- Case insensitive searching
+vim.opt.smartcase = true -- Override ignorecase when search contains uppercase
+vim.opt.hlsearch = true -- Highlight search
+vim.opt.wrap = false -- Don't wrap lines
+vim.opt.breakindent = true -- Enable break indent
+vim.opt.tabstop = 2 -- Number of spaces tabs count for
+vim.opt.shiftwidth = 2 -- Size of an indent
+vim.opt.expandtab = true -- Use spaces instead of tabs
+vim.opt.undofile = true -- Save undo history
+vim.opt.updatetime = 250 -- Decrease update time
+vim.opt.signcolumn = "yes" -- Always show sign column
+vim.opt.cursorline = true -- Highlight current line
+vim.opt.scrolloff = 8 -- Keep 8 lines above/below cursor when scrolling
+vim.opt.termguicolors = true -- True color support
+vim.opt.laststatus = 3 -- Global status line
+vim.opt.showcmd = false -- Hide command line
+vim.opt.showmode = false -- Hide mode text ('-- INSERT --')
+vim.opt.cmdheight = 1 -- Command line height
+vim.opt.clipboard = "unnamedplus" -- Sync with system clipboard
 
+-- Diagnostics customization
+vim.diagnostic.config({
+  virtual_text = {
+    prefix = "●",
+  },
+  update_in_insert = true,
+  float = {
+    focused = false,
+    style = "minimal",
+    border = "rounded",
+    source = "always",
+    header = "",
+    prefix = "",
+  },
+  severity_sort = true,
+})
+
+-- Configure icons for diagnostics
+local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }
+for type, icon in pairs(signs) do
+  local hl = "DiagnosticSign" .. type
+  vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
+end
+
+-- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not (vim.uv or vim.loop).fs_stat(lazypath) then
-  local lazyrepo = "https://github.com/folke/lazy.nvim.git"
+if not vim.loop.fs_stat(lazypath) then
   vim.fn.system({
     "git",
     "clone",
     "--filter=blob:none",
-    "--branch=stable",
-    lazyrepo,
-    lazypath
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable", -- latest stable release
+    lazypath,
   })
 end
 vim.opt.rtp:prepend(lazypath)
 
---------------------------------------------------------------------------------
--- Load core modules
---------------------------------------------------------------------------------
-
--- These modules set up fundamental Neovim settings and behaviors
-require("core.options")  -- Global Neovim options
-require("core.keymaps")  -- Global key mappings
-require("core.autocmds") -- Autocommands
-require("core.utils")    -- Utility functions
-
---------------------------------------------------------------------------------
--- Initialize plugin system
---------------------------------------------------------------------------------
-
--- Configure and load plugins using lazy.nvim
+-- Load plugins
 require("lazy").setup({
-  -- Load all plugin specifications from the plugins directory
-  spec = {
-    -- Include all .lua files from the plugins directory
-    { import = "plugins" },
+  -- Import all configs from lua/plugins directory
+  { import = "plugins" },
 
-    -- Load user settings last to allow overriding defaults
-    { import = "config.settings" },
+  -- Default config for lazy.nvim itself
+  {
+    "folke/lazy.nvim",
+    version = false,
   },
-
-  -- UI configuration for lazy.nvim
-  ui = {
-    border = "rounded", -- Display borders on lazy.nvim windows
-    icons = {
-      cmd = "⌘",
-      config = "🛠",
-      event = "📅",
-      ft = "📂",
-      init = "⚙",
-      keys = "🔑",
-      plugin = "🔌",
-      runtime = "💻",
-      require = "🔍",
-      source = "📄",
-      start = "🚀",
-      task = "📌",
-      lazy = "💤 ",
-    },
-  },
-
-  -- Install options
+}, {
   install = {
-    -- Try these colorschemes when starting for the first time
-    colorscheme = { "tokyonight", "catppuccin", "kanagawa" },
-    -- Install missing plugins automatically
-    missing = true,
+    colorscheme = { "gruvbox-material" },
   },
-
-  -- Performance settings
+  ui = {
+    border = "rounded",
+  },
+  checker = { enabled = true },
+  change_detection = { notify = false },
   performance = {
+    cache = {
+      enabled = true,
+    },
+    reset_packpath = true,
     rtp = {
-      -- Disable some built-in Neovim plugins that we don't need
       disabled_plugins = {
         "gzip",
+        "matchit",
+        "matchparen",
+        "netrwPlugin",
         "tarPlugin",
         "tohtml",
         "tutor",
         "zipPlugin",
-        "rplugin",
-        "spellfile",
       },
     },
-    reset_packpath = true, -- Reset packpath to improve startup time
-    cache = {
-      enabled = true,      -- Enable plugin caching
-    },
   },
-
-  -- Lazy can automatically check for plugin updates
-  checker = {
-    enabled = true,    -- Auto-check for updates
-    notify = false,    -- Don't show notifications for updates
-    frequency = 86400, -- Check once per day
-  },
-
-  -- Auto-reload configuration when changes are detected
-  change_detection = {
-    enabled = true,
-    notify = false, -- Don't show notifications for config changes
-  },
-})
-
--- Print a welcome message when Neovim starts
-vim.api.nvim_create_autocmd("User", {
-  pattern = "LazyDone",
-  callback = function()
-    vim.notify("NeoCode is ready! 🚀", vim.log.levels.INFO)
-  end,
 })
