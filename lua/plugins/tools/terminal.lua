@@ -22,16 +22,16 @@ return {
 		version = "*",
 		cmd = { "ToggleTerm", "TermExec" },
 		keys = {
-			{ "<leader>tf", "<cmd>ToggleTerm direction=float<cr>", desc = "Terminal Float" },
+			{ "<leader>tf", "<cmd>ToggleTerm direction=float<cr>",      desc = "Terminal Float" },
 			{ "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", desc = "Terminal Horizontal" },
-			{ "<leader>tv", "<cmd>ToggleTerm direction=vertical<cr>", desc = "Terminal Vertical" },
-			{ "<leader>tt", "<cmd>ToggleTerm<cr>", desc = "Toggle Terminal" },
-			{ "<leader>1", "<cmd>1ToggleTerm<cr>", desc = "Terminal #1" },
-			{ "<leader>2", "<cmd>2ToggleTerm<cr>", desc = "Terminal #2" },
-			{ "<leader>3", "<cmd>3ToggleTerm<cr>", desc = "Terminal #3" },
-			{ "<leader>4", "<cmd>4ToggleTerm<cr>", desc = "Terminal #4" },
-			{ "<F7>", "<cmd>ToggleTerm<cr>", desc = "Toggle Terminal" },
-			{ "<C-`>", "<cmd>ToggleTerm<cr>", desc = "Toggle Terminal" },
+			{ "<leader>tv", "<cmd>ToggleTerm direction=vertical<cr>",   desc = "Terminal Vertical" },
+			{ "<leader>tt", "<cmd>ToggleTerm<cr>",                      desc = "Toggle Terminal" },
+			{ "<leader>1",  "<cmd>1ToggleTerm<cr>",                     desc = "Terminal #1" },
+			{ "<leader>2",  "<cmd>2ToggleTerm<cr>",                     desc = "Terminal #2" },
+			{ "<leader>3",  "<cmd>3ToggleTerm<cr>",                     desc = "Terminal #3" },
+			{ "<leader>4",  "<cmd>4ToggleTerm<cr>",                     desc = "Terminal #4" },
+			{ "<F7>",       "<cmd>ToggleTerm<cr>",                      desc = "Toggle Terminal" },
+			{ "<C-`>",      "<cmd>ToggleTerm<cr>",                      desc = "Toggle Terminal" },
 		},
 		opts = {
 			size = function(term)
@@ -170,18 +170,18 @@ return {
 		build = "bash ./install.sh",
 		cmd = { "SnipRun", "SnipInfo", "SnipReset", "SnipReplMemoryClean", "SnipClose", "SnipLive" },
 		keys = {
-			{ "<leader>r", "<Plug>SnipRun", mode = "v", desc = "Run Code Snippet" },
-			{ "<leader>R", "<Plug>SnipRunOperator", desc = "Run Code Snippet Operator" },
-			{ "<leader>rs", "<cmd>SnipRun<CR>", desc = "Run Snippet" },
-			{ "<leader>rc", "<cmd>SnipClose<CR>", desc = "Close SnipRun" },
-			{ "<leader>rl", "<cmd>SnipLive<CR>", desc = "Live mode" },
-			{ "<leader>rr", "<cmd>SnipReset<CR>", desc = "Reset Sniprun" },
+			{ "<leader>r",  "<Plug>SnipRun",         mode = "v",                        desc = "Run Code Snippet" },
+			{ "<leader>R",  "<Plug>SnipRunOperator", desc = "Run Code Snippet Operator" },
+			{ "<leader>rs", "<cmd>SnipRun<CR>",      desc = "Run Snippet" },
+			{ "<leader>rc", "<cmd>SnipClose<CR>",    desc = "Close SnipRun" },
+			{ "<leader>rl", "<cmd>SnipLive<CR>",     desc = "Live mode" },
+			{ "<leader>rr", "<cmd>SnipReset<CR>",    desc = "Reset Sniprun" },
 		},
 		config = function()
 			require("sniprun").setup({
-				selected_interpreters = {}, -- Use those instead of the default for the current filetype
+				selected_interpreters = {},                                     -- Use those instead of the default for the current filetype
 				repl_enable = { "Python3_original", "JavaScript", "Lua_original" }, -- Enable REPL-like behavior for the given interpreters
-				repl_disable = {}, -- Disable REPL-like behavior for the given interpreters
+				repl_disable = {},                                              -- Disable REPL-like behavior for the given interpreters
 				interpreter_options = {
 					-- Interpreter-specific options, see docs / :SnipInfo <name>
 					Python3_original = {
@@ -190,8 +190,8 @@ return {
 				},
 				-- You can combo different display modes as desired
 				display = {
-					"Classic", -- Display results in the command line
-					"VirtualTextOk", -- Display results as virtual text
+					"Classic",                    -- Display results in the command line
+					"VirtualTextOk",              -- Display results as virtual text
 				},
 				live_display = { "VirtualTextOk" }, -- Display mode used in live mode
 				display_options = {
@@ -206,8 +206,8 @@ return {
 					SniprunFloatingWinErr = { fg = "#881515", ctermfg = "DarkRed" },
 				},
 				live_mode_toggle = "off", -- Live mode on by default, use to toggle a key a value
-				borders = "single", -- Display borders around floating windows
-				inline_messages = 0, -- Inline_message (0/1) is a one-line way to display messages
+				borders = "single",   -- Display borders around floating windows
+				inline_messages = 0,  -- Inline_message (0/1) is a one-line way to display messages
 
 				-- If you have issues with REPL-like behavior, try tweaking these
 				stop_capture = nil, -- If nil, captures endlessly until broken by the user
@@ -220,10 +220,10 @@ return {
 	{
 		"hkupty/iron.nvim",
 		keys = {
-			{ "<leader>is", "<cmd>IronRepl<cr>", desc = "Iron REPL" },
+			{ "<leader>is", "<cmd>IronRepl<cr>",    desc = "Iron REPL" },
 			{ "<leader>ir", "<cmd>IronRestart<cr>", desc = "Restart Iron REPL" },
-			{ "<leader>if", "<cmd>IronFocus<cr>", desc = "Focus Iron REPL" },
-			{ "<leader>ih", "<cmd>IronHide<cr>", desc = "Hide Iron REPL" },
+			{ "<leader>if", "<cmd>IronFocus<cr>",   desc = "Focus Iron REPL" },
+			{ "<leader>ih", "<cmd>IronHide<cr>",    desc = "Hide Iron REPL" },
 		},
 		config = function()
 			local iron = require("iron.core")
@@ -287,14 +287,14 @@ return {
 	{
 		"stevearc/overseer.nvim",
 		keys = {
-			{ "<leader>oo", "<cmd>OverseerRun<cr>", desc = "Run Task" },
-			{ "<leader>ot", "<cmd>OverseerToggle<cr>", desc = "Toggle Tasks" },
-			{ "<leader>oc", "<cmd>OverseerBuild<cr>", desc = "Build Task" },
-			{ "<leader>ob", "<cmd>OverseerRunCmd<cr>", desc = "Run Command" },
-			{ "<leader>ol", "<cmd>OverseerLoadBundle<cr>", desc = "Load Bundle" },
-			{ "<leader>os", "<cmd>OverseerSaveBundle<cr>", desc = "Save Bundle" },
+			{ "<leader>oo", "<cmd>OverseerRun<cr>",         desc = "Run Task" },
+			{ "<leader>ot", "<cmd>OverseerToggle<cr>",      desc = "Toggle Tasks" },
+			{ "<leader>oc", "<cmd>OverseerBuild<cr>",       desc = "Build Task" },
+			{ "<leader>ob", "<cmd>OverseerRunCmd<cr>",      desc = "Run Command" },
+			{ "<leader>ol", "<cmd>OverseerLoadBundle<cr>",  desc = "Load Bundle" },
+			{ "<leader>os", "<cmd>OverseerSaveBundle<cr>",  desc = "Save Bundle" },
 			{ "<leader>oa", "<cmd>OverseerQuickAction<cr>", desc = "Quick Action" },
-			{ "<leader>od", "<cmd>OverseerTaskAction<cr>", desc = "Task Action" },
+			{ "<leader>od", "<cmd>OverseerTaskAction<cr>",  desc = "Task Action" },
 		},
 		config = function()
 			require("overseer").setup({
@@ -430,10 +430,10 @@ return {
 	{
 		"CRAG666/code_runner.nvim",
 		keys = {
-			{ "<leader>cr", "<cmd>RunCode<CR>", desc = "Run Code" },
-			{ "<leader>crf", "<cmd>RunFile<CR>", desc = "Run File" },
+			{ "<leader>cr",  "<cmd>RunCode<CR>",    desc = "Run Code" },
+			{ "<leader>crf", "<cmd>RunFile<CR>",    desc = "Run File" },
 			{ "<leader>crp", "<cmd>RunProject<CR>", desc = "Run Project" },
-			{ "<leader>crc", "<cmd>RunClose<CR>", desc = "Close Runner" },
+			{ "<leader>crc", "<cmd>RunClose<CR>",   desc = "Close Runner" },
 		},
 		config = function()
 			require("code_runner").setup({

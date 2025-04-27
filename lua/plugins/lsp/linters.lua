@@ -3,16 +3,17 @@
 --------------------------------------------------------------------------------
 --
 -- This module configures code linters for different languages.
--- Linters analyze code for potential errors, bugs, stylistic errors, and
+-- Linters analyze code for potential errors, bugs, stylistic issues, and
 -- suspicious constructs.
 --
--- We use nvim-lint to integrate linters that don't have Language Server Protocol
--- support directly.
+-- We use nvim-lint to integrate linters that don't have LSP support.
 --
--- Each linter is configured with:
--- 1. The file types it supports
--- 2. Any special configuration it needs
--- 3. Any command-line arguments to customize behavior
+-- Features:
+-- 1. Real-time linting as you type or on save
+-- 2. Support for various linters per language
+-- 3. Automatic triggering on file events
+-- 4. Toggle functionality for enabling/disabling linting
+-- 5. Linter-specific configuration options
 --
 -- To add a new linter:
 -- 1. Check if it's available in require("lint").linters
@@ -22,10 +23,12 @@
 return {
   {
     "mfussenegger/nvim-lint",
-    event = { "BufReadPre", "BufNewFile" },
-    opts = {
-      -- Define linters by filetype
-      linters_by_ft = {
+    event = { "BufReadPost", "BufWritePost", "InsertLeave" },
+    config = function()
+      local lint = require("lint")
+      
+      -- Configure linters for different filetypes
+      lint.linters_by_ft = {
         -- General linters for multiple filetypes
         ["*"] = { "codespell" },
         
@@ -53,51 +56,79 @@ return {
         terraform = { "tflint" },
         sql = { "sqlfluff" },
         php = { "php" },
-      },
+      }
       
       -- Linter-specific configuration
-      linters = {
-        -- Lua
-        luacheck = {
-          args = { "--globals", "vim", "--no-max-line-length" },
-        },
+      lint.linters.luacheck.args = { 
+        "--globals", "vim", 
+        "--no-max-line-length", 
+        "--no-unused-args",
+      }
       
-      -- Run linters automatically
-      autostart = true,
+      lint.linters.flake8.args = { 
+        "--max-line-length", "88", 
+        "--extend-ignore", "E203" 
+      }
       
-      -- Methods to trigger linting
-      events = { "BufWritePost", "BufReadPost", "InsertLeave" },
-    },
-    
-    config = function(_, opts)
-      local lint = require("lint")
+      lint.linters.shellcheck.args = { 
+        "--severity", "warning",
+        "--shell", "bash",
+        "--enable", "all",
+      }
       
-      -- Setup nvim-lint with the provided options
-      lint.linters_by_ft = opts.linters_by_ft
+      lint.linters.markdownlint.args = { 
+        "--config", ".markdownlint.json" 
+      }
       
-      -- Configure linters
-      for name, linter_opts in pairs(opts.linters) do
-        if lint.linters[name] then
-          for opt_name, opt_value in pairs(linter_opts) do
-            lint.linters[name][opt_name] = opt_value
-          end
-        end
+      lint.linters.eslint_d.condition = function(ctx)
+        return vim.fs.find({ 
+          ".eslintrc", 
+          ".eslintrc.js", 
+          ".eslintrc.cjs",
+          ".eslintrc.yaml", 
+          ".eslintrc.yml", 
+          ".eslintrc.json"
+        }, { path = ctx.filename, upward = true })[1] ~= nil
       end
       
-      -- Set up autocmd to trigger linting
+      lint.linters.golangci_lint.args = { 
+        "run", 
+        "--out-format=json",
+      }
+      
+      lint.linters.cargo = {
+        args = { "clippy", "--message-format=json", "--", "-W", "clippy::all" },
+      }
+      
+      -- Set up autocmd for automatic linting
       local lint_augroup = vim.api.nvim_create_augroup("nvim-lint", { clear = true })
-      vim.api.nvim_create_autocmd(opts.events, {
+      
+      vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
         group = lint_augroup,
         callback = function()
           -- Skip linting if explicitly disabled
           if vim.b.disable_autoformat or vim.g.disable_autoformat then
             return
           end
+          
+          -- Don't lint large files
+          local max_filesize = 500 * 1024 -- 500 KB
+          local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(0))
+          if ok and stats and stats.size > max_filesize then
+            return
+          end
+          
+          -- Don't lint certain filetypes
+          local exclude_filetypes = { "alpha", "dashboard", "help", "NvimTree", "neo-tree", "Trouble", "lazy" }
+          if vim.tbl_contains(exclude_filetypes, vim.bo.filetype) then
+            return
+          end
+          
           lint.try_lint()
         end,
       })
       
-      -- Create commands to manually trigger lint
+      -- Command to manually trigger linting
       vim.api.nvim_create_user_command("Lint", function()
         lint.try_lint()
       end, { desc = "Trigger linting for current file" })
@@ -110,88 +141,12 @@ return {
           vim.log.levels.INFO
         )
       end, { desc = "Toggle automatic linting for current buffer" })
+      
+      -- Keymap to toggle linting
+      vim.keymap.set("n", "<leader>ul", function()
+        vim.b.disable_linting = not vim.b.disable_linting
+        vim.notify("Linting " .. (vim.b.disable_linting and "disabled" or "enabled"), vim.log.levels.INFO)
+      end, { desc = "Toggle linting" })
     end,
   },
 }
-        
-        -- Python
-        flake8 = {
-          args = { "--max-line-length", "88", "--extend-ignore", "E203" },
-          -- Find local versions of flake8
-          condition = function()
-            return vim.fn.executable("flake8") > 0
-          end,
-        },
-        mypy = {
-          -- Try to use local venv if available
-          condition = function()
-            return vim.fn.executable("mypy") > 0
-          end,
-        },
-        pydocstyle = {},
-        
-        -- JavaScript/TypeScript
-        eslint_d = {
-          condition = function(ctx)
-            return vim.fs.find({ 
-              ".eslintrc", 
-              ".eslintrc.js", 
-              ".eslintrc.cjs",
-              ".eslintrc.yaml", 
-              ".eslintrc.yml", 
-              ".eslintrc.json"
-            }, { path = ctx.filename, upward = true })[1]
-          end,
-        },
-        
-        -- Shell
-        shellcheck = {
-          args = { "--severity", "warning" },
-        },
-        
-        -- Markdown
-        markdownlint = {
-          args = { "--config", ".markdownlint.json" },
-        },
-        vale = {},
-        
-        -- JSON
-        jsonlint = {},
-        
-        -- YAML
-        yamllint = {
-          args = { "-f", "parsable" },
-        },
-        
-        -- Go
-        golangci_lint = {
-          args = { "run", "--out-format=json" },
-        },
-        
-        -- Rust
-        cargo = {
-          args = { "clippy", "--message-format=json", "--", "-W", "clippy::all" },
-        },
-        
-        -- Docker
-        hadolint = {},
-        
-        -- Terraform
-        tflint = {},
-        
-        -- SQL
-        sqlfluff = {
-          args = { "lint", "--dialect", "postgres", "--format", "json" },
-        },
-        
-        -- PHP
-        php = {
-          args = { "-l", "-d", "display_errors=on", "-d", "log_errors=off" },
-        },
-        
-        -- Common spell checker (works with all filetypes)
-        codespell = {
-          args = { "--quiet-level=4", "-" },
-          ignore_exitcode = true,
-        },
-      },

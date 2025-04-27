@@ -6,13 +6,11 @@
 -- 1. Colorscheme (colorscheme.lua)
 -- 2. Status line (statusline.lua)
 -- 3. Dashboard (dashboard.lua)
--- 4. Notification system (notify.lua)
--- 5. Command line enhancements (noice.lua)
--- 6. UI input improvements (dressing.lua)
--- 7. Animations (animate.lua)
--- 8. Document headlines (headlines.lua)
--- 9. Minimap (codewindow.lua)
--- 10. Navigation breadcrumbs (navic.lua)
+-- 4. File explorer (explorer.lua) - consolidated from multiple sources
+-- 5. UI input improvements (dressing.lua)
+-- 6. Notification system (notify.lua)
+-- 7. Code context (navic.lua)
+-- 8. Animations (animate.lua)
 --
 -- These plugins improve the visual appearance and interface of Neovim while
 -- maintaining performance and responsiveness.
@@ -22,15 +20,14 @@ return {
 	-- Import UI modules
 	{ import = "plugins.ui.colorscheme" }, -- Color themes
 	{ import = "plugins.ui.statusline" }, -- Status line
-	{ import = "plugins.ui.dashboard" }, -- Welcome screen
-	{ import = "plugins.ui.notify" }, -- Notification system
-	{ import = "plugins.ui.noice" }, -- Command line and messages
-	{ import = "plugins.ui.dressing" }, -- Input UI
-	{ import = "plugins.ui.animate" }, -- Smooth animations
-	{ import = "plugins.ui.headlines" }, -- Document headlines
-	{ import = "plugins.ui.codewindow" }, -- Minimap
-	{ import = "plugins.ui.navic" }, -- Code context
-	{ import = "plugins.ui.bufferline" }, -- buffer line
+	{ import = "plugins.ui.dashboard" },  -- Welcome screen
+	{ import = "plugins.ui.notify" },     -- Notification system
+	{ import = "plugins.ui.noice" },      -- Command line and messages
+	{ import = "plugins.ui.dressing" },   -- Input UI
+	{ import = "plugins.ui.animate" },    -- Smooth animations
+	{ import = "plugins.ui.navic" },      -- Code context
+	{ import = "plugins.ui.explorer" },   -- Consolidated file explorer
+
 	-- File icons
 	{
 		"nvim-tree/nvim-web-devicons",
@@ -38,7 +35,6 @@ return {
 		opts = {
 			strict = true,
 			override_by_extension = {
-				-- Custom icons for specific file extensions
 				["json"] = {
 					icon = "",
 					color = "#cbcb41",
@@ -71,7 +67,6 @@ return {
 				},
 			},
 			override_by_filename = {
-				-- Custom icons for specific filenames
 				[".gitignore"] = {
 					icon = "",
 					color = "#f1502f",
@@ -101,116 +96,10 @@ return {
 		},
 	},
 
-	-- File explorer
-	{
-		"nvim-neo-tree/neo-tree.nvim",
-		branch = "v3.x",
-		cmd = "Neotree",
-		dependencies = {
-			"nvim-lua/plenary.nvim",
-			"nvim-tree/nvim-web-devicons",
-			"MunifTanjim/nui.nvim",
-		},
-		keys = {
-			{
-				"<leader>e",
-				function()
-					require("neo-tree.command").execute({ toggle = true, dir = vim.loop.cwd() })
-				end,
-				desc = "Explorer NeoTree (cwd)",
-			},
-			{
-				"<leader>fe",
-				"<cmd>Neotree toggle<cr>",
-				desc = "Explorer NeoTree",
-			},
-		},
-		opts = {
-			sources = { "filesystem", "buffers", "git_status", "document_symbols" },
-			open_files_do_not_replace_types = { "terminal", "trouble", "qf" },
-			filesystem = {
-				bind_to_cwd = false,
-				follow_current_file = { enabled = true },
-				use_libuv_file_watcher = true,
-				filtered_items = {
-					visible = false,
-					hide_dotfiles = false,
-					hide_gitignored = false,
-					hide_hidden = false,
-					hide_by_name = {
-						".git",
-						"node_modules",
-						".cache",
-					},
-					never_show = {
-						".DS_Store",
-						"__pycache__",
-					},
-				},
-			},
-			window = {
-				position = "left",
-				width = 30,
-				mappings = {
-					["<space>"] = "none",
-					["o"] = "open",
-					["H"] = "navigate_up",
-					["h"] = function(state)
-						local node = state.tree:get_node()
-						if node.type == "directory" and node:is_expanded() then
-							require("neo-tree.sources.filesystem").toggle_directory(state, node)
-						else
-							require("neo-tree.ui.renderer").focus_node(state, node:get_parent_id())
-						end
-					end,
-					["l"] = function(state)
-						local node = state.tree:get_node()
-						if node.type == "directory" then
-							if not node:is_expanded() then
-								require("neo-tree.sources.filesystem").toggle_directory(state, node)
-							elseif node:has_children() then
-								require("neo-tree.ui.renderer").focus_node(state, node:get_child_ids()[1])
-							end
-						else
-							require("neo-tree.actions.custom").open(state)
-						end
-					end,
-				},
-			},
-			default_component_configs = {
-				indent = {
-					with_expanders = true, -- if nil and file nesting is enabled, will enable expanders
-					expander_collapsed = "",
-					expander_expanded = "",
-					expander_highlight = "NeoTreeExpander",
-				},
-				icon = {
-					folder_closed = "",
-					folder_open = "",
-					folder_empty = "",
-					default = "",
-				},
-				git_status = {
-					symbols = {
-						added = "",
-						modified = "",
-						deleted = "✖",
-						renamed = "➜",
-						untracked = "★",
-						ignored = "◌",
-						unstaged = "✗",
-						staged = "✓",
-						conflict = "",
-					},
-				},
-			},
-		},
-	},
-
 	-- Active indent guides and indent text objects
 	{
 		"echasnovski/mini.indentscope",
-		version = false, -- wait till new 0.7.0 release to put it back on semver
+		version = false,
 		event = { "BufReadPost", "BufNewFile" },
 		opts = {
 			symbol = "│",
@@ -304,8 +193,8 @@ return {
 					require("statuscol").setup({
 						relculright = true,
 						segments = {
-							{ text = { builtin.foldfunc }, click = "v:lua.ScFa" },
-							{ text = { "%s" }, click = "v:lua.ScSa" },
+							{ text = { builtin.foldfunc },      click = "v:lua.ScFa" },
+							{ text = { "%s" },                  click = "v:lua.ScSa" },
 							{ text = { builtin.lnumfunc, " " }, click = "v:lua.ScLa" },
 						},
 					})
@@ -338,6 +227,7 @@ return {
 			vim.o.foldlevelstart = 99
 			vim.o.foldenable = true
 
+			-- UFO folding keymaps
 			vim.keymap.set("n", "zR", require("ufo").openAllFolds)
 			vim.keymap.set("n", "zM", require("ufo").closeAllFolds)
 			vim.keymap.set("n", "zr", require("ufo").openFoldsExceptKinds)
@@ -347,6 +237,38 @@ return {
 					vim.lsp.buf.hover()
 				end
 			end)
+		end,
+	},
+
+	-- Which-key for keybinding help
+	{
+		"folke/which-key.nvim",
+		event = "VeryLazy",
+		opts = {
+			plugins = { spelling = true },
+			defaults = {
+				mode = { "n", "v" },
+				["g"] = { name = "+goto" },
+				["gz"] = { name = "+surround" },
+				["]"] = { name = "+next" },
+				["["] = { name = "+prev" },
+				["<leader>b"] = { name = "+buffer" },
+				["<leader>c"] = { name = "+code" },
+				["<leader>f"] = { name = "+file/find" },
+				["<leader>g"] = { name = "+git" },
+				["<leader>gh"] = { name = "+hunks" },
+				["<leader>q"] = { name = "+quit/session" },
+				["<leader>s"] = { name = "+search" },
+				["<leader>u"] = { name = "+ui" },
+				["<leader>w"] = { name = "+windows" },
+				["<leader>x"] = { name = "+diagnostics/quickfix" },
+				["<leader>a"] = { name = "+ai" },
+			},
+		},
+		config = function(_, opts)
+			local wk = require("which-key")
+			wk.setup(opts)
+			wk.register(opts.defaults)
 		end,
 	},
 }

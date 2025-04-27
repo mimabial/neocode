@@ -49,10 +49,10 @@ return {
 					-- Setup LuaSnip
 					local ls = require("luasnip")
 					ls.setup({
-						history = true, -- Keep track of snippet history
+						history = true,                            -- Keep track of snippet history
 						updateevents = "TextChanged,TextChangedI", -- Update snippets in realtime
 						delete_check_events = "TextChanged,InsertLeave", -- When to check for deleted snippets
-						enable_autosnippets = true, -- Enable automatic snippets
+						enable_autosnippets = true,                -- Enable automatic snippets
 						ext_opts = {
 							[require("luasnip.util.types").choiceNode] = {
 								active = {
@@ -90,17 +90,17 @@ return {
 			},
 
 			-- Sources for nvim-cmp
-			"hrsh7th/cmp-nvim-lsp", -- LSP completions
-			"hrsh7th/cmp-buffer", -- Buffer completions
-			"hrsh7th/cmp-path", -- Path completions
-			"hrsh7th/cmp-cmdline", -- Command line completions
-			"hrsh7th/cmp-nvim-lua", -- Neovim Lua API completions
-			"saadparwaiz1/cmp_luasnip", -- Snippet completions
+			"hrsh7th/cmp-nvim-lsp",                -- LSP completions
+			"hrsh7th/cmp-buffer",                  -- Buffer completions
+			"hrsh7th/cmp-path",                    -- Path completions
+			"hrsh7th/cmp-cmdline",                 -- Command line completions
+			"hrsh7th/cmp-nvim-lua",                -- Neovim Lua API completions
+			"saadparwaiz1/cmp_luasnip",            -- Snippet completions
 			"hrsh7th/cmp-nvim-lsp-signature-help", -- Parameter completions
 			"hrsh7th/cmp-nvim-lsp-document-symbol", -- Document symbol completions
-			"onsails/lspkind.nvim", -- VS Code-like pictograms
+			"onsails/lspkind.nvim",                -- VS Code-like pictograms
 			"roobert/tailwindcss-colorizer-cmp.nvim", -- Tailwind CSS colors in completion
-			"petertriho/cmp-git", -- Git completions
+			"petertriho/cmp-git",                  -- Git completions
 		},
 		config = function()
 			local cmp = require("cmp")
@@ -114,7 +114,7 @@ return {
 				unpack = unpack or table.unpack
 				local line, col = unpack(vim.api.nvim_win_get_cursor(0))
 				return col ~= 0
-					and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
+						and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
 			end
 
 			-- Main nvim-cmp configuration
@@ -209,9 +209,9 @@ return {
 
 				-- Configure the sources for completions (in order of priority)
 				sources = cmp.config.sources({
-					{ name = "nvim_lsp", priority = 1000 },
+					{ name = "nvim_lsp",                priority = 1000 },
 					{ name = "nvim_lsp_signature_help", priority = 900 },
-					{ name = "luasnip", priority = 800 },
+					{ name = "luasnip",                 priority = 800 },
 					-- AI completion sources would be inserted here by the AI modules
 					{
 						name = "buffer",
@@ -223,10 +223,10 @@ return {
 							keyword_length = 3,
 						},
 					},
-					{ name = "path", priority = 600 },
-					{ name = "nvim_lua", priority = 500 },
-					{ name = "calc", priority = 400 },
-					{ name = "emoji", priority = 300 },
+					{ name = "path",       priority = 600 },
+					{ name = "nvim_lua",   priority = 500 },
+					{ name = "calc",       priority = 400 },
+					{ name = "emoji",      priority = 300 },
 					{ name = "treesitter", priority = 200 },
 				}),
 
@@ -372,9 +372,9 @@ return {
 		event = "InsertEnter",
 		config = function()
 			require("nvim-autopairs").setup({
-				check_ts = true, -- Use treesitter to check for pairs
+				check_ts = true,                           -- Use treesitter to check for pairs
 				ts_config = {
-					lua = { "string", "source" }, -- Don't add pairs in lua string treesitter nodes
+					lua = { "string", "source" },            -- Don't add pairs in lua string treesitter nodes
 					javascript = { "string", "template_string" }, -- Don't add pairs in javascript template_string
 				},
 				fast_wrap = {
@@ -435,7 +435,7 @@ return {
 			hint_prefix = "🔍 ",
 			hint_scheme = "String",
 			hi_parameter = "Search",
-			toggle_key = "<C-k>", -- Toggle signature on and off in insert mode
+			toggle_key = "<C-k>",        -- Toggle signature on and off in insert mode
 			select_signature_key = "<C-n>", -- Cycle between signatures
 			floating_window = true,
 			doc_lines = 10,

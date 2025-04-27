@@ -34,7 +34,7 @@ return {
     lazy = true,
     config = function()
       require("nvim-web-devicons").setup({
-        override = {}, -- Used to override icons
+        override = {},  -- Used to override icons
         default = true, -- Use default icons for filetypes
       })
     end,
@@ -50,60 +50,6 @@ return {
   {
     "MunifTanjim/nui.nvim",
     lazy = true,
-  },
-
-  -- Improved UI for messages, cmdline, and popups
-  {
-    "folke/noice.nvim",
-    event = "VeryLazy",
-    dependencies = {
-      "MunifTanjim/nui.nvim",
-      "rcarriga/nvim-notify",
-    },
-    opts = {
-      lsp = {
-        -- Override markdown rendering so that cmp and other plugins use Treesitter
-        override = {
-          ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
-          ["vim.lsp.util.stylize_markdown"] = true,
-          ["cmp.entry.get_documentation"] = true,
-        },
-        -- Show signatures as you type
-        signature = {
-          enabled = true,
-          auto_open = {
-            enabled = true,
-            trigger = true,
-            luasnip = true,
-            throttle = 50,
-          },
-        },
-        -- Enhanced hover documentation
-        hover = {
-          enabled = true,
-          silent = false, -- Show messages while hovering
-        },
-      },
-      -- Enable built-in features
-      presets = {
-        bottom_search = true, -- Search at bottom of screen
-        command_palette = true, -- Command palette UI
-        long_message_to_split = true, -- Long messages go to a split
-        inc_rename = true, -- Incremental renaming UI
-        lsp_doc_border = true, -- Add border to hover docs
-      },
-      -- Hide certain messages
-      routes = {
-        {
-          filter = {
-            event = "msg_show",
-            kind = "",
-            find = "written",
-          },
-          opts = { skip = true }, -- Skip "written" messages
-        },
-      },
-    },
   },
 
   -- Better UI components
@@ -167,7 +113,7 @@ return {
       end,
       background_colour = "#000000",
       stages = "fade_in_slide_out", -- Animation style
-      top_down = true, -- Notifications appear from top
+      top_down = true,              -- Notifications appear from top
     },
     config = function(_, opts)
       require("notify").setup(opts)
@@ -206,11 +152,11 @@ return {
   },
 
   -- Import all plugin modules
-  { import = "plugins.editor" },  -- Editor enhancements
-  { import = "plugins.coding" },  -- Coding support (LSP, completion, etc.)
-  { import = "plugins.lsp" },     -- LSP configuration
-  { import = "plugins.langs" },   -- Language specific plugins
-  { import = "plugins.tools" },   -- Development tools (git, terminal, etc.)
-  { import = "plugins.ui" },      -- UI components
-  { import = "plugins.util" },    -- Utilities (telescope, etc.)
+  { import = "plugins.editor" }, -- Editor enhancements
+  { import = "plugins.coding" }, -- Coding support (LSP, completion, etc.)
+  { import = "plugins.lsp" },    -- LSP configuration
+  { import = "plugins.langs" },  -- Language specific plugins
+  { import = "plugins.tools" },  -- Development tools (git, terminal, etc.)
+  { import = "plugins.ui" },     -- UI components
+  { import = "plugins.util" },   -- Utilities (telescope, etc.)
 }

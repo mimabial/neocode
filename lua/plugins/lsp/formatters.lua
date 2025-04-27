@@ -3,16 +3,18 @@
 --------------------------------------------------------------------------------
 --
 -- This module configures code formatters for different languages.
--- We use conform.nvim to integrate formatters with Neovim.
+-- We use conform.nvim for formatter integration.
 --
--- Each formatter is configured with:
--- 1. The file types it supports
--- 2. Any special configuration it needs
--- 3. Any command-line arguments to customize behavior
+-- Features:
+-- 1. Automatic code formatting on save
+-- 2. Support for multiple formatters per language
+-- 3. Fallback options when primary formatters aren't available
+-- 4. Options to toggle formatting globally or per-buffer
+-- 5. Project-specific formatter configuration detection
 --
 -- To add a new formatter:
 -- 1. Check if it's available in conform.formatters
--- 2. Add it to the formatters_by_ft table
+-- 2. Add it to the formatters_by_ft table for the appropriate filetype
 --------------------------------------------------------------------------------
 
 return {
@@ -75,7 +77,7 @@ return {
 				rust = { "rustfmt" },
 
 				-- Go
-				go = { "gofmt", "goimports" },
+				go = { "gofumpt", "goimports" },
 
 				-- C/C++/Java etc.
 				c = { "clang_format" },
@@ -105,8 +107,8 @@ return {
 				-- Lua
 				stylua = {
 					args = { "--indent-type", "Spaces", "--indent-width", "2" },
+					-- Only use if stylua.toml or .stylua.toml exists
 					condition = function(ctx)
-						-- Only use if stylua.toml or .stylua.toml exists
 						return vim.fs.find({ "stylua.toml", ".stylua.toml" }, { path = ctx.filename, upward = true })[1]
 					end,
 				},
@@ -143,7 +145,7 @@ return {
 				},
 
 				-- Go
-				gofmt = {},
+				gofumpt = {},
 				goimports = {},
 
 				-- Shell
@@ -178,12 +180,33 @@ return {
 			},
 
 			-- Format on save settings
-			format_on_save = {
-				-- I recommend these options with format on save
-				lsp_fallback = true,
-				async = false,
-				timeout_ms = 500,
-			},
+			format_on_save = function(bufnr)
+				-- Check if auto-formatting is disabled for this buffer
+				if vim.b[bufnr].disable_autoformat or vim.g.disable_autoformat then
+					return
+				end
+
+				-- Check for certain filetypes we don't want to auto-format
+				local exclude_filetypes = { "alpha", "dashboard", "help", "NvimTree", "neo-tree", "Trouble", "lazy" }
+				if vim.tbl_contains(exclude_filetypes, vim.bo[bufnr].filetype) then
+					return
+				end
+
+				-- Check filesize limits to avoid formatting huge files
+				local max_filesize = 500 * 1024 -- 500 KB
+				local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(bufnr))
+				if ok and stats and stats.size > max_filesize then
+					vim.notify("File too large for auto-formatting", vim.log.levels.WARN)
+					return
+				end
+
+				-- Return default formatting options
+				return {
+					timeout_ms = 1000,
+					lsp_fallback = true,
+					async = false,
+				}
+			end,
 
 			-- Notify on formatting errors
 			notify_on_error = true,
@@ -215,6 +238,12 @@ return {
 					vim.log.levels.INFO
 				)
 			end, { desc = "Toggle format on save globally" })
+
+			-- Add keymap to toggle autoformat
+			vim.keymap.set("n", "<leader>uf", function()
+				vim.g.disable_autoformat = not vim.g.disable_autoformat
+				vim.notify("Autoformatting " .. (vim.g.disable_autoformat and "disabled" or "enabled"), vim.log.levels.INFO)
+			end, { desc = "Toggle autoformatting" })
 		end,
 	},
 }

@@ -2,8 +2,8 @@
 -- LSP Server Configurations
 --------------------------------------------------------------------------------
 --
--- This module defines the configuration for all language servers.
--- Each server can have custom settings while sharing common capabilities.
+-- This module defines the configuration for language servers.
+-- Each server has custom settings while sharing common capabilities.
 --
 -- Structure:
 -- 1. List of servers to install automatically
@@ -26,13 +26,16 @@ return {
 			{ "williamboman/mason.nvim" },
 			{ "williamboman/mason-lspconfig.nvim" },
 			-- Useful status updates for LSP
-			{ "j-hui/fidget.nvim", opts = {} },
+			{ "j-hui/fidget.nvim",                opts = {} },
 			-- Additional lua configuration for nvim development
-			{ "folke/neodev.nvim", opts = {} },
+			{ "folke/neodev.nvim",                opts = {} },
 		},
 		opts = {
-			-- Enable this to show diagnostics numbers in the sign column
-			inlay_hints = { enabled = true },
+			-- Enable inlay hints (Neovim 0.10+)
+			inlay_hints = {
+				enabled = true,
+				include_trailing_parameter_hint = true,
+			},
 
 			-- Options for vim.diagnostics.config()
 			diagnostics = {
@@ -64,11 +67,12 @@ return {
 							},
 							workspace = {
 								library = {
-									vim.fn.expand("$VIMRUNTIME/lua"),
-									vim.fn.stdpath("config") .. "/lua",
+									vim.env.VIMRUNTIME,
+									-- Make the server aware of Neovim runtime files
+									"${3rd}/luv/library",
+									"${3rd}/busted/library",
 								},
-								-- Don't prompt about third-party dependencies
-								checkThirdParty = false,
+								checkThirdParty = false, -- Don't prompt about third-party dependencies
 							},
 							telemetry = {
 								enable = false, -- Disable telemetry
@@ -76,7 +80,7 @@ return {
 							completion = {
 								callSnippet = "Replace", -- Show function call snippets
 							},
-							hint = { -- Inlay hints (Neovim 0.10+)
+							hint = {           -- Inlay hints (Neovim 0.10+)
 								enable = true,
 								setType = true,
 								paramType = true,
@@ -195,8 +199,10 @@ return {
 										["https://json.schemastore.org/ansible-playbook.json"] = "*play*.{yml,yaml}",
 										["https://json.schemastore.org/chart.json"] = "Chart.{yml,yaml}",
 										["https://json.schemastore.org/docker-compose.json"] = "docker-compose*.{yml,yaml}",
-										["https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json"] = "*docker-compose*.{yml,yaml}",
-										["https://kubernetes-schemas.devbu.io/helm.toolkit.fluxcd.io/helmrelease_v2beta1.json"] = "*helmrelease.{yml,yaml}",
+										["https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json"] =
+										"*docker-compose*.{yml,yaml}",
+										["https://kubernetes-schemas.devbu.io/helm.toolkit.fluxcd.io/helmrelease_v2beta1.json"] =
+										"*helmrelease.{yml,yaml}",
 									}
 								end
 							end,
@@ -238,106 +244,6 @@ return {
 								completeFunctionCalls = true,
 							},
 						},
-					},
-				},
-
-				-- CSS
-				cssls = {
-					settings = {
-						css = {
-							validate = true,
-							lint = {
-								unknownAtRules = "ignore", -- Ignore unknown at-rules for framework compatibility
-							},
-						},
-						scss = {
-							validate = true,
-							lint = {
-								unknownAtRules = "ignore",
-							},
-						},
-						less = {
-							validate = true,
-							lint = {
-								unknownAtRules = "ignore",
-							},
-						},
-					},
-				},
-
-				-- HTML
-				html = {
-					settings = {
-						html = {
-							format = {
-								indentInnerHtml = true,
-								wrapLineLength = 120,
-								wrapAttributes = "auto",
-							},
-							hover = {
-								documentation = true,
-								references = true,
-							},
-							suggest = {
-								html5 = true,
-							},
-						},
-					},
-					filetypes = { "html", "htmldjango" }, -- Support Django templates
-				},
-
-				-- Tailwind CSS
-				tailwindcss = {
-					settings = {
-						tailwindCSS = {
-							experimental = {
-								classRegex = {
-									'class[:]\\s*"([^"]*)"',
-									'className[:]\\s*"([^"]*)"',
-									"class[:]\\s*'([^']*)'",
-									"className[:]\\s*'([^']*)'",
-									"tw`([^`]*)",
-									"tw\\.[^`]+`([^`]*)`",
-									"tw\\(.*?\\).*?`([^`]*)",
-								},
-							},
-							includeLanguages = {
-								typescript = "javascript",
-								typescriptreact = "javascript",
-								["html-eex"] = "html",
-								["phoenix-heex"] = "html",
-								heex = "html",
-								eelixir = "html",
-								elixir = "html",
-								elm = "html",
-								erb = "html",
-								svelte = "html",
-								javascriptreact = "javascript",
-								astro = "html",
-							},
-							validate = true,
-						},
-					},
-				},
-
-				-- Vue
-				volar = {
-					filetypes = { "vue", "typescript", "javascript" },
-				},
-
-				-- Emmet
-				emmet_ls = {
-					filetypes = {
-						"html",
-						"css",
-						"scss",
-						"javascript",
-						"javascriptreact",
-						"typescript",
-						"typescriptreact",
-						"vue",
-						"svelte",
-						"astro",
 					},
 				},
 
@@ -397,111 +303,7 @@ return {
 					},
 				},
 
-				-- C/C++
-				clangd = {
-					cmd = {
-						"clangd",
-						"--background-index",
-						"--suggest-missing-includes",
-						"--clang-tidy",
-						"--header-insertion=iwyu",
-						"--completion-style=detailed",
-						"--function-arg-placeholders",
-						"--fallback-style=llvm",
-					},
-				},
-
-				-- Java
-				jdtls = {
-					-- JDTLS has a more complex setup managed by nvim-jdtls
-					-- See lua/plugins/langs/java.lua for complete setup
-				},
-
-				-- Docker
-				dockerls = {},
-
-				-- Bash
-				bashls = {
-					filetypes = { "sh", "bash", "zsh" },
-				},
-
-				-- Terraform
-				terraformls = {
-					filetypes = { "terraform", "tf", "terraform-vars" },
-				},
-
-				-- TOML
-				taplo = {},
-
-				-- Markdown
-				marksman = {},
-
-				-- LTeX for LaTeX/Markdown spelling and grammar
-				ltex = {
-					settings = {
-						ltex = {
-							language = "en-US",
-							diagnosticSeverity = "information",
-							additionalRules = {
-								enablePickyRules = true,
-							},
-							disabledRules = {},
-							hiddenFalsePositives = {},
-						},
-					},
-				},
-
-				-- Denols (Deno)
-				denols = {
-					root_dir = require("lspconfig").util.root_pattern("deno.json", "deno.jsonc"),
-				},
-
-				-- Ruby
-				ruby_ls = {},
-
-				-- PHP
-				phpactor = {},
-
-				-- GraphQL
-				graphql = {
-					filetypes = { "graphql", "gql", "svelte", "typescriptreact", "javascriptreact" },
-				},
-
-				-- Astro
-				astro = {},
-
-				-- Svelte
-				svelte = {},
-
-				-- Angular
-				angularls = {},
-
-				-- Elixir
-				elixirls = {
-					settings = {
-						elixirLS = {
-							dialyzerEnabled = true,
-							fetchDeps = true,
-						},
-					},
-				},
-
-				-- Prisma ORM
-				prismals = {},
-
-				-- SQL
-				sqlls = {
-					settings = {
-						sqlLanguageServer = {
-							lint = {
-								lintOnChangeDebounce = 500,
-							},
-						},
-					},
-				},
-
-				-- Typos for spelling errors
-				typos_lsp = {},
+				-- Add configurations for other servers here
 			},
 
 			-- Options passed to lspconfig.setup for each server
@@ -526,14 +328,13 @@ return {
 				opts.capabilities or {}
 			)
 
-			-- Enable inlay hints if supported
+			-- Enable inlay hints if supported (Neovim 0.10+)
 			local function setup_inlay_hints(client, bufnr)
-				if
-					client.supports_method("textDocument/inlayHint")
-					and vim.lsp.inlay_hint
-					and opts.inlay_hints.enabled
-				then
-					vim.lsp.inlay_hint.enable(bufnr, true)
+				if client.supports_method("textDocument/inlayHint") then
+					if vim.lsp.inlay_hint then
+						-- Neovim 0.10+
+						vim.lsp.inlay_hint.enable(bufnr, opts.inlay_hints.enabled)
+					end
 				end
 			end
 
@@ -591,66 +392,54 @@ return {
 		"tsserver", -- TypeScript/JavaScript
 		"jsonls", -- JSON
 		"yamlls", -- YAML
-		"html", -- HTML
-		"cssls", -- CSS
+		"html",   -- HTML
+		"cssls",  -- CSS
 
 		-- Web Development
-		"eslint", -- ESLint
+		"eslint",    -- ESLint
 		"tailwindcss", -- Tailwind CSS
-		"volar", -- Vue
-		"astro", -- Astro
-		"emmet_ls", -- Emmet
-		"graphql", -- GraphQL
-		"prismals", -- Prisma ORM
-		"svelte", -- Svelte
+		"volar",     -- Vue
+		"astro",     -- Astro
+		"emmet_ls",  -- Emmet
+		"graphql",   -- GraphQL
+		"prismals",  -- Prisma ORM
+		"svelte",    -- Svelte
 		"angularls", -- Angular
 
 		-- Systems Programming
-		"clangd", -- C/C++
+		"clangd",      -- C/C++
 		"rust_analyzer", -- Rust
-		"gopls", -- Go
-		"zls", -- Zig
+		"gopls",       -- Go
+		"zls",         -- Zig
 
 		-- JVM Languages
-		"jdtls", -- Java
+		"jdtls",                -- Java
 		"kotlin_language_server", -- Kotlin
-		"groovyls", -- Groovy
-		"lemminx", -- XML
+		"groovyls",             -- Groovy
+		"lemminx",              -- XML
 
 		-- Scripting Languages
-		"bashls", -- Bash
+		"bashls",      -- Bash
 		"powershell_es", -- PowerShell
 
-		-- Data Science & ML
-		"pyright", -- Python
-		"r_language_server", -- R
-		"julials", -- Julia
-
 		-- Cloud & DevOps
-		"dockerls", -- Docker
+		"dockerls",                      -- Docker
 		"docker_compose_language_service", -- Docker Compose
-		"terraformls", -- Terraform
-		"helm_ls", -- Helm
-		"ansiblels", -- Ansible
-		"awk_ls", -- AWK
+		"terraformls",                   -- Terraform
+		"helm_ls",                       -- Helm
+		"ansiblels",                     -- Ansible
 
 		-- Databases
 		"sqlls", -- SQL
 
 		-- Markup/Documentation
 		"marksman", -- Markdown
-		"ltex", -- LaTeX/Text
-		"taplo", -- TOML
+		"ltex",   -- LaTeX/Text
+		"taplo",  -- TOML
 
 		-- Other Languages
 		"elixirls", -- Elixir
 		"phpactor", -- PHP
 		"ruby_ls", -- Ruby
-		"crystalline", -- Crystal
-		"ocamllsp", -- OCaml
-		"hls", -- Haskell
-		"dartls", -- Dart
-		"denols", -- Deno
-		"typos_lsp", -- Spelling
 	},
 }

@@ -184,10 +184,10 @@ return {
 							end,
 						})
 					elseif
-						filetype == "javascript"
-						or filetype == "typescript"
-						or filetype == "javascriptreact"
-						or filetype == "typescriptreact"
+							filetype == "javascript"
+							or filetype == "typescript"
+							or filetype == "javascriptreact"
+							or filetype == "typescriptreact"
 					then
 						-- Launch for JS/TS
 						require("dap").launch({
@@ -283,10 +283,10 @@ return {
 					{
 						elements = {
 							-- Top panel elements
-							{ id = "scopes", size = 0.25 },
+							{ id = "scopes",      size = 0.25 },
 							{ id = "breakpoints", size = 0.25 },
-							{ id = "stacks", size = 0.25 },
-							{ id = "watches", size = 0.25 },
+							{ id = "stacks",      size = 0.25 },
+							{ id = "watches",     size = 0.25 },
 						},
 						position = "left",
 						size = 40,
@@ -294,7 +294,7 @@ return {
 					{
 						elements = {
 							-- Bottom panel elements
-							{ id = "repl", size = 0.5 },
+							{ id = "repl",    size = 0.5 },
 							{ id = "console", size = 0.5 },
 						},
 						position = "bottom",
@@ -371,12 +371,12 @@ return {
 		opts = {
 			-- List of debuggers to automatically install
 			ensure_installed = {
-				"python", -- Python debugging
-				"codelldb", -- C/C++/Rust debugging
-				"js", -- JavaScript/TypeScript debugging
-				"php", -- PHP debugging
-				"delve", -- Go debugging
-				"javadbg", -- Java debugging
+				"python",           -- Python debugging
+				"codelldb",         -- C/C++/Rust debugging
+				"js",               -- JavaScript/TypeScript debugging
+				"php",              -- PHP debugging
+				"delve",            -- Go debugging
+				"javadbg",          -- Java debugging
 				"kotlin-debug-adapter", -- Kotlin debugging
 			},
 			automatic_installation = true,
