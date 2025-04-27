@@ -288,11 +288,18 @@ return {
 			telescope.load_extension("project")
 
 			-- Try to load optional extensions
-			pcall(telescope.load_extension, "notify")
-			pcall(telescope.load_extension, "projects") -- For project.nvim
-			pcall(telescope.load_extension, "harpoon")
-			pcall(telescope.load_extension, "frecency")
-			pcall(telescope.load_extension, "luasnip")
+			local optional_extensions = {
+				"notify",   -- For nvim-notify
+				"projects", -- For project.nvim
+				"harpoon",  -- For harpoon
+				"frecency", -- For frequency-based sorting
+				"dap",      -- For debugging
+				"yank_history", -- For yank history
+			}
+
+			for _, ext in ipairs(optional_extensions) do
+				pcall(telescope.load_extension, ext)
+			end
 		end,
 	},
 

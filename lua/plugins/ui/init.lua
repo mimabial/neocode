@@ -23,74 +23,40 @@ return {
 	{ import = "plugins.ui.dashboard" },  -- Welcome screen
 	{ import = "plugins.ui.notify" },     -- Notification system
 	{ import = "plugins.ui.noice" },      -- Command line and messages
-	{ import = "plugins.ui.dressing" },   -- Input UI
-	{ import = "plugins.ui.animate" },    -- Smooth animations
-	{ import = "plugins.ui.navic" },      -- Code context
 	{ import = "plugins.ui.explorer" },   -- Consolidated file explorer
+	{ import = "plugins.ui.navic" },      -- Code context
 
-	-- File icons
+	-- Better UI components
 	{
-		"nvim-tree/nvim-web-devicons",
+		"stevearc/dressing.nvim",
 		lazy = true,
+		init = function()
+			-- Load dressing.nvim when vim.ui functions are called
+			---@diagnostic disable-next-line: duplicate-set-field
+			vim.ui.select = function(...)
+				require("lazy").load({ plugins = { "dressing.nvim" } })
+				return vim.ui.select(...)
+			end
+			---@diagnostic disable-next-line: duplicate-set-field
+			vim.ui.input = function(...)
+				require("lazy").load({ plugins = { "dressing.nvim" } })
+				return vim.ui.input(...)
+			end
+		end,
 		opts = {
-			strict = true,
-			override_by_extension = {
-				["json"] = {
-					icon = "",
-					color = "#cbcb41",
-					name = "JSON",
-				},
-				["js"] = {
-					icon = "",
-					color = "#cbcb41",
-					name = "JavaScript",
-				},
-				["ts"] = {
-					icon = "ﯤ",
-					color = "#519aba",
-					name = "TypeScript",
-				},
-				["py"] = {
-					icon = "",
-					color = "#3572A5",
-					name = "Python",
-				},
-				["go"] = {
-					icon = "ﳑ",
-					color = "#519aba",
-					name = "Go",
-				},
-				["rs"] = {
-					icon = "",
-					color = "#dea584",
-					name = "Rust",
-				},
+			input = {
+				enabled = true,
+				default_prompt = "Input:",
+				border = "rounded",
+				win_options = { winblend = 10 },
 			},
-			override_by_filename = {
-				[".gitignore"] = {
-					icon = "",
-					color = "#f1502f",
-					name = "Gitignore",
-				},
-				["package.json"] = {
-					icon = "",
-					color = "#8bc34a",
-					name = "PackageJson",
-				},
-				["tsconfig.json"] = {
-					icon = "ﯤ",
-					color = "#519aba",
-					name = "TSConfig",
-				},
-				["dockerfile"] = {
-					icon = "",
-					color = "#458ee6",
-					name = "Dockerfile",
-				},
-				["docker-compose.yml"] = {
-					icon = "",
-					color = "#458ee6",
-					name = "DockerCompose",
+			select = {
+				enabled = true,
+				backend = { "telescope", "builtin" },
+				telescope = { layout_strategy = "center" },
+				builtin = {
+					border = "rounded",
+					win_options = { winblend = 10 },
 				},
 			},
 		},
@@ -268,7 +234,7 @@ return {
 		config = function(_, opts)
 			local wk = require("which-key")
 			wk.setup(opts)
-			wk.register(opts.defaults)
+			wk.add(opts.defaults)
 		end,
 	},
 }

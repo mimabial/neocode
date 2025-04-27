@@ -28,6 +28,7 @@ return {
 			"nvim-lua/plenary.nvim",
 			"nvim-tree/nvim-web-devicons",
 			"MunifTanjim/nui.nvim",
+			"s1n7ax/nvim-window-picker",
 		},
 		keys = {
 			{
@@ -171,9 +172,9 @@ return {
 	{
 		"stevearc/oil.nvim",
 		dependencies = { "nvim-tree/nvim-web-devicons" },
-		cmd = "Oil",
 		keys = {
-			{ "-", "<cmd>Oil<cr>", desc = "Open parent directory" },
+			{ "-",          "<cmd>Oil<cr>",         desc = "Open parent directory" },
+			{ "<leader>fo", "<cmd>Oil --float<cr>", desc = "Oil (float)" },
 		},
 		opts = {
 			-- Oil configuration
@@ -221,17 +222,6 @@ return {
 				["g\\"] = "actions.toggle_trash",
 			},
 			use_default_keymaps = true,
-			view_options = {
-				show_hidden = false,
-				is_hidden_file = function(name)
-					return vim.startswith(name, ".")
-				end,
-				sort = {
-					-- sort order: directories, files, symlinks
-					func = "name",
-					reverse = false,
-				},
-			},
 			float = {
 				padding = 2,
 				max_width = 80,
@@ -254,24 +244,13 @@ return {
 				},
 			},
 		},
-		config = function(_, opts)
-			require("oil").setup(opts)
-
-			-- Add command to toggle between float and normal modes
-			vim.api.nvim_create_user_command("OilFloat", function()
-				require("oil").open_float()
-			end, { desc = "Open Oil in float mode" })
-
-			-- Add keybinding for the float mode
-			vim.keymap.set("n", "<leader>fo", "<cmd>OilFloat<cr>", { desc = "Float File Explorer" })
-		end,
 	},
 
 	-- Window picker for Neo-tree
 	{
 		"s1n7ax/nvim-window-picker",
 		name = "window-picker",
-		event = "VeryLazy",
+		lazy = true,
 		version = "2.*",
 		config = function()
 			require("window-picker").setup({

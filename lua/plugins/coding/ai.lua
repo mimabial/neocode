@@ -4,9 +4,13 @@
 --
 -- This module configures AI assistance for coding:
 -- 1. Codeium for AI-powered completions
--- 2. Code explanation and documentation generation
--- 3. AI-powered refactoring suggestions
--- 4. Custom prompts for common coding tasks
+-- 2. Gen.nvim for more advanced AI operations
+--
+-- Features:
+-- - AI-powered code completions
+-- - Code explanation and documentation generation
+-- - Smart refactoring suggestions
+-- - Custom prompts for common coding tasks
 --
 -- The AI integration enhances coding efficiency while maintaining control.
 --------------------------------------------------------------------------------
@@ -88,7 +92,7 @@ return {
 		end,
 	},
 
-	-- Code explanation and AI tasks
+	-- Code explanation and AI tasks with Gen.nvim
 	{
 		"david-kunz/gen.nvim",
 		cmd = { "Gen" },
@@ -147,6 +151,18 @@ return {
 				Tests = {
 					prompt =
 					"Generate comprehensive unit tests for the following code. Include tests for edge cases and potential error conditions:\n$text",
+					model = "claude-3-opus-20240229",
+				},
+				-- Custom prompt for implementing a feature
+				Implement = {
+					prompt =
+					"Implement the following feature based on the description. Generate well-structured, efficient code with appropriate error handling and comments:\n$text",
+					model = "claude-3-opus-20240229",
+				},
+				-- Custom prompt for code review
+				Review = {
+					prompt =
+					"Review the following code and suggest improvements for readability, maintainability, performance, and security:\n$text",
 					model = "claude-3-opus-20240229",
 				},
 			},

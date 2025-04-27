@@ -6,10 +6,10 @@
 --
 -- Features:
 -- 1. Quick jumping within the buffer with flash.nvim (modern leap replacement)
--- 2. File browsing with oil.nvim (buffer-based explorer)
--- 3. Harpoon for quick file navigation
--- 4. Better marks and bookmarks
--- 5. Enhanced motion commands
+-- 2. Quick file navigation with harpoon
+-- 3. Better marks and bookmarks
+-- 4. Enhanced motion commands
+-- 5. Session management
 --
 -- These plugins make it easier to navigate within and between files,
 -- enhancing movement efficiency throughout your codebase.
@@ -136,7 +136,7 @@ return {
 			local harpoon = require("harpoon")
 
 			-- Setup harpoon
-			harpoon:setup({
+			harpoon.setup({
 				settings = {
 					save_on_toggle = true,
 					sync_on_ui_close = true,
@@ -176,111 +176,14 @@ return {
 				{ desc = "Harpoon Next File" })
 
 			-- Add Telescope extension for harpoon
-			require("telescope").load_extension("harpoon")
+			local telescope_available, telescope = pcall(require, "telescope")
+			if telescope_available then
+				telescope.load_extension("harpoon")
+			end
 		end,
 		keys = {
 			{ "<leader>hf", "<cmd>Telescope harpoon marks<cr>", desc = "Harpoon Find" },
 		},
-	},
-
-	-- Buffer-based file explorer with oil.nvim
-	{
-		"stevearc/oil.nvim",
-		dependencies = { "nvim-tree/nvim-web-devicons" },
-		cmd = "Oil",
-		keys = {
-			{ "-", "<cmd>Oil<cr>", desc = "Open parent directory" },
-		},
-		opts = {
-			-- Oil configuration
-			columns = {
-				"icon",
-				"permissions",
-				"size",
-				"mtime",
-			},
-			buf_options = {
-				buflisted = false,
-				bufhidden = "hide",
-			},
-			win_options = {
-				wrap = false,
-				signcolumn = "no",
-				cursorcolumn = false,
-				foldcolumn = "0",
-				spell = false,
-				list = false,
-				conceallevel = 3,
-				concealcursor = "n",
-			},
-			default_file_explorer = true,
-			restore_win_options = true,
-			skip_confirm_for_simple_edits = false,
-			delete_to_trash = true,
-			prompt_save_on_select_new_entry = true,
-			keymaps = {
-				["g?"] = "actions.show_help",
-				["<CR>"] = "actions.select",
-				["<C-v>"] = "actions.select_vsplit",
-				["<C-s>"] = "actions.select_split",
-				["<C-t>"] = "actions.select_tab",
-				["<C-p>"] = "actions.preview",
-				["<C-c>"] = "actions.close",
-				["<C-r>"] = "actions.refresh",
-				["-"] = "actions.parent",
-				["_"] = "actions.open_cwd",
-				["`"] = "actions.cd",
-				["~"] = "actions.tcd",
-				["gs"] = "actions.change_sort",
-				["gx"] = "actions.open_external",
-				["g."] = "actions.toggle_hidden",
-				["g\\"] = "actions.toggle_trash",
-			},
-			use_default_keymaps = true,
-			view_options = {
-				show_hidden = false,
-				is_hidden_file = function(name)
-					return vim.startswith(name, ".")
-				end,
-				sort = {
-					-- sort order: directories, files, symlinks
-					func = "name",
-					reverse = false,
-				},
-			},
-			float = {
-				padding = 2,
-				max_width = 80,
-				max_height = 30,
-				border = "rounded",
-				win_options = {
-					winblend = 10,
-				},
-			},
-			preview = {
-				max_width = 0.7,
-				min_width = { 40, 0.4 },
-				width = nil,
-				max_height = 0.8,
-				min_height = { 5, 0.1 },
-				height = nil,
-				border = "rounded",
-				win_options = {
-					winblend = 0,
-				},
-			},
-		},
-		config = function(_, opts)
-			require("oil").setup(opts)
-
-			-- Add command to toggle between float and normal modes
-			vim.api.nvim_create_user_command("OilFloat", function()
-				require("oil").open_float()
-			end, { desc = "Open Oil in float mode" })
-
-			-- Add keybinding for the float mode
-			vim.keymap.set("n", "<leader>fo", "<cmd>OilFloat<cr>", { desc = "Float File Explorer" })
-		end,
 	},
 
 	-- Better marks and bookmark management
@@ -349,8 +252,8 @@ return {
 				-- Close unwanted buffers
 				for _, buf in ipairs(vim.api.nvim_list_bufs()) do
 					if vim.api.nvim_buf_is_loaded(buf) then
-						local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
-						local filetype = vim.api.nvim_buf_get_option(buf, "filetype")
+						local buftype = vim.bo[buf].buftype
+						local filetype = vim.bo[buf].filetype
 						if buftype == "nofile" or vim.tbl_contains(ignored_filetypes, filetype) then
 							vim.api.nvim_buf_delete(buf, { force = true })
 						end
@@ -379,6 +282,84 @@ return {
 					require("persistence").stop()
 				end,
 				desc = "Don't Save Current Session",
+			},
+		},
+	},
+
+	-- Enhanced yanking and history
+	{
+		"gbprod/yanky.nvim",
+		dependencies = { { "kkharji/sqlite.lua", optional = true } },
+		opts = {
+			ring = {
+				history_length = 100,
+				storage = "memory", -- or "sqlite" if sqlite.lua is available
+				storage_path = vim.fn.stdpath("data") .. "/databases/yanky.db",
+				sync_with_numbered_registers = true,
+				cancel_event = "update",
+			},
+			picker = {
+				select = {
+					action = nil,
+				},
+				telescope = {
+					mappings = nil,
+				},
+			},
+			system_clipboard = {
+				sync_with_ring = true,
+			},
+			highlight = {
+				on_put = true,
+				on_yank = true,
+				timer = 500,
+			},
+			preserve_cursor_position = {
+				enabled = true,
+			},
+		},
+		keys = {
+			{ "y",          "<Plug>(YankyYank)",               mode = { "n", "x" },                         desc = "Yank text" },
+			{ "p",          "<Plug>(YankyPutAfter)",           mode = { "n", "x" },                         desc = "Put after cursor" },
+			{ "P",          "<Plug>(YankyPutBefore)",          mode = { "n", "x" },                         desc = "Put before cursor" },
+			{ "gp",         "<Plug>(YankyGPutAfter)",          mode = { "n", "x" },                         desc = "Put after cursor and leave cursor after" },
+			{ "gP",         "<Plug>(YankyGPutBefore)",         mode = { "n", "x" },                         desc = "Put before cursor and leave cursor after" },
+			{ "<c-n>",      "<Plug>(YankyCycleForward)",       desc = "Cycle forward through yank history" },
+			{ "<c-p>",      "<Plug>(YankyCycleBackward)",      desc = "Cycle backward through yank history" },
+			{ "<leader>fy", "<cmd>Telescope yank_history<CR>", desc = "Yank history" },
+		},
+		config = function(_, opts)
+			require("yanky").setup(opts)
+
+			-- Setup Telescope extension if available
+			local has_telescope, telescope = pcall(require, "telescope")
+			if has_telescope then
+				telescope.load_extension("yank_history")
+			end
+		end,
+	},
+
+	-- Portal for enhanced jumplist navigation
+	{
+		"cbochs/portal.nvim",
+		keys = {
+			{ "<leader>j", "<cmd>Portal jumplist backward<cr>", desc = "Portal Jump Backward" },
+			{ "<leader>k", "<cmd>Portal jumplist forward<cr>",  desc = "Portal Jump Forward" },
+		},
+		dependencies = {
+			"ThePrimeagen/harpoon",
+		},
+		opts = {
+			window_options = {
+				relative = "cursor",
+				width = 80,
+				height = 10,
+				col = 0,
+				row = 0,
+				style = "minimal",
+				border = "rounded",
+				title = { { "Portal" } },
+				title_pos = "center",
 			},
 		},
 	},

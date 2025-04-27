@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------------
--- NeoCode - Advanced Neovim Configuration
+-- NeoCode - Enhanced Neovim Configuration
 -- Author: Your Name
 -- License: MIT
--- Repository: https://github.com/yourusername/neocode
+-- Repository: https://github.com/mimabial/neocode
 --------------------------------------------------------------------------------
 --
 -- This is the main entry point for the NeoCode configuration.
@@ -84,7 +84,7 @@ require("lazy").setup({
   -- Install options
   install = {
     -- Try these colorschemes when starting for the first time
-    colorscheme = { "tokyonight", "catppuccin", "kanagawa", "gruvbox-material" },
+    colorscheme = { "tokyonight", "catppuccin", "kanagawa" },
     -- Install missing plugins automatically
     missing = true,
   },
@@ -98,7 +98,14 @@ require("lazy").setup({
         "tarPlugin",
         "tohtml",
         "tutor",
+        "zipPlugin",
+        "rplugin",
+        "spellfile",
       },
+    },
+    reset_packpath = true, -- Reset packpath to improve startup time
+    cache = {
+      enabled = true,      -- Enable plugin caching
     },
   },
 

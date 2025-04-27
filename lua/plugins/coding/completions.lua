@@ -12,7 +12,7 @@
 -- The completion system prioritizes:
 -- - LSP suggestions (with documentation and signatures)
 -- - Snippets for common patterns
--- - AI completions (from Codeium/Copilot)
+-- - AI completions (from Codeium)
 -- - Context-aware completions from the current buffer
 -- - File paths and environment variables
 --------------------------------------------------------------------------------
@@ -21,92 +21,49 @@ return {
 	-- Main completion plugin
 	{
 		"hrsh7th/nvim-cmp",
-		version = false, -- Using the latest instead of a specific version
+		version = false, -- Using the latest version
 		event = { "InsertEnter", "CmdlineEnter" },
 		dependencies = {
-			-- Snippet engine and its completion source
-			{
-				"L3MON4D3/LuaSnip",
-				dependencies = {
-					-- Collection of preconfigured snippets for various languages
-					"rafamadriz/friendly-snippets",
-					-- Additional language-specific snippets
-					"iurimateus/luasnip-latex-snippets.nvim",
-				},
-				build = "make install_jsregexp", -- For improved regex support
-				config = function()
-					-- Load snippets from friendly-snippets
-					require("luasnip.loaders.from_vscode").lazy_load()
-					-- Load custom snippets from snippets directory
-					require("luasnip.loaders.from_vscode").lazy_load({
-						paths = { vim.fn.stdpath("config") .. "/snippets" },
-					})
-					-- Load LaTeX snippets
-					require("luasnip-latex-snippets").setup({
-						use_treesitter = true,
-					})
+			-- Snippet engine
+			"L3MON4D3/LuaSnip",
 
-					-- Setup LuaSnip
-					local ls = require("luasnip")
-					ls.setup({
-						history = true,                            -- Keep track of snippet history
-						updateevents = "TextChanged,TextChangedI", -- Update snippets in realtime
-						delete_check_events = "TextChanged,InsertLeave", -- When to check for deleted snippets
-						enable_autosnippets = true,                -- Enable automatic snippets
-						ext_opts = {
-							[require("luasnip.util.types").choiceNode] = {
-								active = {
-									virt_text = { { " « Current Choice » ", "Comment" } },
-								},
-							},
-						},
-					})
+			-- LSP completion source
+			"hrsh7th/cmp-nvim-lsp",
 
-					-- Keyboard shortcuts for navigating snippets
-					vim.keymap.set({ "i", "s" }, "<C-j>", function()
-						if ls.expand_or_jumpable() then
-							ls.expand_or_jump()
-						end
-					end, { silent = true, desc = "Expand snippet or jump to next placeholder" })
+			-- Buffer completions
+			"hrsh7th/cmp-buffer",
 
-					vim.keymap.set({ "i", "s" }, "<C-k>", function()
-						if ls.jumpable(-1) then
-							ls.jump(-1)
-						end
-					end, { silent = true, desc = "Jump to previous snippet placeholder" })
+			-- Path completions
+			"hrsh7th/cmp-path",
 
-					vim.keymap.set({ "i", "s" }, "<C-l>", function()
-						if ls.choice_active() then
-							ls.change_choice(1)
-						end
-					end, { silent = true, desc = "Cycle forward through snippet choices" })
+			-- Command line completions
+			"hrsh7th/cmp-cmdline",
 
-					vim.keymap.set({ "i", "s" }, "<C-h>", function()
-						if ls.choice_active() then
-							ls.change_choice(-1)
-						end
-					end, { silent = true, desc = "Cycle backward through snippet choices" })
-				end,
-			},
+			-- Neovim Lua API completions
+			"hrsh7th/cmp-nvim-lua",
 
-			-- Sources for nvim-cmp
-			"hrsh7th/cmp-nvim-lsp",                -- LSP completions
-			"hrsh7th/cmp-buffer",                  -- Buffer completions
-			"hrsh7th/cmp-path",                    -- Path completions
-			"hrsh7th/cmp-cmdline",                 -- Command line completions
-			"hrsh7th/cmp-nvim-lua",                -- Neovim Lua API completions
-			"saadparwaiz1/cmp_luasnip",            -- Snippet completions
-			"hrsh7th/cmp-nvim-lsp-signature-help", -- Parameter completions
-			"hrsh7th/cmp-nvim-lsp-document-symbol", -- Document symbol completions
-			"onsails/lspkind.nvim",                -- VS Code-like pictograms
-			"roobert/tailwindcss-colorizer-cmp.nvim", -- Tailwind CSS colors in completion
-			"petertriho/cmp-git",                  -- Git completions
+			-- Snippet completions
+			"saadparwaiz1/cmp_luasnip",
+
+			-- Function parameter completions
+			"hrsh7th/cmp-nvim-lsp-signature-help",
+
+			-- Document symbol completions
+			"hrsh7th/cmp-nvim-lsp-document-symbol",
+
+			-- VS Code-like pictograms
+			"onsails/lspkind.nvim",
+
+			-- Tailwind CSS colors in completion
+			"roobert/tailwindcss-colorizer-cmp.nvim",
 		},
 		config = function()
 			local cmp = require("cmp")
 			local luasnip = require("luasnip")
 			local lspkind = require("lspkind")
 			local compare = require("cmp.config.compare")
+
+			-- Configure Tailwind CSS integration
 			require("tailwindcss-colorizer-cmp").setup({ color_square_width = 2 })
 
 			-- Helper function to check for text before cursor
@@ -154,11 +111,10 @@ return {
 								nvim_lua = "[Lua]",
 								path = "[Path]",
 								codeium = "[AI]",
-								copilot = "[AI]",
 								calc = "[Calc]",
 							},
 							before = function(_, vim_item)
-								-- Optional colorization for Tailwind CSS classes
+								-- Colorize Tailwind CSS classes
 								return require("tailwindcss-colorizer-cmp").formatter(_, vim_item)
 							end,
 						})(entry, vim_item)
@@ -212,7 +168,7 @@ return {
 					{ name = "nvim_lsp",                priority = 1000 },
 					{ name = "nvim_lsp_signature_help", priority = 900 },
 					{ name = "luasnip",                 priority = 800 },
-					-- AI completion sources would be inserted here by the AI modules
+					-- AI completion source (Codeium) will be inserted by the AI module
 					{
 						name = "buffer",
 						priority = 700,
@@ -269,32 +225,6 @@ return {
 				},
 			})
 
-			-- Configure git source for commit messages and branches
-			require("cmp_git").setup({
-				filetypes = { "gitcommit", "octo", "NeogitCommitMessage" },
-				github = {
-					issues = {
-						filter = "all", -- "assigned", "created", "mentioned", "subscribed"
-						limit = 100,
-						state = "open", -- "open", "closed", "all"
-					},
-					pull_requests = {
-						limit = 100,
-						state = "open", -- "open", "closed", "merged", "all"
-					},
-				},
-				gitlab = {
-					issues = {
-						limit = 100,
-						state = "opened", -- "opened", "closed", "all"
-					},
-					merge_requests = {
-						limit = 100,
-						state = "opened", -- "opened", "closed", "locked", "merged", "all"
-					},
-				},
-			})
-
 			-- Set up completion for command mode (`:`)
 			cmp.setup.cmdline(":", {
 				mapping = cmp.mapping.preset.cmdline(),
@@ -327,44 +257,33 @@ return {
 			})
 
 			-- Auto pairs integration
-			local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-			local handlers = require("nvim-autopairs.completion.handlers")
+			local autopairs_ok, cmp_autopairs = pcall(require, "nvim-autopairs.completion.cmp")
+			if autopairs_ok then
+				local handlers = require("nvim-autopairs.completion.handlers")
 
-			cmp.event:on(
-				"confirm_done",
-				cmp_autopairs.on_confirm_done({
-					filetypes = {
-						-- Disable for specific filetypes
-						["*"] = {
-							["("] = {
-								kind = {
-									cmp.lsp_item_kind.Function,
-									cmp.lsp_item_kind.Method,
+				cmp.event:on(
+					"confirm_done",
+					cmp_autopairs.on_confirm_done({
+						filetypes = {
+							-- Disable for specific filetypes
+							["*"] = {
+								["("] = {
+									kind = {
+										cmp.lsp_item_kind.Function,
+										cmp.lsp_item_kind.Method,
+									},
+									handler = handlers["*"],
 								},
-								handler = handlers["*"],
 							},
+							-- Disable for specific languages
+							tex = false,
+							markdown = false,
 						},
-						-- Disable for specific languages
-						tex = false,
-						markdown = false,
-					},
-				})
-			)
-
-			-- Add borders to documentation window
-			local win = require("cmp.utils.window")
-
-			local _win_open = win.open
-			win.open = function(self, opts)
-				local new_opts = vim.tbl_extend("force", opts or {}, {
-					border = "rounded",
-				})
-				return _win_open(self, new_opts)
+					})
+				)
 			end
 		end,
 	},
-
-	-- Additional completion related plugins
 
 	-- Auto pairs for brackets, quotes, etc.
 	{
@@ -422,34 +341,7 @@ return {
 		end,
 	},
 
-	-- Enhanced parameter hints
-	{
-		"ray-x/lsp_signature.nvim",
-		event = "VeryLazy",
-		opts = {
-			bind = true,
-			handler_opts = {
-				border = "rounded",
-			},
-			hint_enable = true,
-			hint_prefix = "🔍 ",
-			hint_scheme = "String",
-			hi_parameter = "Search",
-			toggle_key = "<C-k>",        -- Toggle signature on and off in insert mode
-			select_signature_key = "<C-n>", -- Cycle between signatures
-			floating_window = true,
-			doc_lines = 10,
-			max_width = 80,
-			always_trigger = false,
-			timer_interval = 200,
-			extra_trigger_chars = { "(", ",", "{" },
-		},
-		config = function(_, opts)
-			require("lsp_signature").setup(opts)
-		end,
-	},
-
-	-- Comment completion and templates
+	-- Comment generation
 	{
 		"danymat/neogen",
 		dependencies = "nvim-treesitter/nvim-treesitter",
@@ -469,17 +361,7 @@ return {
 							annotation_convention = "tsdoc", -- Can be: tsdoc, jsdoc
 						},
 					},
-					typescriptreact = {
-						template = {
-							annotation_convention = "tsdoc",
-						},
-					},
 					javascript = {
-						template = {
-							annotation_convention = "jsdoc",
-						},
-					},
-					javascriptreact = {
 						template = {
 							annotation_convention = "jsdoc",
 						},
@@ -487,6 +369,11 @@ return {
 					lua = {
 						template = {
 							annotation_convention = "emmylua",
+						},
+					},
+					rust = {
+						template = {
+							annotation_convention = "rustdoc",
 						},
 					},
 					java = {
@@ -502,16 +389,6 @@ return {
 					cpp = {
 						template = {
 							annotation_convention = "doxygen",
-						},
-					},
-					php = {
-						template = {
-							annotation_convention = "phpdoc",
-						},
-					},
-					rust = {
-						template = {
-							annotation_convention = "rustdoc",
 						},
 					},
 					go = {

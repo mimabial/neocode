@@ -9,7 +9,7 @@
 -- 2. Enhanced motions with mini.ai
 -- 3. Better surrounding management
 -- 4. Smart pair manipulation
--- 5. Advanced targetting with flash.nvim
+-- 5. Treesitter-aware text objects
 --
 -- Text objects make it easier to select and manipulate specific
 -- elements in your code, enhancing editing efficiency.
@@ -108,26 +108,12 @@ return {
 		},
 	},
 
-	-- Better targets (comma-separated arguments, doc comments, more)
-	{
-		"wellle/targets.vim",
-		event = "VeryLazy",
-		init = function()
-			-- Configure targets.vim
-			vim.g.targets_aiAI = { 'a', 'i', 'A', 'I' }
-			vim.g.targets_nlNL = { 'n', 'l', 'N', 'L' }
-
-			-- Set targets to seek backward first then forward
-			vim.g.targets_seekRanges = 'bc cr cb cB lc ac Ac lr rr ll lb ar ab lB Ar aB Ab AB rb rB al Al'
-		end,
-	},
-
 	-- Enhanced treesitter textobjects support
 	{
 		"nvim-treesitter/nvim-treesitter-textobjects",
-		dependencies = "nvim-treesitter/nvim-treesitter",
-		lazy = true,
+		dependencies = { "nvim-treesitter/nvim-treesitter" },
 		config = function()
+			---@diagnostic disable-next-line: missing-fields
 			require("nvim-treesitter.configs").setup({
 				textobjects = {
 					select = {
@@ -222,37 +208,37 @@ return {
 				},
 			})
 
-			-- Enable repeatable jumps with ; and ,
-			local ts_repeat_move = require("nvim-treesitter.textobjects.repeatable_move")
-
-			-- Make builtin f, F, t, T, etc. repeatable with ; and ,
-			local next_func, prev_func = ts_repeat_move.make_repeatable_move_pair(function()
-				vim.cmd("normal! ;")
-			end, function()
-				vim.cmd("normal! ,")
-			end)
-
-			-- Map ; and , to repeat the last f, t, F, or T
-			vim.keymap.set({ "n", "x", "o" }, ";", next_func, { desc = "Repeat latest f, t, F, or T" })
-			vim.keymap.set(
-				{ "n", "x", "o" },
-				",",
-				prev_func,
-				{ desc = "Repeat latest f, t, F, or T in opposite direction" }
-			)
-
 			-- Make TreeSitter textobject motions repeatable with ; and ,
-			local ts_repeat_move = require("nvim-treesitter.textobjects.repeatable_move")
+			local rm = require("nvim-treesitter.textobjects.repeatable_move")
+
+			local function move_f()
+				vim.api.nvim_feedkeys("f", "n", true)
+			end
+
+			local function move_F()
+				vim.api.nvim_feedkeys("F", "n", true)
+			end
+
+			local function move_t()
+				vim.api.nvim_feedkeys("t", "n", true)
+			end
+
+			local function move_T()
+				vim.api.nvim_feedkeys("T", "n", true)
+			end
+
+			local f, F = rm.make_repeatable_move_pair(move_f, move_F)
+			local t, T = rm.make_repeatable_move_pair(move_t, move_T)
 
 			-- Repeat movement between functions, classes, etc.
-			vim.keymap.set({ "n", "x", "o" }, ";", ts_repeat_move.repeat_last_move)
-			vim.keymap.set({ "n", "x", "o" }, ",", ts_repeat_move.repeat_last_move_opposite)
+			vim.keymap.set({ "n", "x", "o" }, ";", rm.repeat_last_move, { desc = "Repeat last move" })
+			vim.keymap.set({ "n", "x", "o" }, ",", rm.repeat_last_move_opposite, { desc = "Repeat last move (opposite)" })
 
 			-- Make f, t, F, T work with ; and , (in case of conflict with ts motions)
-			vim.keymap.set({ "n", "x", "o" }, "f", ts_repeat_move.builtin_f)
-			vim.keymap.set({ "n", "x", "o" }, "F", ts_repeat_move.builtin_F)
-			vim.keymap.set({ "n", "x", "o" }, "t", ts_repeat_move.builtin_t)
-			vim.keymap.set({ "n", "x", "o" }, "T", ts_repeat_move.builtin_T)
+			vim.keymap.set({ "n", "x", "o" }, "f", f, { desc = "Repeatable f" })
+			vim.keymap.set({ "n", "x", "o" }, "F", F, { desc = "Repeatable F" })
+			vim.keymap.set({ "n", "x", "o" }, "t", t, { desc = "Repeatable t" })
+			vim.keymap.set({ "n", "x", "o" }, "T", T, { desc = "Repeatable T" })
 		end,
 	},
 
@@ -268,6 +254,7 @@ return {
 			vim.g.matchup_matchparen_timeout = 100
 			vim.g.matchup_matchparen_insert_timeout = 30
 
+			---@diagnostic disable-next-line: missing-fields
 			require("nvim-treesitter.configs").setup({
 				matchup = {
 					enable = true,
@@ -275,56 +262,6 @@ return {
 					include_match_words = true,
 				},
 			})
-		end,
-	},
-
-	-- Enhanced yanking and history
-	{
-		"gbprod/yanky.nvim",
-		dependencies = { { "kkharji/sqlite.lua", optional = true } },
-		opts = {
-			ring = {
-				history_length = 100,
-				storage = "memory", -- or "sqlite" if sqlite.lua is available
-				storage_path = vim.fn.stdpath("data") .. "/databases/yanky.db",
-				sync_with_numbered_registers = true,
-				cancel_event = "update",
-			},
-			picker = {
-				select = {
-					action = nil,
-				},
-				telescope = {
-					mappings = nil,
-				},
-			},
-			system_clipboard = {
-				sync_with_ring = true,
-			},
-			highlight = {
-				on_put = true,
-				on_yank = true,
-				timer = 500,
-			},
-			preserve_cursor_position = {
-				enabled = true,
-			},
-		},
-		keys = {
-			{ "y",          "<Plug>(YankyYank)",               mode = { "n", "x" },                         desc = "Yank text" },
-			{ "p",          "<Plug>(YankyPutAfter)",           mode = { "n", "x" },                         desc = "Put after cursor" },
-			{ "P",          "<Plug>(YankyPutBefore)",          mode = { "n", "x" },                         desc = "Put before cursor" },
-			{ "gp",         "<Plug>(YankyGPutAfter)",          mode = { "n", "x" },                         desc = "Put after cursor and leave cursor after" },
-			{ "gP",         "<Plug>(YankyGPutBefore)",         mode = { "n", "x" },                         desc = "Put before cursor and leave cursor after" },
-			{ "<c-n>",      "<Plug>(YankyCycleForward)",       desc = "Cycle forward through yank history" },
-			{ "<c-p>",      "<Plug>(YankyCycleBackward)",      desc = "Cycle backward through yank history" },
-			{ "<leader>fy", "<cmd>Telescope yank_history<CR>", desc = "Yank history" },
-		},
-		config = function(_, opts)
-			require("yanky").setup(opts)
-
-			-- Setup Telescope extension if available
-			require("telescope").load_extension("yank_history")
 		end,
 	},
 
