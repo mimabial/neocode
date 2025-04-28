@@ -54,6 +54,8 @@ return {
       sh = { "shfmt", "shellcheck" },
       bash = { "shfmt", "shellcheck" },
       zsh = { "shfmt" },
+      -- Add GOTH stack specific formatters
+      templ = { "templ" },
     },
     -- Set up format-on-save
     format_on_save = function(bufnr)

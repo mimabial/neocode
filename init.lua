@@ -54,7 +54,7 @@ vim.diagnostic.config({
     severity = {
       min = vim.diagnostic.severity.HINT,
     },
-    source = "if_many",
+    source = true,
     spacing = 4,
   },
   float = {
@@ -64,10 +64,10 @@ vim.diagnostic.config({
     header = "",
     prefix = function(diagnostic)
       local signs = {
-        [vim.diagnostic.severity.ERROR] = " ",
-        [vim.diagnostic.severity.WARN] = " ",
-        [vim.diagnostic.severity.INFO] = " ",
-        [vim.diagnostic.severity.HINT] = " ",
+        [vim.diagnostic.severity.ERROR] = "✗",  -- Error symbol
+        [vim.diagnostic.severity.WARN] = "⚠",   -- Warning symbol
+        [vim.diagnostic.severity.INFO] = "ℹ",   -- Information symbol
+        [vim.diagnostic.severity.HINT] = "",   -- Hint symbol
       }
       return signs[diagnostic.severity] .. " "
     end,
@@ -217,6 +217,18 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.opt_local.wrap = true
     vim.opt_local.linebreak = true
     vim.opt_local.spell = true
+  end,
+})
+
+-- Prevent Vim from automatically commenting on a new line after pressing Start, Enter, or "o" 
+vim.api.nvim_create_autocmd("FileType", {
+  group = autocmd_group,
+  pattern = "*",
+  callback = function()
+    vim.bo.formatoptions = vim.bo.formatoptions
+      :gsub("c", "")
+      :gsub("r", "")
+      :gsub("o", "")
   end,
 })
 

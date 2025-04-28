@@ -204,36 +204,7 @@ return {
       
       -- Next.js Stack
       tsserver = {
-        settings = {
-          typescript = {
-            inlayHints = {
-              includeInlayParameterNameHints = "all",
-              includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-              includeInlayFunctionParameterTypeHints = true,
-              includeInlayVariableTypeHints = true,
-              includeInlayPropertyDeclarationTypeHints = true,
-              includeInlayFunctionLikeReturnTypeHints = true,
-              includeInlayEnumMemberValueHints = true,
-            },
-            suggest = {
-              completeFunctionCalls = true,
-            },
-          },
-          javascript = {
-            inlayHints = {
-              includeInlayParameterNameHints = "all",
-              includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-              includeInlayFunctionParameterTypeHints = true,
-              includeInlayVariableTypeHints = true,
-              includeInlayPropertyDeclarationTypeHints = true,
-              includeInlayFunctionLikeReturnTypeHints = true,
-              includeInlayEnumMemberValueHints = true,
-            },
-            suggest = {
-              completeFunctionCalls = true,
-            },
-          },
-        },
+        -- This will be handled by typescript-tools.nvim
       },
       cssls = {},
       tailwindcss = {
@@ -271,16 +242,12 @@ return {
       bashls = {},
     },
     
-    -- you can do any additional lsp server setup here
-    -- return true if you don't want this server to be setup with lspconfig
+    -- Setup handlers for LSP servers
     setup = {
-      -- example to setup with typescript.nvim
-      -- tsserver = function(_, opts)
-      --   require("typescript").setup({ server = opts })
-      --   return true
-      -- end,
-      -- Specify * to use this function as a fallback for any server
-      -- ["*"] = function(server, opts) end,
+      -- Skip tsserver setup since it's handled by typescript-tools
+      tsserver = function(_, _)
+        return true
+      end,
     },
   },
   config = function(_, opts)
@@ -423,9 +390,15 @@ return {
     -- Enable the following language servers with mason
     local mason_lspconfig = require("mason-lspconfig")
 
+    -- Filter out servers that are handled by other plugins
+    local servers_to_install = vim.tbl_filter(function(server)
+      -- Skip tsserver as it's handled by typescript-tools.nvim
+      return server ~= "tsserver" 
+    end, vim.tbl_keys(opts.servers))
+
     -- Enable mason-lspconfig integration
     mason_lspconfig.setup({
-      ensure_installed = vim.tbl_keys(opts.servers),
+      ensure_installed = servers_to_install,
       automatic_installation = true,
     })
 
@@ -437,22 +410,16 @@ return {
 
     mason_lspconfig.setup_handlers({
       function(server_name)
-        local server_opts = opts.servers[server_name] or {}
-        server_opts.capabilities = capabilities
-        server_opts.on_attach = on_attach
-
-        -- This handles overriding only values explicitly passed
-        -- by the server configuration above. Useful when disabling
-        -- certain features of an LSP (like formatting)
+        -- Skip setup for servers that should be handled elsewhere
         if opts.setup[server_name] then
-          if opts.setup[server_name](server_name, server_opts) then
-            return
-          end
-        elseif opts.setup["*"] then
-          if opts.setup["*"](server_name, server_opts) then
+          if opts.setup[server_name](server_name, opts.servers[server_name] or {}) then
             return
           end
         end
+
+        local server_opts = opts.servers[server_name] or {}
+        server_opts.capabilities = capabilities
+        server_opts.on_attach = on_attach
 
         require("lspconfig")[server_name].setup(server_opts)
       end,
@@ -467,7 +434,7 @@ return {
       local buffers = vim.api.nvim_list_bufs()
       for _, bufnr in ipairs(buffers) do
         if vim.api.nvim_buf_is_loaded(bufnr) then
-          local clients = vim.lsp.get_active_clients({ bufnr = bufnr })
+          local clients = vim.lsp.get_clients({ bufnr = bufnr })
           for _, client in ipairs(clients) do
             if client.supports_method("textDocument/inlayHint") then
               -- Use native Neovim 0.10+ inlay hints if available
@@ -490,7 +457,7 @@ return {
     
     -- Add command to restart all LSPs
     vim.api.nvim_create_user_command("LspRestart", function()
-      vim.lsp.stop_client(vim.lsp.get_active_clients())
+      vim.lsp.stop_client(vim.lsp.get_clients())
       vim.cmd("edit")
       vim.notify("LSP servers restarted", vim.log.levels.INFO)
     end, { desc = "Restart LSP servers" })
@@ -514,7 +481,7 @@ return {
       })
       
       -- Restart relevant servers
-      vim.lsp.stop_client(vim.lsp.get_active_clients({
+      vim.lsp.stop_client(vim.lsp.get_clients({
         name = { "gopls", "templ", "html" }
       }))
       vim.cmd("edit")
@@ -526,12 +493,6 @@ return {
       vim.notify("LSP settings optimized for Next.js stack", vim.log.levels.INFO)
       
       -- Adjust any specific settings if needed
-      require("lspconfig").tsserver.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        settings = opts.servers.tsserver.settings,
-      })
-      
       require("lspconfig").tailwindcss.setup({
         on_attach = on_attach,
         capabilities = capabilities,
@@ -539,8 +500,8 @@ return {
       })
       
       -- Restart relevant servers
-      vim.lsp.stop_client(vim.lsp.get_active_clients({
-        name = { "tsserver", "eslint", "tailwindcss", "cssls" }
+      vim.lsp.stop_client(vim.lsp.get_clients({
+        name = { "eslint", "tailwindcss", "cssls" }
       }))
       vim.cmd("edit")
     end, { desc = "Configure LSP for Next.js stack" })

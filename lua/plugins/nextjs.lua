@@ -1,4 +1,3 @@
--- Configuration for Next.js development
 return {
   -- TypeScript tools
   {
@@ -38,6 +37,31 @@ return {
       "typescriptreact",
       "typescript.tsx",
     },
+    config = function(_, opts)
+      -- Setup typescript-tools
+      require("typescript-tools").setup(opts)
+      
+      -- Add commands for typescript actions
+      vim.api.nvim_create_user_command("TypescriptOrganizeImports", function()
+        require("typescript-tools.api").organize_imports()
+      end, { desc = "Organize Imports" })
+      
+      vim.api.nvim_create_user_command("TypescriptRenameFile", function()
+        require("typescript-tools.api").rename_file()
+      end, { desc = "Rename File" })
+      
+      vim.api.nvim_create_user_command("TypescriptAddMissingImports", function()
+        require("typescript-tools.api").add_missing_imports()
+      end, { desc = "Add Missing Imports" })
+      
+      vim.api.nvim_create_user_command("TypescriptRemoveUnused", function()
+        require("typescript-tools.api").remove_unused()
+      end, { desc = "Remove Unused" })
+      
+      vim.api.nvim_create_user_command("TypescriptFixAll", function()
+        require("typescript-tools.api").fix_all()
+      end, { desc = "Fix All" })
+    end,
   },
 
   -- React snippets and tools
@@ -409,40 +433,10 @@ return {
         }
       )
       
-      -- Add custom handlers for Next.js files
+      -- Add handlers to skip tsserver setup since it's handled by typescript-tools
       opts.setup = opts.setup or {}
-      
-      -- Safe handler for tsserver setup that won't cause errors
-      local original_tsserver_setup = opts.setup.tsserver
-      opts.setup.tsserver = function(_, server_opts)
-        -- Register custom handlers for Next.js file structure
-        vim.api.nvim_create_autocmd("BufRead", {
-          pattern = {"app/*/page.tsx", "app/*/layout.tsx", "app/*/route.ts"},
-          callback = function(args)
-            -- Add specific LSP features for Next.js files
-            local fname = vim.fn.expand("%:t")
-            local bufnr = args.buf
-            
-            if fname == "page.tsx" then
-              -- Add code lens for pages
-              vim.api.nvim_buf_set_var(bufnr, "is_nextjs_page", true)
-            elseif fname == "layout.tsx" then
-              -- Add code lens for layouts
-              vim.api.nvim_buf_set_var(bufnr, "is_nextjs_layout", true)
-            elseif fname == "route.ts" then
-              -- Add code lens for API routes
-              vim.api.nvim_buf_set_var(bufnr, "is_nextjs_api", true)
-            end
-          end
-        })
-        
-        -- Call original setup if it exists
-        if original_tsserver_setup then
-          return original_tsserver_setup(_, server_opts)
-        end
-        
-        -- Continue with normal setup
-        return false
+      opts.setup.tsserver = function(_, _)
+        return true  -- Skip tsserver setup from lspconfig
       end
       
       return opts

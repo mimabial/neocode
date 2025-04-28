@@ -49,7 +49,6 @@ return {
     popup_border_style = "rounded",
     enable_git_status = true,
     enable_diagnostics = true,
-    enable_normal_mode_for_inputs = false,
     sort_case_insensitive = true,
     
     source_selector = {
@@ -190,82 +189,22 @@ return {
         ["z"] = "close_all_nodes",
         ["Z"] = "expand_all_nodes",
         ["R"] = "refresh",
-        ["a"] = {
-          "add",
-          config = {
-            show_path = "none",
-          },
-        },
-        ["A"] = {
-          "add_directory",
-          config = {
-            show_path = "none",
-          },
-        },
-        ["d"] = {
-          "delete",
-          config = {
-            show_path = "none",
-          },
-        },
-        ["r"] = {
-          "rename",
-          config = {
-            show_path = "none",
-          },
-        },
-        ["y"] = {
-          "copy_to_clipboard",
-          config = {
-            show_path = "none",
-          },
-        },
-        ["Y"] = {
-          "copy_selector",
-          config = {
-            show_path = "none",
-          },
-        },
-        ["x"] = {
-          "cut_to_clipboard",
-          config = {
-            show_path = "none",
-          },
-        },
-        ["p"] = {
-          "paste_from_clipboard",
-          config = {
-            show_path = "none",
-          },
-        },
-        ["c"] = {
-          "copy", 
-          config = {
-            show_path = "none",
-          },
-        },
-        ["m"] = {
-          "move", 
-          config = {
-            show_path = "none",
-          },
-        },
+        ["a"] = { "add", config = { show_path = "none" } },
+        ["A"] = { "add_directory", config = { show_path = "none" } },
+        ["d"] = { "delete", config = { show_path = "none" } },
+        ["r"] = { "rename", config = { show_path = "none" } },
+        ["y"] = { "copy_to_clipboard", config = { show_path = "none" } },
+        ["Y"] = { "copy_selector", config = { show_path = "none" } },
+        ["x"] = { "cut_to_clipboard", config = { show_path = "none" } },
+        ["p"] = { "paste_from_clipboard", config = { show_path = "none" } },
+        ["c"] = { "copy", config = { show_path = "none" } },
+        ["m"] = { "move", config = { show_path = "none" } },
         ["q"] = "close_window",
         ["?"] = "show_help",
         ["<"] = "prev_source",
         [">"] = "next_source",
-        ["i"] = {
-          "show_file_details",
-          config = {
-            use_float = true,
-          },
-        },
-        ["o"] = {
-          "system_open",
-          config = {
-            use_float = true,
-          },
-        },
+        ["i"] = { "show_file_details", config = { use_float = true } },
+        ["o"] = { "system_open", config = { use_float = true } },
         ["h"] = function(state)
           local node = state.tree:get_node()
           if node.type == "directory" and node:is_expanded() then
@@ -358,6 +297,14 @@ return {
         handler = function()
           vim.cmd [[setlocal guicursor=]]
         end
+      },
+      {
+        event = "neo_tree_popup_input_ready",
+        ---@param args { bufnr: integer, winid: integer }
+        handler = function(args)
+          vim.cmd("stopinsert")
+          vim.keymap.set("i", "<esc>", vim.cmd.stopinsert, { noremap = true, buffer = args.bufnr })
+        end,
       }
     },
     
@@ -417,6 +364,12 @@ return {
     
     -- Setup Neo-tree
     require("neo-tree").setup(opts)
+    
+    -- Run migrations if needed
+    vim.defer_fn(function()
+      -- Run migrations command to address migration warnings
+      pcall(vim.cmd, "Neotree migrations")
+    end, 1000)
     
     -- Refresh git status when lazygit is closed
     vim.api.nvim_create_autocmd("TermClose", {
