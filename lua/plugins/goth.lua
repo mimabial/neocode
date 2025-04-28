@@ -392,20 +392,26 @@ return {
   {
     "neovim/nvim-lspconfig",
     opts = function(_, opts)
+      -- Initialize opts.servers if it doesn't exist
+      opts.servers = opts.servers or {}
+      
       -- Add HTMX attributes to HTML LSP
-      if opts.servers and opts.servers.html then
-        local schema_store = require("schemastore")
+      opts.servers.html = opts.servers.html or {}
+      opts.servers.html.settings = opts.servers.html.settings or {}
+      opts.servers.html.settings.html = opts.servers.html.settings.html or {}
+      
+      -- Safely load schemas
+      local status_ok, schema_store = pcall(require, "schemastore")
+      if status_ok then
         opts.servers.html.settings.html.customData = {
           schema_store.json.schemas.html .. "/htmx.json",
         }
       end
       
       -- Add special configuration for templ files
-      if not opts.servers.templ then
-        opts.servers.templ = {
-          filetypes = { "templ" },
-        }
-      end
+      opts.servers.templ = opts.servers.templ or {
+        filetypes = { "templ" },
+      }
       
       return opts
     end,
