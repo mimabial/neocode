@@ -22,51 +22,7 @@ return {
     "kkharji/sqlite.lua", -- needed for frecency
     "nvim-tree/nvim-web-devicons",
   },
-  keys = {
-    -- Find files/text
-    { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find Files" },
-    { "<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "Find Text (Grep)" },
-    { "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Find Buffers" },
-    { "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Find Help" },
-    { "<leader>fr", "<cmd>Telescope oldfiles<cr>", desc = "Recent Files" },
-    { "<leader>fR", "<cmd>Telescope frecency<cr>", desc = "Frecent Files" },
-    { "<leader>fk", "<cmd>Telescope keymaps<cr>", desc = "Find Keymaps" },
-
-    -- Project management
-    { "<leader>fp", "<cmd>Telescope project<cr>", desc = "Find Projects" },
-    { "<leader>fP", "<cmd>lua require('telescope').extensions.project.project{}<cr>", desc = "Find Project" },
-    
-    -- Git
-    { "<leader>gc", "<cmd>Telescope git_commits<cr>", desc = "Git Commits" },
-    { "<leader>gs", "<cmd>Telescope git_status<cr>", desc = "Git Status" },
-    { "<leader>gb", "<cmd>Telescope git_branches<cr>", desc = "Git Branches" },
-    
-    -- Code navigation
-    { "<leader>fc", "<cmd>Telescope commands<cr>", desc = "Find Commands" },
-    { "<leader>fs", "<cmd>Telescope lsp_document_symbols<cr>", desc = "Find Document Symbols" },
-    { "<leader>fS", "<cmd>Telescope lsp_workspace_symbols<cr>", desc = "Find Workspace Symbols" },
-    { "<leader>fd", "<cmd>Telescope diagnostics bufnr=0<cr>", desc = "Find Document Diagnostics" },
-    { "<leader>fD", "<cmd>Telescope diagnostics<cr>", desc = "Find Workspace Diagnostics" },
-    { "<leader>fi", "<cmd>Telescope lsp_implementations<cr>", desc = "Find Implementations" },
-    { "<leader>fr", "<cmd>Telescope lsp_references<cr>", desc = "Find References" },
-    
-    -- Vim-related
-    { "<leader>fo", "<cmd>Telescope vim_options<cr>", desc = "Find Options" },
-    { "<leader>ft", "<cmd>Telescope filetypes<cr>", desc = "Find Filetypes" },
-    { "<leader>fT", "<cmd>Telescope builtin<cr>", desc = "Find Telescope Pickers" },
-    
-    -- Other
-    { "<leader>f.", "<cmd>Telescope resume<cr>", desc = "Resume Last Search" },
-    { "<leader>f/", "<cmd>Telescope current_buffer_fuzzy_find<cr>", desc = "Find in Current Buffer" },
-    { "<leader>fe", "<cmd>Telescope file_browser<cr>", desc = "File Browser" },
-    {
-      "<leader>fC",
-      function()
-        require("telescope.builtin").find_files({ cwd = vim.fn.stdpath("config") })
-      end,
-      desc = "Find Config Files",
-    },
-  },
+  -- Keymaps moved to which-key.lua for better organization
   opts = function()
     local actions = require("telescope.actions")
     local fb_actions = require("telescope").extensions.file_browser.actions
