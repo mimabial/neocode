@@ -63,24 +63,24 @@ return {
     wk.setup(opts)
     
     -- Document existing key chains
-    wk.add({
+    wk.register({
       -- Leader key groups
       ["<leader>"] = {
-        b = { name = "Buffer" },
-        c = { name = "Code/LSP" },
-        d = { name = "Debug" },
-        f = { name = "Find/Telescope" },
-        g = { name = "Git" },
-        h = { name = "Git Hunks" },
-        l = { name = "LSP" },
-        n = { name = "Noice/Notifications" },
-        q = { name = "Quit/Session" },
-        r = { name = "Rename/Replace" },
-        s = { name = "Search" },
-        t = { name = "Toggle/Terminal" },
-        u = { name = "UI" },
-        w = { name = "Windows" },
-        x = { name = "Diagnostics/Quickfix" },
+        b = { name = "+Buffer" },
+        c = { name = "+Code/LSP" },
+        d = { name = "+Debug" },
+        f = { name = "+Find/Telescope" },
+        g = { name = "+Git" },
+        h = { name = "+Git Hunks" },
+        l = { name = "+LSP" },
+        n = { name = "+Noice/Notifications" },
+        q = { name = "+Quit/Session" },
+        r = { name = "+Rename/Replace" },
+        s = { name = "+Stack-Specific" },
+        t = { name = "+Terminal/Toggle" },
+        u = { name = "+UI" },
+        w = { name = "+Windows" },
+        x = { name = "+Diagnostics/Quickfix" },
       },
       
       -- Stack-specific commands group
@@ -108,7 +108,7 @@ return {
           i = { "<cmd>!npm install<cr>", "NPM Install" },
         },
       },
-
+      
       -- Git related
       g = {
         name = "Goto/Git",
@@ -121,14 +121,10 @@ return {
       -- Brackets
       ["["] = { name = "Previous..." },
       ["]"] = { name = "Next..." },
-      
-      -- Other common prefixes
-      -- ["<C-w>"] = { name = "Window commands" },
-      -- ["z"] = { name = "Folds/Spelling" },
     })
     
     -- Buffer commands
-    wk.add({
+    wk.register({
       ["<leader>b"] = {
         ["b"] = { "<cmd>e #<cr>", "Switch to Other Buffer" },
         ["d"] = { "<cmd>bdelete<cr>", "Delete Buffer" },
@@ -142,7 +138,7 @@ return {
     })
     
     -- Code/LSP commands
-    wk.add({
+    wk.register({
       ["<leader>c"] = {
         name = "Code/LSP",
         ["a"] = { vim.lsp.buf.code_action, "Code Action" },
@@ -168,7 +164,7 @@ return {
     })
     
     -- Debug commands
-    wk.add({
+    wk.register({
       ["<leader>d"] = {
         name = "Debug",
         ["b"] = { function() require('dap').toggle_breakpoint() end, "Toggle Breakpoint" },
@@ -187,7 +183,7 @@ return {
     })
     
     -- Find/Telescope commands
-    wk.add({
+    wk.register({
       ["<leader>f"] = {
         name = "Find/Telescope",
         ["/"] = { "<cmd>Telescope current_buffer_fuzzy_find<cr>", "Find in Buffer" },
@@ -214,7 +210,7 @@ return {
     })
     
     -- Git commands
-    wk.add({
+    wk.register({
       ["<leader>g"] = {
         name = "Git",
         ["b"] = { "<cmd>Telescope git_branches<cr>", "Git Branches" },
@@ -232,7 +228,7 @@ return {
     })
     
     -- Git Signs / Hunks 
-    wk.add({
+    wk.register({
       ["<leader>h"] = {
         name = "Git Hunks",
         ["b"] = { function() require("gitsigns").blame_line({ full = true }) end, "Blame Line" },
@@ -249,7 +245,7 @@ return {
     })
     
     -- Terminal commands
-    wk.add({
+    wk.register({
       ["<leader>t"] = {
         name = "Terminal/Toggle",
         ["f"] = { "<cmd>ToggleTerm direction=float<cr>", "Terminal (float)" },
@@ -268,7 +264,7 @@ return {
     })
     
     -- UI toggles and commands
-    wk.add({
+    wk.register({
       ["<leader>u"] = {
         name = "UI",
         ["c"] = { "<cmd>ColorSchemeToggle<cr>", "Toggle Colorscheme" },
@@ -279,48 +275,6 @@ return {
         ["L"] = { "<cmd>LazyUpdate<cr>", "Update Plugins" },
         ["m"] = { "<cmd>Mason<cr>", "Mason LSP Manager" },
         ["M"] = { "<cmd>MasonUpdate<cr>", "Update LSP Servers" },
-      }
-    })
-    
-    -- Quit/Session commands
-    wk.add({
-      ["<leader>q"] = {
-        name = "Quit/Session",
-        ["q"] = { "<cmd>qa<cr>", "Quit All" },
-        ["w"] = { "<cmd>wqa<cr>", "Save and Quit All" },
-        ["s"] = { function() require("persistence").load() end, "Restore Session" },
-        ["l"] = { function() require("persistence").load({ last = true }) end, "Restore Last Session" },
-        ["d"] = { function() require("persistence").stop() end, "Don't Save Current Session" },
-      }
-    })
-    
-    -- Noice/Notifications commands
-    wk.add({
-      ["<leader>n"] = {
-        name = "Noice/Notifications",
-        ["a"] = { function() require("noice").cmd("all") end, "Noice All" },
-        ["d"] = { function() require("noice").cmd("dismiss") end, "Dismiss All" },
-        ["h"] = { function() require("noice").cmd("history") end, "Noice History" },
-        ["l"] = { function() require("noice").cmd("last") end, "Noice Last Message" },
-        ["e"] = { function() require("noice").cmd("errors") end, "Noice Errors" },
-      }
-    })
-    
-    -- Search commands
-    wk.register({
-      ["<leader>s"] = {
-        name = "Search",
-        ["b"] = { "<cmd>Telescope current_buffer_fuzzy_find<cr>", "Buffer" },
-        ["d"] = { "<cmd>Telescope diagnostics<cr>", "Diagnostics" },
-        ["g"] = { "<cmd>Telescope git_status<cr>", "Git Status" },
-        ["h"] = { "<cmd>Telescope command_history<cr>", "Command History" },
-        ["m"] = { "<cmd>Telescope marks<cr>", "Marks" },
-        ["M"] = { "<cmd>Telescope man_pages<cr>", "Man Pages" },
-        ["r"] = { "<cmd>Telescope registers<cr>", "Registers" },
-        ["s"] = { "<cmd>Telescope lsp_document_symbols<cr>", "Symbols" },
-        ["t"] = { "<cmd>TodoTelescope<cr>", "Todo" },
-        ["T"] = { "<cmd>TodoTelescope keywords=TODO,FIX,FIXME<cr>", "Todo/Fix/Fixme" },
-        ["w"] = { "<cmd>Telescope grep_string<cr>", "Word Under Cursor" },
       }
     })
     
@@ -356,7 +310,7 @@ return {
       }
     })
     
-    -- Navigation key pairs
+    -- Navigation key pairs 
     wk.register({
       ["["] = {
         ["b"] = { "<cmd>bprevious<cr>", "Previous Buffer" },
@@ -375,7 +329,8 @@ return {
         ["t"] = { function() require("todo-comments").jump_next() end, "Next Todo" },
       },
     })
-        -- Layout switcher
+    
+    -- Layout switcher
     wk.register({
       ["<leader>L"] = {
         name = "Layouts",
@@ -393,6 +348,7 @@ return {
       ["<F11>"] = { function() require("dap").step_into() end, "Debug: Step Into" },
       ["<F12>"] = { function() require("dap").step_out() end, "Debug: Step Out" },
     })
+    
     -- LSP related keymaps
     wk.register({
       ["g"] = {
@@ -401,22 +357,9 @@ return {
         ["r"] = { function() require("telescope.builtin").lsp_references() end, "Go to References" },
         ["i"] = { vim.lsp.buf.implementation, "Go to Implementation" },
         ["K"] = { vim.lsp.buf.hover, "Show Documentation" },
-        ["<C-k>"] = { vim.lsp.buf.signature_help, "Show Signature Help" },
       },
     })
-
-    -- This section defines various Vim keyboard shortcuts and their descriptions
-    wk.register({
-      -- Basic editor operations
-      ["<C-s>"] = { "<cmd>w<cr><esc>", "Save File" },
-      
-      -- Clipboard operations
-      ["<leader>y"] = { '"+y', "Yank to System Clipboard" },
-      ["<leader>Y"] = { '"+Y', "Yank Line to System Clipboard" },
-      ["<leader>p"] = { '"+p', "Paste from System Clipboard" },
-      ["<leader>P"] = { '"+P', "Paste from System Clipboard (Before)" },
-    })
-
+    
     -- Additional key mappings
     vim.keymap.set("n", "<leader>gg", "<cmd>LazyGit<cr>", { desc = "Lazygit" })
     vim.keymap.set("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle colorscheme" })

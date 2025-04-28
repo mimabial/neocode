@@ -77,7 +77,6 @@ return {
         folder_empty = "",
         folder_empty_open = "",
         default = "",
-        -- highlight = "NeoTreFileIcon"
       },
       modified = {
         symbol = "●",
@@ -85,12 +84,10 @@ return {
       },
       git_status = {
         symbols = {
-          -- Change type
-          added = "", -- or "✚", but this is redundant info if you use git_status_colors on the name
-          modified = "", -- or "", but this is redundant info if you use git_status_colors on the name
-          deleted = "✖", -- this can only be used in the git_status source
-          renamed = "󰁕", -- this can only be used in the git_status source
-          -- Status type
+          added = "", 
+          modified = "", 
+          deleted = "✖", 
+          renamed = "󰁕", 
           untracked = "",
           ignored = "",
           unstaged = "󰄱",
@@ -100,7 +97,7 @@ return {
       },
       name = {
         trailing_slash = false,
-        highlight_opened_files = true, -- Highlight open files differently
+        highlight_opened_files = true,
         use_git_status_colors = true,
         highlight = "NeoTreeFileName",
       },
@@ -115,22 +112,14 @@ return {
       use_libuv_file_watcher = true,
       hijack_netrw_behavior = "open_default",
       filtered_items = {
-        visible = false, -- when true, they will just be displayed differently than normal items
+        visible = false,
         hide_dotfiles = false,
         hide_gitignored = true,
-        hide_hidden = true, -- only works on Windows for hidden files/directories
-        hide_by_name = {
-          --"node_modules"
-        },
-        hide_by_pattern = { -- uses glob style patterns
-          --"*.meta",
-          --"*/src/*/tsconfig.json",
-          ".git/",
-        },
-        always_show = { -- remains visible even if other settings would normally hide it
-          --".gitignored",
-        },
-        never_show = { -- remains hidden even if visible is toggled to true, this overrides always_show
+        hide_hidden = true,
+        hide_by_name = {},
+        hide_by_pattern = { ".git/" },
+        always_show = {},
+        never_show = {
           ".DS_Store",
           "thumbs.db",
           ".git",
@@ -140,7 +129,6 @@ return {
         system_open = function(state)
           local node = state.tree:get_node()
           local path = node:get_id()
-          -- macOS: open file in default application in the background
           vim.api.nvim_command("silent !open -g " .. vim.fn.shellescape(path))
         end,
         copy_selector = function(state)
@@ -205,24 +193,79 @@ return {
         ["a"] = {
           "add",
           config = {
-            show_path = "none", -- "none", "relative", "absolute"
+            show_path = "none",
           },
         },
-        ["A"] = "add_directory",
-        ["d"] = "delete",
-        ["r"] = "rename",
-        ["y"] = "copy_to_clipboard",
-        ["x"] = "cut_to_clipboard",
-        ["p"] = "paste_from_clipboard",
-        ["c"] = "copy", -- takes text input for destination, also accepts the optional config.show_path option like "add":
-        ["m"] = "move", -- takes text input for destination, also accepts the optional config.show_path option like "add":
+        ["A"] = {
+          "add_directory",
+          config = {
+            show_path = "none",
+          },
+        },
+        ["d"] = {
+          "delete",
+          config = {
+            show_path = "none",
+          },
+        },
+        ["r"] = {
+          "rename",
+          config = {
+            show_path = "none",
+          },
+        },
+        ["y"] = {
+          "copy_to_clipboard",
+          config = {
+            show_path = "none",
+          },
+        },
+        ["Y"] = {
+          "copy_selector",
+          config = {
+            show_path = "none",
+          },
+        },
+        ["x"] = {
+          "cut_to_clipboard",
+          config = {
+            show_path = "none",
+          },
+        },
+        ["p"] = {
+          "paste_from_clipboard",
+          config = {
+            show_path = "none",
+          },
+        },
+        ["c"] = {
+          "copy", 
+          config = {
+            show_path = "none",
+          },
+        },
+        ["m"] = {
+          "move", 
+          config = {
+            show_path = "none",
+          },
+        },
         ["q"] = "close_window",
         ["?"] = "show_help",
         ["<"] = "prev_source",
         [">"] = "next_source",
-        ["i"] = "show_file_details",
-        ["o"] = "system_open",
-        ["Y"] = "copy_selector",
+        ["i"] = {
+          "show_file_details",
+          config = {
+            use_float = true,
+          },
+        },
+        ["o"] = {
+          "system_open",
+          config = {
+            use_float = true,
+          },
+        },
         ["h"] = function(state)
           local node = state.tree:get_node()
           if node.type == "directory" and node:is_expanded() then
@@ -247,8 +290,8 @@ return {
     },
     
     buffers = {
-      follow_current_file = { enabled = true }, -- This will find and focus the file in the active buffer every time
-      group_empty_dirs = true, -- when true, empty folders will be grouped together
+      follow_current_file = { enabled = true },
+      group_empty_dirs = true,
       show_unloaded = true,
       window = {
         mappings = {
@@ -278,33 +321,11 @@ return {
       client_filters = {
         ["*"] = {
           kinds = {
-            -- These will be the default values
-            "File",
-            "Module",
-            "Namespace",
-            "Package",
-            "Class",
-            "Method",
-            "Property",
-            "Field",
-            "Constructor",
-            "Enum",
-            "Interface",
-            "Function",
-            "Variable",
-            "Constant",
-            "String",
-            "Number",
-            "Boolean",
-            "Array",
-            "Object",
-            "Key",
-            "Null",
-            "EnumMember",
-            "Struct",
-            "Event",
-            "Operator",
-            "TypeParameter",
+            "File", "Module", "Namespace", "Package", "Class", "Method", 
+            "Property", "Field", "Constructor", "Enum", "Interface", 
+            "Function", "Variable", "Constant", "String", "Number", 
+            "Boolean", "Array", "Object", "Key", "Null", "EnumMember", 
+            "Struct", "Event", "Operator", "TypeParameter",
           },
         },
       },
@@ -325,15 +346,79 @@ return {
         handler = function()
           -- Hide cursor in neo-tree window
           vim.cmd [[setlocal guicursor=n:block-Cursor/lCursor-blinkon0]]
+          -- Make the background transparent
+          vim.cmd [[setlocal winhl=Normal:NeoTreeNormal,NormalNC:NeoTreeNormalNC]]
           -- Improve the look
           vim.wo.signcolumn = "auto"
           vim.wo.cursorline = true
         end
       },
+      {
+        event = "neo_tree_buffer_leave",
+        handler = function()
+          vim.cmd [[setlocal guicursor=]]
+        end
+      }
+    },
+    
+    renderers = {
+      directory = {
+        { "indent" },
+        { "icon" },
+        { "current_filter" },
+        {
+          "container",
+          content = {
+            { "name", zindex = 10 },
+            { "symlink_target", zindex = 10, highlight = "NeoTreeSymlinkTarget" },
+            { "clipboard", zindex = 10 },
+            { "diagnostics", errors_only = true, zindex = 20, align = "right", hide_when_expanded = true },
+            { "git_status", zindex = 20, align = "right", hide_when_expanded = true },
+          },
+        },
+      },
+      file = {
+        { "indent" },
+        { "icon" },
+        {
+          "container",
+          content = {
+            {
+              "name",
+              zindex = 10,
+            },
+            { "symlink_target", zindex = 10, highlight = "NeoTreeSymlinkTarget" },
+            { "clipboard", zindex = 10 },
+            { "bufnr", zindex = 10 },
+            { "modified", zindex = 20, align = "right" },
+            { "diagnostics", zindex = 20, align = "right" },
+            { "git_status", zindex = 20, align = "right" },
+          },
+        },
+      },
     },
   },
   config = function(_, opts)
+    -- Setup custom highlights for transparency
+    vim.api.nvim_create_autocmd("ColorScheme", {
+      pattern = "*",
+      callback = function()
+        vim.api.nvim_set_hl(0, "NeoTreeNormal", { bg = "NONE", blend = 0 })
+        vim.api.nvim_set_hl(0, "NeoTreeNormalNC", { bg = "NONE", blend = 0 })
+        vim.api.nvim_set_hl(0, "NeoTreeWinSeparator", { bg = "NONE", blend = 0 })
+        vim.api.nvim_set_hl(0, "NeoTreeEndOfBuffer", { bg = "NONE", blend = 0 })
+        vim.api.nvim_set_hl(0, "NeoTreeDirectoryIcon", { fg = "#7daea3" })
+        vim.api.nvim_set_hl(0, "NeoTreeDirectoryName", { fg = "#a89984", bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeSymbolicLinkTarget", { fg = "#d8a657" })
+        vim.api.nvim_set_hl(0, "NeoTreeIndentMarker", { fg = "#504945" })
+        vim.api.nvim_set_hl(0, "NeoTreeExpander", { fg = "#7c6f64" })
+      end,
+    })
+    
+    -- Setup Neo-tree
     require("neo-tree").setup(opts)
+    
+    -- Refresh git status when lazygit is closed
     vim.api.nvim_create_autocmd("TermClose", {
       pattern = "*lazygit",
       callback = function()

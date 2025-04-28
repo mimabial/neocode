@@ -400,12 +400,38 @@ return {
       opts.servers.html.settings = opts.servers.html.settings or {}
       opts.servers.html.settings.html = opts.servers.html.settings.html or {}
       
-      -- Safely load schemas
+      -- Safely load schemas - FIX: The previous code was trying to access schemas
+      -- as a table property, but it's a function. This is what caused the error.
       local status_ok, schema_store = pcall(require, "schemastore")
       if status_ok then
-        opts.servers.html.settings.html.customData = {
-          schema_store.json.schemas.html .. "/htmx.json",
-        }
+        -- Get HTML schemas from schemastore and add them to HTML LSP configuration
+        local html_schemas = {}
+        
+        -- Try to get html schemas safely
+        local schemas = schema_store.json.schemas()
+        for _, schema in ipairs(schemas) do
+          if schema.fileMatch and vim.tbl_contains(schema.fileMatch, "*.html") then
+            table.insert(html_schemas, schema.url)
+          end
+        end
+        
+        -- Add HTMX schema if available
+        local htmx_schema = nil
+        for _, schema in ipairs(schemas) do
+          if schema.name and schema.name:lower():match("htmx") then
+            htmx_schema = schema.url
+            break
+          end
+        end
+        
+        if htmx_schema then
+          table.insert(html_schemas, htmx_schema)
+        end
+        
+        -- Set custom data if we have any schemas
+        if #html_schemas > 0 then
+          opts.servers.html.settings.html.customData = html_schemas
+        end
       end
       
       -- Add special configuration for templ files

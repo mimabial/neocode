@@ -57,7 +57,7 @@ return {
     },
     -- Enhanced inlay hints
     {
-      "nvimdev/lsp-inlayhints.nvim",
+      "lvimuser/lsp-inlayhints.nvim",
       opts = {
         inlay_hints = {
           parameter_hints = {
@@ -302,7 +302,12 @@ return {
          opts.inlay_hints and 
          opts.inlay_hints.enabled 
       then
-        require("lsp-inlayhints").on_attach(client, bufnr)
+        -- Use native Neovim 0.10+ inlay hints if available, otherwise use plugin
+        if vim.lsp.inlay_hint and type(vim.lsp.inlay_hint.enable) == "function" then
+          vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+        else
+          require("lsp-inlayhints").on_attach(client, bufnr)
+        end
       end
       
       -- Setup navic if supported
@@ -465,10 +470,15 @@ return {
           local clients = vim.lsp.get_active_clients({ bufnr = bufnr })
           for _, client in ipairs(clients) do
             if client.supports_method("textDocument/inlayHint") then
-              if opts.inlay_hints.enabled then
-                require("lsp-inlayhints").on_attach(client, bufnr)
+              -- Use native Neovim 0.10+ inlay hints if available
+              if vim.lsp.inlay_hint and type(vim.lsp.inlay_hint.enable) == "function" then
+                vim.lsp.inlay_hint.enable(opts.inlay_hints.enabled, { bufnr = bufnr })
               else
-                require("lsp-inlayhints").disable()
+                if opts.inlay_hints.enabled then
+                  require("lsp-inlayhints").on_attach(client, bufnr)
+                else
+                  require("lsp-inlayhints").disable()
+                end
               end
             end
           end
