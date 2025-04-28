@@ -92,25 +92,26 @@ return {
         
         -- Next.js with route params
         s("nparams", {
-          t({"interface PageProps {", "  params: {", "    "}),
+          t({"interface PageProps {","  params: {","    "}),
           i(1, "id"),
-          t({": string", "  }", "}", "", "export default function Page({ params }: PageProps) {", "  return (", "    <div>"}),
-          t({"Dynamic parameter: {params."}), f(function(args) return args[1][1] end, {1}), t({"}", "    </div>"),
-          t({"", "  );", "}", ""}),
+          t({": string","  }","}","","export default function Page({ params }: PageProps) {","  return (","    <div>","      Dynamic parameter: {params."}),
+          f(function(args) return args[1][1] end, {1}),
+          t({"}","    </div>","  );","}",""}),
         }),
+
         
         -- Next.js with search params
         s("nsearch", {
-          t({"export default function Page({", "  searchParams,", "}: {", "  searchParams: { [key: string]: string | string[] | undefined };", "}) {", "  return (", "    <div>"}),
-          t({"Search param: {searchParams."}), i(1, "query"), t({" as string}", "    </div>"),
-          t({"", "  );", "}", ""}),
+          t({"export default function Page({","  searchParams,","}: {","  searchParams: { [key: string]: string | string[] | undefined };","}) {","  return (","    <div>","      Search param: {searchParams."}),
+          i(1, "query"),
+          t({" as string}","    </div>","  );","}",""}),
         }),
         
         -- Next.js with data fetching
         s("nfetch", {
           t({"async function getData() {", "  const res = await fetch('"}),
           i(1, "https://api.example.com/data"),
-          t({"'", "  });", "  "}),
+          t("', "),
           c(2, {
             t({"// No cache - revalidate every request", "  { cache: 'no-store' }"}),
             t({"// Cache with revalidation", "  { next: { revalidate: 60 } }"}),
@@ -369,9 +370,14 @@ return {
   {
     "neovim/nvim-lspconfig",
     opts = function(_, opts)
+      -- Initialize opts.servers if it doesn't exist
+      opts.servers = opts.servers or {}
+      
       -- Enhance tsserver configuration for Next.js
-      if opts.servers and opts.servers.tsserver then
-        opts.servers.tsserver.settings = vim.tbl_deep_extend("force", opts.servers.tsserver.settings or {}, {
+      opts.servers.tsserver = opts.servers.tsserver or {}
+      opts.servers.tsserver.settings = vim.tbl_deep_extend("force", 
+        opts.servers.tsserver.settings or {}, 
+        {
           typescript = {
             inlayHints = {
               includeInlayParameterNameHints = "all",
@@ -400,38 +406,43 @@ return {
               completeFunctionCalls = true,
             },
           },
-        })
-      }
+        }
+      )
       
       -- Add custom handlers for Next.js files
-      if opts.setup then
-        local lspconfig = require("lspconfig")
-        
-        opts.setup.tsserver = function(_, server_opts)
-          -- Register custom handlers for Next.js file structure
-          vim.api.nvim_create_autocmd("BufRead", {
-            pattern = {"app/*/page.tsx", "app/*/layout.tsx", "app/*/route.ts"},
-            callback = function(args)
-              -- Add specific LSP features for Next.js files
-              local fname = vim.fn.expand("%:t")
-              local bufnr = args.buf
-              
-              if fname == "page.tsx" then
-                -- Add code lens for pages
-                vim.api.nvim_buf_set_var(bufnr, "is_nextjs_page", true)
-              elseif fname == "layout.tsx" then
-                -- Add code lens for layouts
-                vim.api.nvim_buf_set_var(bufnr, "is_nextjs_layout", true)
-              elseif fname == "route.ts" then
-                -- Add code lens for API routes
-                vim.api.nvim_buf_set_var(bufnr, "is_nextjs_api", true)
-              end
+      opts.setup = opts.setup or {}
+      
+      -- Safe handler for tsserver setup that won't cause errors
+      local original_tsserver_setup = opts.setup.tsserver
+      opts.setup.tsserver = function(_, server_opts)
+        -- Register custom handlers for Next.js file structure
+        vim.api.nvim_create_autocmd("BufRead", {
+          pattern = {"app/*/page.tsx", "app/*/layout.tsx", "app/*/route.ts"},
+          callback = function(args)
+            -- Add specific LSP features for Next.js files
+            local fname = vim.fn.expand("%:t")
+            local bufnr = args.buf
+            
+            if fname == "page.tsx" then
+              -- Add code lens for pages
+              vim.api.nvim_buf_set_var(bufnr, "is_nextjs_page", true)
+            elseif fname == "layout.tsx" then
+              -- Add code lens for layouts
+              vim.api.nvim_buf_set_var(bufnr, "is_nextjs_layout", true)
+            elseif fname == "route.ts" then
+              -- Add code lens for API routes
+              vim.api.nvim_buf_set_var(bufnr, "is_nextjs_api", true)
             end
-          })
-          
-          -- Continue with normal setup
-          return false
+          end
+        })
+        
+        -- Call original setup if it exists
+        if original_tsserver_setup then
+          return original_tsserver_setup(_, server_opts)
         end
+        
+        -- Continue with normal setup
+        return false
       end
       
       return opts
