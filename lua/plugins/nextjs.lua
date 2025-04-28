@@ -165,7 +165,7 @@ return {
   {
     "windwp/nvim-ts-autotag",
     opts = {
-      filetypes = { "html", "jsx", "tsx", "javascriptreact", "typescriptreact" },
+      filetypes = { "html", "tsx", "javascriptreact", "typescriptreact" },
     },
   },
   
@@ -201,7 +201,8 @@ return {
           "typescript",
           "tsx",
           "javascript",
-          "jsx",
+          -- Removed "jsx" as it's not a valid parser in newer treesitter
+          -- JSX syntax is handled by javascript and tsx parsers
           "css",
           "html",
           "json",

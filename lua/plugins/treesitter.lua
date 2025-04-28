@@ -16,7 +16,6 @@ return {
         },
       },
       "HiPhish/rainbow-delimiters.nvim",
-      "windwp/nvim-ts-autotag",
     },
     cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
     keys = {
@@ -74,14 +73,6 @@ return {
           node_incremental = "<C-space>",
           scope_incremental = false,
           node_decremental = "<bs>",
-        },
-      },
-      autotag = {
-        enable = true,
-        filetypes = { 
-          "html", "xml", "javascript", "typescript", "javascriptreact", 
-          "typescriptreact", "svelte", "vue", "tsx", "jsx", "rescript", 
-          "markdown" 
         },
       },
       textobjects = {
@@ -287,5 +278,21 @@ return {
           :use_key(bracket[2])
       end
     end,
+  },
+  {
+    "windwp/nvim-ts-autotag",
+    event = "InsertEnter",
+    dependencies = "nvim-treesitter/nvim-treesitter",
+    opts = {
+      enable = true,
+      enable_rename = true,
+      enable_close = true,
+      enable_close_on_slash = true,
+      filetypes = { 
+        "html", "xml", "javascript", "typescript", "javascriptreact", 
+        "typescriptreact", "svelte", "vue", "tsx", "jsx", "rescript", 
+        "php", "markdown", "astro", "glimmer", "handlebars", "hbs", "templ"
+      },
+    },
   },
 }

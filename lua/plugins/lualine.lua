@@ -28,6 +28,47 @@ return {
         modified = "~",
         removed = "-",
       },
+      diff = {
+        add = " ",
+        modified = " ",
+        remove = " ",
+      },
+      kinds = {
+        Array = " ",
+        Boolean = " ",
+        Class = " ",
+        Color = " ",
+        Constant = " ",
+        Constructor = " ",
+        Enum = " ",
+        EnumMember = " ",
+        Event = " ",
+        Field = " ",
+        File = " ",
+        Folder = " ",
+        Function = " ",
+        Interface = " ",
+        Key = " ",
+        Keyword = " ",
+        Method = " ",
+        Module = " ",
+        Namespace = " ",
+        Null = "ﳠ ",
+        Number = " ",
+        Object = " ",
+        Operator = " ",
+        Package = " ",
+        Property = " ",
+        Reference = " ",
+        Snippet = " ",
+        String = " ",
+        Struct = " ",
+        Text = " ",
+        TypeParameter = " ",
+        Unit = " ",
+        Value = " ",
+        Variable = " ",
+      },
     }
 
     vim.o.laststatus = vim.g.lualine_laststatus
@@ -72,18 +113,60 @@ return {
       return hl and hl.fg and string.format("#%06x", hl.fg) or "NONE"
     end
 
+    -- Stack badge
+    local function stack_badge()
+      local current_stack = vim.g.current_stack or ""
+      if current_stack == "goth" then
+        return "󰟓 GOTH"
+      elseif current_stack == "nextjs" then
+        return "󰟔 NEXT"
+      end
+      return ""
+    end
+    
+    -- LSP status component
+    local function lsp_server()
+      local buf_clients = vim.lsp.get_active_clients({ bufnr = 0 })
+      if #buf_clients == 0 then
+        return ""
+      end
+      
+      local buf_client_names = {}
+      for _, client in pairs(buf_clients) do
+        table.insert(buf_client_names, client.name)
+      end
+      
+      return " " .. table.concat(buf_client_names, ", ")
+    end
+
     local opts = {
       options = {
         theme = "gruvbox-material",
         globalstatus = vim.o.laststatus == 3,
         disabled_filetypes = { statusline = { "dashboard", "alpha", "neo-tree", "lazy" } },
-        component_separators = '',
-        section_separators = '',
+        component_separators = { left = '', right = '' },
+        section_separators = { left = '', right = '' }, 
       },
       sections = {
-        lualine_a = { "mode" },
-        lualine_b = { "branch" },
-
+        lualine_a = { 
+          { "mode", separator = { left = '', right = '' }, right_padding = 2 } 
+        },
+        lualine_b = { 
+          { "branch", icon = "" },
+          { 
+            "diff",
+            symbols = {
+              added = icons.diff.add,
+              modified = icons.diff.modified,
+              removed = icons.diff.remove,
+            },
+            diff_color = {
+              added = { fg = get_highlight_color("GitSignsAdd") },
+              modified = { fg = get_highlight_color("GitSignsChange") },
+              removed = { fg = get_highlight_color("GitSignsDelete") },
+            },
+          }
+        },      
         lualine_c = {
           root_dir(),
           {
@@ -94,9 +177,11 @@ return {
               info = icons.diagnostics.Info,
               hint = icons.diagnostics.Hint,
             },
+            colored = true,
           },
           { "filetype", icon_only = true, separator = "", padding = { left = 1, right = 0 } },
           pretty_path(),
+          { stack_badge, color = { fg = "#a89984", gui = "bold" } },
         },
         lualine_x = {
           -- noice command status
@@ -148,36 +233,34 @@ return {
               return { fg = get_highlight_color("Special") }
             end,
           },
-          {
-            "diff",
-            symbols = {
-              added = icons.git.added,
-              modified = icons.git.modified,
-              removed = icons.git.removed,
-            },
-            source = function()
-              local gitsigns = vim.b.gitsigns_status_dict
-              if gitsigns then
-                return {
-                  added = gitsigns.added,
-                  modified = gitsigns.changed,
-                  removed = gitsigns.removed,
-                }
-              end
-            end,
-          },
+          { lsp_server, icon = " LSP:", color = { fg = "#7daea3" } },
+          { "encoding" },
+          { "fileformat", icons_enabled = true },
         },
         lualine_y = {
           { "progress", separator = " ", padding = { left = 1, right = 0 } },
           { "location", padding = { left = 0, right = 1 } },
         },
         lualine_z = {
-          function()
-            return " " .. os.date("%R")
-          end,
+          {
+            function()
+              return " " .. os.date("%H:%M")
+            end,
+            separator = { left = '', right = '' },
+            left_padding = 2
+          },
         },
       },
-      extensions = { "neo-tree", "lazy", "fzf" },
+      inactive_sections = {
+        lualine_a = {},
+        lualine_b = {},
+        lualine_c = { "filename" },
+        lualine_x = { "location" },
+        lualine_y = {},
+        lualine_z = {},
+      },
+      tabline = {},
+      extensions = { "neo-tree", "lazy", "trouble", "toggleterm", "quickfix" },
     }
 
     -- Add trouble.nvim integration if available

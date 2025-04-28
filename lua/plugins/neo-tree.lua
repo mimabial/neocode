@@ -8,18 +8,18 @@ return {
       function()
         require("neo-tree.command").execute({ toggle = true, dir = vim.loop.cwd() })
       end,
-      desc = "Explorer (cwd)",
+      desc = "Explorer NeoTree (cwd)",
     },
     {
       "<leader>E",
       function()
         require("neo-tree.command").execute({ toggle = true, dir = vim.fn.stdpath("config") })
       end,
-      desc = "Explorer (config)",
+      desc = "Explorer NeoTree (config)",
     },
     { "<leader>be", "<cmd>Neotree buffers reveal float<cr>", desc = "Buffer explorer" },
-    { "<leader>ge", "<cmd>Neotree git_status reveal float<cr>", desc = "Git explorer" },
-    { "<leader>se", "<cmd>Neotree document_symbols reveal float<cr>", desc = "Symbols explorer" },
+    { "<leader>ge", "<cmd>Neotree git_status reveal float<cr>", desc = "Git status explorer" },
+    { "<leader>se", "<cmd>Neotree document_symbols reveal float<cr>", desc = "Symbols Explorer" },
   },
   deactivate = function()
     vim.cmd([[Neotree close]])
@@ -43,33 +43,30 @@ return {
     },
   },
   opts = {
+    sources = { "filesystem", "buffers", "git_status", "document_symbols" },
+    open_files_do_not_replace_types = { "terminal", "trouble", "qf", "edgy" },
     close_if_last_window = true,
     popup_border_style = "rounded",
     enable_git_status = true,
     enable_diagnostics = true,
     enable_normal_mode_for_inputs = false,
-    open_files_do_not_replace_types = { "terminal", "trouble", "qf", "edgy" },
     sort_case_insensitive = true,
     
-    -- Adds blueprint to a project when enter key is pressed on an empty folder
-    add_blank_line_at_top = false,
-    sources = { "filesystem", "buffers", "git_status", "document_symbols" },
     source_selector = {
       winbar = true,
       content_layout = "center",
-      tab_labels = {
-        filesystem = " Files ",
-        buffers = " Buffers ",
-        git_status = " Git ",
-        document_symbols = " Symbols ",
+      sources = {
+        { source = "filesystem", display_name = " Files" },
+        { source = "buffers", display_name = " Buffers" },
+        { source = "git_status", display_name = " Git" },
+        { source = "document_symbols", display_name = " Symbols" },
       },
+      separator = { left = "", right = "" },
     },
+    
     default_component_configs = {
-      container = {
-        enable_character_fade = true,
-      },
       indent = {
-        with_expanders = true, -- if nil and file nesting is enabled, will enable expanders
+        with_expanders = true,
         expander_collapsed = "",
         expander_expanded = "",
         expander_highlight = "NeoTreeExpander",
@@ -78,17 +75,13 @@ return {
         folder_closed = "",
         folder_open = "",
         folder_empty = "",
+        folder_empty_open = "",
         default = "",
-        highlight = "NeoTreeFileIcon",
+        -- highlight = "NeoTreFileIcon"
       },
       modified = {
         symbol = "●",
         highlight = "NeoTreeModified",
-      },
-      name = {
-        trailing_slash = false,
-        use_git_status_colors = true,
-        highlight = "NeoTreeFileName",
       },
       git_status = {
         symbols = {
@@ -105,54 +98,90 @@ return {
           conflict = "",
         },
       },
+      name = {
+        trailing_slash = false,
+        highlight_opened_files = true, -- Highlight open files differently
+        use_git_status_colors = true,
+        highlight = "NeoTreeFileName",
+      },
       symlink_target = {
         enabled = true,
       },
     },
-    commands = {
-      system_open = function(state)
-        local node = state.tree:get_node()
-        local path = node:get_id()
-        -- macOS: open file in default application in the background
-        vim.api.nvim_command("silent !open -g " .. vim.fn.shellescape(path))
-      end,
-      copy_selector = function(state)
-        local node = state.tree:get_node()
-        local filepath = node:get_id()
-        local filename = node.name
-        local modify = vim.fn.fnamemodify
+    
+    filesystem = {
+      bind_to_cwd = false,
+      follow_current_file = { enabled = true },
+      use_libuv_file_watcher = true,
+      hijack_netrw_behavior = "open_default",
+      filtered_items = {
+        visible = false, -- when true, they will just be displayed differently than normal items
+        hide_dotfiles = false,
+        hide_gitignored = true,
+        hide_hidden = true, -- only works on Windows for hidden files/directories
+        hide_by_name = {
+          --"node_modules"
+        },
+        hide_by_pattern = { -- uses glob style patterns
+          --"*.meta",
+          --"*/src/*/tsconfig.json",
+          ".git/",
+        },
+        always_show = { -- remains visible even if other settings would normally hide it
+          --".gitignored",
+        },
+        never_show = { -- remains hidden even if visible is toggled to true, this overrides always_show
+          ".DS_Store",
+          "thumbs.db",
+          ".git",
+        },
+      },
+      commands = {
+        system_open = function(state)
+          local node = state.tree:get_node()
+          local path = node:get_id()
+          -- macOS: open file in default application in the background
+          vim.api.nvim_command("silent !open -g " .. vim.fn.shellescape(path))
+        end,
+        copy_selector = function(state)
+          local node = state.tree:get_node()
+          local filepath = node:get_id()
+          local filename = node.name
+          local modify = vim.fn.fnamemodify
 
-        local results = {
-          e = { val = modify(filename, ":e"), msg = "Extension only" },
-          f = { val = filename, msg = "Filename" },
-          F = { val = modify(filename, ":r"), msg = "Filename w/o extension" },
-          h = { val = modify(filepath, ":~"), msg = "Path relative to Home" },
-          p = { val = modify(filepath, ":."), msg = "Path relative to CWD" },
-          P = { val = filepath, msg = "Absolute path" },
-        }
+          local results = {
+            e = { val = modify(filename, ":e"), msg = "Extension only" },
+            f = { val = filename, msg = "Filename" },
+            F = { val = modify(filename, ":r"), msg = "Filename w/o extension" },
+            h = { val = modify(filepath, ":~"), msg = "Path relative to Home" },
+            p = { val = modify(filepath, ":."), msg = "Path relative to CWD" },
+            P = { val = filepath, msg = "Absolute path" },
+          }
 
-        local messages = {
-          { "\nChoose to copy to clipboard:\n", "Normal" },
-        }
-        for i, result in pairs(results) do
-          if result.val and result.val ~= "" then
-            messages[#messages+1] = { ("%s."):format(i), "Identifier" }
-            messages[#messages+1] = { (" %s: "):format(result.msg), "Normal" }
-            messages[#messages+1] = { result.val, "String" }
-            messages[#messages+1] = { "\n", "Normal" }
+          local messages = {
+            { "\nChoose to copy to clipboard:\n", "Normal" },
+          }
+          for i, result in pairs(results) do
+            if result.val and result.val ~= "" then
+              messages[#messages+1] = { ("%s."):format(i), "Identifier" }
+              messages[#messages+1] = { (" %s: "):format(result.msg), "Normal" }
+              messages[#messages+1] = { result.val, "String" }
+              messages[#messages+1] = { "\n", "Normal" }
+            end
           end
-        end
-        vim.api.nvim_echo(messages, false, {})
-        local result = results[vim.fn.getcharstr()]
-        if result and result.val and result.val ~= "" then
-          vim.fn.setreg("+", result.val)
-          vim.notify("Copied: " .. result.val)
-        end
-      end,
+          vim.api.nvim_echo(messages, false, {})
+          local result = results[vim.fn.getcharstr()]
+          if result and result.val and result.val ~= "" then
+            vim.fn.setreg("+", result.val)
+            vim.notify("Copied: " .. result.val)
+          end
+        end,
+      },
     },
+    
     window = {
       position = "left",
-      width = 40,
+      width = 35,
       mapping_options = {
         noremap = true,
         nowait = true,
@@ -216,33 +245,7 @@ return {
         end,
       },
     },
-    filesystem = {
-      bind_to_cwd = false,
-      follow_current_file = { enabled = true },
-      use_libuv_file_watcher = true,
-      hijack_netrw_behavior = "open_default",
-      filtered_items = {
-        visible = false, -- when true, they will just be displayed differently than normal items
-        hide_dotfiles = false,
-        hide_gitignored = true,
-        hide_hidden = true, -- only works on Windows for hidden files/directories
-        hide_by_name = {
-          --"node_modules"
-        },
-        hide_by_pattern = { -- uses glob style patterns
-          --"*.meta",
-          --"*/src/*/tsconfig.json",
-          ".git/",
-        },
-        always_show = { -- remains visible even if other settings would normally hide it
-          --".gitignored",
-        },
-        never_show = { -- remains hidden even if visible is toggled to true, this overrides always_show
-          --".DS_Store",
-          --"thumbs.db"
-        },
-      },
-    },
+    
     buffers = {
       follow_current_file = { enabled = true }, -- This will find and focus the file in the active buffer every time
       group_empty_dirs = true, -- when true, empty folders will be grouped together
@@ -255,6 +258,7 @@ return {
         },
       },
     },
+    
     git_status = {
       window = {
         mappings = {
@@ -268,6 +272,7 @@ return {
         },
       },
     },
+    
     document_symbols = {
       follow_cursor = true,
       client_filters = {
@@ -304,6 +309,28 @@ return {
         },
       },
     },
+    
+    event_handlers = {
+      {
+        event = "file_opened",
+        handler = function(file_path)
+          -- Auto close neo-tree after selecting a file in small windows
+          if vim.fn.winwidth(0) < 100 then
+            require("neo-tree").close_all()
+          end
+        end,
+      },
+      {
+        event = "neo_tree_buffer_enter",
+        handler = function()
+          -- Hide cursor in neo-tree window
+          vim.cmd [[setlocal guicursor=n:block-Cursor/lCursor-blinkon0]]
+          -- Improve the look
+          vim.wo.signcolumn = "auto"
+          vim.wo.cursorline = true
+        end
+      },
+    },
   },
   config = function(_, opts)
     require("neo-tree").setup(opts)
@@ -315,5 +342,30 @@ return {
         end
       end,
     })
+    
+    -- Create custom commands for stack-specific operations
+    vim.api.nvim_create_user_command("NeotreeGOTH", function()
+      -- Filter to show only Go/Templ files
+      require("neo-tree.command").execute({
+        action = "show",
+        source = "filesystem",
+        toggle = true,
+        dir = vim.loop.cwd(),
+        find_file = vim.api.nvim_buf_get_name(0),
+        position = "left",
+      })
+    end, { desc = "Open Neo-tree with GOTH focus" })
+    
+    vim.api.nvim_create_user_command("NeotreeNextJS", function()
+      -- Filter to show only Next.js related files
+      require("neo-tree.command").execute({
+        action = "show",
+        source = "filesystem",
+        toggle = true,
+        dir = vim.loop.cwd(),
+        find_file = vim.api.nvim_buf_get_name(0),
+        position = "left",
+      })
+    end, { desc = "Open Neo-tree with Next.js focus" })
   end,
 }

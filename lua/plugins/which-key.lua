@@ -63,7 +63,7 @@ return {
     wk.setup(opts)
     
     -- Document existing key chains
-    wk.register({
+    wk.add({
       -- Leader key groups
       ["<leader>"] = {
         b = { name = "Buffer" },
@@ -83,13 +83,39 @@ return {
         x = { name = "Diagnostics/Quickfix" },
       },
       
+      -- Stack-specific commands group
+      ["<leader>s"] = {
+        name = "+Stack-Specific",
+        g = {
+          name = "+GOTH Stack",
+          c = { function() require("config.utils").new_templ_component() end, "New Templ Component" },
+          p = { "<cmd>let g:current_stack='goth'<cr>", "Focus GOTH Stack" },
+          t = { "<cmd>!go test ./...<cr>", "Run Go Tests" },
+          m = { "<cmd>!go mod tidy<cr>", "Go Mod Tidy" },
+          b = { "<cmd>!go build<cr>", "Go Build" },
+          r = { "<cmd>!go run .<cr>", "Go Run" },
+        },
+        n = {
+          name = "+Next.js",
+          c = { function() require("config.utils").new_nextjs_component("client") end, "New Client Component" },
+          s = { function() require("config.utils").new_nextjs_component("server") end, "New Server Component" },
+          p = { function() require("config.utils").new_nextjs_component("page") end, "New Page" },
+          l = { function() require("config.utils").new_nextjs_component("layout") end, "New Layout" },
+          f = { "<cmd>let g:current_stack='nextjs'<cr>", "Focus Next.js Stack" },
+          d = { "<cmd>!npm run dev<cr>", "Next.js Dev" },
+          b = { "<cmd>!npm run build<cr>", "Next.js Build" },
+          t = { "<cmd>!npm test<cr>", "Run Tests" },
+          i = { "<cmd>!npm install<cr>", "NPM Install" },
+        },
+      },
+
       -- Git related
       g = {
         name = "Goto/Git",
-        d = "Go to definition",
-        D = "Go to declaration",
-        r = "Go to references",
-        I = "Go to implementation",
+        d = { vim.lsp.buf.definition, "Go to definition" },
+        D = { vim.lsp.buf.declaration, "Go to declaration" },
+        r = { function() require("telescope.builtin").lsp_references() end, "Go to references" },
+        i = { vim.lsp.buf.implementation, "Go to implementation" },
       },
       
       -- Brackets
@@ -97,12 +123,12 @@ return {
       ["]"] = { name = "Next..." },
       
       -- Other common prefixes
-      ["<C-w>"] = { name = "Window commands" },
-      ["z"] = { name = "Folds/Spelling" },
+      -- ["<C-w>"] = { name = "Window commands" },
+      -- ["z"] = { name = "Folds/Spelling" },
     })
     
     -- Buffer commands
-    wk.register({
+    wk.add({
       ["<leader>b"] = {
         ["b"] = { "<cmd>e #<cr>", "Switch to Other Buffer" },
         ["d"] = { "<cmd>bdelete<cr>", "Delete Buffer" },
@@ -116,7 +142,7 @@ return {
     })
     
     -- Code/LSP commands
-    wk.register({
+    wk.add({
       ["<leader>c"] = {
         name = "Code/LSP",
         ["a"] = { vim.lsp.buf.code_action, "Code Action" },
@@ -128,11 +154,21 @@ return {
         ["r"] = { vim.lsp.buf.rename, "Rename Symbol" },
         ["s"] = { "<cmd>Telescope lsp_document_symbols<cr>", "Document Symbols" },
         ["S"] = { "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>", "Workspace Symbols" },
+        ["g"] = { 
+          name = "+GOTH",
+          ["c"] = { function() require("config.utils").new_templ_component() end, "New Templ Component" },
+          ["t"] = { "<cmd>!go test ./...<cr>", "Run Go Tests" }, 
+        },
+        ["n"] = { 
+          name = "+Next.js",
+          ["c"] = { function() require("config.utils").new_nextjs_component("client") end, "New Client Component" },
+          ["s"] = { function() require("config.utils").new_nextjs_component("server") end, "New Server Component" },
+        },
       }
     })
     
     -- Debug commands
-    wk.register({
+    wk.add({
       ["<leader>d"] = {
         name = "Debug",
         ["b"] = { function() require('dap').toggle_breakpoint() end, "Toggle Breakpoint" },
@@ -151,7 +187,7 @@ return {
     })
     
     -- Find/Telescope commands
-    wk.register({
+    wk.add({
       ["<leader>f"] = {
         name = "Find/Telescope",
         ["/"] = { "<cmd>Telescope current_buffer_fuzzy_find<cr>", "Find in Buffer" },
@@ -178,7 +214,7 @@ return {
     })
     
     -- Git commands
-    wk.register({
+    wk.add({
       ["<leader>g"] = {
         name = "Git",
         ["b"] = { "<cmd>Telescope git_branches<cr>", "Git Branches" },
@@ -186,7 +222,7 @@ return {
         ["d"] = { "<cmd>DiffviewOpen<cr>", "DiffView Open" },
         ["D"] = { "<cmd>DiffviewClose<cr>", "DiffView Close" },
         ["e"] = { "<cmd>Neotree git_status reveal float<cr>", "Git Explorer" },
-        ["g"] = { function() _G.toggle_lazygit() end, "Lazygit" },
+        ["g"] = { "<cmd>LazyGit<cr>", "Lazygit" },
         ["h"] = { "<cmd>DiffviewFileHistory %<cr>", "File History" },
         ["H"] = { "<cmd>DiffviewFileHistory<cr>", "Project History" },
         ["l"] = { "<cmd>Git pull<cr>", "Git Pull" },
@@ -195,10 +231,27 @@ return {
       }
     })
     
+    -- Git Signs / Hunks 
+    wk.add({
+      ["<leader>h"] = {
+        name = "Git Hunks",
+        ["b"] = { function() require("gitsigns").blame_line({ full = true }) end, "Blame Line" },
+        ["B"] = { function() require("gitsigns").toggle_current_line_blame() end, "Toggle Line Blame" },
+        ["d"] = { function() require("gitsigns").diffthis() end, "Diff This" },
+        ["D"] = { function() require("gitsigns").diffthis("~") end, "Diff This ~" },
+        ["p"] = { function() require("gitsigns").preview_hunk() end, "Preview Hunk" },
+        ["r"] = { function() require("gitsigns").reset_hunk() end, "Reset Hunk" },
+        ["R"] = { function() require("gitsigns").reset_buffer() end, "Reset Buffer" },
+        ["s"] = { function() require("gitsigns").stage_hunk() end, "Stage Hunk" },
+        ["S"] = { function() require("gitsigns").stage_buffer() end, "Stage Buffer" },
+        ["u"] = { function() require("gitsigns").undo_stage_hunk() end, "Undo Stage Hunk" },
+      }
+    })
+    
     -- Terminal commands
-    wk.register({
+    wk.add({
       ["<leader>t"] = {
-        name = "Toggle/Terminal",
+        name = "Terminal/Toggle",
         ["f"] = { "<cmd>ToggleTerm direction=float<cr>", "Terminal (float)" },
         ["h"] = { "<cmd>ToggleTerm direction=horizontal<cr>", "Terminal (horizontal)" },
         ["v"] = { "<cmd>ToggleTerm direction=vertical<cr>", "Terminal (vertical)" },
@@ -207,20 +260,30 @@ return {
         ["d"] = { function() require("gitsigns").toggle_deleted() end, "Toggle Deleted" },
         ["n"] = { function() _G.toggle_node() end, "Node Terminal" },
         ["p"] = { function() _G.toggle_python() end, "Python Terminal" },
+        ["c"] = { function() require("config.utils").toggle_colorcolumn() end, "Toggle Color Column" },
+        ["w"] = { function() vim.wo.wrap = not vim.wo.wrap; vim.notify("Wrap " .. (vim.wo.wrap and "enabled" or "disabled")) end, "Toggle Wrap" },
+        ["a"] = { "<cmd>FormatToggle<cr>", "Toggle Auto Format (global)" },
+        ["A"] = { "<cmd>FormatToggleBuffer<cr>", "Toggle Auto Format (buffer)" },
       }
     })
     
-    -- UI commands
-    wk.register({
+    -- UI toggles and commands
+    wk.add({
       ["<leader>u"] = {
         name = "UI",
+        ["c"] = { "<cmd>ColorSchemeToggle<cr>", "Toggle Colorscheme" },
         ["n"] = { function() require("notify").dismiss({ silent = true, pending = true }) end, "Dismiss Notifications" },
         ["r"] = { "<Cmd>nohlsearch<Bar>diffupdate<Bar>normal! <C-L><CR>", "Redraw / Clear Highlight" },
+        ["t"] = { "<cmd>ToggleTransparency<cr>", "Toggle Transparency" },
+        ["l"] = { "<cmd>Lazy<cr>", "Lazy Plugin Manager" },
+        ["L"] = { "<cmd>LazyUpdate<cr>", "Update Plugins" },
+        ["m"] = { "<cmd>Mason<cr>", "Mason LSP Manager" },
+        ["M"] = { "<cmd>MasonUpdate<cr>", "Update LSP Servers" },
       }
     })
     
     -- Quit/Session commands
-    wk.register({
+    wk.add({
       ["<leader>q"] = {
         name = "Quit/Session",
         ["q"] = { "<cmd>qa<cr>", "Quit All" },
@@ -232,7 +295,7 @@ return {
     })
     
     -- Noice/Notifications commands
-    wk.register({
+    wk.add({
       ["<leader>n"] = {
         name = "Noice/Notifications",
         ["a"] = { function() require("noice").cmd("all") end, "Noice All" },
@@ -261,7 +324,7 @@ return {
       }
     })
     
-    -- Window commands
+    -- Windows management
     wk.register({
       ["<leader>w"] = {
         name = "Window",
@@ -278,7 +341,7 @@ return {
       }
     })
     
-    -- Diagnostics/Quickfix commands
+    -- Diagnostics and quickfix
     wk.register({
       ["<leader>x"] = {
         name = "Diagnostics/Quickfix",
@@ -289,23 +352,7 @@ return {
         ["T"] = { "<cmd>TodoTrouble keywords=TODO,FIX,FIXME<cr>", "Todo/Fix/Fixme Trouble" },
         ["w"] = { "<cmd>TroubleToggle workspace_diagnostics<cr>", "Workspace Diagnostics" },
         ["x"] = { "<cmd>TroubleToggle<cr>", "Toggle Trouble" },
-      }
-    })
-    
-    -- Git Hunks commands
-    wk.register({
-      ["<leader>h"] = {
-        name = "Git Hunks",
-        ["b"] = { function() require("gitsigns").blame_line({ full = true }) end, "Blame Line" },
-        ["B"] = { function() require("gitsigns").toggle_current_line_blame() end, "Toggle Line Blame" },
-        ["d"] = { function() require("gitsigns").diffthis() end, "Diff This" },
-        ["D"] = { function() require("gitsigns").diffthis("~") end, "Diff This ~" },
-        ["p"] = { function() require("gitsigns").preview_hunk() end, "Preview Hunk" },
-        ["r"] = { function() require("gitsigns").reset_hunk() end, "Reset Hunk" },
-        ["R"] = { function() require("gitsigns").reset_buffer() end, "Reset Buffer" },
-        ["s"] = { function() require("gitsigns").stage_hunk() end, "Stage Hunk" },
-        ["S"] = { function() require("gitsigns").stage_buffer() end, "Stage Buffer" },
-        ["u"] = { function() require("gitsigns").undo_stage_hunk() end, "Undo Stage Hunk" },
+        ["f"] = { function() require("config.utils").toggle_qf() end, "Toggle Quickfix" },
       }
     })
     
@@ -328,7 +375,36 @@ return {
         ["t"] = { function() require("todo-comments").jump_next() end, "Next Todo" },
       },
     })
+        -- Layout switcher
+    wk.register({
+      ["<leader>L"] = {
+        name = "Layouts",
+        ["1"] = { "<cmd>Layout coding<cr>", "Coding Layout" },
+        ["2"] = { "<cmd>Layout terminal<cr>", "Terminal Layout" },
+        ["3"] = { "<cmd>Layout writing<cr>", "Writing Layout" },
+        ["4"] = { "<cmd>Layout debug<cr>", "Debug Layout" },
+      },
+    })
     
+    -- Function keys for debugging
+    wk.register({
+      ["<F5>"] = { function() require("dap").continue() end, "Debug: Continue" },
+      ["<F10>"] = { function() require("dap").step_over() end, "Debug: Step Over" },
+      ["<F11>"] = { function() require("dap").step_into() end, "Debug: Step Into" },
+      ["<F12>"] = { function() require("dap").step_out() end, "Debug: Step Out" },
+    })
+    -- LSP related keymaps
+    wk.register({
+      ["g"] = {
+        ["d"] = { vim.lsp.buf.definition, "Go to Definition" },
+        ["D"] = { vim.lsp.buf.declaration, "Go to Declaration" },
+        ["r"] = { function() require("telescope.builtin").lsp_references() end, "Go to References" },
+        ["i"] = { vim.lsp.buf.implementation, "Go to Implementation" },
+        ["K"] = { vim.lsp.buf.hover, "Show Documentation" },
+        ["<C-k>"] = { vim.lsp.buf.signature_help, "Show Signature Help" },
+      },
+    })
+
     -- This section defines various Vim keyboard shortcuts and their descriptions
     wk.register({
       -- Basic editor operations
@@ -339,22 +415,12 @@ return {
       ["<leader>Y"] = { '"+Y', "Yank Line to System Clipboard" },
       ["<leader>p"] = { '"+p', "Paste from System Clipboard" },
       ["<leader>P"] = { '"+P', "Paste from System Clipboard (Before)" },
-      
-      -- LSP operations with g prefix
-      ["gd"] = { vim.lsp.buf.definition, "Go to Definition" },
-      ["gD"] = { vim.lsp.buf.declaration, "Go to Declaration" },
-      ["gr"] = { function() require("telescope.builtin").lsp_references() end, "Go to References" },
-      ["gI"] = { vim.lsp.buf.implementation, "Go to Implementation" },
-      ["K"] = { vim.lsp.buf.hover, "Show Hover Documentation" },
-      ["<C-k>"] = { vim.lsp.buf.signature_help, "Show Signature Help" },
     })
-    
-    -- Function key mappings for debugging
-    wk.register({
-      ["<F5>"] = { function() require("dap").continue() end, "Debug: Continue" },
-      ["<F10>"] = { function() require("dap").step_over() end, "Debug: Step Over" },
-      ["<F11>"] = { function() require("dap").step_into() end, "Debug: Step Into" },
-      ["<F12>"] = { function() require("dap").step_out() end, "Debug: Step Out" },
-    })
+
+    -- Additional key mappings
+    vim.keymap.set("n", "<leader>gg", "<cmd>LazyGit<cr>", { desc = "Lazygit" })
+    vim.keymap.set("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle colorscheme" })
+    vim.keymap.set("n", "<leader>uT", "<cmd>ToggleTransparency<cr>", { desc = "Toggle transparency" })
+    vim.keymap.set("n", "<leader>cr", "<cmd>ReloadConfig<cr>", { desc = "Reload config" })
   end,
 }
