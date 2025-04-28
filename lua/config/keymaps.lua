@@ -10,14 +10,19 @@ wk.register({
     f = { name = "+find/telescope" },
     g = { name = "+git" },
     h = { name = "+git hunks" },
+    L = { name = "+layouts" },
     n = { name = "+noice/notifications" },
     q = { name = "+quit/session" },
-    s = { name = "+search" },
+    s = { name = "+stack-specific" },
     t = { name = "+terminal/toggle" },
     u = { name = "+ui" },
     w = { name = "+windows" },
     x = { name = "+diagnostics/quickfix" },
+    e = { name = "+explorer" },
   },
+  ["["] = { name = "+prev" },
+  ["]"] = { name = "+next" },
+  ["g"] = { name = "+goto/lsp" },
 })
 
 -- Buffer management
@@ -35,8 +40,12 @@ wk.register({
 })
 
 -- Buffer navigation with Shift
-vim.keymap.set("n", "<S-h>", "<cmd>bprevious<cr>", { desc = "Previous buffer" })
-vim.keymap.set("n", "<S-l>", "<cmd>bnext<cr>", { desc = "Next buffer" })
+wk.register({
+  ["<S-h>"] = { "<cmd>bprevious<cr>", "Previous buffer" },
+  ["<S-l>"] = { "<cmd>bnext<cr>", "Next buffer" },
+  ["[b"] = { "<cmd>bprevious<cr>", "Previous buffer" },
+  ["]b"] = { "<cmd>bnext<cr>", "Next buffer" },
+})
 
 -- LSP and Code actions
 wk.register({
@@ -51,35 +60,39 @@ wk.register({
     r = { vim.lsp.buf.rename, "Rename Symbol" },
     s = { "<cmd>Telescope lsp_document_symbols<cr>", "Document Symbols" },
     S = { "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>", "Workspace Symbols" },
-  },
-})
-
--- LSP related keymaps
-vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to Definition" })
-vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { desc = "Go to Declaration" })
-vim.keymap.set("n", "gr", function() require("telescope.builtin").lsp_references() end, { desc = "Go to References" })
-vim.keymap.set("n", "gI", vim.lsp.buf.implementation, { desc = "Go to Implementation" })
-vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "Show Documentation" })
-vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, { desc = "Signature Help" })
-
--- Stack-specific keymaps
-wk.register({
-  ["<leader>cs"] = {
-    name = "+stack-specific",
-    g = {
+    g = { 
       name = "+goth",
       c = { function() require("config.utils").new_templ_component() end, "New Templ Component" },
-      p = { "<cmd>StackFocus goth<cr>", "Focus GOTH Stack" },
+      t = { "<cmd>!go test ./...<cr>", "Run Go Tests" }, 
+      m = { "<cmd>!go mod tidy<cr>", "Go Mod Tidy" },
+      b = { "<cmd>!go build<cr>", "Go Build" },
+      r = { "<cmd>!go run .<cr>", "Go Run" },
     },
-    n = {
+    n = { 
       name = "+nextjs",
       c = { function() require("config.utils").new_nextjs_component("client") end, "New Client Component" },
       s = { function() require("config.utils").new_nextjs_component("server") end, "New Server Component" },
       p = { function() require("config.utils").new_nextjs_component("page") end, "New Page" },
       l = { function() require("config.utils").new_nextjs_component("layout") end, "New Layout" },
-      f = { "<cmd>StackFocus nextjs<cr>", "Focus Next.js Stack" },
+      d = { "<cmd>!npm run dev<cr>", "Next.js Dev" },
+      b = { "<cmd>!npm run build<cr>", "Next.js Build" },
+      t = { "<cmd>!npm test<cr>", "Run Tests" },
+      i = { "<cmd>!npm install<cr>", "NPM Install" },
     },
   },
+})
+
+-- LSP related keymaps
+wk.register({
+  ["g"] = {
+    d = { vim.lsp.buf.definition, "Go to Definition" },
+    D = { vim.lsp.buf.declaration, "Go to Declaration" },
+    r = { function() require("telescope.builtin").lsp_references() end, "Go to References" },
+    i = { vim.lsp.buf.implementation, "Go to Implementation" },
+    t = { vim.lsp.buf.type_definition, "Type Definition" },
+    ["<C-k>"] = { vim.lsp.buf.signature_help, "Signature Help" },
+  },
+  ["K"] = { vim.lsp.buf.hover, "Show Documentation" },
 })
 
 -- Debug mode keymaps
@@ -98,14 +111,17 @@ wk.register({
     R = { function() require("dap").restart() end, "Restart" },
     t = { function() require("dap").terminate() end, "Terminate" },
     u = { function() require("dapui").toggle() end, "Toggle UI" },
+    g = { function() _G.debug_goth_app() end, "Debug GOTH App" },
   },
 })
 
 -- Function keys for debugging
-vim.keymap.set("n", "<F5>", function() require("dap").continue() end, { desc = "Continue" })
-vim.keymap.set("n", "<F10>", function() require("dap").step_over() end, { desc = "Step Over" })
-vim.keymap.set("n", "<F11>", function() require("dap").step_into() end, { desc = "Step Into" })
-vim.keymap.set("n", "<F12>", function() require("dap").step_out() end, { desc = "Step Out" })
+wk.register({
+  ["<F5>"] = { function() require("dap").continue() end, "Continue" },
+  ["<F10>"] = { function() require("dap").step_over() end, "Step Over" },
+  ["<F11>"] = { function() require("dap").step_into() end, "Step Into" },
+  ["<F12>"] = { function() require("dap").step_out() end, "Step Out" },
+})
 
 -- Telescope / Find
 wk.register({
@@ -131,6 +147,7 @@ wk.register({
     t = { "<cmd>Telescope filetypes<cr>", "Find Filetypes" },
     T = { "<cmd>Telescope builtin<cr>", "Find Telescope Pickers" },
     ["."] = { "<cmd>Telescope resume<cr>", "Resume Last Search" },
+    n = { "<cmd>Telescope file_browser<cr>", "Browse Next.js Project" },
   },
 })
 
@@ -149,6 +166,9 @@ wk.register({
     l = { "<cmd>Git pull<cr>", "Git Pull" },
     p = { "<cmd>Git push<cr>", "Git Push" },
     s = { "<cmd>Telescope git_status<cr>", "Git Status" },
+    o = { "<cmd>Octo<cr>", "Octo" },
+    r = { "<cmd>Octo pr list<cr>", "PR List" },
+    i = { "<cmd>Octo issue list<cr>", "Issue List" },
   }
 })
 
@@ -193,25 +213,174 @@ wk.register({
   }
 })
 
--- Search commands
+-- Stack-specific commands
 wk.register({
   ["<leader>s"] = {
-    name = "+search",
-    b = { "<cmd>Telescope current_buffer_fuzzy_find<cr>", "Buffer" },
-    d = { "<cmd>Telescope diagnostics<cr>", "Diagnostics" },
-    g = { "<cmd>Telescope git_status<cr>", "Git Status" },
-    h = { "<cmd>Telescope command_history<cr>", "Command History" },
-    m = { "<cmd>Telescope marks<cr>", "Marks" },
-    M = { "<cmd>Telescope man_pages<cr>", "Man Pages" },
-    r = { "<cmd>Telescope registers<cr>", "Registers" },
-    s = { "<cmd>Telescope lsp_document_symbols<cr>", "Symbols" },
-    t = { "<cmd>TodoTelescope<cr>", "Todo" },
-    T = { "<cmd>TodoTelescope keywords=TODO,FIX,FIXME<cr>", "Todo/Fix/Fixme" },
-    w = { "<cmd>Telescope grep_string<cr>", "Word Under Cursor" },
+    name = "+stack-specific",
+    g = {
+      name = "+goth stack",
+      n = { 
+        function()
+          vim.ui.input({ prompt = "Project name: " }, function(name)
+            if name and name ~= "" then
+              local Terminal = require("toggleterm.terminal").Terminal
+              local goth_init = Terminal:new({
+                cmd = string.format("mkdir -p %s && cd %s && go mod init %s && mkdir -p components handlers static", name, name, name),
+                hidden = false,
+                direction = "float",
+                on_exit = function()
+                  -- Create main.go, components, etc.
+                  vim.cmd("cd " .. name)
+                  vim.notify("GOTH project '" .. name .. "' initialized!", vim.log.levels.INFO)
+                end,
+              })
+              goth_init:toggle()
+            end
+          end)
+        end,
+        "New GOTH Project" 
+      },
+      r = { 
+        function()
+          local Terminal = require("toggleterm.terminal").Terminal
+          local goth_run = Terminal:new({
+            cmd = "templ generate && go run .",
+            hidden = false,
+            direction = "horizontal",
+          })
+          goth_run:toggle()
+        end,
+        "Run GOTH Project" 
+      },
+      d = { "<cmd>DebugGOTHApp<cr>", "Debug GOTH App" },
+      g = { "<cmd>!templ generate<cr>", "Generate Templ Files" },
+      c = { function() require("config.utils").new_templ_component() end, "New Templ Component" },
+      t = { "<cmd>!go test ./...<cr>", "Run Go Tests" },
+      m = { "<cmd>!go mod tidy<cr>", "Go Mod Tidy" },
+      b = { "<cmd>!go build<cr>", "Go Build" },
+      p = { "<cmd>StackFocus goth<cr>", "Focus GOTH Stack" },
+    },
+    n = {
+      name = "+nextjs stack",
+      n = { 
+        function()
+          vim.ui.input({ prompt = "Project name: " }, function(name)
+            if name and name ~= "" then
+              local Terminal = require("toggleterm.terminal").Terminal
+              local nextjs_init = Terminal:new({
+                cmd = string.format("npx create-next-app@latest %s --typescript --eslint --tailwind --app --src-dir --import-alias '@/*'", name),
+                hidden = false,
+                direction = "float",
+              })
+              nextjs_init:toggle()
+            end
+          end)
+        end,
+        "New Next.js Project" 
+      },
+      d = { 
+        function()
+          local Terminal = require("toggleterm.terminal").Terminal
+          local nextjs_dev = Terminal:new({
+            cmd = "npm run dev",
+            hidden = false,
+            direction = "horizontal",
+          })
+          nextjs_dev:toggle()
+        end,
+        "Run Development Server" 
+      },
+      b = { 
+        function()
+          local Terminal = require("toggleterm.terminal").Terminal
+          local nextjs_build = Terminal:new({
+            cmd = "npm run build",
+            hidden = false,
+            direction = "horizontal",
+          })
+          nextjs_build:toggle()
+        end,
+        "Build for Production" 
+      },
+      s = { 
+        function()
+          local Terminal = require("toggleterm.terminal").Terminal
+          local nextjs_start = Terminal:new({
+            cmd = "npm run start",
+            hidden = false,
+            direction = "horizontal",
+          })
+          nextjs_start:toggle()
+        end,
+        "Start Production Server" 
+      },
+      t = { 
+        function()
+          local Terminal = require("toggleterm.terminal").Terminal
+          local nextjs_test = Terminal:new({
+            cmd = "npm run test",
+            hidden = false,
+            direction = "horizontal",
+          })
+          nextjs_test:toggle()
+        end,
+        "Run Tests" 
+      },
+      l = { 
+        function()
+          local Terminal = require("toggleterm.terminal").Terminal
+          local nextjs_lint = Terminal:new({
+            cmd = "npm run lint",
+            hidden = false,
+            direction = "horizontal",
+          })
+          nextjs_lint:toggle()
+        end,
+        "Lint Project" 
+      },
+      c = { function() require("config.utils").new_nextjs_component("client") end, "New Client Component" },
+      S = { function() require("config.utils").new_nextjs_component("server") end, "New Server Component" },
+      p = { function() require("config.utils").new_nextjs_component("page") end, "New Page" },
+      L = { function() require("config.utils").new_nextjs_component("layout") end, "New Layout" },
+      f = { "<cmd>StackFocus nextjs<cr>", "Focus Next.js Stack" },
+      i = {
+        function()
+          vim.ui.input({ prompt = "Package name: " }, function(package)
+            if package and package ~= "" then
+              local Terminal = require("toggleterm.terminal").Terminal
+              local npm_install = Terminal:new({
+                cmd = "npm install " .. package,
+                hidden = false,
+                direction = "float",
+              })
+              npm_install:toggle()
+            end
+          end)
+        end,
+        "Install Package"
+      },
+      D = {
+        function()
+          vim.ui.input({ prompt = "Dev package name: " }, function(package)
+            if package and package ~= "" then
+              local Terminal = require("toggleterm.terminal").Terminal
+              local npm_install_dev = Terminal:new({
+                cmd = "npm install -D " .. package,
+                hidden = false,
+                direction = "float",
+              })
+              npm_install_dev:toggle()
+            end
+          end)
+        end,
+        "Install Dev Package"
+      },
+    },
+    r = { "<cmd>lua _G.toggle_htmx_server()<cr>", "Run Server" },
   }
 })
 
--- Terminal/toggle commands
+-- Terminal commands
 wk.register({
   ["<leader>t"] = {
     name = "+terminal/toggle",
@@ -223,8 +392,12 @@ wk.register({
     d = { function() require("gitsigns").toggle_deleted() end, "Toggle Deleted" },
     n = { function() _G.toggle_node() end, "Node Terminal" },
     p = { function() _G.toggle_python() end, "Python Terminal" },
+    g = { function() _G.toggle_go() end, "Go Terminal" },
+    s = { function() _G.toggle_htmx_server() end, "HTMX Server" },
     c = { function() require("config.utils").toggle_colorcolumn() end, "Toggle Color Column" },
     w = { function() vim.wo.wrap = not vim.wo.wrap; vim.notify("Wrap " .. (vim.wo.wrap and "enabled" or "disabled")) end, "Toggle Wrap" },
+    a = { "<cmd>FormatToggle<cr>", "Toggle Auto Format (global)" },
+    A = { "<cmd>FormatToggleBuffer<cr>", "Toggle Auto Format (buffer)" },
   }
 })
 
@@ -236,6 +409,7 @@ wk.register({
     n = { function() require("notify").dismiss({ silent = true, pending = true }) end, "Dismiss Notifications" },
     r = { "<Cmd>nohlsearch<Bar>diffupdate<Bar>normal! <C-L><CR>", "Redraw / Clear Highlight" },
     t = { "<cmd>ToggleTransparency<cr>", "Toggle Transparency" },
+    T = { "<cmd>ToggleTransparency<cr>", "Toggle Transparency" },
     l = { "<cmd>Lazy<cr>", "Lazy Plugin Manager" },
     L = { "<cmd>LazyUpdate<cr>", "Update Plugins" },
     m = { "<cmd>Mason<cr>", "Mason LSP Manager" },
@@ -295,60 +469,100 @@ wk.register({
   },
 })
 
--- Movement in insert mode
-vim.keymap.set("i", "<C-h>", "<Left>", { desc = "Move left" })
-vim.keymap.set("i", "<C-j>", "<Down>", { desc = "Move down" })
-vim.keymap.set("i", "<C-k>", "<Up>", { desc = "Move up" })
-vim.keymap.set("i", "<C-l>", "<Right>", { desc = "Move right" })
+-- Move Lines
+wk.register({
+  ["<A-j>"] = { "<cmd>m .+1<cr>==", "Move line down" },
+  ["<A-k>"] = { "<cmd>m .-2<cr>==", "Move line up" },
+}, { mode = "n" })
+
+wk.register({ 
+  ["<A-j>"] = { "<esc><cmd>m .+1<cr>==gi", "Move line down" },
+  ["<A-k>"] = { "<esc><cmd>m .-2<cr>==gi", "Move line up" },
+}, { mode = "i" })
+
+wk.register({
+  ["<A-j>"] = { ":m '>+1<cr>gv=gv", "Move selection down" },
+  ["<A-k>"] = { ":m '<-2<cr>gv=gv", "Move selection up" },
+}, { mode = "v" })
 
 -- Better window navigation
-vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "Go to left window" })
-vim.keymap.set("n", "<C-j>", "<C-w>j", { desc = "Go to lower window" })
-vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "Go to upper window" })
-vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "Go to right window" })
+wk.register({
+  ["<C-h>"] = { "<C-w>h", "Go to left window" },
+  ["<C-j>"] = { "<C-w>j", "Go to lower window" },
+  ["<C-k>"] = { "<C-w>k", "Go to upper window" },
+  ["<C-l>"] = { "<C-w>l", "Go to right window" },
+})
 
 -- Resize window using <ctrl> arrow keys
-vim.keymap.set("n", "<C-Up>", "<cmd>resize +2<cr>", { desc = "Increase window height" })
-vim.keymap.set("n", "<C-Down>", "<cmd>resize -2<cr>", { desc = "Decrease window height" })
-vim.keymap.set("n", "<C-Left>", "<cmd>vertical resize -2<cr>", { desc = "Decrease window width" })
-vim.keymap.set("n", "<C-Right>", "<cmd>vertical resize +2<cr>", { desc = "Increase window width" })
-
--- Move Lines
-vim.keymap.set("n", "<A-j>", "<cmd>m .+1<cr>==", { desc = "Move line down" })
-vim.keymap.set("n", "<A-k>", "<cmd>m .-2<cr>==", { desc = "Move line up" })
-vim.keymap.set("i", "<A-j>", "<esc><cmd>m .+1<cr>==gi", { desc = "Move line down" })
-vim.keymap.set("i", "<A-k>", "<esc><cmd>m .-2<cr>==gi", { desc = "Move line up" })
-vim.keymap.set("v", "<A-j>", ":m '>+1<cr>gv=gv", { desc = "Move selection down" })
-vim.keymap.set("v", "<A-k>", ":m '<-2<cr>gv=gv", { desc = "Move selection up" })
+wk.register({
+  ["<C-Up>"] = { "<cmd>resize +2<cr>", "Increase window height" },
+  ["<C-Down>"] = { "<cmd>resize -2<cr>", "Decrease window height" },
+  ["<C-Left>"] = { "<cmd>vertical resize -2<cr>", "Decrease window width" },
+  ["<C-Right>"] = { "<cmd>vertical resize +2<cr>", "Increase window width" },
+})
 
 -- Clear search with <esc>
-vim.keymap.set({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", { desc = "Escape and clear hlsearch" })
+wk.register({
+  ["<esc>"] = { "<cmd>noh<cr><esc>", "Escape and clear hlsearch" },
+}, { mode = { "i", "n" } })
 
 -- Save file
-vim.keymap.set({ "i", "x", "n", "s" }, "<C-s>", "<cmd>w<cr><esc>", { desc = "Save file" })
+wk.register({
+  ["<C-s>"] = { "<cmd>w<cr><esc>", "Save file" },
+}, { mode = { "i", "x", "n", "s" } })
 
 -- Better indenting
-vim.keymap.set("v", "<", "<gv", { desc = "Unindent line" })
-vim.keymap.set("v", ">", ">gv", { desc = "Indent line" })
+wk.register({
+  ["<"] = { "<gv", "Unindent line" },
+  [">"] = { ">gv", "Indent line" },
+}, { mode = "v" })
+
+-- Paste over currently selected text without yanking it
+wk.register({
+  ["p"] = { '"_dP', "Better paste" },
+}, { mode = "v" })
+
+-- Maintain cursor position when joining lines
+wk.register({
+  ["J"] = { "mzJ`z", "Join lines and maintain cursor position" },
+})
+
+-- Better navigation
+wk.register({
+  ["<C-d>"] = { "<C-d>zz", "Scroll down half a page and center" },
+  ["<C-u>"] = { "<C-u>zz", "Scroll up half a page and center" },
+  ["n"] = { "nzzzv", "Next search result and center" },
+  ["N"] = { "Nzzzv", "Previous search result and center" },
+})
+
+-- Diagnostic keymaps
+wk.register({
+  ["<leader>cd"] = { vim.diagnostic.open_float, "Open floating diagnostic message" },
+  ["<leader>xq"] = { vim.diagnostic.setloclist, "Open diagnostics list" },
+})
 
 -- Layout switching keymaps
-vim.keymap.set("n", "<leader>L1", "<cmd>Layout coding<cr>", { desc = "Coding Layout" })
-vim.keymap.set("n", "<leader>L2", "<cmd>Layout terminal<cr>", { desc = "Terminal Layout" })
-vim.keymap.set("n", "<leader>L3", "<cmd>Layout writing<cr>", { desc = "Writing Layout" })
-vim.keymap.set("n", "<leader>L4", "<cmd>Layout debug<cr>", { desc = "Debug Layout" })
+wk.register({
+  ["<leader>L"] = {
+    name = "+layouts",
+    ["1"] = { "<cmd>Layout coding<cr>", "Coding Layout" },
+    ["2"] = { "<cmd>Layout terminal<cr>", "Terminal Layout" },
+    ["3"] = { "<cmd>Layout writing<cr>", "Writing Layout" },
+    ["4"] = { "<cmd>Layout debug<cr>", "Debug Layout" },
+  },
+})
 
--- Add more stack-specific keymaps
--- GOTH
-vim.keymap.set("n", "<leader>cgt", "<cmd>!go test ./...<cr>", { desc = "Run Go Tests" })
-vim.keymap.set("n", "<leader>cgm", "<cmd>!go mod tidy<cr>", { desc = "Go Mod Tidy" })
-vim.keymap.set("n", "<leader>cgb", "<cmd>!go build<cr>", { desc = "Go Build" })
-vim.keymap.set("n", "<leader>cgr", "<cmd>!go run .<cr>", { desc = "Go Run" })
+-- Explorer
+wk.register({
+  ["<leader>e"] = { function() require("neo-tree.command").execute({ toggle = true, dir = vim.loop.cwd() }) end, "Explorer NeoTree (cwd)" },
+  ["<leader>E"] = { function() require("neo-tree.command").execute({ toggle = true, dir = vim.fn.stdpath("config") }) end, "Explorer NeoTree (config)" },
+  ["<leader>be"] = { "<cmd>Neotree buffers reveal float<cr>", "Buffer explorer" },
+  ["<leader>ge"] = { "<cmd>Neotree git_status reveal float<cr>", "Git status explorer" },
+  ["<leader>se"] = { "<cmd>Neotree document_symbols reveal float<cr>", "Symbols Explorer" },
+  ["-"] = { "<CMD>Oil<CR>", "Open parent directory" },
+})
 
--- Next.js
-vim.keymap.set("n", "<leader>cnd", "<cmd>!npm run dev<cr>", { desc = "Next.js Dev" })
-vim.keymap.set("n", "<leader>cnb", "<cmd>!npm run build<cr>", { desc = "Next.js Build" })
-vim.keymap.set("n", "<leader>cnt", "<cmd>!npm test<cr>", { desc = "Run Tests" })
-vim.keymap.set("n", "<leader>cni", "<cmd>!npm install<cr>", { desc = "NPM Install" })
-
--- Quick reload config
-vim.keymap.set("n", "<leader>cr", "<cmd>ReloadConfig<cr>", { desc = "Reload Config" })
+-- Add command to reload config
+wk.register({
+  ["<leader>cr"] = { "<cmd>ReloadConfig<cr>", "Reload Config" },
+})
