@@ -144,18 +144,6 @@ return {
     build = ':lua require("go.install").update_all_sync()',
   },
   
-  -- HTMX/Templ related
-  {
-    "windwp/nvim-ts-autotag",
-    opts = {
-      filetypes = { "html", "xml", "javascript", "typescript", "javascriptreact", "typescriptreact", "templ" },
-      skip_tags = {
-        "area", "base", "br", "col", "command", "embed", "hr", "img", "slot",
-        "input", "keygen", "link", "meta", "param", "source", "track", "wbr"
-      },
-    },
-  },
-  
   -- Enhance tree-sitter for Go/Templ
   {
     "nvim-treesitter/nvim-treesitter",

@@ -8,7 +8,12 @@ return {
   cmd = "Codeium",
   build = ":Codeium Auth",
   opts = {
-    -- No config needed for default behavior
+    tools = {
+      -- Disable Codeium for certain path patterns
+      path_deny_list = {
+        "oil://*", -- Disable for Oil paths
+      },
+    },
   },
   config = function(_, opts)
     require("codeium").setup(opts)
@@ -55,9 +60,19 @@ return {
 
     -- Disable Codeium in certain filetypes
     vim.api.nvim_create_autocmd("FileType", {
-      pattern = { "TelescopePrompt", "neo-tree", "dashboard", "alpha", "lazy" },
+      pattern = { "TelescopePrompt", "neo-tree", "dashboard", "alpha", "lazy", "oil" },
       callback = function()
         vim.b.codeium_enabled = false
+      end,
+    })
+    
+    -- Add check for oil:// protocol in buffer paths
+    vim.api.nvim_create_autocmd("BufEnter", {
+      callback = function(args)
+        local bufname = vim.api.nvim_buf_get_name(args.buf)
+        if bufname:match("^oil://") then
+          vim.b.codeium_enabled = false
+        end
       end,
     })
   end,

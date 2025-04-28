@@ -251,14 +251,6 @@ return {
       })
     end,
   },
-
-  -- React specific tools
-  {
-    "windwp/nvim-ts-autotag",
-    opts = {
-      filetypes = { "html", "tsx", "jsx", "javascriptreact", "typescriptreact" },
-    },
-  },
   
   -- React component refactoring
   {
