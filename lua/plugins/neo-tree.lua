@@ -49,6 +49,7 @@ return {
     popup_border_style = "rounded",
     enable_git_status = true,
     enable_diagnostics = true,
+    enable_normal_mode_for_inputs = false,
     sort_case_insensitive = true,
     
     source_selector = {
@@ -297,14 +298,6 @@ return {
         handler = function()
           vim.cmd [[setlocal guicursor=]]
         end
-      },
-      {
-        event = "neo_tree_popup_input_ready",
-        ---@param args { bufnr: integer, winid: integer }
-        handler = function(args)
-          vim.cmd("stopinsert")
-          vim.keymap.set("i", "<esc>", vim.cmd.stopinsert, { noremap = true, buffer = args.bufnr })
-        end,
       }
     },
     
