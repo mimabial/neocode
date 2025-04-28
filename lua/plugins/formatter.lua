@@ -32,17 +32,17 @@ return {
     formatters_by_ft = {
       lua = { "stylua" },
       python = { "isort", "black" },
-      javascript = { { "prettierd", "prettier" } },
-      typescript = { { "prettierd", "prettier" } },
-      javascriptreact = { { "prettierd", "prettier" } },
-      typescriptreact = { { "prettierd", "prettier" } },
-      json = { { "prettierd", "prettier" } },
-      jsonc = { { "prettierd", "prettier" } },
-      html = { { "prettierd", "prettier" } },
-      css = { { "prettierd", "prettier" } },
-      scss = { { "prettierd", "prettier" } },
-      markdown = { { "prettierd", "prettier" } },
-      yaml = { { "prettierd", "prettier" } },
+      javascript = { "prettierd", "prettier" },
+      typescript = { "prettierd", "prettier" },
+      javascriptreact = { "prettierd", "prettier" },
+      typescriptreact = { "prettierd", "prettier" },
+      json = { "prettierd", "prettier" },
+      jsonc = { "prettierd", "prettier" },
+      html = { "prettierd", "prettier" },
+      css = { "prettierd", "prettier" },
+      scss = { "prettierd", "prettier" },
+      markdown = { "prettierd", "prettier" },
+      yaml = { "prettierd", "prettier" },
       rust = { "rustfmt" },
       go = { "gofumpt", "goimports" },
       c = { "clang_format" },
@@ -86,11 +86,17 @@ return {
         timeout_ms = 3000, -- More time for complex files
         lsp_fallback = true,
         async = async, -- Use async for large files
+        stop_after_first = true, -- Stop after first formatter succeeds
       }
     end,
     
     -- Customize formatters
     formatters = {
+      ["*"] = {
+        -- global formatter settings
+        stop_after_first = true,
+      },
+
       -- Customize default options for formatters
       stylua = {
         -- Use a standard stylua.toml if it exists in the project

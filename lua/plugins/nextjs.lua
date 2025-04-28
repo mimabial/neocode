@@ -1,3 +1,4 @@
+
 -- Configuration for Next.js development
 return {
   -- Add custom formatters for Next.js
@@ -26,8 +27,12 @@ return {
           },
         },
       },
+      format_on_save = {
+        stop_after_first = true, -- Stop after first formatter succeeds
+      },
     },
   },
+
   -- TypeScript tools
   {
     "pmizio/typescript-tools.nvim",
@@ -92,7 +97,7 @@ return {
       end, { desc = "Fix All" })
     end,
   },
-
+  
   -- React snippets and tools
   {
     "L3MON4D3/LuaSnip",

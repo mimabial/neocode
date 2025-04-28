@@ -21,8 +21,12 @@ return {
           stdin = false,
         },
       },
+      format_on_save = {
+        stop_after_first = true, -- Stop after first formatter succeeds
+      },
     },
   },
+  
   -- Templ syntax support
   {
     "joerdav/templ.vim",
@@ -98,7 +102,7 @@ return {
     end,
     build = ':lua require("go.install").update_all_sync()',
   },
-  
+
   -- Enhance tree-sitter for Go/Templ
   {
     "nvim-treesitter/nvim-treesitter",
