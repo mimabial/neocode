@@ -327,36 +327,7 @@ return {
       end
     end,
   },
-  
-  -- Add custom formatters for Next.js
-  {
-    "stevearc/conform.nvim",
-    opts = {
-      formatters_by_ft = {
-        javascript = { { "prettierd", "prettier" } },
-        typescript = { { "prettierd", "prettier" } },
-        javascriptreact = { { "prettierd", "prettier" } },
-        typescriptreact = { { "prettierd", "prettier" } },
-        css = { { "prettierd", "prettier" } },
-        json = { { "prettierd", "prettier" } },
-        jsonc = { { "prettierd", "prettier" } },
-        graphql = { { "prettierd", "prettier" } },
-      },
-      formatters = {
-        prettierd = {
-          env = {
-            PRETTIERD_DEFAULT_CONFIG = vim.fn.expand("~/.config/nvim/.prettierrc"),
-          },
-        },
-        prettier = {
-          options = {
-            configPath = vim.fn.getcwd() .. "/.prettierrc",
-          },
-        },
-      },
-    },
-  },
-  
+
   -- Enhanced jsx/tsx commenting
   {
     "numToStr/Comment.nvim",

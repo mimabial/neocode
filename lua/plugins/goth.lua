@@ -458,30 +458,6 @@ return {
     end,
   },
   
-  -- Add custom formatter config for Templ files
-  {
-    "stevearc/conform.nvim",
-    optional = true,
-    opts = {
-      formatters_by_ft = {
-        templ = { "templ" },
-        go = { "gofumpt", "goimports" },
-      },
-      formatters = {
-        templ = {
-          command = "templ",
-          args = { "fmt", "$FILENAME" },
-          stdin = false,
-        },
-        gofumpt = {
-          command = "gofumpt",
-          args = { "-l", "-w", "$FILENAME" },
-          stdin = false,
-        },
-      },
-    },
-  },
-  
   -- File browser configured for Go projects
   {
     "nvim-neo-tree/neo-tree.nvim",
