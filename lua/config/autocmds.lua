@@ -517,19 +517,48 @@ vim.api.nvim_create_autocmd("FileType", {
   desc = "Improve help navigation",
 })
 
--- NeoTree specific settings
+-- Auto open Oil when opening directories
+vim.api.nvim_create_autocmd("BufEnter", {
+  group = augroup,
+  callback = function()
+    local bufname = vim.api.nvim_buf_get_name(0)
+    if vim.fn.isdirectory(bufname) == 1 then
+      -- Change from Neotree to Oil
+      vim.cmd("Oil " .. bufname)
+    end
+  end,
+  desc = "Open directory in Oil",
+})
+
+-- Configure oil-specific settings
 vim.api.nvim_create_autocmd("FileType", {
   group = augroup,
-  pattern = "neo-tree",
+  pattern = "oil",
   callback = function()
-    -- Disable numbers in NeoTree
+    -- Disable numbers in Oil
     vim.wo.number = false
     vim.wo.relativenumber = false
-
-    -- Make NeoTree a bit narrower
-    vim.cmd("vertical resize 30")
+    
+    -- Enable cursorline for better visibility
+    vim.wo.cursorline = true
+    
+    -- Set custom highlights
+    if vim.g.colors_name == "gruvbox-material" then
+      vim.cmd("highlight link OilDir GruvboxAqua")
+      vim.cmd("highlight link OilDirIcon GruvboxAqua")
+      vim.cmd("highlight link OilLink GruvboxGreen")
+    end
+    
+    -- Stack-specific filters
+    if vim.g.current_stack == "goth" then
+      -- Apply GOTH-specific filters if needed
+      vim.b.oil_filter_pattern = "node_modules/|vendor/|go.sum"
+    elseif vim.g.current_stack == "nextjs" then
+      -- Apply Next.js-specific filters if needed
+      vim.b.oil_filter_pattern = "node_modules/|.next/|.vercel/|out/|.turbo/"
+    end
   end,
-  desc = "NeoTree specific settings",
+  desc = "Oil-specific settings",
 })
 
 -- LSP inlay hints (where supported)

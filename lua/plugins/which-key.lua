@@ -480,12 +480,41 @@ return {
       ["<C-k>"] = { vim.lsp.buf.signature_help, "Signature Help" },
     })
 
-    -- Explorer
+    -- Explorer related keymaps
     wk.register({
-      ["<leader>e"] = { function() require("neo-tree.command").execute({ toggle = true, dir = vim.loop.cwd() }) end, "Explorer NeoTree (cwd)" },
-      ["<leader>E"] = { function() require("neo-tree.command").execute({ toggle = true, dir = vim.fn.stdpath("config") }) end, "Explorer NeoTree (config)" },
-      ["<leader>se"] = { "<cmd>Neotree document_symbols reveal float<cr>", "Symbols Explorer" },
+      ["<leader>e"] = { function() require("config.utils").open_oil() end, "File Explorer (Oil)" },
+      ["<leader>E"] = { function() require("config.utils").open_oil(nil, true) end, "File Explorer Float (Oil)" },
       ["-"] = { "<CMD>Oil<CR>", "Open parent directory" },
+      ["_"] = { "<CMD>Oil .<CR>", "Open project root" },
+    })
+
+    -- Add Explorer section to root groups
+    wk.register({
+      ["<leader>f"] = { 
+        name = "+Find/Telescope/Files",
+        e = { function() require("config.utils").open_oil() end, "Oil Explorer" },
+        E = { function() require("config.utils").open_oil(nil, true) end, "Oil Explorer (float)" },
+        n = { "<cmd>Neotree toggle<cr>", "Neo-tree Explorer" },
+        N = { "<cmd>Neotree float<cr>", "Neo-tree Explorer (float)" },
+        t = { function() require("config.utils").toggle_explorer() end, "Toggle Explorer Type" },
+        g = { function() require("config.utils").oil_git_root() end, "Browse Git Root" },
+      },
+    })
+
+    -- Stack-specific oil commands
+    wk.register({
+      ["<leader>sg"] = { 
+        name = "+GOTH Stack",
+        -- Add oil commands for GOTH
+        e = { function() require("config.utils").oil_goth(false) end, "GOTH Files (Oil)" },
+        E = { function() require("config.utils").oil_goth(true) end, "GOTH Files (Oil float)" },
+      },
+      ["<leader>sn"] = {
+        name = "+Next.js Stack",
+        -- Add oil commands for Next.js
+        e = { function() require("config.utils").oil_nextjs(false) end, "Next.js Files (Oil)" },
+        E = { function() require("config.utils").oil_nextjs(true) end, "Next.js Files (Oil float)" },
+      },
     })
 
     -- Move Lines (normal mode)

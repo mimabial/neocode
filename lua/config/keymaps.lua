@@ -206,6 +206,51 @@ wk.register({
   }
 })
 
+-- Explorer keymaps (update for oil.nvim)
+wk.register({
+  ["<leader>e"] = { "<CMD>Oil<CR>", "File Explorer (Oil)" },
+  ["<leader>E"] = { "<CMD>Oil --float<CR>", "File Explorer Floating (Oil)" },
+  ["<leader>o"] = { "<CMD>Oil<CR>", "Open parent directory" },
+  ["<leader>O"] = { "<CMD>Oil .<CR>", "Open project root" },
+  ["-"] = { "<CMD>Oil<CR>", "Open parent directory" },
+  ["_"] = { "<CMD>Oil .<CR>", "Open project root directory" },
+})
+
+-- Git folder exploration with oil
+wk.register({
+  ["<leader>ge"] = { 
+    function()
+      local git_root = vim.fn.system("git rev-parse --show-toplevel 2>/dev/null"):gsub("%s+$", "")
+      if git_root ~= "" then
+        vim.cmd("Oil " .. git_root)
+      else
+        vim.notify("Not in a git repository", vim.log.levels.WARN)
+      end
+    end, 
+    "Git Root Explorer" 
+  },
+})
+
+-- Stack-specific oil commands
+wk.register({
+  ["<leader>sg<leader>e"] = {
+    function()
+      -- Set the current stack to GOTH to apply filtering
+      vim.g.current_stack = "goth"
+      vim.cmd("Oil")
+    end,
+    "File Explorer (GOTH focus)"
+  },
+  ["<leader>sn<leader>e"] = {
+    function()
+      -- Set the current stack to Next.js to apply filtering
+      vim.g.current_stack = "nextjs"
+      vim.cmd("Oil")
+    end,
+    "File Explorer (Next.js focus)"
+  },
+})
+
 -- Quick exit and sessions
 wk.register({
   ["<leader>q"] = {

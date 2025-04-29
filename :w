@@ -5,10 +5,11 @@ return {
     -- Oil will take over directory buffers (like `:e .` or `:e $PWD`)
     default_file_explorer = true,
     -- Id is automatically added at the beginning, and name at the end
+    -- See :help oil-columns
     columns = {
       "icon",
-      -- "permissions",
       "size",
+      "permissions",
       "mtime",
     },
     -- Buffer-local options to use for oil buffers
@@ -33,7 +34,7 @@ return {
     skip_confirm_for_simple_edits = true,
     -- Oil will automatically watch for external changes in the directory
     auto_refresh = true,
-    -- Enhanced keymaps for better navigation and operations
+    -- Keymaps in oil buffer. Can be any value that `vim.keymap.set` accepts OR a table of keymap options with a `callback` key
     keymaps = {
       ["g?"] = "actions.show_help",
       ["<CR>"] = "actions.select",
@@ -51,83 +52,21 @@ return {
       ["gx"] = "actions.open_external",
       ["g."] = "actions.toggle_hidden",
       ["g\\"] = "actions.toggle_trash",
-      -- Additional useful keymaps
-      ["K"] = "actions.preview", -- Preview on hover like LSP
-      ["<C-r>"] = "actions.refresh", -- Explicit refresh
-      ["yp"] = { -- Copy file path
-        callback = function()
-          local oil = require("oil")
-          local entry = oil.get_cursor_entry()
-          if entry then
-            local path = oil.get_current_dir() .. entry.name
-            vim.fn.setreg("+", path)
-            vim.notify("Copied path: " .. path, vim.log.levels.INFO)
-          end
-        end
-      },
-      ["yn"] = { -- Copy file name
-        callback = function()
-          local oil = require("oil")
-          local entry = oil.get_cursor_entry()
-          if entry then
-            vim.fn.setreg("+", entry.name)
-            vim.notify("Copied name: " .. entry.name, vim.log.levels.INFO)
-          end
-        end
-      },
-      ["n"] = { -- New file
-        callback = function()
-          vim.ui.input({ prompt = "New file: " }, function(name)
-            if name then
-              local oil = require("oil")
-              local path = oil.get_current_dir() .. name
-              vim.fn.writefile({}, path)
-              require("oil").refresh()
-            end
-          end)
-        end
-      },
-      ["N"] = { -- New directory
-        callback = function()
-          vim.ui.input({ prompt = "New directory: " }, function(name)
-            if name then
-              local oil = require("oil")
-              local path = oil.get_current_dir() .. name
-              vim.fn.mkdir(path, "p")
-              require("oil").refresh()
-            end
-          end)
-        end
-      },
     },
-    -- Use default keymaps but enhance with our additions
+    -- Set to false to disable all of the above keymaps
     use_default_keymaps = true,
     view_options = {
       -- Show files and directories that start with "."
       show_hidden = true,
       -- This function defines what is considered a "hidden" file
       is_hidden_file = function(name, bufnr)
-        -- Base function with common patterns
-        local base_hidden = vim.startswith(name, ".") or 
+        -- Common patterns for hidden files
+        return vim.startswith(name, ".") or 
                name == "node_modules" or
                name == "vendor" or
                name == "dist" or
                name == ".next" or
                name == "build"
-        
-        -- Stack-specific filtering
-        if vim.g.current_stack == "goth" then
-          return base_hidden or
-                 name == "go.sum" or
-                 name == "bin"
-        elseif vim.g.current_stack == "nextjs" then
-          return base_hidden or
-                 name == ".turbo" or
-                 name == ".vercel" or
-                 name == "out"
-        end
-        
-        return base_hidden
       end,
       -- This function defines what will never be shown, even when `show_hidden` is set
       is_always_hidden = function(name, bufnr)
@@ -138,13 +77,14 @@ return {
     float = {
       -- Padding around the floating window
       padding = 2,
-      max_width = 0.9,
-      max_height = 0.9,
+      max_width = 80,
+      max_height = 30,
       border = "rounded",
       win_options = {
         winblend = 0,
       },
       -- This is the config that will be passed to nvim_open_win.
+      -- Override any of the values with your own configuration.
       override = function(conf)
         return conf
       end,
@@ -193,8 +133,9 @@ return {
   keys = {
     { "-", "<CMD>Oil<CR>", desc = "Open parent directory" },
     { "_", "<CMD>Oil .<CR>", desc = "Open project root directory" },
-    { "<leader>o", "<CMD>Oil --float<CR>", desc = "Open parent directory" },
-    { "<leader>O", "<CMD>Oil .<CR>", desc = "Open project root" },
+
+    { "<leader>e", "<CMD>Oil<CR>", desc = "Open parent directory with Oil" },
+    { "<leader>E", "<CMD>Oil --float<CR>", desc = "Open parent directory in float" },
   },
   config = function(_, opts)
     -- Get colors from Gruvbox Material palette for better styling
@@ -218,40 +159,42 @@ return {
 
     require("oil").setup(opts)
     
-    -- Create commands for stack-specific file browsing
-    vim.api.nvim_create_user_command("OilGOTH", function()
-      vim.g.current_stack = "goth"
-      vim.cmd("Oil")
-      vim.notify("Oil explorer focused on GOTH stack", vim.log.levels.INFO)
-    end, { desc = "Oil explorer with GOTH focus" })
-
-    vim.api.nvim_create_user_command("OilNextJS", function()
-      vim.g.current_stack = "nextjs"
-      vim.cmd("Oil")
-      vim.notify("Oil explorer focused on Next.js stack", vim.log.levels.INFO)
-    end, { desc = "Oil explorer with Next.js focus" })
-
-    -- Add useful commands
-    vim.api.nvim_create_user_command("OilFloat", function()
-      vim.cmd("Oil --float")
-    end, { desc = "Open Oil in floating window" })
-    
-    -- Register buffer-local keymaps when entering Oil buffers
-    vim.api.nvim_create_autocmd("FileType", {
-      pattern = "oil",
-      callback = function()
-        local function map(mode, lhs, rhs, desc)
-          vim.keymap.set(mode, lhs, rhs, { buffer = true, silent = true, desc = desc })
-        end
-        
-        -- These keymaps work alongside the ones defined in opts.keymaps
-        map("n", "?", "g?", "Show help")
-        map("n", "q", "<cmd>oil_close<CR>", "Close oil")
-        
-        -- Set cursorline for better visibility in oil buffers
-        vim.opt_local.cursorline = true
+    -- Add stack-specific configurations
+    if vim.g.current_stack == "goth" then
+      -- Custom filter for GOTH stack
+      local goth_filter = function(name, bufnr)
+        return vim.startswith(name, ".") or 
+              name == "node_modules" or
+              name == "vendor" or
+              name == "bin" or
+              name == "dist" or
+              name == "build"
       end
-    })
+      
+      -- Apply GOTH-specific configuration
+      require("oil").setup({
+        view_options = {
+          is_hidden_file = goth_filter,
+        },
+      })
+    elseif vim.g.current_stack == "nextjs" then
+      -- Custom filter for Next.js stack
+      local nextjs_filter = function(name, bufnr)
+        return vim.startswith(name, ".") or 
+              name == "node_modules" or
+              name == ".next" or
+              name == "out" or
+              name == ".turbo" or
+              name == ".vercel"
+      end
+      
+      -- Apply Next.js-specific configuration
+      require("oil").setup({
+        view_options = {
+          is_hidden_file = nextjs_filter,
+        },
+      })
+    end
   end,
 }
 

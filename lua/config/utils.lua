@@ -354,27 +354,68 @@ function M.cwd_name()
   return vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
 end
 
--- Return only icons and filenames for neo-tree
-function M.neo_tree_items()
-  if vim.bo.filetype ~= "neo-tree" then
-    return ""
+-- Oil helpers
+function M.open_oil(path, float)
+  path = path or vim.fn.expand("%:p:h")
+  local cmd = "Oil"
+  
+  if float then
+    cmd = cmd .. " --float"
   end
   
-  local utils = require("neo-tree.utils")
-  local state = require("neo-tree.sources.filesystem.state")
-  local items = {}
-  
-  local context = (state.current_position or {}).search_pattern or ""
-  local tree =  state.tree
-  if tree then
-    for _, node in ipairs(tree:get_nodes()) do
-      local name = utils.basename(node.path)
-      local icon = node.icon or (node:get_icon() or {}).icon or ""
-      table.insert(items, icon .. " " .. name)
-    end
+  if path ~= "" then
+    cmd = cmd .. " " .. path
   end
   
-  return table.concat(items, ", ")
+  vim.cmd(cmd)
+end
+
+-- Open oil at git root
+function M.oil_git_root()
+  local git_root = vim.fn.system("git rev-parse --show-toplevel 2>/dev/null"):gsub("%s+$", "")
+  if git_root ~= "" then
+    M.open_oil(git_root)
+  else
+    vim.notify("Not in a git repository", vim.log.levels.WARN)
+    M.open_oil() -- Fallback to current directory
+  end
+end
+
+-- Open oil with stack-specific filtering
+function M.oil_stack(stack, float)
+  -- Set the current stack before opening
+  if stack then
+    vim.g.current_stack = stack
+  end
+  
+  M.open_oil(nil, float)
+  
+  -- Notify the user
+  if stack then
+    vim.notify("Oil explorer focused on " .. stack .. " stack", vim.log.levels.INFO)
+  end
+end
+
+-- Oil stack helpers
+function M.oil_goth(float)
+  M.oil_stack("goth", float)
+end
+
+function M.oil_nextjs(float)
+  M.oil_stack("nextjs", float)
+end
+
+-- Toggle between oil and neo-tree
+function M.toggle_explorer()
+  if vim.g.default_explorer == "oil" then
+    vim.g.default_explorer = "neo-tree"
+    vim.cmd("Neotree toggle")
+    vim.notify("Switched to Neo-tree explorer", vim.log.levels.INFO)
+  else
+    vim.g.default_explorer = "oil"
+    vim.cmd("Oil")
+    vim.notify("Switched to Oil explorer", vim.log.levels.INFO)
+  end
 end
 
 -- Generate a new Next.js component

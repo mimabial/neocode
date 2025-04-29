@@ -2,6 +2,9 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
+-- Set oil as the default explorer early
+vim.g.default_explorer = "oil"
+
 -- Load configurations
 require("config.options")      -- Load options
 require("config.autocmds")     -- Load autocommands
@@ -35,6 +38,21 @@ vim.api.nvim_create_user_command("ReloadConfig", function()
   dofile(vim.fn.stdpath("config") .. "/init.lua")
   vim.notify("Nvim configuration reloaded!", vim.log.levels.INFO, { title = "Config" })
 end, { desc = "Reload Neovim configuration" })
+
+-- Add command to toggle between explorers
+vim.api.nvim_create_user_command("ExplorerToggle", function(args)
+  local explorer_type = args.args
+  if explorer_type == "oil" then
+    vim.g.default_explorer = "oil"
+    vim.cmd("Oil")
+  elseif explorer_type == "neo-tree" or explorer_type == "neotree" then
+    vim.g.default_explorer = "neo-tree"
+    vim.cmd("Neotree toggle")
+  else
+    vim.cmd("Oil")
+  end
+  vim.notify("Default explorer set to: " .. vim.g.default_explorer, vim.log.levels.INFO)
+end, { nargs = "?", complete = function() return {"oil", "neo-tree"} end, desc = "Set default explorer" })
 
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "*",

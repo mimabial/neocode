@@ -1,4 +1,4 @@
--- Bootstrap lazy.nvim
+-- lua/config/lazy.lua
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = "https://github.com/folke/lazy.nvim.git"
@@ -37,10 +37,19 @@ if vim.g.current_stack == nil then
   end
 end
 
--- Setup lazy.nvim with conditional imports
+-- Setup lazy.nvim with conditional imports and explicit priorities
 require("lazy").setup({
   spec = {
-    -- Import all plugins from lua/plugins directory
+    -- Core UI plugins with explicit loading priorities
+    { 
+      { "nvim-tree/nvim-web-devicons", priority = 1000 },
+      { "sainnhe/gruvbox-material", priority = 950 },
+      { "folke/tokyonight.nvim", priority = 940 },
+      { "stevearc/oil.nvim", priority = 900 }, -- Make sure oil loads before neo-tree
+      import = "plugins.ui" 
+    },
+    
+    -- Import all other plugins from lua/plugins directory
     { import = "plugins" },
     
     -- Stack-specific configurations - conditional imports based on detected project type
@@ -207,17 +216,18 @@ vim.api.nvim_create_user_command("Layout", function(opts)
   local layout = opts.args
   
   if layout == "coding" then
-    vim.cmd("Neotree show left")
+    -- Use oil.nvim instead of neo-tree
+    vim.cmd("Oil")
     vim.cmd("wincmd l") -- Move to the right window (main buffer)
   elseif layout == "terminal" then
-    vim.cmd("Neotree close")
+    vim.cmd("Oil close")
     vim.cmd("ToggleTerm direction=horizontal")
   elseif layout == "writing" then
-    vim.cmd("Neotree close")
+    vim.cmd("Oil close")
     vim.cmd("set wrap linebreak")
     _G.utils.center_buffer()
   elseif layout == "debug" then
-    vim.cmd("Neotree close")
+    vim.cmd("Oil close")
     if package.loaded["dapui"] then
       require("dapui").open()
     else
