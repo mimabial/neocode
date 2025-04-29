@@ -20,7 +20,7 @@ local options = {
   -- Indentation
   tabstop = 2,                  -- Number of spaces tabs count for
   shiftwidth = 2,               -- Size of an indent
-  expandtab = truddweei,             -- Use spaces instead of tabs
+  expandtab = true,             -- Use spaces instead of tabs
   smartindent = true,           -- Smart indentation
   breakindent = true,           -- Enable break indent
   

@@ -569,7 +569,10 @@ return {
     -- Extract server names from opts.servers table to create servers_to_install
     local servers_to_install = {}
     for server_name, _ in pairs(opts.servers) do
-      table.insert(servers_to_install, server_name)
+      -- Skip servers that should be handled elsewhere
+      if not opts.setup[server_name] then
+        table.insert(servers_to_install, server_name)
+      end
     end
 
     -- Then set up mason-lspconfig

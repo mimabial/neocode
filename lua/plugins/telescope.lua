@@ -182,6 +182,12 @@ return {
             ["?"] = actions.which_key,
           },
         },
+        results_title = false,
+        dynamic_preview_title = true,
+        results_count = true,  -- Show the total number of search results
+        entry_prefix = "  ",  -- Adds a little space before each entry
+        hl_result_eol = true, -- Highlight to end of line (better for seeing matches)
+        show_line = true,     -- Show line numbers in results
       },
       pickers = {
         find_files = {
@@ -201,6 +207,8 @@ return {
               "--glob=!build/",
             }
           end,
+          show_line = true,
+          count = true,  -- Show the total count of matches
         },
         buffers = {
           show_all_buffers = true,
@@ -220,6 +228,20 @@ return {
         },
         colorscheme = {
           enable_preview = true,
+        },
+        current_buffer_fuzzy_find = {
+          count = true,  -- Show count of matches
+          show_line = true,
+          previewer = false,
+          theme = "dropdown",
+          layout_config = {
+            width = 0.9,
+            height = 0.35,
+          },
+        },
+        diagnostics = {
+          count = true,  -- Show count of diagnostics
+          line_width = 120,
         },
       },
       extensions = {
@@ -302,6 +324,29 @@ return {
     if package.loaded["dap"] then
       safe_load_extension("dap")
     end
+    
+    -- Create highlights for search count display
+    vim.api.nvim_create_autocmd("ColorScheme", {
+      callback = function()
+        -- Set up highlight groups for the count display
+        vim.api.nvim_set_hl(0, "TelescopeCountTitle", { 
+          link = "Title",
+          bold = true,
+        })
+        
+        vim.api.nvim_set_hl(0, "TelescopeCountBorder", { 
+          link = "TelescopeBorder",
+        })
+        
+        vim.api.nvim_set_hl(0, "TelescopeCountNormal", {
+          link = "Normal",
+        })
+        
+        vim.api.nvim_set_hl(0, "TelescopeResultsNumber", {
+          link = "Number",
+        })
+      end
+    })
     
     -- Add custom command for Next.js navigation
     vim.api.nvim_create_user_command("TelescopeNextJS", function()

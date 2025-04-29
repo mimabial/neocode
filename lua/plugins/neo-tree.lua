@@ -43,19 +43,13 @@ return {
     vim.cmd([[Neotree close]])
   end,
   init = function()
-    -- Don't auto-open Neo-tree, only initialize it
-    if vim.fn.argc() == 1 then
-      local stat = vim.loop.fs_stat(vim.fn.argv(0))
-      if stat and stat.type == "directory" then
-        -- Instead of auto-opening, just require the module to initialize it
-        require("neo-tree")
-      end
-    end
+    -- Do not auto-open Neo-tree at startup, even for directories
+    vim.g.neo_tree_remove_legacy_commands = 1
   end,
   opts = {
     sources = { "filesystem", "buffers", "git_status", "document_symbols" },
     open_files_do_not_replace_types = { "terminal", "trouble", "qf", "edgy" },
-    close_if_last_window = true,
+    close_if_last_window = true, -- Close Neo-tree if it is the last window left
     popup_border_style = "",
     enable_git_status = true,
     enable_diagnostics = true,
@@ -92,13 +86,13 @@ return {
 
         -- expander config, needed for nesting files
         with_expanders = nil, -- if nil and file nesting is enabled, will enable expanders
-        expander_collapsed = "",
-        expander_expanded = "",
+        expander_collapsed = "",
+        expander_expanded = "",
 
       },
       icon = {
-        folder_closed = "",
-        folder_open = "",
+        folder_closed = "",
+        folder_open = "",
         folder_empty = "󰉖",
         folder_empty_open = "󰷏",
         -- The next two settings are only a fallback, if you use nvim-web-devicons and configure default icons there
@@ -114,14 +108,14 @@ return {
           -- Change type
           added     = "✚", -- NOTE: you can set any of these to an empty string to not show them
           deleted   = "✖",
-          modified  = "",
+          modified  = "",
           renamed   = "󰁕",
           -- Status type
-          untracked = "",
-          ignored   = "",
+          untracked = "",
+          ignored   = "",
           unstaged  = "󰄱",
-          staged    = "",
-          conflict  = "",
+          staged    = "",
+          conflict  = "",
         },
         align = "right",
       },
@@ -337,6 +331,24 @@ return {
         handler = function()
           vim.cmd [[setlocal guicursor=]]
         end
+      },
+      -- Handle Neo-tree close if it is the last window
+      {
+        event = "neo_tree_window_after_open",
+        handler = function(args)
+          -- Check if Neo-tree is the only window
+          if #vim.api.nvim_list_wins() == 1 then
+            local buftype = vim.bo[vim.api.nvim_win_get_buf(0)].filetype
+            if buftype == "neo-tree" then
+              -- Close Neo-tree if it's the only window left
+              vim.defer_fn(function()
+                if #vim.api.nvim_list_wins() == 1 and vim.bo[vim.api.nvim_win_get_buf(0)].filetype == "neo-tree" then
+                  vim.cmd("quit")
+                end
+              end, 0)
+            end
+          end
+        end
       }
     },
 
@@ -439,6 +451,18 @@ return {
 
     -- Setup Neo-tree
     require("neo-tree").setup(opts)
+
+    -- Add autocommand to check if Neo-tree is the last window and close it
+    vim.api.nvim_create_autocmd("WinEnter", {
+      callback = function()
+        if #vim.api.nvim_list_wins() == 1 then
+          local bufnr = vim.api.nvim_get_current_buf()
+          if vim.bo[bufnr].filetype == "neo-tree" then
+            vim.cmd("quit")
+          end
+        end
+      end
+    })
 
     -- Run migrations if needed
     vim.defer_fn(function()
