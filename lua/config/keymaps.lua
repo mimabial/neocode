@@ -1,6 +1,11 @@
 -- Define keymaps using which-key for better organization
 local wk = require("which-key")
 
+vim.keymap.set({"n", "o"}, "iw", "iw", { desc = "Inner word text object" })
+vim.keymap.set({"n", "o"}, "aw", "aw", { desc = "Around word text object" })
+vim.keymap.set({"n", "o"}, "i(", "i(", { desc = "Inner parentheses text object" })
+vim.keymap.set({"n", "o"}, "a(", "a(", { desc = "Around parentheses text object" })
+
 -- Define leader key groups
 wk.register({
   ["<leader>"] = {

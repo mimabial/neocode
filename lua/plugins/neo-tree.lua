@@ -35,18 +35,19 @@ return {
       end,
       desc = "Explorer NeoTree (config)",
     },
-    { "<leader>be", "<cmd>Neotree buffers reveal float<cr>", desc = "Buffer explorer" },
-    { "<leader>ge", "<cmd>Neotree git_status reveal float<cr>", desc = "Git status explorer" },
+    { "<leader>be", "<cmd>Neotree buffers reveal float<cr>",          desc = "Buffer explorer" },
+    { "<leader>ge", "<cmd>Neotree git_status reveal float<cr>",       desc = "Git status explorer" },
     { "<leader>se", "<cmd>Neotree document_symbols reveal float<cr>", desc = "Symbols Explorer" },
   },
   deactivate = function()
     vim.cmd([[Neotree close]])
   end,
   init = function()
-    -- If you want to use neo-tree as a replacement for nvim-tree,
+    -- Don't auto-open Neo-tree, only initialize it
     if vim.fn.argc() == 1 then
       local stat = vim.loop.fs_stat(vim.fn.argv(0))
       if stat and stat.type == "directory" then
+        -- Instead of auto-opening, just require the module to initialize it
         require("neo-tree")
       end
     end
@@ -55,53 +56,74 @@ return {
     sources = { "filesystem", "buffers", "git_status", "document_symbols" },
     open_files_do_not_replace_types = { "terminal", "trouble", "qf", "edgy" },
     close_if_last_window = true,
-    popup_border_style = "rounded",
+    popup_border_style = "",
     enable_git_status = true,
     enable_diagnostics = true,
+    hide_root_node = true,
+    retain_hidden_root_indent = true,
+    show_scrolled_off_parent_node = true,
     sort_case_insensitive = true,
-    
+
     source_selector = {
       winbar = true,
       content_layout = "center",
       sources = {
-        { source = "filesystem", display_name = " Files" },
-        { source = "buffers", display_name = " Buffers" },
-        { source = "git_status", display_name = " Git" },
+        { source = "filesystem",       display_name = " Files" },
+        { source = "buffers",          display_name = " Buffers" },
+        { source = "git_status",       display_name = " Git" },
         { source = "document_symbols", display_name = " Symbols" },
       },
       separator = { left = "", right = "" },
     },
-    
+
     default_component_configs = {
+      container = {
+        enable_character_fade = true,
+        width = "100%",
+        right_padding = 0,
+      },
       indent = {
-        with_expanders = true,
-        expander_collapsed = "",
-        expander_expanded = "",
-        expander_highlight = "NeoTreeExpander",
+        indent_size = 2,
+        padding = 1,
+        -- indent guides
+        with_markers = true,
+        indent_marker = "│",
+        last_indent_marker = "└",
+
+        -- expander config, needed for nesting files
+        with_expanders = nil, -- if nil and file nesting is enabled, will enable expanders
+        expander_collapsed = "",
+        expander_expanded = "",
+
       },
       icon = {
-        folder_closed = "",
-        folder_open = "",
-        folder_empty = "",
-        folder_empty_open = "",
+        folder_closed = "",
+        folder_open = "",
+        folder_empty = "󰉖",
+        folder_empty_open = "󰷏",
+        -- The next two settings are only a fallback, if you use nvim-web-devicons and configure default icons there
+        -- then these will never be used.
         default = "",
+
       },
       modified = {
-        symbol = "●",
-        highlight = "NeoTreeModified",
+        symbol = "",
       },
       git_status = {
         symbols = {
-          added = "", 
-          modified = "", 
-          deleted = "✖", 
-          renamed = "󰁕", 
-          untracked = "",
-          ignored = "",
-          unstaged = "󰄱",
-          staged = "",
-          conflict = "",
+          -- Change type
+          added     = "✚", -- NOTE: you can set any of these to an empty string to not show them
+          deleted   = "✖",
+          modified  = "",
+          renamed   = "󰁕",
+          -- Status type
+          untracked = "",
+          ignored   = "",
+          unstaged  = "󰄱",
+          staged    = "",
+          conflict  = "",
         },
+        align = "right",
       },
       name = {
         trailing_slash = false,
@@ -113,7 +135,7 @@ return {
         enabled = true,
       },
     },
-    
+
     filesystem = {
       bind_to_cwd = false,
       follow_current_file = { enabled = true },
@@ -160,10 +182,10 @@ return {
           }
           for i, result in pairs(results) do
             if result.val and result.val ~= "" then
-              messages[#messages+1] = { ("%s."):format(i), "Identifier" }
-              messages[#messages+1] = { (" %s: "):format(result.msg), "Normal" }
-              messages[#messages+1] = { result.val, "String" }
-              messages[#messages+1] = { "\n", "Normal" }
+              messages[#messages + 1] = { ("%s."):format(i), "Identifier" }
+              messages[#messages + 1] = { (" %s: "):format(result.msg), "Normal" }
+              messages[#messages + 1] = { result.val, "String" }
+              messages[#messages + 1] = { "\n", "Normal" }
             end
           end
           vim.api.nvim_echo(messages, false, {})
@@ -175,7 +197,7 @@ return {
         end,
       },
     },
-    
+
     window = {
       position = "left",
       width = 35,
@@ -237,7 +259,7 @@ return {
         end,
       },
     },
-    
+
     buffers = {
       follow_current_file = { enabled = true },
       group_empty_dirs = true,
@@ -250,7 +272,7 @@ return {
         },
       },
     },
-    
+
     git_status = {
       window = {
         mappings = {
@@ -264,22 +286,22 @@ return {
         },
       },
     },
-    
+
     document_symbols = {
       follow_cursor = true,
       client_filters = {
         ["*"] = {
           kinds = {
-            "File", "Module", "Namespace", "Package", "Class", "Method", 
-            "Property", "Field", "Constructor", "Enum", "Interface", 
-            "Function", "Variable", "Constant", "String", "Number", 
-            "Boolean", "Array", "Object", "Key", "Null", "EnumMember", 
+            "File", "Module", "Namespace", "Package", "Class", "Method",
+            "Property", "Field", "Constructor", "Enum", "Interface",
+            "Function", "Variable", "Constant", "String", "Number",
+            "Boolean", "Array", "Object", "Key", "Null", "EnumMember",
             "Struct", "Event", "Operator", "TypeParameter",
           },
         },
       },
     },
-    
+
     event_handlers = {
       {
         event = "neo_tree_popup_input_ready",
@@ -317,7 +339,7 @@ return {
         end
       }
     },
-    
+
     renderers = {
       directory = {
         { "indent" },
@@ -326,11 +348,11 @@ return {
         {
           "container",
           content = {
-            { "name", zindex = 10 },
-            { "symlink_target", zindex = 10, highlight = "NeoTreeSymlinkTarget" },
-            { "clipboard", zindex = 10 },
-            { "diagnostics", errors_only = true, zindex = 20, align = "right", hide_when_expanded = true },
-            { "git_status", zindex = 20, align = "right", hide_when_expanded = true },
+            { "name",           zindex = 10 },
+            { "symlink_target", zindex = 10,        highlight = "NeoTreeSymlinkTarget" },
+            { "clipboard",      zindex = 10 },
+            { "diagnostics",    errors_only = true, zindex = 20,                       align = "right",          hide_when_expanded = true },
+            { "git_status",     zindex = 20,        align = "right",                   hide_when_expanded = true },
           },
         },
       },
@@ -345,38 +367,65 @@ return {
               zindex = 10,
             },
             { "symlink_target", zindex = 10, highlight = "NeoTreeSymlinkTarget" },
-            { "clipboard", zindex = 10 },
-            { "bufnr", zindex = 10 },
-            { "modified", zindex = 20, align = "right" },
-            { "diagnostics", zindex = 20, align = "right" },
-            { "git_status", zindex = 20, align = "right" },
+            { "clipboard",      zindex = 10 },
+            { "bufnr",          zindex = 10 },
+            { "modified",       zindex = 20, align = "right" },
+            { "diagnostics",    zindex = 20, align = "right" },
+            { "git_status",     zindex = 20, align = "right" },
           },
         },
       },
     },
   },
   config = function(_, opts)
-    -- Setup custom highlights for transparency
+    -- Setup custom highlights for better appearance
     vim.api.nvim_create_autocmd("ColorScheme", {
       pattern = "*",
       callback = function()
-        vim.api.nvim_set_hl(0, "NeoTreeNormal", { bg = "NONE", blend = 0 })
-        vim.api.nvim_set_hl(0, "NeoTreeNormalNC", { bg = "NONE", blend = 0 })
-        vim.api.nvim_set_hl(0, "NeoTreeWinSeparator", { bg = "NONE", blend = 0 })
-        vim.api.nvim_set_hl(0, "NeoTreeEndOfBuffer", { bg = "NONE", blend = 0 })
-        vim.api.nvim_set_hl(0, "NeoTreeDirectoryIcon", { fg = "#7daea3" })
-        vim.api.nvim_set_hl(0, "NeoTreeDirectoryName", { fg = "#a89984", bold = true })
-        vim.api.nvim_set_hl(0, "NeoTreeSymbolicLinkTarget", { fg = "#d8a657" })
+        -- Create highlight groups based on the colorscheme
+        local bg_color = vim.api.nvim_get_hl(0, { name = "Normal" }).bg
+        local fg_color = vim.api.nvim_get_hl(0, { name = "Normal" }).fg
+
+        -- Get colors from Gruvbox Material or fallback
+        local green_color = vim.api.nvim_get_hl(0, { name = "GruvboxGreen" }).fg or "#89b482"
+        local aqua_color = vim.api.nvim_get_hl(0, { name = "GruvboxAqua" }).fg or "#7daea3"
+        local red_color = vim.api.nvim_get_hl(0, { name = "GruvboxRed" }).fg or "#ea6962"
+        local yellow_color = vim.api.nvim_get_hl(0, { name = "GruvboxYellow" }).fg or "#d8a657"
+        local orange_color = vim.api.nvim_get_hl(0, { name = "GruvboxOrange" }).fg or "#e78a4e"
+        local blue_color = vim.api.nvim_get_hl(0, { name = "GruvboxBlue" }).fg or "#7daea3"
+
+        -- Enhanced highlight groups for Neo-tree
+        vim.api.nvim_set_hl(0, "NeoTreeRootName", { fg = blue_color, bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeDirectoryIcon", { fg = aqua_color })
+        vim.api.nvim_set_hl(0, "NeoTreeDirectoryName", { fg = aqua_color, bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeFileIcon", { fg = yellow_color })
+        vim.api.nvim_set_hl(0, "NeoTreeFileName", { fg = fg_color })
+        vim.api.nvim_set_hl(0, "NeoTreeFileNameOpened", { fg = green_color, bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeFloatBorder", { fg = "#504945" })
+        vim.api.nvim_set_hl(0, "NeoTreeFloatTitle", { fg = yellow_color, bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeTitleBar", { fg = yellow_color, bg = "#3c3836", bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeGitAdded", { fg = green_color })
+        vim.api.nvim_set_hl(0, "NeoTreeGitModified", { fg = yellow_color })
+        vim.api.nvim_set_hl(0, "NeoTreeGitDeleted", { fg = red_color })
+        vim.api.nvim_set_hl(0, "NeoTreeGitConflict", { fg = red_color, bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeGitUntracked", { fg = orange_color, italic = true })
         vim.api.nvim_set_hl(0, "NeoTreeIndentMarker", { fg = "#504945" })
         vim.api.nvim_set_hl(0, "NeoTreeExpander", { fg = "#7c6f64" })
+        vim.api.nvim_set_hl(0, "NeoTreeSymbolicLinkTarget", { fg = yellow_color, italic = true })
+        vim.api.nvim_set_hl(0, "NeoTreeTabActive", { bg = "#32302f", fg = fg_color, bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeTabInactive", { bg = "#282828", fg = "#a89984" })
+        vim.api.nvim_set_hl(0, "NeoTreeTabSeparatorActive", { bg = "#32302f", fg = "#665c54" })
+        vim.api.nvim_set_hl(0, "NeoTreeTabSeparatorInactive", { bg = "#282828", fg = "#665c54" })
+        vim.api.nvim_set_hl(0, "NeoTreeCursorLine", { bg = "#3c3836" })
+        vim.api.nvim_set_hl(0, "NeoTreeDimText", { fg = "#665c54" })
       end,
     })
-    
+
     -- Better filtering for Go projects
     if not opts.filesystem.filtered_items then
       opts.filesystem.filtered_items = {}
     end
-    
+
     -- Add common Go-related ignore patterns
     opts.filesystem.filtered_items.never_show = vim.list_extend(
       opts.filesystem.filtered_items.never_show or {},
@@ -387,16 +436,16 @@ return {
         "bin",    -- Compiled binaries
       }
     )
-    
+
     -- Setup Neo-tree
     require("neo-tree").setup(opts)
-    
+
     -- Run migrations if needed
     vim.defer_fn(function()
       -- Run migrations command to address migration warnings
       pcall(vim.cmd, "Neotree migrations")
     end, 1000)
-    
+
     -- Refresh git status when lazygit is closed
     vim.api.nvim_create_autocmd("TermClose", {
       pattern = "*lazygit",
@@ -406,7 +455,7 @@ return {
         end
       end,
     })
-    
+
     -- Create custom commands for stack-specific operations
     vim.api.nvim_create_user_command("NeotreeGOTH", function()
       -- Filter to show only Go/Templ files
@@ -419,7 +468,7 @@ return {
         position = "left",
       })
     end, { desc = "Open Neo-tree with GOTH focus" })
-    
+
     vim.api.nvim_create_user_command("NeotreeNextJS", function()
       -- Filter to show only Next.js related files
       require("neo-tree.command").execute({
@@ -431,5 +480,20 @@ return {
         position = "left",
       })
     end, { desc = "Open Neo-tree with Next.js focus" })
+
+    vim.api.nvim_create_autocmd("ColorScheme", {
+      callback = function()
+        -- Get background color from your theme's Normal highlight group
+        local normal_bg = vim.api.nvim_get_hl(0, { name = "Normal" }).bg
+
+        -- Apply it to Neo-tree
+        vim.api.nvim_set_hl(0, "NeoTreeNormal", { bg = normal_bg })
+        vim.api.nvim_set_hl(0, "NeoTreeNormalNC", { bg = normal_bg })
+
+        -- For other Neo-tree elements that need the same background
+        vim.api.nvim_set_hl(0, "NeoTreeEndOfBuffer", { bg = normal_bg })
+        vim.api.nvim_set_hl(0, "NeoTreeRootName", { bg = normal_bg, bold = true })
+      end,
+    })
   end,
 }

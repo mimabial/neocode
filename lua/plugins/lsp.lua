@@ -566,11 +566,18 @@ return {
       max_concurrent_installers = 10,
     })
 
+    -- Extract server names from opts.servers table to create servers_to_install
+    local servers_to_install = {}
+    for server_name, _ in pairs(opts.servers) do
+      table.insert(servers_to_install, server_name)
+    end
+
     -- Then set up mason-lspconfig
     require("mason-lspconfig").setup({
       ensure_installed = servers_to_install,
       automatic_installation = true,
-      handlers = {        function(server_name)
+      handlers = {        
+        function(server_name)
           -- Skip setup for servers that should be handled elsewhere
           if opts.setup[server_name] then
             if opts.setup[server_name](server_name, opts.servers[server_name] or {}) then
