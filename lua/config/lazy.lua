@@ -267,18 +267,31 @@ end, { nargs = "?", desc = "Switch workspace layout", complete = function()
   return { "coding", "terminal", "writing", "debug" }
 end})
 
--- Add command to toggle between explorers
 vim.api.nvim_create_user_command("ExplorerToggle", function(args)
   local explorer_type = args.args
   if explorer_type == "oil" then
     vim.g.default_explorer = "oil"
     vim.cmd("Oil")
+    -- Update keymaps by reloading config
+    vim.cmd("ReloadConfig")
+    vim.notify("Default explorer set to: Oil", vim.log.levels.INFO)
   elseif explorer_type == "snacks" then
     vim.g.default_explorer = "snacks"
     require("snacks.explorer").toggle()
+    -- Update keymaps by reloading config
+    vim.cmd("ReloadConfig") 
+    vim.notify("Default explorer set to: Snacks", vim.log.levels.INFO)
   else
-    -- Default to snacks
-    require("snacks.explorer").toggle()
+    -- Toggle between explorers
+    if vim.g.default_explorer == "oil" then
+      vim.g.default_explorer = "snacks"
+      require("snacks.explorer").toggle()
+    else
+      vim.g.default_explorer = "oil"
+      vim.cmd("Oil")
+    end
+    -- Update keymaps by reloading config
+    vim.cmd("ReloadConfig")
+    vim.notify("Default explorer set to: " .. vim.g.default_explorer, vim.log.levels.INFO)
   end
-  vim.notify("Default explorer set to: " .. vim.g.default_explorer, vim.log.levels.INFO)
 end, { nargs = "?", complete = function() return {"oil", "snacks"} end, desc = "Set default explorer" })
