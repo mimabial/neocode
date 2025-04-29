@@ -143,15 +143,18 @@ return {
         indent_marker = "│",
         last_indent_marker = "└",
 
+        hide_root_node = true, -- Hide the root node.
+        retain_hidden_root_indent = true, -- IF the root node is hidden, keep the indentation anyhow.
+
         -- expander config, needed for nesting files
         with_expanders = nil, -- if nil and file nesting is enabled, will enable expanders
-        expander_collapsed = "",
-        expander_expanded = "",
+        expander_collapsed = "",
+        expander_expanded = "",
 
       },
       icon = {
-        folder_closed = "",
-        folder_open = "",
+        folder_closed = "",
+        folder_open = "",
         folder_empty = "󰉖",
         folder_empty_open = "󰷏",
         -- The next two settings are only a fallback, if you use nvim-web-devicons and configure default icons there
@@ -164,16 +167,17 @@ return {
       git_status = {
         symbols = {
           -- Change type
-          added     = "✚", -- NOTE: you can set any of these to an empty string to not show them
-          deleted   = "✖",
-          modified  = "",
-          renamed   = "󰁕",
-          -- Status type
-          untracked = "",
-          ignored   = "",
-          unstaged  = "󰄱",
-          staged    = "",
-          conflict  = "",
+        -- Change type
+        added     = "✚", -- NOTE: you can set any of these to an empty string to not show them
+        deleted   = "✖",
+        modified  = "",
+        renamed   = "󰁕",
+        -- Status type
+        untracked = "",
+        ignored   = "",
+        unstaged  = "󰄱",
+        staged    = "",
+        conflict  = "",
         },
         align = "right",
       },

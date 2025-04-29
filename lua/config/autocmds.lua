@@ -31,24 +31,6 @@ vim.api.nvim_create_autocmd("BufReadPost", {
   desc = "Go to last location when opening a buffer",
 })
 
--- Auto-format on save using conform.nvim
-vim.api.nvim_create_autocmd("BufWritePre", {
-  group = augroup,
-  callback = function(args)
-    -- Skip formatting if explicitly disabled
-    if vim.g.disable_autoformat or vim.b[args.buf].disable_autoformat then
-      return
-    end
-
-    -- Use conform.nvim for formatting if available
-    local conform_ok, conform = pcall(require, "conform")
-    if conform_ok then
-      conform.format({ bufnr = args.buf, timeout_ms = 500, lsp_fallback = true })
-    end
-  end,
-  desc = "Auto-format on save",
-})
-
 -- Toggle between relative and absolute line numbers based on mode
 vim.api.nvim_create_autocmd({ "BufEnter", "FocusGained", "InsertLeave", "WinEnter" }, {
   group = augroup,

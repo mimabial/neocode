@@ -1,5 +1,6 @@
 return {
   "hrsh7th/nvim-cmp",
+  priority = 1000, 
   event = { "InsertEnter", "CmdlineEnter" },
   dependencies = {
     { "hrsh7th/cmp-nvim-lsp", priority = 60 },
@@ -293,16 +294,15 @@ return {
   end,
   config = function(_, opts)
     local cmp = require("cmp")
-    local options = opts()
     
     -- Set up completion sources
-    options.sources = options.sources()
+    opts.sources = opts.sources()
     
     -- Set up sorting comparators
-    options.sorting.comparators = options.sorting.comparators()
+    opts.sorting.comparators = opts.sorting.comparators()
     
     -- Setup cmp
-    cmp.setup(options)
+    cmp.setup(opts)
 
     -- Set up specific configs for different filetypes or cmdline
     cmp.setup.cmdline(":", {
@@ -327,7 +327,7 @@ return {
       pattern = { "go", "templ" },
       callback = function()
         -- Deep copy the original sources to avoid modifying the global config
-        local sources = vim.deepcopy(options.sources)
+        local sources = vim.deepcopy(opts.sources)
         
         -- Adjust priorities for GOTH stack
         for _, source in ipairs(sources) do
@@ -346,7 +346,7 @@ return {
       pattern = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
       callback = function()
         -- Deep copy the original sources to avoid modifying the global config
-        local sources = vim.deepcopy(options.sources)
+        local sources = vim.deepcopy(opts.sources)
         
         -- Adjust priorities for Next.js stack
         for _, source in ipairs(sources) do

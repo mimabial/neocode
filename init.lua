@@ -35,3 +35,10 @@ vim.api.nvim_create_user_command("ReloadConfig", function()
   dofile(vim.fn.stdpath("config") .. "/init.lua")
   vim.notify("Nvim configuration reloaded!", vim.log.levels.INFO, { title = "Config" })
 end, { desc = "Reload Neovim configuration" })
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "*",
+  callback = function()
+    vim.opt_local.formatoptions:remove({ "c", "r", "o" })
+  end,
+})

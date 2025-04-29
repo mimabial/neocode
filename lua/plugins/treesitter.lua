@@ -302,23 +302,23 @@ return {
   {
     "windwp/nvim-ts-autotag",
     event = "InsertEnter",
-    dependencies = "nvim-treesitter/nvim-treesitter",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
     config = function()
       require("nvim-ts-autotag").setup({
-        enable = true,
-        enable_rename = true,
-        enable_close = true,
-        enable_close_on_slash = true,
-        filetypes = { 
-          "html", "xml", "javascript", "typescript", "javascriptreact", 
-          "typescriptreact", "svelte", "vue", "tsx", "jsx", "rescript", 
-          "php", "markdown", "astro", "glimmer", "handlebars", "hbs", "templ"
-        },
-        skip_tags = {
-          "area", "base", "br", "col", "command", "embed", "hr", "img", "slot",
-          "input", "keygen", "link", "meta", "param", "source", "track", "wbr"
+        autotag = {
+          enable = true,
+          filetypes = {
+            "html", "xml", "javascript", "typescript", "javascriptreact",
+            "typescriptreact", "svelte", "vue", "tsx", "jsx", "rescript",
+            "php", "markdown", "astro", "glimmer", "handlebars", "hbs", "templ",
+          },
+          skip_tags = {
+            "area", "base", "br", "col", "command", "embed", "hr", "img",
+            "slot", "input", "keygen", "link", "meta", "param", "source",
+            "track", "wbr",
+          },
         },
       })
     end,
-  },
+  }
 }
