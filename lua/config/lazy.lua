@@ -46,9 +46,31 @@ require("lazy").setup({
       { "sainnhe/gruvbox-material", priority = 950 },
       { "folke/tokyonight.nvim", priority = 940 },
       { "stevearc/oil.nvim", priority = 900 }, -- Keep oil.nvim as it's used by snacks.nvim
-      { "folke/snacks.nvim", priority = 850 }, -- Add snacks.nvim with high priority
+      { "folke/snacks.nvim", priority = 950 }, -- Elevate snacks.nvim priority to load earlier
       { "folke/which-key.nvim", priority = 800 }, -- High priority for which-key
       import = "plugins.ui" 
+    },
+    
+    -- Use snacks.nvim instead of telescope
+    {
+      "folke/snacks.nvim", 
+      priority = 950,
+      enabled = true,
+      -- Disable telescope when using snacks.nvim
+      -- We keep telescope code but disable it to avoid breaking dependencies
+      cond = function()
+        return vim.g.default_picker == "snacks"
+      end,
+    },
+    
+    -- Keep telescope.nvim but with lower priority
+    {
+      "nvim-telescope/telescope.nvim",
+      priority = 200,
+      enabled = function() 
+        -- Only enable if explicitly requested
+        return vim.g.default_picker == "telescope"
+      end,
     },
     
     -- Import all other plugins from lua/plugins directory

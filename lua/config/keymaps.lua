@@ -37,7 +37,6 @@ wk.register({
 vim.keymap.set("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to Other Buffer" })
 vim.keymap.set("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Delete Buffer" })
 vim.keymap.set("n", "<leader>bf", "<cmd>bfirst<cr>", { desc = "First Buffer" })
-vim.keymap.set("n", "<leader>bh", "<cmd>Telescope buffers<cr>", { desc = "Find Buffer" })
 vim.keymap.set("n", "<leader>bl", "<cmd>blast<cr>", { desc = "Last Buffer" })
 vim.keymap.set("n", "<leader>bn", "<cmd>bnext<cr>", { desc = "Next Buffer" })
 vim.keymap.set("n", "<leader>bp", "<cmd>bprevious<cr>", { desc = "Previous Buffer" })
@@ -57,8 +56,6 @@ vim.keymap.set("n", "<leader>cF", "<cmd>FormatToggle<CR>", { desc = "Toggle Form
 vim.keymap.set("n", "<leader>ci", "<cmd>LspInfo<cr>", { desc = "LSP Info" })
 vim.keymap.set("n", "<leader>cl", "<cmd>lua require('lint').try_lint()<cr>", { desc = "Trigger Linting" })
 vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, { desc = "Rename Symbol" })
-vim.keymap.set("n", "<leader>cs", "<cmd>Telescope lsp_document_symbols<cr>", { desc = "Document Symbols" })
-vim.keymap.set("n", "<leader>cS", "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>", { desc = "Workspace Symbols" })
 vim.keymap.set("n", "<leader>cR", "<cmd>ReloadConfig<cr>", { desc = "Reload Config" })
 
 -- GOTH stack specific
@@ -99,32 +96,44 @@ vim.keymap.set("n", "<F10>", function() require("dap").step_over() end, { desc =
 vim.keymap.set("n", "<F11>", function() require("dap").step_into() end, { desc = "Step Into" })
 vim.keymap.set("n", "<F12>", function() require("dap").step_out() end, { desc = "Step Out" })
 
--- Telescope / Find
-vim.keymap.set("n", "<leader>f/", "<cmd>Telescope current_buffer_fuzzy_find<cr>", { desc = "Find in Buffer" })
-vim.keymap.set("n", "<leader>fb", "<cmd>Telescope buffers<cr>", { desc = "Find Buffer" })
-vim.keymap.set("n", "<leader>fc", "<cmd>Telescope commands<cr>", { desc = "Find Commands" })
-vim.keymap.set("n", "<leader>fC", function() require("telescope.builtin").find_files({cwd = vim.fn.stdpath("config")}) end, { desc = "Find Config Files" })
-vim.keymap.set("n", "<leader>fd", "<cmd>Telescope diagnostics bufnr=0<cr>", { desc = "Find Document Diagnostics" })
-vim.keymap.set("n", "<leader>fD", "<cmd>Telescope diagnostics<cr>", { desc = "Find Workspace Diagnostics" })
-vim.keymap.set("n", "<leader>fe", "<cmd>Telescope file_browser<cr>", { desc = "File Browser" })
-vim.keymap.set("n", "<leader>ff", "<cmd>Telescope find_files<cr>", { desc = "Find Files" })
-vim.keymap.set("n", "<leader>fg", "<cmd>Telescope live_grep<cr>", { desc = "Find Text (Grep)" })
-vim.keymap.set("n", "<leader>fh", "<cmd>Telescope help_tags<cr>", { desc = "Find Help" })
-vim.keymap.set("n", "<leader>fk", "<cmd>Telescope keymaps<cr>", { desc = "Find Keymaps" })
-vim.keymap.set("n", "<leader>fo", "<cmd>Telescope vim_options<cr>", { desc = "Find Options" })
-vim.keymap.set("n", "<leader>fp", "<cmd>Telescope projects<cr>", { desc = "Find Projects" })
-vim.keymap.set("n", "<leader>fr", "<cmd>Telescope oldfiles<cr>", { desc = "Recent Files" })
-vim.keymap.set("n", "<leader>fR", "<cmd>Telescope frecency<cr>", { desc = "Frecent Files" })
-vim.keymap.set("n", "<leader>fs", "<cmd>Telescope lsp_document_symbols<cr>", { desc = "Find Document Symbols" })
-vim.keymap.set("n", "<leader>fS", "<cmd>Telescope lsp_workspace_symbols<cr>", { desc = "Find Workspace Symbols" })
-vim.keymap.set("n", "<leader>ft", "<cmd>Telescope filetypes<cr>", { desc = "Find Filetypes" })
-vim.keymap.set("n", "<leader>fT", "<cmd>Telescope builtin<cr>", { desc = "Find Telescope Pickers" })
-vim.keymap.set("n", "<leader>f.", "<cmd>Telescope resume<cr>", { desc = "Resume Last Search" })
-vim.keymap.set("n", "<leader>fn", "<cmd>Telescope file_browser<cr>", { desc = "Browse Next.js Project" })
+-- Snacks Finder keymaps
+vim.keymap.set("n", "<leader>ff", function() require("snacks.picker").find_files() end, { desc = "Find Files" })
+vim.keymap.set("n", "<leader>fg", function() require("snacks.picker").live_grep() end, { desc = "Find Text (Grep)" })
+vim.keymap.set("n", "<leader>fb", function() require("snacks.picker").buffers() end, { desc = "Find Buffers" })
+vim.keymap.set("n", "<leader>fh", function() require("snacks.picker").help_tags() end, { desc = "Find Help" })
+vim.keymap.set("n", "<leader>fr", function() require("snacks.picker").oldfiles() end, { desc = "Recent Files" })
+vim.keymap.set("n", "<leader>fR", function() require("snacks.picker").frecency() end, { desc = "Frecent Files" })
+vim.keymap.set("n", "<leader>fp", function() require("snacks.picker").projects() end, { desc = "Find Projects" })
+vim.keymap.set("n", "<leader>fc", function() require("snacks.picker").commands() end, { desc = "Find Commands" })
+vim.keymap.set("n", "<leader>fk", function() require("snacks.picker").keymaps() end, { desc = "Find Keymaps" })
+vim.keymap.set("n", "<leader>f/", function() require("snacks.picker").current_buffer_fuzzy_find() end, { desc = "Find in Buffer" })
+vim.keymap.set("n", "<leader>f.", function() require("snacks.picker").resume() end, { desc = "Resume Last Search" })
+vim.keymap.set("n", "<leader>fC", function() require("snacks.picker").find_files({cwd = vim.fn.stdpath("config")}) end, { desc = "Find Config Files" })
+vim.keymap.set("n", "<leader>fd", function() require("snacks.picker").diagnostics({ bufnr = 0 }) end, { desc = "Find Document Diagnostics" })
+vim.keymap.set("n", "<leader>fD", function() require("snacks.picker").diagnostics() end, { desc = "Find Workspace Diagnostics" })
+vim.keymap.set("n", "<leader>fs", function() require("snacks.picker").lsp_document_symbols() end, { desc = "Find Document Symbols" })
+vim.keymap.set("n", "<leader>fS", function() require("snacks.picker").lsp_workspace_symbols() end, { desc = "Find Workspace Symbols" })
+vim.keymap.set("n", "<leader>fT", function() require("snacks.picker").builtin() end, { desc = "Find Snacks Pickers" })
+
+-- Git picker keymaps
+vim.keymap.set("n", "<leader>gs", function() require("snacks.picker").git_status() end, { desc = "Git Status" })
+vim.keymap.set("n", "<leader>gc", function() require("snacks.picker").git_commits() end, { desc = "Git Commits" })
+vim.keymap.set("n", "<leader>gb", function() require("snacks.picker").git_branches() end, { desc = "Git Branches" })
+
+-- LSP finder mappings
+vim.keymap.set("n", "gr", function() require("snacks.picker").lsp_references() end, { desc = "Go to References" })
+
+-- Stack-specific finder keymaps
+vim.keymap.set("n", "<leader>sgg", function() require("snacks.picker").custom("goth_files") end, { desc = "Find GOTH Files" })
+vim.keymap.set("n", "<leader>sng", function() require("snacks.picker").custom("nextjs_files") end, { desc = "Find Next.js Files" })
+
+-- Explorer keymaps
+vim.keymap.set("n", "<leader>e", function() require("snacks.explorer").toggle() end, { desc = "Toggle Snacks Explorer" })
+vim.keymap.set("n", "<leader>E", function() require("snacks.explorer").toggle_float() end, { desc = "Toggle Snacks Explorer (float)" })
+vim.keymap.set("n", "-", function() require("snacks.explorer").toggle() end, { desc = "Open Parent Directory" })
+vim.keymap.set("n", "_", function() require("snacks.explorer").toggle({ path = "." }) end, { desc = "Open Project Root" })
 
 -- Git commands
-vim.keymap.set("n", "<leader>gb", "<cmd>Telescope git_branches<cr>", { desc = "Git Branches" })
-vim.keymap.set("n", "<leader>gc", "<cmd>Telescope git_commits<cr>", { desc = "Git Commits" })
 vim.keymap.set("n", "<leader>gd", "<cmd>DiffviewOpen<cr>", { desc = "DiffView Open" })
 vim.keymap.set("n", "<leader>gD", "<cmd>DiffviewClose<cr>", { desc = "DiffView Close" })
 vim.keymap.set("n", "<leader>ge", "<cmd>Neotree git_status reveal float<cr>", { desc = "Git Explorer" })
@@ -133,7 +142,6 @@ vim.keymap.set("n", "<leader>gh", "<cmd>DiffviewFileHistory %<cr>", { desc = "Fi
 vim.keymap.set("n", "<leader>gH", "<cmd>DiffviewFileHistory<cr>", { desc = "Project History" })
 vim.keymap.set("n", "<leader>gl", "<cmd>Git pull<cr>", { desc = "Git Pull" })
 vim.keymap.set("n", "<leader>gp", "<cmd>Git push<cr>", { desc = "Git Push" })
-vim.keymap.set("n", "<leader>gs", "<cmd>Telescope git_status<cr>", { desc = "Git Status" })
 vim.keymap.set("n", "<leader>go", "<cmd>Octo<cr>", { desc = "Octo" })
 vim.keymap.set("n", "<leader>gr", "<cmd>Octo pr list<cr>", { desc = "PR List" })
 vim.keymap.set("n", "<leader>gi", "<cmd>Octo issue list<cr>", { desc = "Issue List" })
@@ -156,15 +164,14 @@ vim.keymap.set("n", "<leader>nd", function() require("noice").cmd("dismiss") end
 vim.keymap.set("n", "<leader>nh", function() require("noice").cmd("history") end, { desc = "Noice History" })
 vim.keymap.set("n", "<leader>nl", function() require("noice").cmd("last") end, { desc = "Noice Last Message" })
 vim.keymap.set("n", "<leader>ne", function() require("noice").cmd("errors") end, { desc = "Noice Errors" })
-vim.keymap.set("n", "<leader>nn", function() require("noice").cmd("telescope") end, { desc = "Telescope Noice" })
 
--- Explorer keymaps (for both Oil and Neo-tree)
+-- Explorer keymaps for Oil
 vim.keymap.set("n", "<leader>o", "<CMD>Oil<CR>", { desc = "Open parent directory" })
 vim.keymap.set("n", "<leader>O", "<CMD>Oil .<CR>", { desc = "Open project root" })
 vim.keymap.set("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
 vim.keymap.set("n", "_", "<CMD>Oil .<CR>", { desc = "Open project root directory" })
 
--- New snacks.nvim keymaps:
+-- New snacks.nvim keymaps
 vim.keymap.set("n", "<leader>e", function() require("snacks.explorer").toggle() end, { desc = "File Explorer (Snacks)" })
 vim.keymap.set("n", "<leader>E", function() require("snacks.explorer").toggle_float() end, { desc = "File Explorer Float (Snacks)" })
 
@@ -383,7 +390,6 @@ vim.keymap.set("n", "<leader>L4", "<cmd>Layout debug<cr>", { desc = "Debug Layou
 -- LSP related keymaps
 vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to Definition" })
 vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { desc = "Go to Declaration" })
-vim.keymap.set("n", "gr", function() require("telescope.builtin").lsp_references() end, { desc = "Go to References" })
 vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { desc = "Go to Implementation" })
 vim.keymap.set("n", "gt", vim.lsp.buf.type_definition, { desc = "Type Definition" })
 vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "Show Documentation" })

@@ -105,16 +105,25 @@ vim.api.nvim_create_autocmd("FileType", {
   desc = "Set markdown-specific settings",
 })
 
--- Auto open Neotree when opening directories
+-- Auto open directory with snacks.nvim explorer
 vim.api.nvim_create_autocmd("BufEnter", {
   group = augroup,
   callback = function()
     local bufname = vim.api.nvim_buf_get_name(0)
     if vim.fn.isdirectory(bufname) == 1 then
-      vim.cmd("Neotree position=current dir=" .. bufname)
+      if vim.g.default_explorer == "snacks" and package.loaded["snacks.explorer"] then
+        require("snacks.explorer").toggle({ path = bufname })
+      elseif vim.g.default_explorer == "oil" then
+        vim.cmd("Oil " .. bufname)
+      elseif vim.g.default_explorer == "neo-tree" then
+        vim.cmd("Neotree position=current dir=" .. bufname)
+      else
+        -- Default to snacks
+        require("snacks.explorer").toggle({ path = bufname })
+      end
     end
   end,
-  desc = "Open directory in Neotree",
+  desc = "Open directory in file explorer",
 })
 
 -- Trigger linting when files are saved or opened
@@ -193,7 +202,14 @@ vim.api.nvim_create_autocmd("LspAttach", {
     vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
     vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
     vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
-    vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
+    
+    -- Use snacks.picker for references if available
+    if package.loaded["snacks.picker"] then
+      vim.keymap.set("n", "gr", function() require("snacks.picker").lsp_references() end, opts)
+    else
+      vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
+    end
+    
     vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
     vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, opts)
     vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, opts)
@@ -341,10 +357,20 @@ vim.api.nvim_create_autocmd("VimEnter", {
         local opts = { buffer = buf, silent = true }
         vim.keymap.set("n", "q", "<cmd>quit<CR>", opts)
         vim.keymap.set("n", "<ESC>", "<cmd>quit<CR>", opts)
-        vim.keymap.set("n", "ff", "<cmd>Telescope find_files<CR>", opts)
-        vim.keymap.set("n", "fg", "<cmd>Telescope live_grep<CR>", opts)
-        vim.keymap.set("n", "fb", "<cmd>Telescope buffers<CR>", opts)
-        vim.keymap.set("n", "fr", "<cmd>Telescope oldfiles<CR>", opts)
+        
+        -- Use snacks.picker instead of telescope if available
+        if package.loaded["snacks.picker"] then
+          vim.keymap.set("n", "ff", function() require("snacks.picker").find_files() end, opts)
+          vim.keymap.set("n", "fg", function() require("snacks.picker").live_grep() end, opts)
+          vim.keymap.set("n", "fb", function() require("snacks.picker").buffers() end, opts)
+          vim.keymap.set("n", "fr", function() require("snacks.picker").oldfiles() end, opts)
+        else
+          vim.keymap.set("n", "ff", "<cmd>Telescope find_files<CR>", opts)
+          vim.keymap.set("n", "fg", "<cmd>Telescope live_grep<CR>", opts)
+          vim.keymap.set("n", "fb", "<cmd>Telescope buffers<CR>", opts)
+          vim.keymap.set("n", "fr", "<cmd>Telescope oldfiles<CR>", opts)
+        end
+        
         vim.keymap.set("n", "L1", "<cmd>Layout coding<CR>", opts)
         vim.keymap.set("n", "L2", "<cmd>Layout terminal<CR>", opts)
         vim.keymap.set("n", "L3", "<cmd>Layout writing<CR>", opts)
@@ -384,154 +410,6 @@ vim.api.nvim_create_autocmd("VimEnter", {
     end
   end,
   desc = "Show custom start screen",
-})
-
--- Add automatic updating of ctags if available
-vim.api.nvim_create_autocmd("BufWritePost", {
-  group = augroup,
-  callback = function()
-    -- Only run if ctags is installed
-    if vim.fn.executable("ctags") == 1 then
-      local buf_name = vim.api.nvim_buf_get_name(0)
-      local file_ext = vim.fn.fnamemodify(buf_name, ":e")
-
-      -- File types that work well with ctags
-      local tag_file_types = {
-        go = true,
-        py = true,
-        js = true,
-        ts = true,
-        jsx = true,
-        tsx = true,
-        rb = true,
-        php = true,
-        java = true,
-        c = true,
-        cpp = true,
-        h = true,
-        hpp = true,
-        lua = true,
-        rs = true,
-      }
-
-      if tag_file_types[file_ext] then
-        -- Run ctags asynchronously
-        vim.fn.jobstart("ctags -R .")
-      end
-    end
-  end,
-  desc = "Auto generate ctags on file save",
-})
-
--- Auto commands for specific file types
--- Go-specific
-vim.api.nvim_create_autocmd("FileType", {
-  group = augroup,
-  pattern = "go",
-  callback = function()
-    -- Go uses tabs, so we need to adjust settings
-    vim.bo.expandtab = false
-
-    -- Add project-specific GOPATH if it exists
-    local go_mod = vim.fn.findfile("go.mod", ".;")
-    if go_mod ~= "" then
-      local project_root = vim.fn.fnamemodify(go_mod, ":p:h")
-      local gopath = os.getenv("GOPATH") or ""
-
-      -- Add the project root to GOPATH
-      if gopath ~= "" then
-        vim.env.GOPATH = project_root .. ":" .. gopath
-      else
-        vim.env.GOPATH = project_root
-      end
-    end
-  end,
-  desc = "Go-specific settings",
-})
-
--- NextJS specific
-vim.api.nvim_create_autocmd("FileType", {
-  group = augroup,
-  pattern = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
-  callback = function()
-    -- Check if this is a Next.js project
-    local is_nextjs = false
-    local package_json = vim.fn.findfile("package.json", ".;")
-
-    if package_json ~= "" then
-      local content = vim.fn.readfile(package_json)
-      local json_str = table.concat(content, "\n")
-
-      is_nextjs = json_str:find("\"next\"") ~= nil
-    end
-
-    if is_nextjs then
-      -- Set up nextjs-specific settings
-      -- For example, recognize special Next.js directory structure
-      vim.cmd([[
-        autocmd BufRead,BufNewFile app/*/page.tsx set filetype=nextjs_page
-        autocmd BufRead,BufNewFile app/*/layout.tsx set filetype=nextjs_layout
-        autocmd BufRead,BufNewFile app/api/**/route.ts set filetype=nextjs_api
-      ]])
-
-      -- Set path to include Next.js specific directories
-      vim.opt_local.path:append("app")
-      vim.opt_local.path:append("components")
-      vim.opt_local.path:append("lib")
-    end
-  end,
-  desc = "Next.js specific settings",
-})
-
--- Handle special file types
-vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-  group = augroup,
-  pattern = { "*.md", "*.mdx" },
-  callback = function()
-    -- Enable spellcheck and make it more pleasant to edit Markdown
-    vim.opt_local.spell = true
-    vim.opt_local.wrap = true
-    vim.opt_local.linebreak = true
-
-    -- Add markdown specific keymaps
-    local opts = { buffer = true }
-    vim.keymap.set("n", "<leader>mp", "<cmd>MarkdownPreview<CR>", opts)
-    vim.keymap.set("n", "<leader>mP", "<cmd>MarkdownPreviewStop<CR>", opts)
-  end,
-  desc = "Markdown specific settings",
-})
-
--- Better help navigation
-vim.api.nvim_create_autocmd("FileType", {
-  group = augroup,
-  pattern = "help",
-  callback = function()
-    -- Make help window easier to navigate
-    vim.keymap.set("n", "<CR>", "<C-]>", { buffer = true })
-    vim.keymap.set("n", "<BS>", "<C-T>", { buffer = true })
-    vim.keymap.set("n", "q", ":q<CR>", { buffer = true })
-
-    -- Open help in a vertical split instead of horizontal by default
-    vim.cmd("wincmd L")
-  end,
-  desc = "Improve help navigation",
-})
-
--- Auto open directory with oil instead of snacks.nvim
-vim.api.nvim_create_autocmd("BufEnter", {
-  group = augroup,
-  callback = function()
-    local bufname = vim.api.nvim_buf_get_name(0)
-    if vim.fn.isdirectory(bufname) == 1 then
-      if vim.g.default_explorer == "oil" then
-        vim.cmd("Oil " .. bufname)
-      else
-        -- Default to snacks
-        require("snacks.explorer").toggle({ path = bufname })
-      end
-    end
-  end,
-  desc = "Open directory in file explorer",
 })
 
 -- Configure snacks-specific settings
@@ -621,22 +499,6 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.opt_local.conceallevel = 0
   end,
   desc = "JSON specific settings",
-})
-
--- Clear empty buffers on BufRead
-vim.api.nvim_create_autocmd("BufRead", {
-  group = augroup,
-  pattern = "*",
-  callback = function()
-    -- Clear empty buffers
-    local max_bufnr = vim.fn.bufnr("$")
-    for i = 1, max_bufnr do
-      if vim.fn.buflisted(i) == 1 and vim.fn.bufname(i) == "" and vim.fn.bufwinnr(i) < 0 then
-        vim.cmd("bd " .. i)
-      end
-    end
-  end,
-  desc = "Clear empty buffers",
 })
 
 -- Update Vim title

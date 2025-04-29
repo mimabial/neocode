@@ -354,60 +354,101 @@ function M.cwd_name()
   return vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
 end
 
--- Oil helpers
-function M.open_oil(path, float)
+-- Explorer helpers to work with both Oil and Snacks
+-- Open explorer at the specified path
+function M.open_explorer(path, float)
   path = path or vim.fn.expand("%:p:h")
-  local cmd = "Oil"
   
-  if float then
-    cmd = cmd .. " --float"
+  -- Use the appropriate explorer based on configuration
+  if vim.g.default_explorer == "oil" then
+    -- Use oil.nvim
+    local cmd = "Oil"
+    
+    if float then
+      cmd = cmd .. " --float"
+    end
+    
+    if path ~= "" then
+      cmd = cmd .. " " .. path
+    end
+    
+    vim.cmd(cmd)
+  elseif vim.g.default_explorer == "neo-tree" then
+    -- Use neo-tree
+    if float then
+      vim.cmd("Neotree float dir=" .. path)
+    else
+      vim.cmd("Neotree reveal dir=" .. path)
+    end
+  else
+    -- Default to snacks.nvim
+    if package.loaded["snacks.explorer"] then
+      require("snacks.explorer").toggle({
+        path = path,
+        float = float or false
+      })
+    else
+      -- Fallback to oil if snacks isn't available
+      local cmd = "Oil"
+      if float then
+        cmd = cmd .. " --float"
+      end
+      if path ~= "" then
+        cmd = cmd .. " " .. path
+      end
+      vim.cmd(cmd)
+    end
   end
-  
-  if path ~= "" then
-    cmd = cmd .. " " .. path
-  end
-  
-  vim.cmd(cmd)
 end
 
--- Open oil at git root
-function M.oil_git_root()
+-- Open explorer at git root
+function M.explorer_git_root()
   local git_root = vim.fn.system("git rev-parse --show-toplevel 2>/dev/null"):gsub("%s+$", "")
   if git_root ~= "" then
-    M.open_oil(git_root)
+    M.open_explorer(git_root)
   else
     vim.notify("Not in a git repository", vim.log.levels.WARN)
-    M.open_oil() -- Fallback to current directory
+    M.open_explorer() -- Fallback to current directory
   end
 end
 
--- Open oil with stack-specific filtering
-function M.oil_stack(stack, float)
+-- Open explorer with stack-specific filtering
+function M.explorer_stack(stack, float)
   -- Set the current stack before opening
   if stack then
     vim.g.current_stack = stack
   end
   
-  M.open_oil(nil, float)
+  M.open_explorer(nil, float)
   
   -- Notify the user
   if stack then
-    vim.notify("Oil explorer focused on " .. stack .. " stack", vim.log.levels.INFO)
+    vim.notify("Explorer focused on " .. stack .. " stack", vim.log.levels.INFO)
   end
 end
 
--- Oil stack helpers
-function M.oil_goth(float)
-  M.oil_stack("goth", float)
+-- Explorer stack helpers
+function M.explorer_goth(float)
+  M.explorer_stack("goth", float)
 end
 
-function M.oil_nextjs(float)
-  M.oil_stack("nextjs", float)
+function M.explorer_nextjs(float)
+  M.explorer_stack("nextjs", float)
 end
 
--- Toggle between oil and neo-tree
+-- Toggle between explorers
 function M.toggle_explorer()
   if vim.g.default_explorer == "oil" then
+    vim.g.default_explorer = "snacks"
+    if package.loaded["snacks.explorer"] then
+      require("snacks.explorer").toggle()
+      vim.notify("Switched to Snacks explorer", vim.log.levels.INFO)
+    else
+      vim.g.default_explorer = "neo-tree"
+      vim.cmd("Neotree toggle")
+      vim.notify("Switched to Neo-tree explorer", vim.log.levels.INFO)
+    end
+  elseif vim.g.default_explorer == "snacks" then
     vim.g.default_explorer = "neo-tree"
     vim.cmd("Neotree toggle")
     vim.notify("Switched to Neo-tree explorer", vim.log.levels.INFO)
@@ -415,6 +456,33 @@ function M.toggle_explorer()
     vim.g.default_explorer = "oil"
     vim.cmd("Oil")
     vim.notify("Switched to Oil explorer", vim.log.levels.INFO)
+  end
+end
+
+-- Picker helpers to work with both Telescope and Snacks.picker
+-- Find files using the configured picker
+function M.find_files(opts)
+  opts = opts or {}
+  
+  if vim.g.default_picker == "snacks" and package.loaded["snacks.picker"] then
+    require("snacks.picker").find_files(opts)
+  elseif package.loaded["telescope.builtin"] then
+    require("telescope.builtin").find_files(opts)
+  else
+    vim.notify("No picker available", vim.log.levels.ERROR)
+  end
+end
+
+-- Live grep using the configured picker
+function M.live_grep(opts)
+  opts = opts or {}
+  
+  if vim.g.default_picker == "snacks" and package.loaded["snacks.picker"] then
+    require("snacks.picker").live_grep(opts)
+  elseif package.loaded["telescope.builtin"] then
+    require("telescope.builtin").live_grep(opts)
+  else
+    vim.notify("No picker available", vim.log.levels.ERROR)
   end
 end
 
@@ -473,6 +541,11 @@ function M.new_nextjs_component(type)
     table.insert(content, "}")
   elseif type == "page" then
     table.insert(content, "import React from 'react';")
+    table.insert(content, "")
+    table.insert(content, "export const metadata = {")
+    table.insert(content, "  title: '" .. component_name .. "',")
+    table.insert(content, "  description: '" .. component_name .. " page',")
+    table.insert(content, "};")
     table.insert(content, "")
     table.insert(content, "export default function Page() {")
     table.insert(content, "  return (")
