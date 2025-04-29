@@ -1,42 +1,12 @@
-
--- Configuration for Next.js development
+-- lua/plugins/nextjs.lua
 return {
-  -- Add custom formatters for Next.js
-  {
-    "stevearc/conform.nvim",
-    opts = {
-      formatters_by_ft = {
-        javascript = { "prettierd", "prettier" },
-        typescript = { "prettierd", "prettier" },
-        javascriptreact = { "prettierd", "prettier" },
-        typescriptreact = { "prettierd", "prettier" },
-        css = { "prettierd", "prettier" },
-        json = { "prettierd", "prettier" },
-        jsonc = { "prettierd", "prettier" },
-        graphql = { "prettierd", "prettier" },
-      },
-      formatters = {
-        prettierd = {
-          env = {
-            PRETTIERD_DEFAULT_CONFIG = vim.fn.expand("~/.config/nvim/.prettierrc"),
-          },
-        },
-        prettier = {
-          options = {
-            configPath = vim.fn.getcwd() .. "/.prettierrc",
-          },
-        },
-      },
-      format_on_save = {
-        stop_after_first = true, -- Stop after first formatter succeeds
-      },
-    },
-  },
-
-  -- TypeScript tools
+  -- TypeScript/Next.js LSP enhancement
   {
     "pmizio/typescript-tools.nvim",
-    dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "neovim/nvim-lspconfig",
+    },
     opts = {
       settings = {
         -- For Next.js
@@ -76,214 +46,366 @@ return {
       require("typescript-tools").setup(opts)
       
       -- Add commands for typescript actions
-      vim.api.nvim_create_user_command("TypescriptOrganizeImports", function()
+      vim.api.nvim_create_user_command("TSOrganizeImports", function()
         require("typescript-tools.api").organize_imports()
       end, { desc = "Organize Imports" })
       
-      vim.api.nvim_create_user_command("TypescriptRenameFile", function()
+      vim.api.nvim_create_user_command("TSRenameFile", function()
         require("typescript-tools.api").rename_file()
       end, { desc = "Rename File" })
       
-      vim.api.nvim_create_user_command("TypescriptAddMissingImports", function()
+      vim.api.nvim_create_user_command("TSAddMissingImports", function()
         require("typescript-tools.api").add_missing_imports()
       end, { desc = "Add Missing Imports" })
       
-      vim.api.nvim_create_user_command("TypescriptRemoveUnused", function()
+      vim.api.nvim_create_user_command("TSRemoveUnused", function()
         require("typescript-tools.api").remove_unused()
       end, { desc = "Remove Unused" })
       
-      vim.api.nvim_create_user_command("TypescriptFixAll", function()
+      vim.api.nvim_create_user_command("TSFixAll", function()
         require("typescript-tools.api").fix_all()
       end, { desc = "Fix All" })
+      
+      -- Add Next.js specific keymaps
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = { "typescript", "javascript", "typescriptreact", "javascriptreact" },
+        callback = function()
+          local map = function(mode, lhs, rhs, desc)
+            vim.keymap.set(mode, lhs, rhs, { buffer = true, desc = desc })
+          end
+          
+          map("n", "<leader>sno", function() require("typescript-tools.api").organize_imports() end, "Organize Imports")
+          map("n", "<leader>snr", function() require("typescript-tools.api").rename_file() end, "Rename File")
+          map("n", "<leader>sni", function() require("typescript-tools.api").add_missing_imports() end, "Add Missing Imports")
+          map("n", "<leader>snu", function() require("typescript-tools.api").remove_unused() end, "Remove Unused")
+          map("n", "<leader>snf", function() require("typescript-tools.api").fix_all() end, "Fix All")
+        end
+      })
     end,
+    priority = 80,
+  },
+  
+  -- Add custom formatters for Next.js
+  {
+    "stevearc/conform.nvim",
+    optional = true,
+    opts = {
+      formatters_by_ft = {
+        javascript = { "prettierd", "prettier" },
+        typescript = { "prettierd", "prettier" },
+        javascriptreact = { "prettierd", "prettier" },
+        typescriptreact = { "prettierd", "prettier" },
+        css = { "prettierd", "prettier" },
+        json = { "prettierd", "prettier" },
+        jsonc = { "prettierd", "prettier" },
+        graphql = { "prettierd", "prettier" },
+        html = { "prettierd", "prettier" },
+      },
+      formatters = {
+        prettierd = {
+          env = {
+            PRETTIERD_DEFAULT_CONFIG = vim.fn.expand("~/.config/nvim/.prettierrc"),
+          },
+        },
+        prettier = {
+          prepend_args = function(self, ctx)
+            -- Try to detect project's .prettierrc
+            local prettier_config = require("conform.util").root_file({
+              ".prettierrc",
+              ".prettierrc.json",
+              ".prettierrc.yml",
+              ".prettierrc.yaml",
+              ".prettierrc.json5",
+              ".prettierrc.js",
+              "prettier.config.js",
+              ".prettierrc.toml",
+            }, ctx.filename)
+            
+            -- Use project config or default to built-in config
+            if prettier_config then
+              return { "--config", prettier_config }
+            else
+              return { "--print-width", "100", "--single-quote", "true" }
+            end
+          end,
+        },
+      },
+    },
+    priority = 50,
+  },
+  
+  -- Schema store for better JSON validation
+  {
+    "b0o/SchemaStore.nvim",
+    lazy = true,
+    version = false,
+    priority = 55,
+  },
+  
+  -- Tailwind CSS support
+  {
+    "NvChad/nvim-colorizer.lua",
+    config = true,
+    opts = {
+      user_default_options = {
+        tailwind = true,
+        mode = "background",
+        css = true,
+        css_variables = true,
+      },
+    },
+    ft = { "css", "html", "javascript", "typescript", "javascriptreact", "typescriptreact" },
+    priority = 65,
+  },
+  
+  -- Tailwind CSS completion
+  {
+    "roobert/tailwindcss-colorizer-cmp.nvim",
+    opts = {
+      color_square_width = 2,
+    },
+    priority = 60,
   },
   
   -- React snippets and tools
   {
     "L3MON4D3/LuaSnip",
     config = function()
-      local ls = require("luasnip")
-      local s = ls.snippet
-      local t = ls.text_node
-      local i = ls.insert_node
-      local f = ls.function_node
-      local c = ls.choice_node
+      -- Create snippets directory if it doesn't exist
+      local snippets_dir = vim.fn.stdpath("config") .. "/snippets"
+      if vim.fn.isdirectory(snippets_dir) == 0 then
+        vim.fn.mkdir(snippets_dir, "p")
+      end
       
-      -- Next.js specific snippets
-      ls.add_snippets("typescriptreact", {
-        -- Next.js page component
-        s("npage", {
-          t({"export default function Page() {", "  return (", "    "}),
-          i(1, "<div>Page content</div>"),
-          t({"", "  );", "}", ""}),
-        }),
-        
-        -- Next.js layout component
-        s("nlayout", {
-          t({"export default function Layout({ children }: { children: React.ReactNode }) {", "  return (", "    "}),
-          i(1, "<div>{children}</div>"),
-          t({"", "  );", "}", ""}),
-        }),
-        
-        -- Next.js server component
-        s("nserver", {
-          t({"import { headers } from 'next/headers';", "", "export default async function ServerComponent() {", "  const headersList = headers();", "  ", "  return (", "    "}),
-          i(1, "<div>Server Component</div>"),
-          t({"", "  );", "}", ""}),
-        }),
-        
-        -- Next.js client component
-        s("nclient", {
-          t({"'use client';", "", "import { useState } from 'react';", "", "export default function ClientComponent() {", "  const [state, setState] = useState("}),
-          i(1, "null"),
-          t({");", "  ", "  return (", "    "}),
-          i(2, "<div>Client Component</div>"),
-          t({"", "  );", "}", ""}),
-        }),
-        
-        -- Next.js API route
-        s("napi", {
-          t({"export async function GET(request: Request) {", "  "}),
-          i(1, "// Handle GET request"),
-          t({"", "  return Response.json({ message: 'Hello from API route!' });", "}", ""}),
-        }),
-        
-        -- Next.js with route params
-        s("nparams", {
-          t({"interface PageProps {","  params: {","    "}),
-          i(1, "id"),
-          t({": string","  }","}","","export default function Page({ params }: PageProps) {","  return (","    <div>","      Dynamic parameter: {params."}),
-          f(function(args) return args[1][1] end, {1}),
-          t({"}","    </div>","  );","}",""}),
-        }),
+      -- Create React/Next.js snippets
+      local nextjs_snippets_file = snippets_dir .. "/nextjs.lua"
+      if vim.fn.filereadable(nextjs_snippets_file) == 0 then
+        local file = io.open(nextjs_snippets_file, "w")
+        if file then
+          file:write([[
+-- Next.js snippets
+local ls = require("luasnip")
+local s = ls.snippet
+local t = ls.text_node
+local i = ls.insert_node
+local f = ls.function_node
+local c = ls.choice_node
 
-        
-        -- Next.js with search params
-        s("nsearch", {
-          t({"export default function Page({","  searchParams,","}: {","  searchParams: { [key: string]: string | string[] | undefined };","}) {","  return (","    <div>","      Search param: {searchParams."}),
-          i(1, "query"),
-          t({" as string}","    </div>","  );","}",""}),
-        }),
-        
-        -- Next.js with data fetching
-        s("nfetch", {
-          t({"async function getData() {", "  const res = await fetch('"}),
-          i(1, "https://api.example.com/data"),
-          t("', "),
-          c(2, {
-            t({"// No cache - revalidate every request", "  { cache: 'no-store' }"}),
-            t({"// Cache with revalidation", "  { next: { revalidate: 60 } }"}),
-            t({"// Cache until manually revalidated", "  { cache: 'force-cache' }"}),
-          }),
-          t({");", "  ", "  if (!res.ok) {", "    throw new Error('Failed to fetch data');", "  }", "  ", "  return res.json();", "}", "", "export default async function Page() {", "  const data = await getData();", "  ", "  return (", "    <div>", "      <h1>Data:</h1>", "      <pre>{JSON.stringify(data, null, 2)}</pre>", "    </div>", "  );", "}", ""}),
-        }),
-        
-        -- React useState hook
-        s("ust", {
-          t({"const ["}),
-          i(1, "state"),
-          t({", set"}),
-          f(function(args)
-            local state = args[1][1]
-            return state:gsub("^%l", string.upper)
-          end, {1}),
-          t({"] = useState("}),
-          i(2, "initialState"),
-          t({");"}),
-        }),
-        
-        -- React useEffect
-        s("uef", {
-          t({"useEffect(() => {", "  "}),
-          i(1, "// Effect code"),
-          t({"", "  return () => {", "    "}),
-          i(2, "// Cleanup code"),
-          t({"", "  };", "}, ["}),
-          i(3, "/* dependencies */"),
-          t({"]);"}),
-        }),
-        
-        -- React component with props
-        s("rcomp", {
-          t({"interface "}),
-          i(1, "Component"),
-          t({"Props {", "  "}),
-          i(2, "// Props"),
-          t({"", "}", "", "export function "}),
-          f(function(args) return args[1][1] end, {1}),
-          t({"({ "}),
-          i(3, "/* destructured props */"),
-          t({" }: "}),
-          f(function(args) return args[1][1] end, {1}),
-          t({"Props) {", "  return (", "    "}),
-          i(0, "<div></div>"),
-          t({"", "  );", "}", ""}),
-        }),
-        
-        -- Next.js metadata export
-        s("nmeta", {
-          t({"export const metadata = {", "  title: '"}),
-          i(1, "Page Title"),
-          t({"',", "  description: '"}),
-          i(2, "Page Description"),
-          t({"',", "};", ""}),
-        }),
-      })
+local snippets = {
+  -- Next.js page component
+  s("npage", {
+    t({"export default function Page() {", "  return (", "    "}),
+    i(1, "<div>Page content</div>"),
+    t({"", "  );", "}", ""}),
+  }),
+  
+  -- Next.js layout component
+  s("nlayout", {
+    t({"export default function Layout({ children }: { children: React.ReactNode }) {", "  return (", "    "}),
+    i(1, "<div>{children}</div>"),
+    t({"", "  );", "}", ""}),
+  }),
+  
+  -- Next.js server component
+  s("nserver", {
+    t({"import { headers } from 'next/headers';", "", "export default async function ServerComponent() {", "  const headersList = headers();", "  ", "  return (", "    "}),
+    i(1, "<div>Server Component</div>"),
+    t({"", "  );", "}", ""}),
+  }),
+  
+  -- Next.js client component
+  s("nclient", {
+    t({"'use client';", "", "import { useState } from 'react';", "", "export default function ClientComponent() {", "  const [state, setState] = useState("}),
+    i(1, "null"),
+    t({");", "  ", "  return (", "    "}),
+    i(2, "<div>Client Component</div>"),
+    t({"", "  );", "}", ""}),
+  }),
+  
+  -- Next.js API route
+  s("napi", {
+    t({"export async function GET(request: Request) {", "  "}),
+    i(1, "// Handle GET request"),
+    t({"", "  return Response.json({ message: 'Hello from API route!' });", "}", ""}),
+  }),
+  
+  -- Next.js with route params
+  s("nparams", {
+    t({"interface PageProps {","  params: {","    "}),
+    i(1, "id"),
+    t({": string","  }","}","","export default function Page({ params }: PageProps) {","  return (","    <div>","      Dynamic parameter: {params."}),
+    f(function(args) return args[1][1] end, {1}),
+    t({"}","    </div>","  );","}",""}),
+  }),
+
+  
+  -- Next.js with search params
+  s("nsearch", {
+    t({"export default function Page({","  searchParams,","}: {","  searchParams: { [key: string]: string | string[] | undefined };","}) {","  return (","    <div>","      Search param: {searchParams."}),
+    i(1, "query"),
+    t({" as string}","    </div>","  );","}",""}),
+  }),
+  
+  -- Next.js with data fetching
+  s("nfetch", {
+    t({"async function getData() {", "  const res = await fetch('"}),
+    i(1, "https://api.example.com/data"),
+    t("', "),
+    c(2, {
+      t({"// No cache - revalidate every request", "  { cache: 'no-store' }"}),
+      t({"// Cache with revalidation", "  { next: { revalidate: 60 } }"}),
+      t({"// Cache until manually revalidated", "  { cache: 'force-cache' }"}),
+    }),
+    t({");", "  ", "  if (!res.ok) {", "    throw new Error('Failed to fetch data');", "  }", "  ", "  return res.json();", "}", "", "export default async function Page() {", "  const data = await getData();", "  ", "  return (", "    <div>", "      <h1>Data:</h1>", "      <pre>{JSON.stringify(data, null, 2)}</pre>", "    </div>", "  );", "}", ""}),
+  }),
+  
+  -- React useState hook
+  s("ust", {
+    t({"const ["}),
+    i(1, "state"),
+    t({", set"}),
+    f(function(args)
+      local state = args[1][1]
+      return state:gsub("^%l", string.upper)
+    end, {1}),
+    t({"] = useState("}),
+    i(2, "initialState"),
+    t({");"}),
+  }),
+  
+  -- React useEffect
+  s("uef", {
+    t({"useEffect(() => {", "  "}),
+    i(1, "// Effect code"),
+    t({"", "  return () => {", "    "}),
+    i(2, "// Cleanup code"),
+    t({"", "  };", "}, ["}),
+    i(3, "/* dependencies */"),
+    t({"]);"}),
+  }),
+  
+  -- React component with props
+  s("rcomp", {
+    t({"interface "}),
+    i(1, "Component"),
+    t({"Props {", "  "}),
+    i(2, "// Props"),
+    t({"", "}", "", "export function "}),
+    f(function(args) return args[1][1] end, {1}),
+    t({"({ "}),
+    i(3, "/* destructured props */"),
+    t({" }: "}),
+    f(function(args) return args[1][1] end, {1}),
+    t({"Props) {", "  return (", "    "}),
+    i(0, "<div></div>"),
+    t({"", "  );", "}", ""}),
+  }),
+  
+  -- Next.js metadata export
+  s("nmeta", {
+    t({"export const metadata = {", "  title: '"}),
+    i(1, "Page Title"),
+    t({"',", "  description: '"}),
+    i(2, "Page Description"),
+    t({"',", "};", ""}),
+  }),
+}
+
+return snippets
+]])
+          file:close()
+        end
+      end
       
-      -- Add the same snippets to javascript JSX files
-      ls.filetype_extend("javascriptreact", { "typescriptreact" })
+      -- Create JavaScript snippets file
+      local js_snippets_file = snippets_dir .. "/javascript.lua"
+      if vim.fn.filereadable(js_snippets_file) == 0 then
+        local file = io.open(js_snippets_file, "w")
+        if file then
+          file:write([[
+-- JavaScript snippets for Next.js
+local ls = require("luasnip")
+local s = ls.snippet
+local t = ls.text_node
+local i = ls.insert_node
+local c = ls.choice_node
+
+local snippets = {
+  -- Next.js config
+  s("nconfig", {
+    t({"/** @type {import('next').NextConfig} */", "const nextConfig = {", "  "}),
+    c(1, {
+      t({"// Base configuration", "reactStrictMode: true,"}),
+      t({"// With redirects", "reactStrictMode: true,", "  async redirects() {", "    return [", "      {", "        source: '/old-path',", "        destination: '/new-path',", "        permanent: true,", "      },", "    ];", "  },"}),
+      t({"// With image domains", "reactStrictMode: true,", "  images: {", "    domains: ['example.com'],", "  },"}),
+      t({"// With API rewrites", "reactStrictMode: true,", "  async rewrites() {", "    return {", "      beforeFiles: [", "        {", "          source: '/api/:path*',", "          destination: 'https://api.example.com/:path*',", "        },", "      ],", "    };", "  },"}),
+    }),
+    t({"", "};", "", "module.exports = nextConfig;", ""}),
+  }),
+}
+
+return snippets
+]])
+          file:close()
+        end
+      end
       
-      -- Add snippets for Next.js API routes
-      ls.add_snippets("typescript", {
-        -- Next.js API handler
-        s("napi", {
-          t({"export async function GET(request: Request) {", "  "}),
-          i(1, "// Handle GET request"),
-          t({"", "  return Response.json({ message: 'Hello from API route!' });", "}", ""}),
-        }),
-        
-        -- Next.js API handler with multiple HTTP methods
-        s("napi-methods", {
-          t({"export async function GET(request: Request) {", "  "}),
-          i(1, "// Handle GET request"),
-          t({"", "  return Response.json({ message: 'Hello from GET' });", "}", "", "export async function POST(request: Request) {", "  const body = await request.json();", "  ", "  "}),
-          i(2, "// Handle POST request"),
-          t({"", "  return Response.json({ message: 'Hello from POST', received: body });", "}", ""}),
-        }),
-        
-        -- Next.js dynamic API route
-        s("napi-dynamic", {
-          t({"export async function GET(", "  request: Request,", "  { params }: { params: { "}),
-          i(1, "id"),
-          t({": string } }", ") {", "  "}),
-          t({"const "}), f(function(args) return args[1][1] end, {1}), t({" = params."}), f(function(args) return args[1][1] end, {1}), t({";", "  ", "  return Response.json({ "}),
-          f(function(args) return args[1][1] end, {1}), t({" });", "}", ""}),
-        }),
-      })
-      
-      -- Add snippets for next.config.js
-      ls.add_snippets("javascript", {
-        -- Next.js config
-        s("nconfig", {
-          t({"/** @type {import('next').NextConfig} */", "const nextConfig = {", "  "}),
-          c(1, {
-            t({"// Base configuration", "reactStrictMode: true,"}),
-            t({"// With redirects", "reactStrictMode: true,", "  async redirects() {", "    return [", "      {", "        source: '/old-path',", "        destination: '/new-path',", "        permanent: true,", "      },", "    ];", "  },"}),
-            t({"// With image domains", "reactStrictMode: true,", "  images: {", "    domains: ['example.com'],", "  },"}),
-            t({"// With API rewrites", "reactStrictMode: true,", "  async rewrites() {", "    return {", "      beforeFiles: [", "        {", "          source: '/api/:path*',", "          destination: 'https://api.example.com/:path*',", "        },", "      ],", "    };", "  },"}),
-          }),
-          t({"", "};", "", "module.exports = nextConfig;", ""}),
-        }),
-      })
-      
-      -- Add snippets for package.json
-      ls.add_snippets("json", {
-        -- Next.js dependencies
-        s("ndeps", {
-          t({"\"dependencies\": {", "  \"next\": \"^14.0.0\",", "  \"react\": \"^18.2.0\",", "  \"react-dom\": \"^18.2.0\"", "},", "\"devDependencies\": {", "  \"@types/node\": \"^20.0.0\",", "  \"@types/react\": \"^18.2.0\",", "  \"@types/react-dom\": \"^18.2.0\",", "  \"typescript\": \"^5.0.0\"", "}"}),
-        }),
-      })
+      -- Create TypeScript snippets file
+      local ts_snippets_file = snippets_dir .. "/typescript.lua"
+      if vim.fn.filereadable(ts_snippets_file) == 0 then
+        local file = io.open(ts_snippets_file, "w")
+        if file then
+          file:write([[
+-- TypeScript snippets for Next.js
+local ls = require("luasnip")
+local s = ls.snippet
+local t = ls.text_node
+local i = ls.insert_node
+local f = ls.function_node
+
+local snippets = {
+  -- Next.js API handler
+  s("napi", {
+    t({"export async function GET(request: Request) {", "  "}),
+    i(1, "// Handle GET request"),
+    t({"", "  return Response.json({ message: 'Hello from API route!' });", "}", ""}),
+  }),
+  
+  -- Next.js API handler with multiple HTTP methods
+  s("napi-methods", {
+    t({"export async function GET(request: Request) {", "  "}),
+    i(1, "// Handle GET request"),
+    t({"", "  return Response.json({ message: 'Hello from GET' });", "}", "", "export async function POST(request: Request) {", "  const body = await request.json();", "  ", "  "}),
+    i(2, "// Handle POST request"),
+    t({"", "  return Response.json({ message: 'Hello from POST', received: body });", "}", ""}),
+  }),
+  
+  -- Next.js dynamic API route
+  s("napi-dynamic", {
+    t({"export async function GET(", "  request: Request,", "  { params }: { params: { "}),
+    i(1, "id"),
+    t({": string } }", ") {", "  "}),
+    t({"const "}), f(function(args) return args[1][1] end, {1}), t({" = params."}), f(function(args) return args[1][1] end, {1}), t({";", "  ", "  return Response.json({ "}),
+    f(function(args) return args[1][1] end, {1}), t({" });", "}", ""}),
+  }),
+  
+  -- TypeScript React component type
+  s("tscomp", {
+    t({"import React from 'react';", "", "type "}), i(1, "Component"), t({"Props = {", "  "}), i(2, "children: React.ReactNode"), t({"", "};", "", "export default function "}), 
+    f(function(args) return args[1][1] end, {1}), 
+    t({" ({ "}), i(3, "children"), t({" }: "}), f(function(args) return args[1][1] end, {1}), t({"Props) {", "  return (", "    "}), 
+    i(0, "<div>{children}</div>"), 
+    t({"", "  );", "}", ""})
+  }),
+}
+
+return snippets
+]])
+          file:close()
+        end
+      end
     end,
+    priority = 70,
   },
   
   -- React component refactoring
@@ -294,19 +416,7 @@ return {
     },
     opts = {},
     event = "BufRead package.json",
-  },
-  
-  -- Tailwind CSS support
-  {
-    "NvChad/nvim-colorizer.lua",
-    opts = {
-      user_default_options = {
-        tailwind = true,
-        mode = "background",
-        css = true,
-        css_variables = true,
-      },
-    },
+    priority = 65,
   },
   
   -- Improve Typescript/React development with better treesitter support
@@ -326,6 +436,7 @@ return {
         })
       end
     end,
+    priority = 65,
   },
 
   -- Enhanced jsx/tsx commenting
@@ -337,30 +448,7 @@ return {
       ft.set("typescriptreact", {"{/* %s */}", "// %s"})
       return opts
     end,
-  },
-  
-  -- Add ESLint integration
-  {
-    "neovim/nvim-lspconfig",
-    dependencies = {
-      "mfussenegger/nvim-lint",
-      config = function()
-        require("lint").linters_by_ft = {
-          javascript = {"eslint"},
-          typescript = {"eslint"},
-          javascriptreact = {"eslint"},
-          typescriptreact = {"eslint"},
-        }
-        
-        -- Automatically lint on save
-        vim.api.nvim_create_autocmd({ "BufWritePost" }, {
-          pattern = { "*.js", "*.jsx", "*.ts", "*.tsx" },
-          callback = function()
-            require("lint").try_lint()
-          end,
-        })
-      end,
-    },
+    priority = 60,
   },
   
   -- Better file browser for Next.js project navigation
@@ -378,467 +466,261 @@ return {
           respect_gitignore = false,
           hidden = true,
           grouped = true,
-          previewer = false,
           initial_mode = "normal",
           layout_config = { height = 40 },
         }
         require("telescope").extensions.file_browser.file_browser(opts)
       end, { desc = "Browse Next.js Project" })
     end,
+    priority = 55,
   },
   
-  -- Add custom configuration for Next.js projects in LSP
+  -- Next.js utilities
   {
-    "neovim/nvim-lspconfig",
-    opts = function(_, opts)
-      -- Initialize opts.servers if it doesn't exist
-      opts.servers = opts.servers or {}
-      
-      -- Enhance tsserver configuration for Next.js
-      opts.servers.tsserver = opts.servers.tsserver or {}
-      opts.servers.tsserver.settings = vim.tbl_deep_extend("force", 
-        opts.servers.tsserver.settings or {}, 
-        {
-          typescript = {
-            inlayHints = {
-              includeInlayParameterNameHints = "all",
-              includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-              includeInlayFunctionParameterTypeHints = true,
-              includeInlayVariableTypeHints = true,
-              includeInlayPropertyDeclarationTypeHints = true,
-              includeInlayFunctionLikeReturnTypeHints = true,
-              includeInlayEnumMemberValueHints = true,
-            },
-            suggest = {
-              completeFunctionCalls = true,
-            },
-          },
-          javascript = {
-            inlayHints = {
-              includeInlayParameterNameHints = "all",
-              includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-              includeInlayFunctionParameterTypeHints = true,
-              includeInlayVariableTypeHints = true,
-              includeInlayPropertyDeclarationTypeHints = true,
-              includeInlayFunctionLikeReturnTypeHints = true,
-              includeInlayEnumMemberValueHints = true,
-            },
-            suggest = {
-              completeFunctionCalls = true,
-            },
-          },
-        }
-      )
-      
-      -- Add handlers to skip tsserver setup since it's handled by typescript-tools
-      opts.setup = opts.setup or {}
-      opts.setup.tsserver = function(_, _)
-        return true  -- Skip tsserver setup from lspconfig
-      end
-      
-      return opts
-    end,
-  },
-  
-  -- Next.js project management
-  {
-    "folke/which-key.nvim",
-    opts = function(_, opts)
-      if opts.defaults then
-        -- Add Next.js specific keymaps in the which-key menu
-        opts.defaults["<leader>sn"] = { 
-          name = "+Next.js Stack",
-          -- Create a new Next.js project
-          n = { 
-            function()
-              vim.ui.input({ prompt = "Project name: " }, function(name)
-                if not name or name == "" then
-                  return
-                end
-                
-                -- Create a new terminal for project initialization
-                local Terminal = require("toggleterm.terminal").Terminal
-                local nextjs_init = Terminal:new({
-                  cmd = string.format("npx create-next-app@latest %s --typescript --eslint --tailwind --app --src-dir --import-alias '@/*'", name),
-                  hidden = false,
-                  direction = "float",
-                  float_opts = {
-                    width = math.floor(vim.o.columns * 0.9),
-                    height = math.floor(vim.o.lines * 0.9),
-                  },
-                  on_exit = function()
-                    vim.cmd("cd " .. name)
-                    vim.notify("Next.js project '" .. name .. "' initialized! Run 'cd " .. name .. " && npm run dev'", vim.log.levels.INFO)
-                  end,
-                })
-                nextjs_init:toggle()
-              end)
-            end,
-            "New Next.js Project" 
-          },
-          -- Run the development server
-          d = { 
-            function()
-              local Terminal = require("toggleterm.terminal").Terminal
-              local nextjs_dev = Terminal:new({
-                cmd = "npm run dev",
-                hidden = false,
-                direction = "horizontal",
-                on_open = function(term)
-                  vim.cmd("startinsert!")
-                end,
-              })
-              nextjs_dev:toggle()
-            end,
-            "Run Development Server" 
-          },
-          -- Build the production version
-          b = { 
-            function()
-              local Terminal = require("toggleterm.terminal").Terminal
-              local nextjs_build = Terminal:new({
-                cmd = "npm run build",
-                hidden = false,
-                direction = "horizontal",
-                on_open = function(term)
-                  vim.cmd("startinsert!")
-                end,
-              })
-              nextjs_build:toggle()
-            end,
-            "Build for Production" 
-          },
-          -- Start the production server
-          s = { 
-            function()
-              local Terminal = require("toggleterm.terminal").Terminal
-              local nextjs_start = Terminal:new({
-                cmd = "npm run start",
-                hidden = false,
-                direction = "horizontal",
-                on_open = function(term)
-                  vim.cmd("startinsert!")
-                end,
-              })
-              nextjs_start:toggle()
-            end,
-            "Start Production Server" 
-          },
-          -- Run tests
-          t = { 
-            function()
-              local Terminal = require("toggleterm.terminal").Terminal
-              local nextjs_test = Terminal:new({
-                cmd = "npm run test",
-                hidden = false,
-                direction = "horizontal",
-                on_open = function(term)
-                  vim.cmd("startinsert!")
-                end,
-              })
-              nextjs_test:toggle()
-            end,
-            "Run Tests" 
-          },
-          -- Lint the project
-          l = { 
-            function()
-              local Terminal = require("toggleterm.terminal").Terminal
-              local nextjs_lint = Terminal:new({
-                cmd = "npm run lint",
-                hidden = false,
-                direction = "horizontal",
-                on_open = function(term)
-                  vim.cmd("startinsert!")
-                end,
-              })
-              nextjs_lint:toggle()
-            end,
-            "Lint Project" 
-          },
-          -- Create a new component
-          c = { function() require("config.utils").new_nextjs_component("client") end, "New Client Component" },
-          -- Create a new server component
-          S = { function() require("config.utils").new_nextjs_component("server") end, "New Server Component" },
-          -- Create a new page component
-          p = { function() require("config.utils").new_nextjs_component("page") end, "New Page" },
-          -- Create a new layout component
-          L = { function() require("config.utils").new_nextjs_component("layout") end, "New Layout" },
-          -- Generate component from clipboard
-          g = {
-            function()
-              -- Get text from clipboard
-              local clipboard = vim.fn.getreg("+")
-              if not clipboard or clipboard == "" then
-                vim.notify("Clipboard is empty", vim.log.levels.ERROR)
-                return
-              end
-              
-              -- Ask for component name
-              vim.ui.input({ prompt = "Component name: " }, function(name)
-                if not name or name == "" then
-                  return
-                end
-                
-                -- Create component file
-                local file_path = "src/components/" .. name .. ".tsx"
-                
-                -- Check if src/components directory exists
-                if vim.fn.isdirectory("src/components") == 0 then
-                  vim.fn.mkdir("src/components", "p")
-                end
-                
-                -- Create the file with appropriate React component structure
-                local file = io.open(file_path, "w")
-                if file then
-                  -- Format clipboard content as component
-                  local content = string.format([['use client';
-
-import React from 'react';
-
-interface %sProps {
-  // Add props here
-}
-
-export default function %s({ }: %sProps) {
-  return (
-%s
-  );
-}
-]], name, name, name, clipboard)
-                  
-                  file:write(content)
-                  file:close()
-                  
-                  -- Open the new file
-                  vim.cmd("edit " .. file_path)
-                  vim.notify("Component created: " .. file_path, vim.log.levels.INFO)
-                else
-                  vim.notify("Failed to create component file", vim.log.levels.ERROR)
-                end
-              end)
-            end,
-            "Generate Component from Clipboard"
-          },
-          -- Install a package
-          i = {
-            function()
-              vim.ui.input({ prompt = "Package name: " }, function(package)
-                if not package or package == "" then
-                  return
-                end
-                
-                local Terminal = require("toggleterm.terminal").Terminal
-                local npm_install = Terminal:new({
-                  cmd = "npm install " .. package,
-                  hidden = false,
-                  direction = "float",
-                  on_open = function(term)
-                    vim.cmd("startinsert!")
-                  end,
-                })
-                npm_install:toggle()
-              end)
-            end,
-            "Install Package"
-          },
-          -- Install a development package
-          D = {
-            function()
-              vim.ui.input({ prompt = "Dev package name: " }, function(package)
-                if not package or package == "" then
-                  return
-                end
-                
-                local Terminal = require("toggleterm.terminal").Terminal
-                local npm_install_dev = Terminal:new({
-                  cmd = "npm install -D " .. package,
-                  hidden = false,
-                  direction = "float",
-                  on_open = function(term)
-                    vim.cmd("startinsert!")
-                  end,
-                })
-                npm_install_dev:toggle()
-              end)
-            end,
-            "Install Dev Package"
-          },
-        }
-      end
-      
-      return opts
-    end,
-  },
-  
-  -- Custom commands for Next.js development
-  {
-    "folke/which-key.nvim",
+    "nvim-lua/plenary.nvim",
     optional = true,
-    config = function(_, _)
-      -- Add autocommand for quick functions in Next.js files
+    config = function()
+      -- Create a utility function for creating Next.js components
+      _G.new_nextjs_component = function(type)
+        type = type or "client" -- Default to client component
+        
+        -- Get the component name from user input
+        local component_name = vim.fn.input("Component Name: ")
+        if component_name == "" then
+          vim.notify("Component name cannot be empty", vim.log.levels.ERROR)
+          return
+        end
+        
+        -- Create a new buffer
+        local bufnr = vim.api.nvim_create_buf(true, false)
+        
+        -- Set buffer name
+        vim.api.nvim_buf_set_name(bufnr, component_name .. ".tsx")
+        
+        -- Set filetype
+        vim.api.nvim_buf_set_option(bufnr, "filetype", "typescriptreact")
+        
+        -- Generate component content based on type
+        local content = {}
+        if type == "client" then
+          table.insert(content, "'use client';")
+          table.insert(content, "")
+          table.insert(content, "import React from 'react';")
+          table.insert(content, "")
+          table.insert(content, "interface " .. component_name .. "Props {")
+          table.insert(content, "  // Props go here")
+          table.insert(content, "}")
+          table.insert(content, "")
+          table.insert(content, "export default function " .. component_name .. "({ }: " .. component_name .. "Props) {")
+          table.insert(content, "  return (")
+          table.insert(content, "    <div>")
+          table.insert(content, "      " .. component_name .. " Component")
+          table.insert(content, "    </div>")
+          table.insert(content, "  );")
+          table.insert(content, "}")
+        elseif type == "server" then
+          table.insert(content, "import React from 'react';")
+          table.insert(content, "")
+          table.insert(content, "interface " .. component_name .. "Props {")
+          table.insert(content, "  // Props go here")
+          table.insert(content, "}")
+          table.insert(content, "")
+          table.insert(content, "export default async function " .. component_name .. "({ }: " .. component_name .. "Props) {")
+          table.insert(content, "  // Server-side logic here")
+          table.insert(content, "  return (")
+          table.insert(content, "    <div>")
+          table.insert(content, "      " .. component_name .. " Server Component")
+          table.insert(content, "    </div>")
+          table.insert(content, "  );")
+          table.insert(content, "}")
+        elseif type == "page" then
+          table.insert(content, "import React from 'react';")
+          table.insert(content, "")
+          table.insert(content, "export const metadata = {")
+          table.insert(content, "  title: '" .. component_name .. "',")
+          table.insert(content, "  description: '" .. component_name .. " page',")
+          table.insert(content, "};")
+          table.insert(content, "")
+          table.insert(content, "export default function Page() {")
+          table.insert(content, "  return (")
+          table.insert(content, "    <main className=\"p-4\">")
+          table.insert(content, "      <h1 className=\"text-2xl font-bold\">" .. component_name .. " Page</h1>")
+          table.insert(content, "    </main>")
+          table.insert(content, "  );")
+          table.insert(content, "}")
+        elseif type == "layout" then
+          table.insert(content, "import React from 'react';")
+          table.insert(content, "")
+          table.insert(content, "export default function " .. component_name .. "Layout({")
+          table.insert(content, "  children,")
+          table.insert(content, "}: {")
+          table.insert(content, "  children: React.ReactNode;")
+          table.insert(content, "}) {")
+          table.insert(content, "  return (")
+          table.insert(content, "    <div className=\"layout\">")
+          table.insert(content, "      {children}")
+          table.insert(content, "    </div>")
+          table.insert(content, "  );")
+          table.insert(content, "}")
+        end
+        
+        -- Set buffer content
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
+        
+        -- Open the buffer in the current window
+        vim.api.nvim_win_set_buf(0, bufnr)
+        
+        -- Position cursor
+        if type == "client" then
+          vim.api.nvim_win_set_cursor(0, {7, 0}) -- Position at props
+        elseif type == "server" then
+          vim.api.nvim_win_set_cursor(0, {7, 0}) -- Position at props
+        elseif type == "page" then
+          vim.api.nvim_win_set_cursor(0, {6, 0}) -- Position at page content
+        elseif type == "layout" then
+          vim.api.nvim_win_set_cursor(0, {9, 0}) -- Position at layout
+        end
+        
+        -- Enter insert mode
+        vim.cmd("startinsert!")
+      end
+      
+      -- Create commands for Next.js development
+      vim.api.nvim_create_user_command("NextJSClientComponent", function()
+        _G.new_nextjs_component("client")
+      end, { desc = "Create a new Next.js client component" })
+      
+      vim.api.nvim_create_user_command("NextJSServerComponent", function()
+        _G.new_nextjs_component("server")
+      end, { desc = "Create a new Next.js server component" })
+      
+      vim.api.nvim_create_user_command("NextJSPage", function()
+        _G.new_nextjs_component("page")
+      end, { desc = "Create a new Next.js page" })
+      
+      vim.api.nvim_create_user_command("NextJSLayout", function()
+        _G.new_nextjs_component("layout")
+      end, { desc = "Create a new Next.js layout" })
+      
+      -- Create a command to start the Next.js development server
+      vim.api.nvim_create_user_command("NextJSDev", function()
+        local Terminal = require("toggleterm.terminal").Terminal
+        local nextjs_dev = Terminal:new({
+          cmd = "npm run dev",
+          direction = "float",
+          close_on_exit = false,
+          on_open = function(term)
+            vim.cmd("startinsert!")
+            vim.notify("Starting Next.js development server...", vim.log.levels.INFO)
+          end,
+        })
+        nextjs_dev:toggle()
+      end, { desc = "Start Next.js development server" })
+      
+      -- Create a command to build the Next.js project
+      vim.api.nvim_create_user_command("NextJSBuild", function()
+        local Terminal = require("toggleterm.terminal").Terminal
+        local nextjs_build = Terminal:new({
+          cmd = "npm run build",
+          direction = "float",
+          close_on_exit = false,
+          on_open = function(term)
+            vim.cmd("startinsert!")
+            vim.notify("Building Next.js project...", vim.log.levels.INFO)
+          end,
+        })
+        nextjs_build:toggle()
+      end, { desc = "Build Next.js project" })
+      
+      -- Create a command to lint the Next.js project
+      vim.api.nvim_create_user_command("NextJSLint", function()
+        local Terminal = require("toggleterm.terminal").Terminal
+        local nextjs_lint = Terminal:new({
+          cmd = "npm run lint",
+          direction = "float",
+          close_on_exit = false,
+          on_open = function(term)
+            vim.cmd("startinsert!")
+            vim.notify("Linting Next.js project...", vim.log.levels.INFO)
+          end,
+        })
+        nextjs_lint:toggle()
+      end, { desc = "Lint Next.js project" })
+      
+      -- Add Next.js keymaps for specific file types
       vim.api.nvim_create_autocmd("FileType", {
-        pattern = {"typescriptreact", "javascriptreact"},
-        callback = function(args)
-          local buffer = args.buf
-          local file_path = vim.api.nvim_buf_get_name(buffer)
-          
-          if file_path:match("app/.*/page%.[jt]sx$") or file_path:match("pages/.*%.[jt]sx$") then
-            -- We're in a Next.js page file
-            vim.api.nvim_buf_create_user_command(buffer, "NextAdd", function(cmd_args)
-              local component_type = cmd_args.args
-              if component_type == "metadata" then
-                -- Add metadata export
-                local lines = {
-                  "",
-                  "export const metadata = {",
-                  "  title: 'Page Title',",
-                  "  description: 'Page description',",
-                  "};"
-                }
-                
-                -- Insert at the top of the file
-                vim.api.nvim_buf_set_lines(buffer, 0, 0, false, lines)
-                vim.notify("Added metadata export", vim.log.levels.INFO)
-              elseif component_type == "loading" then
-                -- Create corresponding loading.tsx file
-                local dir = vim.fn.fnamemodify(file_path, ":h")
-                local loading_path = dir .. "/loading.tsx"
-                
-                local file = io.open(loading_path, "w")
-                if file then
-                  file:write([[
-export default function Loading() {
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-    </div>
-  );
-}
-]])
-                  file:close()
-                  vim.notify("Created loading.tsx", vim.log.levels.INFO)
-                else
-                  vim.notify("Failed to create loading.tsx", vim.log.levels.ERROR)
-                end
-              elseif component_type == "error" then
-                -- Create corresponding error.tsx file
-                local dir = vim.fn.fnamemodify(file_path, ":h")
-                local error_path = dir .. "/error.tsx"
-                
-                local file = io.open(error_path, "w")
-                if file then
-                  file:write([['use client';
-
-import { useEffect } from 'react';
-
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  useEffect(() => {
-    console.error(error);
-  }, [error]);
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h2 className="text-2xl font-bold text-red-600 mb-4">Something went wrong!</h2>
-      <button
-        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-        onClick={() => reset()}
-      >
-        Try again
-      </button>
-    </div>
-  );
-}
-]])
-                  file:close()
-                  vim.notify("Created error.tsx", vim.log.levels.INFO)
-                else
-                  vim.notify("Failed to create error.tsx", vim.log.levels.ERROR)
-                end
-              else
-                vim.notify("Unknown component type. Options: metadata, loading, error", vim.log.levels.WARN)
-              end
-            end, { nargs = 1, complete = function() return { "metadata", "loading", "error" } end, desc = "Add Next.js component" })
-          end
-          
-          -- For API routes
-          if file_path:match("app/.*/route%.[jt]s$") or file_path:match("pages/api/.*%.[jt]s$") then
-            vim.api.nvim_buf_create_user_command(buffer, "NextAddMethod", function(cmd_args)
-              local method = cmd_args.args:upper()
-              local valid_methods = {GET = true, POST = true, PUT = true, DELETE = true, PATCH = true}
-              
-              if not valid_methods[method] then
-                vim.notify("Invalid HTTP method. Use: GET, POST, PUT, DELETE, PATCH", vim.log.levels.WARN)
-                return
-              end
-              
-              local template
-              if method == "GET" then
-                template = [[
-export async function GET(request: Request) {
-  // Handle GET request
-  return Response.json({ message: 'GET request handler' });
-}
-]]
-              elseif method == "POST" then
-                template = [[
-export async function POST(request: Request) {
-  // Parse the request body
-  const body = await request.json();
-  
-  // Handle POST request
-  return Response.json({ message: 'POST request handled', received: body });
-}
-]]
-              elseif method == "PUT" then
-                template = [[
-export async function PUT(request: Request) {
-  // Parse the request body
-  const body = await request.json();
-  
-  // Handle PUT request
-  return Response.json({ message: 'PUT request handled', received: body });
-}
-]]
-              elseif method == "DELETE" then
-                template = [[
-export async function DELETE(request: Request) {
-  // Handle DELETE request
-  return Response.json({ message: 'DELETE request handled' });
-}
-]]
-              else -- PATCH
-                template = [[
-export async function PATCH(request: Request) {
-  // Parse the request body
-  const body = await request.json();
-  
-  // Handle PATCH request
-  return Response.json({ message: 'PATCH request handled', received: body });
-}
-]]
-              end
-              
-              -- Add to the end of the file
-              local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
-              table.insert(lines, "")
-              
-              for line in template:gmatch("[^\r\n]+") do
-                table.insert(lines, line)
-              end
-              
-              vim.api.nvim_buf_set_lines(buffer, 0, -1, false, lines)
-              vim.notify("Added " .. method .. " method handler", vim.log.levels.INFO)
-            end, { nargs = 1, complete = function() return { "GET", "POST", "PUT", "DELETE", "PATCH" } end, desc = "Add HTTP method handler" })
-          end
+        pattern = { "typescript", "javascript", "typescriptreact", "javascriptreact" },
+        callback = function()
+          vim.keymap.set("n", "<leader>snc", "<cmd>NextJSClientComponent<CR>", { buffer = true, desc = "New Client Component" })
+          vim.keymap.set("n", "<leader>sns", "<cmd>NextJSServerComponent<CR>", { buffer = true, desc = "New Server Component" })
+          vim.keymap.set("n", "<leader>snp", "<cmd>NextJSPage<CR>", { buffer = true, desc = "New Page" })
+          vim.keymap.set("n", "<leader>snl", "<cmd>NextJSLayout<CR>", { buffer = true, desc = "New Layout" })
+          vim.keymap.set("n", "<leader>snd", "<cmd>NextJSDev<CR>", { buffer = true, desc = "Start Dev Server" })
+          vim.keymap.set("n", "<leader>snb", "<cmd>NextJSBuild<CR>", { buffer = true, desc = "Build Project" })
+          vim.keymap.set("n", "<leader>snl", "<cmd>NextJSLint<CR>", { buffer = true, desc = "Lint Project" })
         end
       })
+      
+      -- Auto-detect Next.js project and create useful resources
+      vim.api.nvim_create_autocmd("VimEnter", {
+        callback = function()
+          if vim.g.current_stack == "nextjs" then
+            -- Create useful VSCode settings file if in a Next.js project
+            local vscode_dir = vim.fn.getcwd() .. "/.vscode"
+            local settings_file = vscode_dir .. "/settings.json"
+            
+            if vim.fn.isdirectory(vscode_dir) == 0 then
+              vim.fn.mkdir(vscode_dir, "p")
+            end
+            
+            if vim.fn.filereadable(settings_file) == 0 then
+              local settings = {
+                ["editor.formatOnSave"] = true,
+                ["editor.defaultFormatter"] = "esbenp.prettier-vscode",
+                ["editor.codeActionsOnSave"] = {
+                  ["source.fixAll.eslint"] = true,
+                },
+                ["typescript.tsdk"] = "node_modules/typescript/lib",
+                ["typescript.enablePromptUseWorkspaceTsdk"] = true,
+                ["tailwindCSS.includeLanguages"] = {
+                  ["typescript"] = "javascript",
+                  ["typescriptreact"] = "javascript"
+                },
+                ["tailwindCSS.emmetCompletions"] = true,
+              }
+              
+              local file = io.open(settings_file, "w")
+              if file then
+                file:write(vim.json.encode(settings))
+                file:close()
+                vim.notify("Created VSCode settings for Next.js project", vim.log.levels.INFO)
+              end
+            end
+            
+            -- Create .prettierrc if it doesn't exist
+            local prettier_config = vim.fn.getcwd() .. "/.prettierrc"
+            if vim.fn.filereadable(prettier_config) == 0 then
+              local prettier_settings = {
+                semi = true,
+                singleQuote = true,
+                printWidth = 100,
+                tabWidth = 2,
+                trailingComma = "es5",
+                bracketSpacing = true,
+              }
+              
+              local file = io.open(prettier_config, "w")
+              if file then
+                file:write(vim.json.encode(prettier_settings))
+                file:close()
+                vim.notify("Created .prettierrc for Next.js project", vim.log.levels.INFO)
+              end
+            end
+          end
+        end,
+        once = true,
+      })
     end,
+    priority = 50,
   },
 }

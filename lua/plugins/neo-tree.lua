@@ -2,10 +2,11 @@ return {
   "nvim-neo-tree/neo-tree.nvim",
   branch = "v3.x",
   cmd = "Neotree",
+  priority = 70,
   dependencies = {
-    "nvim-lua/plenary.nvim",
-    "nvim-tree/nvim-web-devicons", -- Make sure this loads first
-    "MunifTanjim/nui.nvim",
+    { "nvim-lua/plenary.nvim", priority = 100 },
+    { "nvim-tree/nvim-web-devicons", priority = 100 }, -- Make sure this loads first
+    { "MunifTanjim/nui.nvim", priority = 95 },
     {
       "s1n7ax/nvim-window-picker",
       opts = {
@@ -17,7 +18,22 @@ return {
             buftype = { "terminal", "quickfix", "nofile" },
           },
         },
+        highlights = {
+          statusline = {
+            focused = {
+              fg = "#dddddd",
+              bg = "#89b482", -- Use Gruvbox green color
+              bold = true,
+            },
+            unfocused = {
+              fg = "#dddddd",
+              bg = "#7daea3", -- Use Gruvbox blue color
+              bold = true,
+            },
+          },
+        },
       },
+      priority = 90,
     },
   },
   keys = {
@@ -45,16 +61,59 @@ return {
   init = function()
     -- Do not auto-open Neo-tree at startup, even for directories
     vim.g.neo_tree_remove_legacy_commands = 1
+    
+    -- Create highlights early to avoid flicker
+    vim.api.nvim_create_autocmd("ColorScheme", {
+      callback = function()
+        -- Get colors from Gruvbox Material palette
+        local green_color = vim.api.nvim_get_hl(0, { name = "GruvboxGreen" }).fg or "#89b482"
+        local aqua_color = vim.api.nvim_get_hl(0, { name = "GruvboxAqua" }).fg or "#7daea3"
+        local red_color = vim.api.nvim_get_hl(0, { name = "GruvboxRed" }).fg or "#ea6962"
+        local yellow_color = vim.api.nvim_get_hl(0, { name = "GruvboxYellow" }).fg or "#d8a657"
+        local orange_color = vim.api.nvim_get_hl(0, { name = "GruvboxOrange" }).fg or "#e78a4e"
+        local blue_color = vim.api.nvim_get_hl(0, { name = "GruvboxBlue" }).fg or "#7daea3"
+        local bg_color = vim.api.nvim_get_hl(0, { name = "Normal" }).bg or "#282828"
+        local fg_color = vim.api.nvim_get_hl(0, { name = "Normal" }).fg or "#d4be98"
+
+        -- Enhanced highlight groups for Neo-tree
+        vim.api.nvim_set_hl(0, "NeoTreeNormal", { bg = bg_color })
+        vim.api.nvim_set_hl(0, "NeoTreeNormalNC", { bg = bg_color })
+        vim.api.nvim_set_hl(0, "NeoTreeRootName", { fg = blue_color, bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeDirectoryIcon", { fg = aqua_color })
+        vim.api.nvim_set_hl(0, "NeoTreeDirectoryName", { fg = aqua_color, bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeFileIcon", { fg = yellow_color })
+        vim.api.nvim_set_hl(0, "NeoTreeFileName", { fg = fg_color })
+        vim.api.nvim_set_hl(0, "NeoTreeFileNameOpened", { fg = green_color, bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeIndentMarker", { fg = "#504945" })
+        vim.api.nvim_set_hl(0, "NeoTreeGitAdded", { fg = green_color })
+        vim.api.nvim_set_hl(0, "NeoTreeGitModified", { fg = yellow_color })
+        vim.api.nvim_set_hl(0, "NeoTreeGitDeleted", { fg = red_color })
+        vim.api.nvim_set_hl(0, "NeoTreeGitConflict", { fg = red_color, bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeGitIgnored", { fg = "#665c54" })
+        vim.api.nvim_set_hl(0, "NeoTreeGitUntracked", { fg = orange_color, italic = true })
+        vim.api.nvim_set_hl(0, "NeoTreeFloatBorder", { fg = "#504945" })
+        vim.api.nvim_set_hl(0, "NeoTreeFloatTitle", { fg = yellow_color, bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeTitleBar", { fg = yellow_color, bg = "#3c3836", bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeCursorLine", { bg = "#3c3836" })
+        vim.api.nvim_set_hl(0, "NeoTreeTabActive", { bg = "#32302f", fg = fg_color, bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeTabInactive", { bg = "#282828", fg = "#a89984" })
+        vim.api.nvim_set_hl(0, "NeoTreeTabSeparatorActive", { bg = "#32302f", fg = "#665c54" })
+        vim.api.nvim_set_hl(0, "NeoTreeTabSeparatorInactive", { bg = "#282828", fg = "#665c54" })
+      end,
+      pattern = "*",
+    })
   end,
   opts = {
     sources = { "filesystem", "buffers", "git_status", "document_symbols" },
     open_files_do_not_replace_types = { "terminal", "trouble", "qf", "edgy" },
     close_if_last_window = true, -- Close Neo-tree if it is the last window left
-    popup_border_style = "",
+    popup_border_style = "rounded",
     enable_git_status = true,
     enable_diagnostics = true,
-    hide_root_node = true,
+    hide_root_node = false,
     retain_hidden_root_indent = true,
+    add_blank_line_at_top = false,
+    auto_clean_after_session_restore = true,
     show_scrolled_off_parent_node = true,
     sort_case_insensitive = true,
 
@@ -98,10 +157,9 @@ return {
         -- The next two settings are only a fallback, if you use nvim-web-devicons and configure default icons there
         -- then these will never be used.
         default = "",
-
       },
       modified = {
-        symbol = "",
+        symbol = "●",
       },
       git_status = {
         symbols = {
@@ -154,7 +212,20 @@ return {
         system_open = function(state)
           local node = state.tree:get_node()
           local path = node:get_id()
-          vim.api.nvim_command("silent !open -g " .. vim.fn.shellescape(path))
+          -- Uses the default system application for opening the file
+          -- This should work across different operating systems
+          local cmd
+          if vim.fn.has("mac") == 1 then
+            cmd = "open"
+          elseif vim.fn.has("unix") == 1 then
+            cmd = "xdg-open"
+          elseif vim.fn.has("win32") == 1 then
+            cmd = "start"
+          end
+          
+          if cmd then
+            vim.fn.jobstart({ cmd, path }, { detach = true })
+          end
         end,
         copy_selector = function(state)
           local node = state.tree:get_node()
@@ -326,30 +397,6 @@ return {
           vim.wo.cursorline = true
         end
       },
-      {
-        event = "neo_tree_buffer_leave",
-        handler = function()
-          vim.cmd [[setlocal guicursor=]]
-        end
-      },
-      -- Handle Neo-tree close if it is the last window
-      {
-        event = "neo_tree_window_after_open",
-        handler = function(args)
-          -- Check if Neo-tree is the only window
-          if #vim.api.nvim_list_wins() == 1 then
-            local buftype = vim.bo[vim.api.nvim_win_get_buf(0)].filetype
-            if buftype == "neo-tree" then
-              -- Close Neo-tree if it's the only window left
-              vim.defer_fn(function()
-                if #vim.api.nvim_list_wins() == 1 and vim.bo[vim.api.nvim_win_get_buf(0)].filetype == "neo-tree" then
-                  vim.cmd("quit")
-                end
-              end, 0)
-            end
-          end
-        end
-      }
     },
 
     renderers = {
@@ -390,85 +437,81 @@ return {
     },
   },
   config = function(_, opts)
-    -- Setup custom highlights for better appearance
-    vim.api.nvim_create_autocmd("ColorScheme", {
-      pattern = "*",
-      callback = function()
-        -- Create highlight groups based on the colorscheme
-        local bg_color = vim.api.nvim_get_hl(0, { name = "Normal" }).bg
-        local fg_color = vim.api.nvim_get_hl(0, { name = "Normal" }).fg
+    -- Before configuring neo-tree, set up any stack-specific filtering
+    local current_stack = vim.g.current_stack
 
-        -- Get colors from Gruvbox Material or fallback
-        local green_color = vim.api.nvim_get_hl(0, { name = "GruvboxGreen" }).fg or "#89b482"
-        local aqua_color = vim.api.nvim_get_hl(0, { name = "GruvboxAqua" }).fg or "#7daea3"
-        local red_color = vim.api.nvim_get_hl(0, { name = "GruvboxRed" }).fg or "#ea6962"
-        local yellow_color = vim.api.nvim_get_hl(0, { name = "GruvboxYellow" }).fg or "#d8a657"
-        local orange_color = vim.api.nvim_get_hl(0, { name = "GruvboxOrange" }).fg or "#e78a4e"
-        local blue_color = vim.api.nvim_get_hl(0, { name = "GruvboxBlue" }).fg or "#7daea3"
-
-        -- Enhanced highlight groups for Neo-tree
-        vim.api.nvim_set_hl(0, "NeoTreeRootName", { fg = blue_color, bold = true })
-        vim.api.nvim_set_hl(0, "NeoTreeDirectoryIcon", { fg = aqua_color })
-        vim.api.nvim_set_hl(0, "NeoTreeDirectoryName", { fg = aqua_color, bold = true })
-        vim.api.nvim_set_hl(0, "NeoTreeFileIcon", { fg = yellow_color })
-        vim.api.nvim_set_hl(0, "NeoTreeFileName", { fg = fg_color })
-        vim.api.nvim_set_hl(0, "NeoTreeFileNameOpened", { fg = green_color, bold = true })
-        vim.api.nvim_set_hl(0, "NeoTreeFloatBorder", { fg = "#504945" })
-        vim.api.nvim_set_hl(0, "NeoTreeFloatTitle", { fg = yellow_color, bold = true })
-        vim.api.nvim_set_hl(0, "NeoTreeTitleBar", { fg = yellow_color, bg = "#3c3836", bold = true })
-        vim.api.nvim_set_hl(0, "NeoTreeGitAdded", { fg = green_color })
-        vim.api.nvim_set_hl(0, "NeoTreeGitModified", { fg = yellow_color })
-        vim.api.nvim_set_hl(0, "NeoTreeGitDeleted", { fg = red_color })
-        vim.api.nvim_set_hl(0, "NeoTreeGitConflict", { fg = red_color, bold = true })
-        vim.api.nvim_set_hl(0, "NeoTreeGitUntracked", { fg = orange_color, italic = true })
-        vim.api.nvim_set_hl(0, "NeoTreeIndentMarker", { fg = "#504945" })
-        vim.api.nvim_set_hl(0, "NeoTreeExpander", { fg = "#7c6f64" })
-        vim.api.nvim_set_hl(0, "NeoTreeSymbolicLinkTarget", { fg = yellow_color, italic = true })
-        vim.api.nvim_set_hl(0, "NeoTreeTabActive", { bg = "#32302f", fg = fg_color, bold = true })
-        vim.api.nvim_set_hl(0, "NeoTreeTabInactive", { bg = "#282828", fg = "#a89984" })
-        vim.api.nvim_set_hl(0, "NeoTreeTabSeparatorActive", { bg = "#32302f", fg = "#665c54" })
-        vim.api.nvim_set_hl(0, "NeoTreeTabSeparatorInactive", { bg = "#282828", fg = "#665c54" })
-        vim.api.nvim_set_hl(0, "NeoTreeCursorLine", { bg = "#3c3836" })
-        vim.api.nvim_set_hl(0, "NeoTreeDimText", { fg = "#665c54" })
-      end,
-    })
-
-    -- Better filtering for Go projects
-    if not opts.filesystem.filtered_items then
-      opts.filesystem.filtered_items = {}
+    -- For GOTH stack - special filtering for Go/Templ projects
+    if current_stack == "goth" then
+      -- Add common Go-related ignore patterns
+      opts.filesystem.filtered_items.never_show = vim.list_extend(
+        opts.filesystem.filtered_items.never_show or {},
+        {
+          "go.sum", -- Generally don't need to edit go.sum directly
+          "vendor", -- Vendor directory is generally not edited directly
+          "bin",    -- Compiled binaries
+          "dist",   -- Build output
+        }
+      )
     end
-
-    -- Add common Go-related ignore patterns
-    opts.filesystem.filtered_items.never_show = vim.list_extend(
-      opts.filesystem.filtered_items.never_show or {},
-      {
-        ".git",
-        "go.sum", -- Generally don't need to edit go.sum directly
-        "vendor", -- Vendor directory is generally not edited directly
-        "bin",    -- Compiled binaries
-      }
-    )
+    
+    -- For Next.js stack - special filtering for Next.js projects
+    if current_stack == "nextjs" then
+      -- Add common Next.js-related ignore patterns
+      opts.filesystem.filtered_items.never_show = vim.list_extend(
+        opts.filesystem.filtered_items.never_show or {},
+        {
+          "node_modules",  -- Dependencies
+          ".next",         -- Build output
+          "out",           -- Export output
+          "dist",          -- Production build
+          ".turbo",        -- Turbo cache
+        }
+      )
+    end
 
     -- Setup Neo-tree
     require("neo-tree").setup(opts)
 
-    -- Add autocommand to check if Neo-tree is the last window and close it
-    vim.api.nvim_create_autocmd("WinEnter", {
-      callback = function()
-        if #vim.api.nvim_list_wins() == 1 then
-          local bufnr = vim.api.nvim_get_current_buf()
-          if vim.bo[bufnr].filetype == "neo-tree" then
-            vim.cmd("quit")
-          end
-        end
-      end
-    })
+    -- Add custom stack-specific commands
+    vim.api.nvim_create_user_command("NeotreeGOTH", function()
+      -- Filter to focus on GOTH stack files
+      require("neo-tree.command").execute({
+        action = "show",
+        source = "filesystem",
+        toggle = true,
+        dir = vim.loop.cwd(),
+        find_file = vim.api.nvim_buf_get_name(0),
+        position = opts.window.position,
+        reveal = true,
+        reveal_force_cwd = true,
+      })
+      
+      -- Apply GOTH-specific file filter
+      vim.g.current_stack = "goth"
+      vim.notify("Neo-tree focused on GOTH stack", vim.log.levels.INFO)
+    end, { desc = "Open Neo-tree with GOTH focus" })
 
-    -- Run migrations if needed
-    vim.defer_fn(function()
-      -- Run migrations command to address migration warnings
-      pcall(vim.cmd, "Neotree migrations")
-    end, 1000)
+    vim.api.nvim_create_user_command("NeotreeNextJS", function()
+      -- Filter to focus on Next.js related files
+      require("neo-tree.command").execute({
+        action = "show",
+        source = "filesystem",
+        toggle = true,
+        dir = vim.loop.cwd(),
+        find_file = vim.api.nvim_buf_get_name(0),
+        position = opts.window.position,
+        reveal = true,
+        reveal_force_cwd = true,
+      })
+      
+      -- Apply Next.js-specific file filter
+      vim.g.current_stack = "nextjs"
+      vim.notify("Neo-tree focused on Next.js stack", vim.log.levels.INFO)
+    end, { desc = "Open Neo-tree with Next.js focus" })
+
+    -- Add keymaps for stack-specific Neo-tree focus
+    vim.keymap.set("n", "<leader>sg<leader>e", "<cmd>NeotreeGOTH<cr>", { desc = "Neo-tree (GOTH focus)" })
+    vim.keymap.set("n", "<leader>sn<leader>e", "<cmd>NeotreeNextJS<cr>", { desc = "Neo-tree (Next.js focus)" })
 
     -- Refresh git status when lazygit is closed
     vim.api.nvim_create_autocmd("TermClose", {
@@ -477,46 +520,6 @@ return {
         if package.loaded["neo-tree.sources.git_status"] then
           require("neo-tree.sources.git_status").refresh()
         end
-      end,
-    })
-
-    -- Create custom commands for stack-specific operations
-    vim.api.nvim_create_user_command("NeotreeGOTH", function()
-      -- Filter to show only Go/Templ files
-      require("neo-tree.command").execute({
-        action = "show",
-        source = "filesystem",
-        toggle = true,
-        dir = vim.loop.cwd(),
-        find_file = vim.api.nvim_buf_get_name(0),
-        position = "left",
-      })
-    end, { desc = "Open Neo-tree with GOTH focus" })
-
-    vim.api.nvim_create_user_command("NeotreeNextJS", function()
-      -- Filter to show only Next.js related files
-      require("neo-tree.command").execute({
-        action = "show",
-        source = "filesystem",
-        toggle = true,
-        dir = vim.loop.cwd(),
-        find_file = vim.api.nvim_buf_get_name(0),
-        position = "left",
-      })
-    end, { desc = "Open Neo-tree with Next.js focus" })
-
-    vim.api.nvim_create_autocmd("ColorScheme", {
-      callback = function()
-        -- Get background color from your theme's Normal highlight group
-        local normal_bg = vim.api.nvim_get_hl(0, { name = "Normal" }).bg
-
-        -- Apply it to Neo-tree
-        vim.api.nvim_set_hl(0, "NeoTreeNormal", { bg = normal_bg })
-        vim.api.nvim_set_hl(0, "NeoTreeNormalNC", { bg = normal_bg })
-
-        -- For other Neo-tree elements that need the same background
-        vim.api.nvim_set_hl(0, "NeoTreeEndOfBuffer", { bg = normal_bg })
-        vim.api.nvim_set_hl(0, "NeoTreeRootName", { bg = normal_bg, bold = true })
       end,
     })
   end,

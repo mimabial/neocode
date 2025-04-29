@@ -2,7 +2,7 @@ return {
   {
     "sainnhe/gruvbox-material",
     lazy = false,
-    priority = 1000, -- Load before other plugins
+    priority = 1000, -- Highest priority to load before other plugins
     config = function()
       -- Configure gruvbox-material
       vim.g.gruvbox_material_background = "medium" -- Options: 'hard', 'medium', 'soft'
@@ -19,7 +19,7 @@ return {
       vim.g.gruvbox_material_current_word = "bold"
       vim.g.gruvbox_material_disable_italic_comment = 0
       
-      -- Better Colors for UI
+      -- Better Colors for UI elements
       vim.g.gruvbox_material_colors_override = {
         bg0 = { "#282828", "235" },
         bg1 = { "#32302f", "236" },
@@ -37,68 +37,104 @@ return {
       -- Apply colorscheme
       vim.cmd("colorscheme gruvbox-material")
       
-      -- Additional customization after colorscheme is loaded
+      -- Create a function to export Gruvbox Material colors
+      -- This allows other plugins to use these colors
+      _G.get_gruvbox_colors = function()
+        return {
+          bg = "#282828",
+          bg1 = "#32302f",
+          bg2 = "#32302f",
+          bg3 = "#45403d",
+          bg4 = "#45403d",
+          bg5 = "#5a524c",
+          red = "#ea6962",
+          orange = "#e78a4e",
+          yellow = "#d8a657",
+          green = "#89b482",
+          aqua = "#7daea3",
+          blue = "#7daea3",
+          purple = "#d3869b",
+          bg_red = "#4e3e43",
+          bg_green = "#404d44",
+          bg_yellow = "#4a4940",
+          bg_blue = "#394f5a",
+          grey = "#928374",
+          grey_dim = "#7c6f64",
+        }
+      end
+      
+      -- Ensure consistent highlights across all instances of the colorscheme
+      local function update_highlights()
+        -- Make the line number more visible
+        vim.api.nvim_set_hl(0, "LineNr", { fg = "#a89984" })
+        -- Enhance the visual selection
+        vim.api.nvim_set_hl(0, "Visual", { bg = "#504945", bold = true })
+        -- Better matching parentheses highlight
+        vim.api.nvim_set_hl(0, "MatchParen", { fg = "#fabd2f", bg = "#504945", bold = true })
+        -- Make comments more readable
+        vim.api.nvim_set_hl(0, "Comment", { fg = "#928374", italic = true })
+        
+        -- Improve the color for UI elements
+        vim.api.nvim_set_hl(0, "FloatBorder", { fg = "#7c6f64" })
+        vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#282828" })
+        
+        -- Which-key highlights
+        vim.api.nvim_set_hl(0, "WhichKey", { fg = "#d8a657", bold = true })
+        vim.api.nvim_set_hl(0, "WhichKeyGroup", { fg = "#ea6962" })
+        vim.api.nvim_set_hl(0, "WhichKeySeparator", { fg = "#928374" })
+        vim.api.nvim_set_hl(0, "WhichKeyDesc", { fg = "#89b482" })
+        
+        -- Treesitter context
+        vim.api.nvim_set_hl(0, "TreesitterContext", { bg = "#32302f" })
+        vim.api.nvim_set_hl(0, "TreesitterContextLineNumber", { fg = "#a89984", bg = "#32302f" })
+        
+        -- Telescope highlights for better integration
+        vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = "#a89984" })
+        vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = "#a89984" })
+        vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { fg = "#a89984" })
+        vim.api.nvim_set_hl(0, "TelescopeSelection", { bg = "#3c3836", fg = "#d8a657" })
+        vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = "#89b482", bold = true })
+        
+        -- Make folders in tree have better visibility
+        vim.api.nvim_set_hl(0, "NeoTreeDirectoryName", { fg = "#a89984", bold = true })
+        vim.api.nvim_set_hl(0, "NeoTreeDirectoryIcon", { fg = "#7daea3" })
+        
+        -- Enhance syntax highlighting for web development
+        vim.api.nvim_set_hl(0, "htmlTag", { fg = "#7daea3", bold = true })
+        vim.api.nvim_set_hl(0, "htmlEndTag", { fg = "#7daea3", bold = true })
+        vim.api.nvim_set_hl(0, "htmlArg", { fg = "#d8a657", italic = true })
+        vim.api.nvim_set_hl(0, "htmlTagName", { fg = "#ea6962" })
+        
+        -- HTMX specific highlights (for treesitter)
+        vim.api.nvim_set_hl(0, "@attribute.htmx", { fg = "#89b482", italic = true, bold = true })
+        vim.api.nvim_set_hl(0, "@tag.attribute.htmx", { fg = "#89b482", italic = true, bold = true })
+        
+        -- Go specific highlights
+        vim.api.nvim_set_hl(0, "@type.go", { fg = "#89b482" })
+        vim.api.nvim_set_hl(0, "@function.go", { fg = "#7daea3" })
+        vim.api.nvim_set_hl(0, "@variable.go", { fg = "#d3869b" })
+        
+        -- NextJS/React specific highlights
+        vim.api.nvim_set_hl(0, "@tag.jsx", { fg = "#ea6962" })
+        vim.api.nvim_set_hl(0, "@tag.tsx", { fg = "#ea6962" })
+        vim.api.nvim_set_hl(0, "@constructor.jsx", { fg = "#7daea3" })
+        vim.api.nvim_set_hl(0, "@constructor.tsx", { fg = "#7daea3" })
+        
+        -- Status line improvements
+        vim.api.nvim_set_hl(0, "StatusLine", { bg = "#3c3836", fg = "#d4be98" })
+        vim.api.nvim_set_hl(0, "StatusLineNC", { bg = "#32302f", fg = "#a89984" })
+      end
+      
+      -- Update highlights when changing colorscheme
       vim.api.nvim_create_autocmd("ColorScheme", {
         pattern = "gruvbox-material",
         callback = function()
-          -- Make the line number more visible
-          vim.api.nvim_set_hl(0, "LineNr", { fg = "#a89984" })
-          -- Enhance the visual selection
-          vim.api.nvim_set_hl(0, "Visual", { bg = "#504945", bold = true })
-          -- Better matching parentheses highlight
-          vim.api.nvim_set_hl(0, "MatchParen", { fg = "#fabd2f", bg = "#504945", bold = true })
-          -- Make comments more readable
-          vim.api.nvim_set_hl(0, "Comment", { fg = "#928374", italic = true })
-          
-          -- Improve the color for UI elements
-          vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = "#a89984" })
-          vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = "#a89984" })
-          vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { fg = "#a89984" })
-          
-          -- Make folders in tree have better visibility
-          vim.api.nvim_set_hl(0, "NeoTreeDirectoryName", { fg = "#a89984", bold = true })
-          vim.api.nvim_set_hl(0, "NeoTreeDirectoryIcon", { fg = "#a89984" })
-          
-          -- Enhance syntax highlighting for web development
-          vim.api.nvim_set_hl(0, "htmlTag", { fg = "#7daea3", bold = true })
-          vim.api.nvim_set_hl(0, "htmlEndTag", { fg = "#7daea3", bold = true })
-          vim.api.nvim_set_hl(0, "htmlArg", { fg = "#d8a657", italic = true })
-          vim.api.nvim_set_hl(0, "htmlTagName", { fg = "#ea6962" })
-          
-          -- HTMX specific highlights (for treesitter)
-          vim.api.nvim_set_hl(0, "@attribute.htmx", { fg = "#89b482", italic = true, bold = true })
-          vim.api.nvim_set_hl(0, "@tag.attribute.htmx", { fg = "#89b482", italic = true, bold = true })
-          
-          -- Go specific highlights
-          vim.api.nvim_set_hl(0, "@type.go", { fg = "#89b482" })
-          vim.api.nvim_set_hl(0, "@function.go", { fg = "#7daea3" })
-          vim.api.nvim_set_hl(0, "@variable.go", { fg = "#d3869b" })
-          
-          -- NextJS/React specific highlights
-          vim.api.nvim_set_hl(0, "@tag.jsx", { fg = "#ea6962" })
-          vim.api.nvim_set_hl(0, "@tag.tsx", { fg = "#ea6962" })
-          vim.api.nvim_set_hl(0, "@constructor.jsx", { fg = "#7daea3" })
-          vim.api.nvim_set_hl(0, "@constructor.tsx", { fg = "#7daea3" })
-          
-          -- Status line improvements
-          vim.api.nvim_set_hl(0, "StatusLine", { bg = "#3c3836", fg = "#d4be98" })
-          vim.api.nvim_set_hl(0, "StatusLineNC", { bg = "#32302f", fg = "#a89984" })
-          
-          -- Floating windows
-          vim.api.nvim_set_hl(0, "FloatBorder", { fg = "#7c6f64" })
-          vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#282828" })
-          
-          -- WhichKey improvements
-          vim.api.nvim_set_hl(0, "WhichKey", { fg = "#d8a657", bold = true })
-          vim.api.nvim_set_hl(0, "WhichKeyGroup", { fg = "#ea6962" })
-          vim.api.nvim_set_hl(0, "WhichKeySeparator", { fg = "#928374" })
-          vim.api.nvim_set_hl(0, "WhichKeyDesc", { fg = "#89b482" })
-          
-          -- Treesitter context for code blocks
-          vim.api.nvim_set_hl(0, "TreesitterContext", { bg = "#32302f" })
-          vim.api.nvim_set_hl(0, "TreesitterContextLineNumber", { fg = "#a89984", bg = "#32302f" })
+          update_highlights()
         end,
       })
+      
+      -- Apply highlights immediately
+      update_highlights()
       
       -- Handle filetype detection for GOTH stack
       vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
@@ -137,7 +173,7 @@ return {
         sidebars = "dark",
         floats = "dark",
       },
-      sidebars = { "qf", "help", "terminal", "packer", "neo-tree" },
+      sidebars = { "qf", "help", "terminal", "packer", "neo-tree", "trouble" },
       day_brightness = 0.3,
       hide_inactive_statusline = false,
       dim_inactive = false,
@@ -171,12 +207,32 @@ return {
         highlights["@tag.tsx"] = { fg = colors.red }
         highlights["@constructor.jsx"] = { fg = colors.blue }
         highlights["@constructor.tsx"] = { fg = colors.blue }
+        
+        -- Neo-tree integration
+        highlights.NeoTreeDirectoryName = { fg = colors.fg_dark, bold = true }
+        highlights.NeoTreeDirectoryIcon = { fg = colors.blue }
+        highlights.NeoTreeNormal = { bg = colors.bg_dark }
+        highlights.NeoTreeIndentMarker = { fg = colors.fg_gutter }
+        
+        -- Telescope integration
+        highlights.TelescopePromptBorder = { fg = colors.blue }
+        highlights.TelescopeResultsBorder = { fg = colors.blue }
+        highlights.TelescopePreviewBorder = { fg = colors.blue }
+        highlights.TelescopeSelection = { bg = colors.bg_highlight, fg = colors.fg }
+        highlights.TelescopeMatching = { fg = colors.cyan, bold = true }
       end,
     },
     config = function(_, opts)
       require("tokyonight").setup(opts)
-      
-      -- Add a command to switch between themes
+    end,
+  },
+  -- Utility commands for theme and transparency control
+  {
+    "nvim-lua/plenary.nvim",
+    lazy = true,
+    priority = 100, -- Load very early
+    config = function()
+      -- Add command to switch between themes
       vim.api.nvim_create_user_command("ColorSchemeToggle", function()
         local current = vim.g.colors_name
         if current == "gruvbox-material" then
@@ -215,8 +271,9 @@ return {
         end
       end, { desc = "Toggle background transparency" })
       
-      -- Add a keymap for transparency toggle
+      -- Add keymaps for quick access
+      vim.keymap.set("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle Colorscheme" })
       vim.keymap.set("n", "<leader>uT", "<cmd>ToggleTransparency<cr>", { desc = "Toggle Transparency" })
     end,
-  },
+  }
 }

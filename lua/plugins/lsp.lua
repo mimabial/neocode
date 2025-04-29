@@ -2,23 +2,48 @@ return {
   "neovim/nvim-lspconfig",
   event = { "BufReadPre", "BufNewFile" },
   dependencies = {
-    -- Automatically install LSPs and related tools to stdpath for neovim
     { 
       "williamboman/mason.nvim", 
       build = ":MasonUpdate", 
       config = true, 
-      priority = 80,  -- Load mason early
+      priority = 90,  -- Load mason early
     },
     { 
       "williamboman/mason-lspconfig.nvim", 
-      priority = 70   -- Load after mason but before LSP
+      priority = 85   -- Load after mason but before LSP
     },
     
     -- Useful status updates for LSP
-    { "j-hui/fidget.nvim", tag = "legacy", opts = {} },
+    { 
+      "j-hui/fidget.nvim", 
+      tag = "legacy", 
+      opts = {
+        text = {
+          spinner = "dots",
+        },
+        window = {
+          blend = 0,
+          relative = "editor",
+        },
+        sources = {
+          ["null-ls"] = { ignore = true },
+        },
+      },
+      priority = 80
+    },
     
-    -- Additional lua configuration specifically for working on neovim config
-    { "folke/neodev.nvim", ft = "lua" },
+    -- Additional lua configuration for working on neovim config
+    { 
+      "folke/neodev.nvim", 
+      ft = "lua",
+      opts = {
+        library = {
+          plugins = { "nvim-dap-ui", "neotest" },
+          types = true,
+        },
+      },
+      priority = 81 
+    },
     
     -- Show code context
     { 
@@ -56,7 +81,8 @@ return {
         separator = " › ",
         depth_limit = 0,
         depth_limit_indicator = "...",
-      }
+      },
+      priority = 75
     },
     
     -- Visualize lsp progress
@@ -69,50 +95,8 @@ return {
           end
           return ""
         end,
-      }
-    },
-    
-    -- Enhanced inlay hints
-    {
-      "lvimuser/lsp-inlayhints.nvim",
-      opts = {
-        inlay_hints = {
-          parameter_hints = {
-            show = true,
-            prefix = "<- ",
-            separator = ", ",
-            remove_colon_start = false,
-            remove_colon_end = true,
-          },
-          type_hints = {
-            show = true,
-            prefix = "=> ",
-            separator = ", ",
-            remove_colon_start = false,
-            remove_colon_end = false,
-          },
-          only_current_line = false,
-          labels_separator = " ",
-          highlight = "LspInlayHint",
-          priority = 0,
-        }
       },
-      cond = function()
-        -- Only load if Neovim < 0.10 as newer versions have native inlay hints
-        return vim.fn.has("nvim-0.10") == 0
-      end,
-    },
-    
-    -- Typescript tools if needed
-    {
-      "pmizio/typescript-tools.nvim",
-      dependencies = { "nvim-lua/plenary.nvim" },
-      ft = {
-        "javascript",
-        "javascriptreact",
-        "typescript",
-        "typescriptreact",
-      },
+      priority = 76
     },
     
     -- Schema store for JSON/YAML validation
@@ -120,6 +104,7 @@ return {
       "b0o/SchemaStore.nvim",
       lazy = true,
       version = false, -- latest
+      priority = 70
     },
   },
   opts = {
@@ -408,19 +393,11 @@ return {
 
       -- Create a command `:Format` local to the LSP buffer
       vim.api.nvim_buf_create_user_command(bufnr, "Format", function(_)
-        if vim.lsp.buf.format then
-          vim.lsp.buf.format({ async = true })
-        else
-          vim.lsp.buf.formatting_sync() -- Fallback for older versions
-        end
+        vim.lsp.buf.format({ async = true })
       end, { desc = "Format current buffer with LSP" })
 
       map("n", "<leader>cf", function()
-        if vim.lsp.buf.format then
-          vim.lsp.buf.format({ async = true })
-        else
-          vim.lsp.buf.formatting_sync() -- Fallback for older versions
-        end
+        vim.lsp.buf.format({ async = true })
       end, "Format")
 
       -- Show diagnostics in a floating window
@@ -553,7 +530,7 @@ return {
       }
     )
 
-    -- Setup mason first
+    -- Setup mason
     require("mason").setup({
       ui = {
         border = "rounded",
@@ -566,7 +543,7 @@ return {
       max_concurrent_installers = 10,
     })
 
-    -- Extract server names from opts.servers table to create servers_to_install
+    -- Extract server names from opts.servers table
     local servers_to_install = {}
     for server_name, _ in pairs(opts.servers) do
       -- Skip servers that should be handled elsewhere
@@ -575,7 +552,7 @@ return {
       end
     end
 
-    -- Then set up mason-lspconfig
+    -- Set up mason-lspconfig
     require("mason-lspconfig").setup({
       ensure_installed = servers_to_install,
       automatic_installation = true,
@@ -597,7 +574,7 @@ return {
       }
     })
     
-    -- Add special handling for Templ LSP which may not be in Mason yet
+    -- Special handling for Templ LSP which may not be in Mason yet
     if not vim.tbl_contains(servers_to_install, "templ") then
       require("lspconfig")["templ"].setup({
         capabilities = capabilities,
@@ -645,13 +622,13 @@ return {
       vim.notify("LSP servers restarted", vim.log.levels.INFO)
     end, { desc = "Restart LSP servers" })
     
-    -- Add command for specific stacks
+    -- Add command for GOTH stack
     vim.api.nvim_create_user_command("LspGOTH", function()
-      -- Specifically focus on GOTH stack capabilities
+      -- Focus on GOTH stack capabilities
       vim.g.current_stack = "goth"
       vim.notify("LSP settings optimized for GOTH stack", vim.log.levels.INFO)
       
-      -- Adjust any specific settings if needed
+      -- Configure specific settings for GOTH
       require("lspconfig").gopls.setup({
         on_attach = on_attach,
         capabilities = capabilities,
@@ -663,6 +640,13 @@ return {
         capabilities = capabilities,
       })
       
+      require("lspconfig").html.setup({
+        on_attach = on_attach,
+        capabilities = capabilities,
+        filetypes = { "html", "templ" },
+        settings = opts.servers.html.settings,
+      })
+      
       -- Restart relevant servers
       vim.lsp.stop_client(vim.lsp.get_clients({
         name = { "gopls", "templ", "html" }
@@ -670,21 +654,60 @@ return {
       vim.cmd("edit")
     end, { desc = "Configure LSP for GOTH stack" })
     
+    -- Add command for Next.js stack
     vim.api.nvim_create_user_command("LspNextJS", function()
-      -- Specifically focus on Next.js stack capabilities
+      -- Focus on Next.js stack capabilities
       vim.g.current_stack = "nextjs"
       vim.notify("LSP settings optimized for Next.js stack", vim.log.levels.INFO)
       
-      -- Adjust any specific settings if needed
+      -- Configure specific settings for Next.js
+      if package.loaded["typescript-tools"] then
+        require("typescript-tools").setup({
+          on_attach = on_attach,
+          capabilities = capabilities,
+          settings = {
+            -- For Next.js
+            tsserver_plugins = {
+              "@styled/typescript-styled-plugin",
+            },
+            expose_as_code_action = {
+              "fix_all",
+              "add_missing_imports",
+              "remove_unused",
+            },
+            tsserver_file_preferences = {
+              includeInlayParameterNameHints = "all",
+              includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+              includeInlayFunctionParameterTypeHints = true,
+              includeInlayVariableTypeHints = true,
+              includeInlayPropertyDeclarationTypeHints = true,
+              includeInlayFunctionLikeReturnTypeHints = true,
+              includeInlayEnumMemberValueHints = true,
+            },
+          },
+        })
+      end
+      
       require("lspconfig").tailwindcss.setup({
         on_attach = on_attach,
         capabilities = capabilities,
         settings = opts.servers.tailwindcss.settings,
       })
       
+      require("lspconfig").cssls.setup({
+        on_attach = on_attach,
+        capabilities = capabilities,
+      })
+      
+      require("lspconfig").eslint.setup({
+        on_attach = on_attach,
+        capabilities = capabilities,
+        settings = opts.servers.eslint.settings,
+      })
+      
       -- Restart relevant servers
       vim.lsp.stop_client(vim.lsp.get_clients({
-        name = { "eslint", "tailwindcss", "cssls" }
+        name = { "tsserver", "eslint", "tailwindcss", "cssls" }
       }))
       vim.cmd("edit")
     end, { desc = "Configure LSP for Next.js stack" })
@@ -716,5 +739,24 @@ return {
         },
       })
     end
+
+    -- Apply colors from Gruvbox Material to LSP UI elements
+    vim.api.nvim_create_autocmd("ColorScheme", {
+      callback = function()
+        local green_color = vim.api.nvim_get_hl(0, { name = "GruvboxGreen" }).fg or "#89b482"
+        local aqua_color = vim.api.nvim_get_hl(0, { name = "GruvboxAqua" }).fg or "#7daea3"
+        local red_color = vim.api.nvim_get_hl(0, { name = "GruvboxRed" }).fg or "#ea6962"
+        local yellow_color = vim.api.nvim_get_hl(0, { name = "GruvboxYellow" }).fg or "#d8a657"
+        
+        -- Customize Diagnostic highlights for better integration with Gruvbox
+        vim.api.nvim_set_hl(0, "DiagnosticVirtualTextError", { fg = red_color })
+        vim.api.nvim_set_hl(0, "DiagnosticVirtualTextWarn", { fg = yellow_color })
+        vim.api.nvim_set_hl(0, "DiagnosticVirtualTextInfo", { fg = aqua_color })
+        vim.api.nvim_set_hl(0, "DiagnosticVirtualTextHint", { fg = green_color })
+        
+        -- Inlay hints
+        vim.api.nvim_set_hl(0, "LspInlayHint", { fg = "#665c54", italic = true })
+      end
+    })
   end,
 }

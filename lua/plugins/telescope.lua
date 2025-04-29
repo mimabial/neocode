@@ -23,9 +23,12 @@ return {
       dependencies = {
         "mfussenegger/nvim-dap",
       },
+      cond = function()
+        return require("lazy.core.config").spec.plugins["nvim-dap"] ~= nil
+      end,
     },
     "kkharji/sqlite.lua", -- needed for frecency
-    "nvim-tree/nvim-web-devicons",
+    { "nvim-tree/nvim-web-devicons", priority = 100 },
   },
   keys = {
     -- Find files/text
@@ -39,7 +42,6 @@ return {
 
     -- Project management
     { "<leader>fp", "<cmd>Telescope project<cr>", desc = "Find Projects" },
-    { "<leader>fP", "<cmd>lua require('telescope').extensions.project.project{}<cr>", desc = "Find Project" },
     
     -- Git
     { "<leader>gc", "<cmd>Telescope git_commits<cr>", desc = "Git Commits" },
@@ -52,24 +54,46 @@ return {
     { "<leader>fS", "<cmd>Telescope lsp_workspace_symbols<cr>", desc = "Find Workspace Symbols" },
     { "<leader>fd", "<cmd>Telescope diagnostics bufnr=0<cr>", desc = "Find Document Diagnostics" },
     { "<leader>fD", "<cmd>Telescope diagnostics<cr>", desc = "Find Workspace Diagnostics" },
-    { "<leader>fi", "<cmd>Telescope lsp_implementations<cr>", desc = "Find Implementations" },
-    { "<leader>fr", "<cmd>Telescope lsp_references<cr>", desc = "Find References" },
     
     -- Vim-related
     { "<leader>fo", "<cmd>Telescope vim_options<cr>", desc = "Find Options" },
-    { "<leader>ft", "<cmd>Telescope filetypes<cr>", desc = "Find Filetypes" },
-    { "<leader>fT", "<cmd>Telescope builtin<cr>", desc = "Find Telescope Pickers" },
+    { "<leader>fC", function() require("telescope.builtin").find_files({cwd = vim.fn.stdpath("config")}) end, desc = "Find Config Files" },
     
     -- Other
     { "<leader>f.", "<cmd>Telescope resume<cr>", desc = "Resume Last Search" },
     { "<leader>f/", "<cmd>Telescope current_buffer_fuzzy_find<cr>", desc = "Find in Current Buffer" },
     { "<leader>fe", "<cmd>Telescope file_browser<cr>", desc = "File Browser" },
-    {
-      "<leader>fC",
-      function()
-        require("telescope.builtin").find_files({ cwd = vim.fn.stdpath("config") })
-      end,
-      desc = "Find Config Files",
+    
+    -- Stack-specific
+    { "<leader>sng", function() 
+        require("telescope.builtin").find_files({
+          prompt_title = "Next.js Files",
+          cwd = vim.fn.getcwd(),
+          file_ignore_patterns = { 
+            "node_modules", 
+            "%.git/",
+            "%.next/",
+            "public/",
+          }
+        })
+      end, 
+      desc = "Find Next.js Files" 
+    },
+    { "<leader>sgg", function() 
+        require("telescope.builtin").find_files({
+          prompt_title = "GOTH Stack Files",
+          cwd = vim.fn.getcwd(),
+          file_ignore_patterns = { 
+            "node_modules", 
+            "%.git/",
+            "vendor/",
+            "build/",
+            "bin/",
+          },
+          find_command = { "find", ".", "-type", "f", "-not", "-path", "*/\\.*", "-o", "-name", "*.go", "-o", "-name", "*.templ" },
+        })
+      end, 
+      desc = "Find GOTH Files" 
     },
   },
   opts = function()
@@ -152,9 +176,6 @@ return {
             ["<C-q>"] = actions.send_to_qflist + actions.open_qflist,
             ["<M-q>"] = actions.send_selected_to_qflist + actions.open_qflist,
             ["<C-l>"] = actions.complete_tag,
-            ["<C-/>"] = actions.which_key,
-            ["<C-_>"] = actions.which_key, -- keys from pressing <C-/>
-            ["<C-w>"] = { "<c-s-w>", type = "command" },
           },
           n = {
             ["<esc>"] = actions.close,
@@ -213,7 +234,7 @@ return {
         buffers = {
           show_all_buffers = true,
           sort_lastused = true,
-          previewer = false,
+          preview_title = false,
           mappings = {
             i = {
               ["<c-d>"] = actions.delete_buffer,
@@ -223,25 +244,14 @@ return {
             },
           },
         },
-        commands = {
-          theme = "dropdown",
-        },
-        colorscheme = {
-          enable_preview = true,
-        },
         current_buffer_fuzzy_find = {
           count = true,  -- Show count of matches
           show_line = true,
-          previewer = false,
-          theme = "dropdown",
+          preview_title = false,
           layout_config = {
             width = 0.9,
             height = 0.35,
           },
-        },
-        diagnostics = {
-          count = true,  -- Show count of diagnostics
-          line_width = 120,
         },
       },
       extensions = {
@@ -300,22 +310,16 @@ return {
   config = function(_, opts)
     require("telescope").setup(opts)
     
-    -- Load extensions
-    local telescope = require("telescope")
-    
     -- Load available extensions and safely handle errors
     local function safe_load_extension(name)
-      local status_ok, _ = pcall(telescope.load_extension, name)
+      local status_ok, _ = pcall(require("telescope").load_extension, name)
       if not status_ok then
         vim.notify("Could not load telescope extension: " .. name, vim.log.levels.WARN)
       end
     end
     
-    -- Core extensions
     safe_load_extension("fzf")
     safe_load_extension("ui-select")
-    
-    -- File and project navigation
     safe_load_extension("file_browser")
     safe_load_extension("project")
     safe_load_extension("frecency")
@@ -342,46 +346,19 @@ return {
           link = "Normal",
         })
         
-        vim.api.nvim_set_hl(0, "TelescopeResultsNumber", {
-          link = "Number",
-        })
+        -- Enhance Telescope's appearance with Gruvbox Material colors
+        local bg_color = vim.api.nvim_get_hl(0, { name = "Normal" }).bg
+        local fg_color = vim.api.nvim_get_hl(0, { name = "Normal" }).fg
+        
+        -- Get colors from Gruvbox Material or fallback
+        local green_color = vim.api.nvim_get_hl(0, { name = "GruvboxGreen" }).fg or "#89b482"
+        local aqua_color = vim.api.nvim_get_hl(0, { name = "GruvboxAqua" }).fg or "#7daea3"
+        local yellow_color = vim.api.nvim_get_hl(0, { name = "GruvboxYellow" }).fg or "#d8a657"
+        
+        vim.api.nvim_set_hl(0, "TelescopeSelection", { bg = "#3c3836", fg = yellow_color })
+        vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = green_color, bold = true })
+        vim.api.nvim_set_hl(0, "TelescopePromptPrefix", { fg = aqua_color })
       end
     })
-    
-    -- Add custom command for Next.js navigation
-    vim.api.nvim_create_user_command("TelescopeNextJS", function()
-      require("telescope.builtin").find_files({
-        prompt_title = "Next.js Files",
-        cwd = vim.fn.getcwd(),
-        file_ignore_patterns = { 
-          "node_modules", 
-          "%.git/",
-          "%.next/",
-          "public/",
-        },
-        path_display = { "smart" },
-      })
-    end, { desc = "Find Next.js files" })
-    
-    -- Add custom command for GOTH stack navigation
-    vim.api.nvim_create_user_command("TelescopeGOTH", function()
-      require("telescope.builtin").find_files({
-        prompt_title = "GOTH Stack Files",
-        cwd = vim.fn.getcwd(),
-        file_ignore_patterns = { 
-          "node_modules", 
-          "%.git/",
-          "vendor/",
-          "build/",
-          "bin/",
-        },
-        find_command = { "find", ".", "-type", "f", "-not", "-path", "*/\\.*", "-o", "-name", "*.go", "-o", "-name", "*.templ" },
-        path_display = { "smart" },
-      })
-    end, { desc = "Find GOTH stack files" })
-    
-    -- Add keymaps for these custom commands
-    vim.keymap.set("n", "<leader>sng", "<cmd>TelescopeNextJS<cr>", { desc = "Find Next.js Files" })
-    vim.keymap.set("n", "<leader>sgg", "<cmd>TelescopeGOTH<cr>", { desc = "Find GOTH Files" })
   end,
 }
