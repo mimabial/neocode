@@ -335,8 +335,9 @@ return {
       end,
     },
   },
+
   config = function(_, opts)
-    -- Setup neodev for neovim config development
+    -- Setup neodev for neovim config development - do this BEFORE lspconfig setup
     require("neodev").setup({
       library = {
         plugins = {
@@ -552,7 +553,7 @@ return {
       }
     )
 
-    -- Setup mason
+    -- Setup mason first
     require("mason").setup({
       ui = {
         border = "rounded",
@@ -565,17 +566,11 @@ return {
       max_concurrent_installers = 10,
     })
 
-    -- Filter out servers that are handled by other plugins
-    local servers_to_install = vim.tbl_filter(function(server)
-      return server ~= "tsserver" or not opts.setup.tsserver
-    end, vim.tbl_keys(opts.servers))
-
-    -- Enable mason-lspconfig integration
+    -- Then set up mason-lspconfig
     require("mason-lspconfig").setup({
       ensure_installed = servers_to_install,
       automatic_installation = true,
-      handlers = {
-        function(server_name)
+      handlers = {        function(server_name)
           -- Skip setup for servers that should be handled elsewhere
           if opts.setup[server_name] then
             if opts.setup[server_name](server_name, opts.servers[server_name] or {}) then
@@ -591,34 +586,6 @@ return {
         end,
       }
     })
-    
-    -- Setup typescript-tools if available
-    if package.loaded["typescript-tools"] then
-      require("typescript-tools").setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        settings = {
-          -- For Next.js
-          tsserver_plugins = {
-            "@styled/typescript-styled-plugin",
-          },
-          expose_as_code_action = {
-            "fix_all",
-            "add_missing_imports",
-            "remove_unused",
-          },
-          tsserver_file_preferences = {
-            includeInlayParameterNameHints = "all",
-            includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-            includeInlayFunctionParameterTypeHints = true,
-            includeInlayVariableTypeHints = true,
-            includeInlayPropertyDeclarationTypeHints = true,
-            includeInlayFunctionLikeReturnTypeHints = true,
-            includeInlayEnumMemberValueHints = true,
-          },
-        },
-      })
-    end
     
     -- Add special handling for Templ LSP which may not be in Mason yet
     if not vim.tbl_contains(servers_to_install, "templ") then
@@ -711,5 +678,33 @@ return {
       }))
       vim.cmd("edit")
     end, { desc = "Configure LSP for Next.js stack" })
+
+    -- Setup typescript-tools if available
+    if package.loaded["typescript-tools"] then
+      require("typescript-tools").setup({
+        on_attach = on_attach,
+        capabilities = capabilities,
+        settings = {
+          -- For Next.js
+          tsserver_plugins = {
+            "@styled/typescript-styled-plugin",
+          },
+          expose_as_code_action = {
+            "fix_all",
+            "add_missing_imports",
+            "remove_unused",
+          },
+          tsserver_file_preferences = {
+            includeInlayParameterNameHints = "all",
+            includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+            includeInlayFunctionParameterTypeHints = true,
+            includeInlayVariableTypeHints = true,
+            includeInlayPropertyDeclarationTypeHints = true,
+            includeInlayFunctionLikeReturnTypeHints = true,
+            includeInlayEnumMemberValueHints = true,
+          },
+        },
+      })
+    end
   end,
 }

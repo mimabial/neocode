@@ -155,6 +155,26 @@ return {
       sorting = {
         priority_weight = 2,
         comparators = {
+          -- Make copilot/nvim_lsp suggestions appear at the top
+          function(entry1, entry2)
+            local kind1 = entry1:get_kind()
+            local kind2 = entry2:get_kind()
+            
+            local priority1 = 0
+            local priority2 = 0
+            
+            if entry1.source.name == "copilot" then priority1 = 100
+            elseif entry1.source.name == "nvim_lsp" then priority1 = 90
+            end
+            
+            if entry2.source.name == "copilot" then priority2 = 100
+            elseif entry2.source.name == "nvim_lsp" then priority2 = 90
+            end
+            
+            if priority1 ~= priority2 then
+              return priority1 > priority2
+            end
+          end,
           cmp.config.compare.offset,
           cmp.config.compare.exact,
           cmp.config.compare.score,
@@ -239,7 +259,6 @@ return {
     vim.api.nvim_create_autocmd("FileType", {
       pattern = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
       callback = function()
-        -- Make sure we don't interfere with copilot
         local sources = {
           { name = "nvim_lsp", group_index = 1, priority = 90 },
           { name = "luasnip",  group_index = 1, priority = 80 },

@@ -4,6 +4,10 @@ return {
     "nvim-lua/plenary.nvim",
     "hrsh7th/nvim-cmp",
   },
+  enabled = function()
+    -- Disable codeium if copilot is enabled
+    return not require("lazy.core.config").spec.plugins["copilot.lua"]
+  end,
   event = { "BufReadPost", "BufNewFile" },
   cmd = "Codeium",
   build = ":Codeium Auth",
@@ -41,7 +45,7 @@ return {
     end, { expr = true, silent = true })
 
     vim.keymap.set("i", "<C-;>", function()
-      return vim.fn 
+      return vim.fn["codeium#CycleCompletions"](1)
     end, { expr = true, silent = true })
 
     vim.keymap.set("i", "<C-,>", function()
@@ -70,4 +74,3 @@ return {
     })
   end,
 }
-

@@ -25,14 +25,62 @@ vim.opt.rtp:prepend(lazypath)
 -- Import utility functions
 _G.Util = require("config.utils")
 
--- Setup lazy.nvim
+-- Check if we're in a GOTH or Next.js project
+local function detect_project_type()
+  -- Check for Go files
+  local has_go = vim.fn.glob("**/*.go") ~= ""
+  local has_templ = vim.fn.glob("**/*.templ") ~= ""
+  local has_go_mod = vim.fn.filereadable("go.mod") == 1
+  
+  -- Check for Next.js files
+  local has_next_config = vim.fn.filereadable("next.config.js") == 1 or 
+                          vim.fn.filereadable("next.config.mjs") == 1 or
+                          vim.fn.filereadable("next.config.ts") == 1
+  local has_package_json = vim.fn.filereadable("package.json") == 1
+  local is_next_js = false
+  
+  if has_package_json then
+    local package_json = vim.fn.readfile("package.json")
+    local package_content = table.concat(package_json, "\n")
+    is_next_js = package_content:find('"next"') ~= nil
+  end
+  
+  -- Determine project type
+  if has_go_mod and (has_go or has_templ) then
+    return "goth"
+  elseif is_next_js or has_next_config then
+    return "nextjs"
+  end
+  
+  return nil -- Unknown project type
+end
+
+-- Detect project type
+local project_type = detect_project_type()
+if project_type then
+  vim.g.current_stack = project_type
+  print("Detected project type: " .. project_type)
+end
+
+-- Setup lazy.nvim with conditional imports
 require("lazy").setup({
   spec = {
     -- Import all plugins from lua/plugins directory
     { import = "plugins" },
-    -- Stack-specific configurations
-    { import = "plugins.goth" },    -- Go + Templ + HTMX stack
-    { import = "plugins.nextjs" },  -- Next.js stack
+    
+    -- Stack-specific configurations - conditional imports based on detected project type
+    { 
+      import = "plugins.goth",
+      cond = function()
+        return vim.g.current_stack == "goth" or vim.g.current_stack == nil
+      end
+    },
+    { 
+      import = "plugins.nextjs",
+      cond = function()
+        return vim.g.current_stack == "nextjs" or vim.g.current_stack == nil
+      end
+    },
   },
   defaults = {
     lazy = false, -- Load plugins eagerly instead of lazy-loading by default
@@ -169,10 +217,18 @@ vim.api.nvim_create_user_command("Profile", function()
   vim.notify("Profiling started, restart Neovim to generate profile.log", vim.log.levels.INFO)
 end, { desc = "Start profiling Neovim" })
 
--- Create a command for switching between stacks
+-- Improved command for switching between stacks with auto-detection
 vim.api.nvim_create_user_command("StackFocus", function(opts)
   local stack = opts.args
-  if stack == "" or not (stack == "goth" or stack == "nextjs") then
+  
+  -- Auto-detect stack if no argument provided
+  if stack == "" then
+    stack = detect_project_type() or ""
+    if stack == "" then
+      vim.notify("Could not auto-detect stack type. Please specify 'goth' or 'nextjs'", vim.log.levels.WARN)
+      return
+    end
+  elseif not (stack == "goth" or stack == "nextjs") then
     vim.notify("Please specify a valid stack: 'goth' or 'nextjs'", vim.log.levels.ERROR)
     return
   end
@@ -192,14 +248,18 @@ vim.api.nvim_create_user_command("StackFocus", function(opts)
     vim.g.go_highlight_function_calls = 1
     
     -- Configure linters and formatters
-    if _G.utils.has_plugin("null-ls.nvim") then
-      local null_ls = require("null-ls")
-      null_ls.setup({
-        sources = {
-          null_ls.builtins.formatting.goimports,
-          null_ls.builtins.formatting.templ,
-        }
+    if package.loaded["conform"] then
+      require("conform").setup({
+        formatters_by_ft = {
+          go = { "gofumpt", "goimports" },
+          templ = { "templ" },
+        },
       })
+    end
+    
+    -- Load/Focus GOTH-specific LSP settings
+    if package.loaded["lspconfig"] then
+      vim.cmd("LspGOTH")
     end
     
   elseif stack == "nextjs" then
@@ -210,14 +270,23 @@ vim.api.nvim_create_user_command("StackFocus", function(opts)
     vim.g.typescript_indent_disable = 1
     
     -- Configure linters and formatters for JS/TS
-    if _G.utils.has_plugin("null-ls.nvim") then
-      local null_ls = require("null-ls")
-      null_ls.setup({
-        sources = {
-          null_ls.builtins.formatting.prettier,
-          null_ls.builtins.diagnostics.eslint,
-        }
+    if package.loaded["conform"] then
+      require("conform").setup({
+        formatters_by_ft = {
+          javascript = { "prettierd", "prettier" },
+          typescript = { "prettierd", "prettier" },
+          javascriptreact = { "prettierd", "prettier" },
+          typescriptreact = { "prettierd", "prettier" },
+          json = { "prettierd", "prettier" },
+          css = { "prettierd", "prettier" },
+          html = { "prettierd", "prettier" },
+        },
       })
+    end
+    
+    -- Load/Focus Next.js-specific LSP settings
+    if package.loaded["lspconfig"] then
+      vim.cmd("LspNextJS")
     end
   end
   
@@ -267,10 +336,32 @@ vim.api.nvim_create_user_command("Layout", function(opts)
   elseif layout == "debug" then
     -- Debug layout
     vim.cmd("Neotree close")
-    require("dapui").open()
+    if package.loaded["dapui"] then
+      require("dapui").open()
+    else
+      vim.notify("DAP UI is not loaded", vim.log.levels.WARN)
+    end
   else
     vim.notify("Available layouts: coding, terminal, writing, debug", vim.log.levels.INFO)
   end
 end, { nargs = "?", desc = "Switch workspace layout", complete = function()
   return { "coding", "terminal", "writing", "debug" }
 end})
+
+-- Setup auto-detection for project when starting Neovim
+vim.api.nvim_create_autocmd("VimEnter", {
+  callback = function()
+    if vim.g.current_stack == nil then
+      local detected = detect_project_type()
+      if detected then
+        vim.g.current_stack = detected
+        vim.notify("Auto-detected " .. detected .. " stack", vim.log.levels.INFO)
+        
+        -- Apply stack-specific settings
+        vim.defer_fn(function()
+          vim.cmd("StackFocus " .. detected)
+        end, 1000) -- Delay to ensure all plugins are loaded
+      end
+    end
+  end,
+})

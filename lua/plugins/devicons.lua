@@ -101,4 +101,12 @@ return {
       },
     },
   },
+  config = function(_, opts)
+    require("nvim-web-devicons").setup(opts)
+    
+    -- Force-reload icons in any plugins that might have loaded before this
+    vim.defer_fn(function()
+      require("nvim-web-devicons").refresh()
+    end, 100)
+  end,
 }

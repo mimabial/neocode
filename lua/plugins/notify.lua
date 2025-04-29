@@ -118,7 +118,7 @@ return {
       local timeout = opts.timeout or 3000
       
       -- Show notification
-      vim.notify(message, level, {
+      notify(message, level, {
         title = opts.title,
         timeout = timeout,
         icon = opts.icon,
