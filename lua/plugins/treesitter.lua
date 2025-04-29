@@ -16,6 +16,7 @@ return {
         },
       },
       "HiPhish/rainbow-delimiters.nvim",
+      "windwp/nvim-ts-autotag", -- Add as direct dependency
     },
     cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
     keys = {
@@ -65,6 +66,9 @@ return {
         "vim",
         "vimdoc",
         "yaml",
+      },
+      autotag = {
+        enable = true, -- Enable nvim-ts-autotag integration
       },
       incremental_selection = {
         enable = true,
@@ -193,6 +197,21 @@ return {
           "RainbowDelimiterCyan",
         },
       }
+      
+      -- Add specific parsers for GOTH stack
+      local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
+      
+      -- Make sure templ parser is properly configured
+      if not parser_config.templ then
+        parser_config.templ = {
+          install_info = {
+            url = "https://github.com/vrischmann/tree-sitter-templ.git",
+            files = {"src/parser.c", "src/scanner.c"},
+            branch = "master",
+          },
+          filetype = "templ",
+        }
+      end
     end,
   },
   {

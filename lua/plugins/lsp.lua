@@ -3,17 +3,26 @@ return {
   event = { "BufReadPre", "BufNewFile" },
   dependencies = {
     -- Automatically install LSPs and related tools to stdpath for neovim
-    { "williamboman/mason.nvim", build = ":MasonUpdate", config = true },
-    "williamboman/mason-lspconfig.nvim",
+    { 
+      "williamboman/mason.nvim", 
+      build = ":MasonUpdate", 
+      config = true, 
+      priority = 80,  -- Load mason early
+    },
+    { 
+      "williamboman/mason-lspconfig.nvim", 
+      priority = 70   -- Load after mason but before LSP
+    },
     
     -- Useful status updates for LSP
     { "j-hui/fidget.nvim", tag = "legacy", opts = {} },
     
     -- Additional lua configuration specifically for working on neovim config
-    { "folke/neodev.nvim" },
+    { "folke/neodev.nvim", ft = "lua" },
     
     -- Show code context
-    { "SmiteshP/nvim-navic", 
+    { 
+      "SmiteshP/nvim-navic", 
       opts = {
         icons = {
           File = " ",
@@ -104,6 +113,13 @@ return {
         "typescript",
         "typescriptreact",
       },
+    },
+    
+    -- Schema store for JSON/YAML validation
+    {
+      "b0o/SchemaStore.nvim",
+      lazy = true,
+      version = false, -- latest
     },
   },
   opts = {
@@ -268,17 +284,37 @@ return {
           workingDirectories = { { mode = "auto" } },
         },
       },
-      jsonls = {},
+      jsonls = {
+        -- Get schemas from SchemaStore
+        settings = {
+          json = {
+            schemas = function()
+              local has_schemastore, schemastore = pcall(require, "schemastore")
+              if has_schemastore then
+                return schemastore.json.schemas()
+              end
+              return {}
+            end,
+            validate = { enable = true },
+          }
+        }
+      },
       
       -- General purpose
       yamlls = {
         settings = {
           yaml = {
             keyOrdering = false,
-            schemas = {
-              ["https://json.schemastore.org/github-workflow.json"] = "/.github/workflows/*",
-              ["https://json.schemastore.org/docker-compose.json"] = "*docker-compose*.yml",
-            },
+            schemas = function()
+              local has_schemastore, schemastore = pcall(require, "schemastore")
+              if has_schemastore then 
+                return schemastore.yaml.schemas()
+              end
+              return {
+                ["https://json.schemastore.org/github-workflow.json"] = "/.github/workflows/*",
+                ["https://json.schemastore.org/docker-compose.json"] = "*docker-compose*.yml",
+              }
+            end,
             validate = true,
             schemaStore = {
               enable = true,
@@ -560,6 +596,7 @@ return {
     if package.loaded["typescript-tools"] then
       require("typescript-tools").setup({
         on_attach = on_attach,
+        capabilities = capabilities,
         settings = {
           -- For Next.js
           tsserver_plugins = {

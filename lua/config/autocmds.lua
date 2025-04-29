@@ -200,12 +200,12 @@ vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
     local bufnr = args.buf
     local client = vim.lsp.get_client_by_id(args.data.client_id)
-    
+
     -- Skip attaching keymaps for certain clients
     if client.name == "copilot" then
       return
     end
-    
+
     -- Create buffer-local keymaps
     local opts = { buffer = bufnr }
     vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
@@ -217,13 +217,13 @@ vim.api.nvim_create_autocmd("LspAttach", {
     vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, opts)
     vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
     vim.keymap.set("n", "<leader>cf", function() vim.lsp.buf.format({ async = true }) end, opts)
-    
+
     -- Show diagnostics in a floating window
     vim.keymap.set("n", "<leader>cd", vim.diagnostic.open_float, opts)
-    
+
     -- Add to the quickfix list
     vim.keymap.set("n", "<leader>cq", vim.diagnostic.setqflist, opts)
-    
+
     -- Add formatting capability if supported
     if client.supports_method("textDocument/formatting") then
       -- Create a command to manually format
@@ -242,7 +242,7 @@ vim.api.nvim_create_autocmd("FileType", {
   callback = function()
     -- Special indentation
     vim.bo.indentexpr = "GetTemplIndent()"
-    
+
     -- Create the indent function if it doesn't exist
     if vim.fn.exists("*GetTemplIndent") == 0 then
       vim.cmd([[
@@ -251,14 +251,14 @@ vim.api.nvim_create_autocmd("FileType", {
           if curline =~ '^\s*}'
             return indent(v:lnum - 1) - &shiftwidth
           endif
-          
+
           let prevline = getline(v:lnum - 1)
           let previndent = indent(v:lnum - 1)
-          
+
           if prevline =~ '{$'
             return previndent + &shiftwidth
           endif
-          
+
           return previndent
         endfunction
       ]])
@@ -274,10 +274,10 @@ vim.api.nvim_create_autocmd("TermOpen", {
     -- Disable line numbers in terminal
     vim.wo.number = false
     vim.wo.relativenumber = false
-    
+
     -- Start in insert mode
     vim.cmd("startinsert")
-    
+
     -- Set terminal-specific keymaps
     local opts = { buffer = true, silent = true }
     vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], opts)
@@ -301,7 +301,7 @@ vim.api.nvim_create_autocmd("TermClose", {
   desc = "Refresh gitsigns when closing lazygit",
 })
 
--- Start screen 
+-- Start screen
 vim.api.nvim_create_autocmd("VimEnter", {
   group = augroup,
   callback = function()
@@ -314,7 +314,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
         local buf = vim.api.nvim_create_buf(false, true)
         local width = vim.o.columns
         local height = vim.o.lines
-        
+
         -- Create centered window
         local win = vim.api.nvim_open_win(buf, true, {
           relative = "editor",
@@ -325,7 +325,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
           style = "minimal",
           border = "rounded",
         })
-        
+
         -- Add some welcome content
         local lines = {
           "",
@@ -350,11 +350,11 @@ vim.api.nvim_create_autocmd("VimEnter", {
           "   Happy coding!",
           "",
         }
-        
+
         vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
         vim.api.nvim_buf_set_option(buf, "modifiable", false)
         vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
-        
+
         -- Set buffer-local keymaps
         local opts = { buffer = buf, silent = true }
         vim.keymap.set("n", "q", "<cmd>quit<CR>", opts)
@@ -366,18 +366,18 @@ vim.api.nvim_create_autocmd("VimEnter", {
         vim.keymap.set("n", "L1", "<cmd>Layout coding<CR>", opts)
         vim.keymap.set("n", "L2", "<cmd>Layout terminal<CR>", opts)
         vim.keymap.set("n", "L3", "<cmd>Layout writing<CR>", opts)
-        
+
         -- Center the text by adding spaces to the beginning of each line
         local centered_lines = {}
         for _, line in ipairs(lines) do
           table.insert(centered_lines, string.rep(" ", 10) .. line)
         end
-        
+
         vim.api.nvim_buf_set_lines(buf, 0, -1, false, centered_lines)
-        
+
         -- Set highlight for the buffer
         local ns_id = vim.api.nvim_create_namespace("StartScreen")
-        
+
         -- Apply syntax highlighting to the welcome message
         vim.api.nvim_buf_add_highlight(buf, ns_id, "Title", 1, 0, -1)
         vim.api.nvim_buf_add_highlight(buf, ns_id, "Title", 2, 0, -1)
@@ -385,18 +385,18 @@ vim.api.nvim_create_autocmd("VimEnter", {
         vim.api.nvim_buf_add_highlight(buf, ns_id, "Title", 4, 0, -1)
         vim.api.nvim_buf_add_highlight(buf, ns_id, "Title", 5, 0, -1)
         vim.api.nvim_buf_add_highlight(buf, ns_id, "Title", 6, 0, -1)
-        
+
         vim.api.nvim_buf_add_highlight(buf, ns_id, "String", 8, 0, -1)
-        
+
         vim.api.nvim_buf_add_highlight(buf, ns_id, "Keyword", 10, 0, -1)
         vim.api.nvim_buf_add_highlight(buf, ns_id, "Keyword", 11, 0, -1)
         vim.api.nvim_buf_add_highlight(buf, ns_id, "Keyword", 12, 0, -1)
         vim.api.nvim_buf_add_highlight(buf, ns_id, "Keyword", 13, 0, -1)
-        
+
         vim.api.nvim_buf_add_highlight(buf, ns_id, "Function", 15, 0, -1)
         vim.api.nvim_buf_add_highlight(buf, ns_id, "Function", 16, 0, -1)
         vim.api.nvim_buf_add_highlight(buf, ns_id, "Function", 17, 0, -1)
-        
+
         vim.api.nvim_buf_add_highlight(buf, ns_id, "Comment", 19, 0, -1)
       end
     end
@@ -412,7 +412,7 @@ vim.api.nvim_create_autocmd("BufWritePost", {
     if vim.fn.executable("ctags") == 1 then
       local buf_name = vim.api.nvim_buf_get_name(0)
       local file_ext = vim.fn.fnamemodify(buf_name, ":e")
-      
+
       -- File types that work well with ctags
       local tag_file_types = {
         go = true,
@@ -431,7 +431,7 @@ vim.api.nvim_create_autocmd("BufWritePost", {
         lua = true,
         rs = true,
       }
-      
+
       if tag_file_types[file_ext] then
         -- Run ctags asynchronously
         vim.fn.jobstart("ctags -R .")
@@ -449,13 +449,13 @@ vim.api.nvim_create_autocmd("FileType", {
   callback = function()
     -- Go uses tabs, so we need to adjust settings
     vim.bo.expandtab = false
-    
+
     -- Add project-specific GOPATH if it exists
     local go_mod = vim.fn.findfile("go.mod", ".;")
     if go_mod ~= "" then
       local project_root = vim.fn.fnamemodify(go_mod, ":p:h")
       local gopath = os.getenv("GOPATH") or ""
-      
+
       -- Add the project root to GOPATH
       if gopath ~= "" then
         vim.env.GOPATH = project_root .. ":" .. gopath
@@ -475,14 +475,14 @@ vim.api.nvim_create_autocmd("FileType", {
     -- Check if this is a Next.js project
     local is_nextjs = false
     local package_json = vim.fn.findfile("package.json", ".;")
-    
+
     if package_json ~= "" then
       local content = vim.fn.readfile(package_json)
       local json_str = table.concat(content, "\n")
-      
+
       is_nextjs = json_str:find("\"next\"") ~= nil
     end
-    
+
     if is_nextjs then
       -- Set up nextjs-specific settings
       -- For example, recognize special Next.js directory structure
@@ -491,7 +491,7 @@ vim.api.nvim_create_autocmd("FileType", {
         autocmd BufRead,BufNewFile app/*/layout.tsx set filetype=nextjs_layout
         autocmd BufRead,BufNewFile app/api/**/route.ts set filetype=nextjs_api
       ]])
-      
+
       -- Set path to include Next.js specific directories
       vim.opt_local.path:append("app")
       vim.opt_local.path:append("components")
@@ -510,7 +510,7 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
     vim.opt_local.spell = true
     vim.opt_local.wrap = true
     vim.opt_local.linebreak = true
-    
+
     -- Add markdown specific keymaps
     local opts = { buffer = true }
     vim.keymap.set("n", "<leader>mp", "<cmd>MarkdownPreview<CR>", opts)
@@ -528,7 +528,7 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.keymap.set("n", "<CR>", "<C-]>", { buffer = true })
     vim.keymap.set("n", "<BS>", "<C-T>", { buffer = true })
     vim.keymap.set("n", "q", ":q<CR>", { buffer = true })
-    
+
     -- Open help in a vertical split instead of horizontal by default
     vim.cmd("wincmd L")
   end,
@@ -543,7 +543,7 @@ vim.api.nvim_create_autocmd("FileType", {
     -- Disable numbers in NeoTree
     vim.wo.number = false
     vim.wo.relativenumber = false
-    
+
     -- Make NeoTree a bit narrower
     vim.cmd("vertical resize 30")
   end,
@@ -555,7 +555,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
   group = augroup,
   callback = function(args)
     local client = vim.lsp.get_client_by_id(args.data.client_id)
-    
+
     -- Enable inlay hints for supported clients
     if client and client.supports_method("textDocument/inlayHint") then
       -- Using vim.lsp.inlay_hint instead of the deprecated vim.lsp.buf.inlay_hint
@@ -614,11 +614,11 @@ vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost", "VimResume" }, {
     local icon = "  "
     local filename = vim.fn.expand("%:t")
     local filetype = vim.bo.filetype
-    
+
     if filename == "" then
       filename = "Untitled"
     end
-    
+
     -- Add an icon based on filetype if available
     if filetype == "lua" then
       icon = "  "
@@ -635,7 +635,7 @@ vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost", "VimResume" }, {
     elseif filetype == "markdown" then
       icon = "  "
     end
-    
+
     vim.opt.titlestring = icon .. " " .. filename .. " - NVIM"
   end,
   desc = "Update Vim title",

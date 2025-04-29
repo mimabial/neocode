@@ -1,5 +1,7 @@
 return {
   "rcarriga/nvim-notify",
+  event = "VeryLazy", -- Load earlier to ensure it's available for plugins that need it
+  priority = 90,      -- High priority to ensure it loads before depending plugins
   keys = {
     {
       "<leader>un",

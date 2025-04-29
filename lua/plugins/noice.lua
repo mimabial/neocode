@@ -2,8 +2,14 @@ return {
   "folke/noice.nvim",
   event = "VeryLazy",
   dependencies = {
-    "MunifTanjim/nui.nvim",
-    "rcarriga/nvim-notify",
+    { 
+      "MunifTanjim/nui.nvim",
+      priority = 70,
+    },
+    { 
+      "rcarriga/nvim-notify",
+      priority = 90, 
+    },
   },
   keys = {
     {
@@ -293,5 +299,18 @@ return {
   },
   config = function(_, opts)
     require("noice").setup(opts)
+    
+    -- Add keymaps for quick noice navigation
+    vim.keymap.set("n", "<leader>nn", function()
+      require("noice").cmd("telescope")
+    end, { desc = "Telescope Noice" })
+    
+    -- Hide cmdline for specific filetypes
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = {"neo-tree", "dashboard", "alpha", "lazy"},
+      callback = function()
+        vim.b.noice_disable = true
+      end,
+    })
   end,
 }

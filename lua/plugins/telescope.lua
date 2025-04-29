@@ -1,8 +1,13 @@
 return {
   "nvim-telescope/telescope.nvim",
   cmd = "Telescope",
+  version = false, -- Use latest
+  priority = 80,   -- Higher priority to ensure it loads before plugins that might use it
   dependencies = {
-    "nvim-lua/plenary.nvim",
+    { 
+      "nvim-lua/plenary.nvim",
+      priority = 90, -- Make sure plenary loads first
+    },
     {
       "nvim-telescope/telescope-fzf-native.nvim",
       build = "make",
@@ -297,5 +302,41 @@ return {
     if package.loaded["dap"] then
       safe_load_extension("dap")
     end
+    
+    -- Add custom command for Next.js navigation
+    vim.api.nvim_create_user_command("TelescopeNextJS", function()
+      require("telescope.builtin").find_files({
+        prompt_title = "Next.js Files",
+        cwd = vim.fn.getcwd(),
+        file_ignore_patterns = { 
+          "node_modules", 
+          "%.git/",
+          "%.next/",
+          "public/",
+        },
+        path_display = { "smart" },
+      })
+    end, { desc = "Find Next.js files" })
+    
+    -- Add custom command for GOTH stack navigation
+    vim.api.nvim_create_user_command("TelescopeGOTH", function()
+      require("telescope.builtin").find_files({
+        prompt_title = "GOTH Stack Files",
+        cwd = vim.fn.getcwd(),
+        file_ignore_patterns = { 
+          "node_modules", 
+          "%.git/",
+          "vendor/",
+          "build/",
+          "bin/",
+        },
+        find_command = { "find", ".", "-type", "f", "-not", "-path", "*/\\.*", "-o", "-name", "*.go", "-o", "-name", "*.templ" },
+        path_display = { "smart" },
+      })
+    end, { desc = "Find GOTH stack files" })
+    
+    -- Add keymaps for these custom commands
+    vim.keymap.set("n", "<leader>sng", "<cmd>TelescopeNextJS<cr>", { desc = "Find Next.js Files" })
+    vim.keymap.set("n", "<leader>sgg", "<cmd>TelescopeGOTH<cr>", { desc = "Find GOTH Files" })
   end,
 }

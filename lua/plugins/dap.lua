@@ -19,6 +19,7 @@ return {
     "leoluz/nvim-dap-go",
     "mfussenegger/nvim-dap-python",
   },
+  cmd = "DapContinue", -- Make it load on command
   keys = {
     {
       "<leader>dB",
@@ -407,5 +408,33 @@ return {
     vim.fn.sign_define("DapLogPoint", { text = "", texthl = "DiagnosticSignInfo", linehl = "", numhl = "" })
     vim.fn.sign_define("DapStopped", { text = "", texthl = "DiagnosticSignWarn", linehl = "DapStopped", numhl = "DapStopped" })
     vim.fn.sign_define("DapBreakpointRejected", { text = "", texthl = "DiagnosticSignHint", linehl = "", numhl = "" })
+    
+    -- Custom function to debug GOTH app
+    _G.debug_goth_app = function()
+      -- Try to find main.go in workspace
+      local main_file = vim.fn.findfile("main.go", vim.fn.getcwd() .. "/**")
+      if main_file == "" then
+        vim.notify("Could not find main.go file to debug", vim.log.levels.ERROR)
+        return
+      end
+      
+      -- Configure and start debugging
+      dap.configurations.go = {
+        {
+          type = "go",
+          name = "Debug GOTH App",
+          request = "launch",
+          program = main_file,
+          buildFlags = "",
+        }
+      }
+      
+      dap.continue()
+    end
+    
+    -- Add custom command
+    vim.api.nvim_create_user_command("DebugGOTHApp", function()
+      _G.debug_goth_app()
+    end, { desc = "Debug GOTH Application" })
   end,
 }

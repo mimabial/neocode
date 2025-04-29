@@ -2,6 +2,24 @@ return {
   "nvim-neo-tree/neo-tree.nvim",
   branch = "v3.x",
   cmd = "Neotree",
+  dependencies = {
+    "nvim-lua/plenary.nvim",
+    "nvim-tree/nvim-web-devicons", -- Make sure this loads first
+    "MunifTanjim/nui.nvim",
+    {
+      "s1n7ax/nvim-window-picker",
+      opts = {
+        filter_rules = {
+          include_current_win = false,
+          autoselect_one = true,
+          bo = {
+            filetype = { "neo-tree", "neo-tree-popup", "notify", "quickfix" },
+            buftype = { "terminal", "quickfix", "nofile" },
+          },
+        },
+      },
+    },
+  },
   keys = {
     {
       "<leader>e",
@@ -24,24 +42,15 @@ return {
   deactivate = function()
     vim.cmd([[Neotree close]])
   end,
-  dependencies = {
-    "nvim-lua/plenary.nvim",
-    "nvim-tree/nvim-web-devicons",
-    "MunifTanjim/nui.nvim",
-    {
-      "s1n7ax/nvim-window-picker",
-      opts = {
-        filter_rules = {
-          include_current_win = false,
-          autoselect_one = true,
-          bo = {
-            filetype = { "neo-tree", "neo-tree-popup", "notify", "quickfix" },
-            buftype = { "terminal", "quickfix", "nofile" },
-          },
-        },
-      },
-    },
-  },
+  init = function()
+    -- If you want to use neo-tree as a replacement for nvim-tree,
+    if vim.fn.argc() == 1 then
+      local stat = vim.loop.fs_stat(vim.fn.argv(0))
+      if stat and stat.type == "directory" then
+        require("neo-tree")
+      end
+    end
+  end,
   opts = {
     sources = { "filesystem", "buffers", "git_status", "document_symbols" },
     open_files_do_not_replace_types = { "terminal", "trouble", "qf", "edgy" },
@@ -49,7 +58,6 @@ return {
     popup_border_style = "rounded",
     enable_git_status = true,
     enable_diagnostics = true,
-    enable_normal_mode_for_inputs = false,
     sort_case_insensitive = true,
     
     source_selector = {
@@ -124,6 +132,7 @@ return {
           "thumbs.db",
           ".git",
         },
+        never_show_by_pattern = {},
       },
       commands = {
         system_open = function(state)
@@ -273,6 +282,14 @@ return {
     
     event_handlers = {
       {
+        event = "neo_tree_popup_input_ready",
+        ---@param args { bufnr: integer, winid: integer }
+        handler = function(args)
+          vim.cmd("stopinsert")
+          vim.keymap.set("i", "<esc>", vim.cmd.stopinsert, { noremap = true, buffer = args.bufnr })
+        end,
+      },
+      {
         event = "file_opened",
         handler = function(file_path)
           -- Auto close neo-tree after selecting a file in small windows
@@ -354,6 +371,22 @@ return {
         vim.api.nvim_set_hl(0, "NeoTreeExpander", { fg = "#7c6f64" })
       end,
     })
+    
+    -- Better filtering for Go projects
+    if not opts.filesystem.filtered_items then
+      opts.filesystem.filtered_items = {}
+    end
+    
+    -- Add common Go-related ignore patterns
+    opts.filesystem.filtered_items.never_show = vim.list_extend(
+      opts.filesystem.filtered_items.never_show or {},
+      {
+        ".git",
+        "go.sum", -- Generally don't need to edit go.sum directly
+        "vendor", -- Vendor directory is generally not edited directly
+        "bin",    -- Compiled binaries
+      }
+    )
     
     -- Setup Neo-tree
     require("neo-tree").setup(opts)

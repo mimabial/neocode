@@ -43,6 +43,7 @@ return {
     end, {})
   end,
   opts = {
+    log_level = vim.log.levels.DEBUG,
     -- Define formatters by filetype
     formatters_by_ft = {
       -- Common web development formats
@@ -150,21 +151,29 @@ return {
 
       -- Lua
       stylua = {
-        -- Use stylua.toml from project or home directory
-        prepend_args = function(self, ctx)
-          local args = {}
+        args = function(self, ctx)
+          local args = {
+            "--search-parent-directories",
+            "--respect-ignores",
+            "--stdin-filepath",
+            ctx.filename,
+            "-"
+          }
+
           local conf_path = require("conform.util").root_file({
             "stylua.toml",
             ".stylua.toml",
           }, ctx.filename)
 
           if conf_path then
-            vim.list_extend(args, { "--config-path", conf_path })
+            table.insert(args, 1, conf_path)
+            table.insert(args, 1, "--config-path")
           end
 
           return args
         end,
       },
+
 
       -- Go & GOTH stack
       gofumpt = {

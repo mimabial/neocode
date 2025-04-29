@@ -1,9 +1,16 @@
 return {
   "nvim-lualine/lualine.nvim",
   event = "VeryLazy",
+  priority = 50, -- Ensure it loads after colorscheme and icons
   dependencies = {
-    "nvim-tree/nvim-web-devicons",
-    "lewis6991/gitsigns.nvim",
+    { 
+      "nvim-tree/nvim-web-devicons",
+      priority = 100,
+    },
+    { 
+      "lewis6991/gitsigns.nvim",
+      priority = 60,
+    },
   },
   init = function()
     vim.g.lualine_laststatus = vim.o.laststatus
@@ -290,5 +297,39 @@ return {
     end
 
     return opts
+  end,
+  config = function(_, opts)
+    require("lualine").setup(opts)
+    
+    -- Set up special filetype handlers
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = {"neo-tree", "alpha", "dashboard", "lazy", "mason"},
+      callback = function()
+        vim.opt_local.statusline = nil
+      end
+    })
+    
+    -- Make sure lualine reloads when colorscheme changes
+    vim.api.nvim_create_autocmd("ColorScheme", {
+      callback = function()
+        -- Try to apply colorscheme specifically
+        local theme = vim.g.colors_name
+        if theme == "gruvbox-material" or theme == "tokyonight" then
+          require("lualine").setup({
+            options = { 
+              theme = theme,
+              -- Keep other options the same
+              globalstatus = vim.o.laststatus == 3,
+              disabled_filetypes = opts.options.disabled_filetypes,
+              component_separators = opts.options.component_separators,
+              section_separators = opts.options.section_separators,
+            }
+          })
+        else
+          -- Reload with auto theme
+          require("lualine").setup(opts)
+        end
+      end
+    })
   end,
 }

@@ -4,39 +4,29 @@ return {
   cmd = { "Bracey", "BraceyStop", "BraceyReload" },
   -- Fix for local changes issue
   init = function()
-    -- Create the directory if it doesn't exist
     local server_dir = vim.fn.stdpath("data") .. "/lazy/bracey.vim/server"
     if vim.fn.isdirectory(server_dir) == 1 then
-      -- Check if package-lock.json exists and has local changes
       local lock_file = server_dir .. "/package-lock.json"
       if vim.fn.filereadable(lock_file) == 1 then
-        -- Add to gitignore if needed
         local gitignore = server_dir .. "/.gitignore"
         if vim.fn.filereadable(gitignore) == 0 then
-          local f = io.open(gitignore, "w")
-          if f then
-            f:write("package-lock.json\n")
-            f:close()
-          end
+          vim.fn.writefile({ "package-lock.json" }, gitignore)
         else
-          -- Append to existing gitignore if package-lock.json is not there
-          local has_lockfile = false
-          for line in io.lines(gitignore) do
+          local lines = vim.fn.readfile(gitignore)
+          local found = false
+          for _, line in ipairs(lines) do
             if line == "package-lock.json" then
-              has_lockfile = true
+              found = true
               break
             end
           end
-          
-          if not has_lockfile then
-            local f = io.open(gitignore, "a")
-            if f then
-              f:write("\npackage-lock.json\n")
-              f:close()
-            end
+          if not found then
+            table.insert(lines, "package-lock.json")
+            vim.fn.writefile(lines, gitignore)
           end
         end
       end
     end
-  end,
+  end
+
 }

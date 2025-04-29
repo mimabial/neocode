@@ -2,7 +2,7 @@ return {
   "hrsh7th/nvim-cmp",
   event = { "InsertEnter", "CmdlineEnter" },
   dependencies = {
-    "hrsh7th/cmp-nvim-lsp",
+    { "hrsh7th/cmp-nvim-lsp", priority = 60 },
     "hrsh7th/cmp-buffer",
     "hrsh7th/cmp-path",
     "hrsh7th/cmp-cmdline",
@@ -11,18 +11,44 @@ return {
       version = "v2.*",
       build = "make install_jsregexp",
       dependencies = {
-        "rafamadriz/friendly-snippets",
-        config = function()
-          require("luasnip.loaders.from_vscode").lazy_load()
-        end,
+        {
+          "rafamadriz/friendly-snippets",
+          config = function()
+            require("luasnip.loaders.from_vscode").lazy_load()
+          end,
+        }
       },
+      priority = 70, -- Higher priority to load before completion
     },
     "saadparwaiz1/cmp_luasnip",
-    "onsails/lspkind.nvim",
+    {
+      "onsails/lspkind.nvim",
+      priority = 75, -- Load before completion
+    },
     -- Add these for more sources
     "hrsh7th/cmp-nvim-lua",
     "hrsh7th/cmp-emoji",
-    "zbirenbaum/copilot-cmp",
+    {
+      "zbirenbaum/copilot-cmp",
+      dependencies = {
+        {
+          "zbirenbaum/copilot.lua",
+          cmd = "Copilot",
+          event = "InsertEnter",
+          opts = {
+            suggestion = { enabled = false },
+            panel = { enabled = false },
+            filetypes = {
+              markdown = true,
+              help = true,
+            },
+          },
+        }
+      },
+      config = function()
+        require("copilot_cmp").setup()
+      end
+    },
   },
   opts = function()
     local cmp = require("cmp")
@@ -118,13 +144,13 @@ return {
         end, { "i", "s" }),
       }),
       sources = cmp.config.sources({
-        { name = "copilot", group_index = 1, priority = 100 },
+        { name = "copilot",  group_index = 1, priority = 100 },
         { name = "nvim_lsp", group_index = 1, priority = 90 },
-        { name = "luasnip", group_index = 1, priority = 80 },
+        { name = "luasnip",  group_index = 1, priority = 80 },
         { name = "nvim_lua", group_index = 1, priority = 70 },
-        { name = "buffer", group_index = 2, priority = 50, keyword_length = 3 },
-        { name = "path", group_index = 2, priority = 40 },
-        { name = "emoji", group_index = 3, priority = 30 },
+        { name = "buffer",   group_index = 2, priority = 50, keyword_length = 3 },
+        { name = "path",     group_index = 2, priority = 40 },
+        { name = "emoji",    group_index = 3, priority = 30 },
       }),
       sorting = {
         priority_weight = 2,
@@ -185,7 +211,53 @@ return {
         { name = "buffer" },
       },
     })
-    
+
+    -- Add GOTH-specific sources when in templ or go files
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = { "go", "templ" },
+      callback = function()
+        -- Make sure we don't interfere with copilot
+        local sources = {
+          { name = "nvim_lsp", group_index = 1, priority = 90 },
+          { name = "luasnip",  group_index = 1, priority = 80 },
+          { name = "buffer",   group_index = 2, priority = 50 },
+          { name = "path",     group_index = 2, priority = 40 },
+        }
+
+        -- Check if copilot is installed and enabled
+        local has_copilot = package.loaded["copilot_cmp"] ~= nil
+        if has_copilot then
+          table.insert(sources, 1, { name = "copilot", group_index = 1, priority = 100 })
+        end
+
+        -- Apply the modified sources to only this buffer
+        cmp.setup.buffer({ sources = sources })
+      end
+    })
+
+    -- Add Next.js specific sources when in JS/TS files
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
+      callback = function()
+        -- Make sure we don't interfere with copilot
+        local sources = {
+          { name = "nvim_lsp", group_index = 1, priority = 90 },
+          { name = "luasnip",  group_index = 1, priority = 80 },
+          { name = "buffer",   group_index = 2, priority = 50 },
+          { name = "path",     group_index = 2, priority = 40 },
+        }
+
+        -- Check if copilot is installed and enabled
+        local has_copilot = package.loaded["copilot_cmp"] ~= nil
+        if has_copilot then
+          table.insert(sources, 1, { name = "copilot", group_index = 1, priority = 100 })
+        end
+
+        -- Apply the modified sources to only this buffer
+        cmp.setup.buffer({ sources = sources })
+      end
+    })
+
     -- Load Copilot if available
     pcall(function()
       require("copilot_cmp").setup()
