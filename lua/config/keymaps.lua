@@ -159,12 +159,25 @@ vim.keymap.set("n", "<leader>ne", function() require("noice").cmd("errors") end,
 vim.keymap.set("n", "<leader>nn", function() require("noice").cmd("telescope") end, { desc = "Telescope Noice" })
 
 -- Explorer keymaps (for both Oil and Neo-tree)
-vim.keymap.set("n", "<leader>e", "<CMD>Oil<CR>", { desc = "File Explorer (Oil)" })
-vim.keymap.set("n", "<leader>E", "<CMD>Oil --float<CR>", { desc = "File Explorer Floating (Oil)" })
 vim.keymap.set("n", "<leader>o", "<CMD>Oil<CR>", { desc = "Open parent directory" })
 vim.keymap.set("n", "<leader>O", "<CMD>Oil .<CR>", { desc = "Open project root" })
 vim.keymap.set("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
 vim.keymap.set("n", "_", "<CMD>Oil .<CR>", { desc = "Open project root directory" })
+
+-- New snacks.nvim keymaps:
+vim.keymap.set("n", "<leader>e", function() require("snacks.explorer").toggle() end, { desc = "File Explorer (Snacks)" })
+vim.keymap.set("n", "<leader>E", function() require("snacks.explorer").toggle_float() end, { desc = "File Explorer Float (Snacks)" })
+
+-- Stack-specific explorer keymaps
+vim.keymap.set("n", "<leader>sg<leader>e", function() 
+  vim.g.current_stack = "goth"
+  require("snacks.explorer").toggle()
+end, { desc = "File Explorer (GOTH focus)" })
+
+vim.keymap.set("n", "<leader>sn<leader>e", function()
+  vim.g.current_stack = "nextjs"
+  require("snacks.explorer").toggle()
+end, { desc = "File Explorer (Next.js focus)" })
 
 -- Quick exit and sessions
 vim.keymap.set("n", "<leader>qq", "<cmd>qa<cr>", { desc = "Quit All" })
@@ -422,9 +435,3 @@ vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "Scroll up half a page and cent
 vim.keymap.set("n", "n", "nzzzv", { desc = "Next search result and center" })
 vim.keymap.set("n", "N", "Nzzzv", { desc = "Previous search result and center" })
 
--- Flash.nvim keymaps
-vim.keymap.set({ "n", "x", "o" }, "s", function() require("flash").jump() end, { desc = "Flash jump" })
-vim.keymap.set({ "n", "x", "o" }, "S", function() require("flash").treesitter() end, { desc = "Flash treesitter" })
-vim.keymap.set("o", "r", function() require("flash").remote() end, { desc = "Flash remote" })
-vim.keymap.set({ "o", "x" }, "R", function() require("flash").treesitter_search() end, { desc = "Flash treesitter search" })
-vim.keymap.set("c", "<c-s>", function() require("flash").toggle() end, { desc = "Toggle flash search" })

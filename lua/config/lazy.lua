@@ -45,9 +45,9 @@ require("lazy").setup({
       { "nvim-tree/nvim-web-devicons", priority = 1000 },
       { "sainnhe/gruvbox-material", priority = 950 },
       { "folke/tokyonight.nvim", priority = 940 },
-      { "stevearc/oil.nvim", priority = 900 }, -- Make sure oil loads before neo-tree
-      { "folke/which-key.nvim", priority = 850 }, -- High priority for which-key
-      { "folke/flash.nvim", priority = 800 }, -- Add flash.nvim with high priority
+      { "stevearc/oil.nvim", priority = 900 }, -- Keep oil.nvim as it's used by snacks.nvim
+      { "folke/snacks.nvim", priority = 850 }, -- Add snacks.nvim with high priority
+      { "folke/which-key.nvim", priority = 800 }, -- High priority for which-key
       import = "plugins.ui" 
     },
     
@@ -215,18 +215,18 @@ vim.api.nvim_create_user_command("Layout", function(opts)
   local layout = opts.args
   
   if layout == "coding" then
-    -- Use oil.nvim instead of neo-tree
-    vim.cmd("Oil")
+    -- Use snacks.nvim instead of oil.nvim
+    require("snacks.explorer").toggle()
     vim.cmd("wincmd l") -- Move to the right window (main buffer)
   elseif layout == "terminal" then
-    vim.cmd("Oil close")
+    require("snacks.explorer").close()
     vim.cmd("ToggleTerm direction=horizontal")
   elseif layout == "writing" then
-    vim.cmd("Oil close")
+    require("snacks.explorer").close()
     vim.cmd("set wrap linebreak")
     _G.utils.center_buffer()
   elseif layout == "debug" then
-    vim.cmd("Oil close")
+    require("snacks.explorer").close()
     if package.loaded["dapui"] then
       require("dapui").open()
     else
@@ -238,3 +238,22 @@ vim.api.nvim_create_user_command("Layout", function(opts)
 end, { nargs = "?", desc = "Switch workspace layout", complete = function()
   return { "coding", "terminal", "writing", "debug" }
 end})
+
+-- Add command to toggle between explorers
+vim.api.nvim_create_user_command("ExplorerToggle", function(args)
+  local explorer_type = args.args
+  if explorer_type == "oil" then
+    vim.g.default_explorer = "oil"
+    vim.cmd("Oil")
+  elseif explorer_type == "snacks" then
+    vim.g.default_explorer = "snacks"
+    require("snacks.explorer").toggle()
+  elseif explorer_type == "neo-tree" or explorer_type == "neotree" then
+    vim.g.default_explorer = "neo-tree"
+    vim.cmd("Neotree toggle")
+  else
+    -- Default to snacks
+    require("snacks.explorer").toggle()
+  end
+  vim.notify("Default explorer set to: " .. vim.g.default_explorer, vim.log.levels.INFO)
+end, { nargs = "?", complete = function() return {"oil", "snacks", "neo-tree"} end, desc = "Set default explorer" })

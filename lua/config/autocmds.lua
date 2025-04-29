@@ -517,17 +517,38 @@ vim.api.nvim_create_autocmd("FileType", {
   desc = "Improve help navigation",
 })
 
--- Auto open Oil when opening directories
+-- Auto open directory with oil instead of snacks.nvim
 vim.api.nvim_create_autocmd("BufEnter", {
   group = augroup,
   callback = function()
     local bufname = vim.api.nvim_buf_get_name(0)
     if vim.fn.isdirectory(bufname) == 1 then
-      -- Change from Neotree to Oil
-      vim.cmd("Oil " .. bufname)
+      if vim.g.default_explorer == "oil" then
+        vim.cmd("Oil " .. bufname)
+      else
+        -- Default to snacks
+        require("snacks.explorer").toggle({ path = bufname })
+      end
     end
   end,
-  desc = "Open directory in Oil",
+  desc = "Open directory in file explorer",
+})
+
+-- Configure snacks-specific settings
+vim.api.nvim_create_autocmd("FileType", {
+  group = augroup,
+  pattern = "snacks-explorer",
+  callback = function()
+    -- Disable numbers in explorer
+    vim.wo.number = false
+    vim.wo.relativenumber = false
+    
+    -- Enable cursorline for better visibility
+    vim.wo.cursorline = true
+    
+    -- Stack-specific filters are handled by the snacks.nvim config
+  end,
+  desc = "Snacks-specific settings",
 })
 
 -- Configure oil-specific settings
