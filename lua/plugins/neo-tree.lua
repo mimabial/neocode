@@ -147,7 +147,7 @@ return {
         retain_hidden_root_indent = true, -- IF the root node is hidden, keep the indentation anyhow.
 
         -- expander config, needed for nesting files
-        with_expanders = nil, -- if nil and file nesting is enabled, will enable expanders
+        with_expanders = true, -- if nil and file nesting is enabled, will enable expanders
         expander_collapsed = "",
         expander_expanded = "",
 

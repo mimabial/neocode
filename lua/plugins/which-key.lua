@@ -23,15 +23,10 @@ return {
         g = true,
       },
     },
-    operators = { gc = "Comments", gb = "Block Comments" },
     icons = {
       breadcrumb = "»",
       separator = "➜",
       group = "+",
-    },
-    popup_mappings = {
-      scroll_down = "<c-d>",
-      scroll_up = "<c-u>",
     },
     window = {
       border = "rounded",
@@ -46,13 +41,6 @@ return {
       spacing = 3,
       align = "center",
     },
-    hidden = { "<silent>", "<cmd>", "<Cmd>", "<CR>", "^:", "^ ", "^call ", "^lua " },
-    triggers_blacklist = {
-      i = { "j", "k" },
-      v = { "j", "k" },
-    },
-    show_help = true,
-    show_keys = true,
     disable = {
       buftypes = {},
       filetypes = { "TelescopePrompt" },
@@ -62,308 +50,510 @@ return {
     local wk = require("which-key")
     wk.setup(opts)
     
-    -- Document existing key chains
+    -- Root groups
     wk.register({
-      -- Leader key groups
-      ["<leader>"] = {
-        b = { name = "+Buffer" },
-        c = { name = "+Code/LSP" },
-        d = { name = "+Debug" },
-        f = { name = "+Find/Telescope" },
-        g = { name = "+Git" },
-        h = { name = "+Git Hunks" },
-        l = { name = "+LSP" },
-        n = { name = "+Noice/Notifications" },
-        q = { name = "+Quit/Session" },
-        r = { name = "+Rename/Replace" },
-        s = { name = "+Stack-Specific" },
-        t = { name = "+Terminal/Toggle" },
-        u = { name = "+UI" },
-        w = { name = "+Windows" },
-        x = { name = "+Diagnostics/Quickfix" },
-      },
+      ["<leader>b"] = { name = "+Buffer" },
+      ["<leader>c"] = { name = "+Code/LSP" },
+      ["<leader>d"] = { name = "+Debug" },
+      ["<leader>f"] = { name = "+Find/Telescope" },
+      ["<leader>g"] = { name = "+Git" },
+      ["<leader>h"] = { name = "+Git Hunks" },
+      ["<leader>L"] = { name = "+Layouts" },
+      ["<leader>n"] = { name = "+Noice/Notifications" },
+      ["<leader>q"] = { name = "+Quit/Session" },
+      ["<leader>s"] = { name = "+Stack-Specific" },
+      ["<leader>t"] = { name = "+Terminal/Toggle" },
+      ["<leader>u"] = { name = "+UI" },
+      ["<leader>w"] = { name = "+Window" },
+      ["<leader>x"] = { name = "+Diagnostics/Quickfix" },
+      ["<leader>e"] = { name = "+Explorer" },
+      ["["] = { name = "+Previous" },
+      ["]"] = { name = "+Next" },
+      ["g"] = { name = "+Goto/LSP" },
+    })
       
-      -- Stack-specific commands group
-      ["<leader>s"] = {
-        name = "+Stack-Specific",
-        g = {
-          name = "+GOTH Stack",
-          c = { function() require("config.utils").new_templ_component() end, "New Templ Component" },
-          p = { "<cmd>let g:current_stack='goth'<cr>", "Focus GOTH Stack" },
-          t = { "<cmd>!go test ./...<cr>", "Run Go Tests" },
-          m = { "<cmd>!go mod tidy<cr>", "Go Mod Tidy" },
-          b = { "<cmd>!go build<cr>", "Go Build" },
-          r = { "<cmd>!go run .<cr>", "Go Run" },
-        },
-        n = {
-          name = "+Next.js",
-          c = { function() require("config.utils").new_nextjs_component("client") end, "New Client Component" },
-          s = { function() require("config.utils").new_nextjs_component("server") end, "New Server Component" },
-          p = { function() require("config.utils").new_nextjs_component("page") end, "New Page" },
-          l = { function() require("config.utils").new_nextjs_component("layout") end, "New Layout" },
-          f = { "<cmd>let g:current_stack='nextjs'<cr>", "Focus Next.js Stack" },
-          d = { "<cmd>!npm run dev<cr>", "Next.js Dev" },
-          b = { "<cmd>!npm run build<cr>", "Next.js Build" },
-          t = { "<cmd>!npm test<cr>", "Run Tests" },
-          i = { "<cmd>!npm install<cr>", "NPM Install" },
-        },
-      },
-      
-      -- Git related
-      g = {
-        name = "Goto/Git",
-        d = { vim.lsp.buf.definition, "Go to definition" },
-        D = { vim.lsp.buf.declaration, "Go to declaration" },
-        r = { function() require("telescope.builtin").lsp_references() end, "Go to references" },
-        i = { vim.lsp.buf.implementation, "Go to implementation" },
-      },
-      
-      -- Brackets
-      ["["] = { name = "Previous..." },
-      ["]"] = { name = "Next..." },
+    -- Buffer management
+    wk.register({
+      ["<leader>bb"] = { "<cmd>e #<cr>", "Switch to Other Buffer" },
+      ["<leader>bd"] = { "<cmd>bdelete<cr>", "Delete Buffer" },
+      ["<leader>bf"] = { "<cmd>bfirst<cr>", "First Buffer" },
+      ["<leader>bh"] = { "<cmd>Telescope buffers<cr>", "Find Buffer" },
+      ["<leader>bl"] = { "<cmd>blast<cr>", "Last Buffer" },
+      ["<leader>bn"] = { "<cmd>bnext<cr>", "Next Buffer" },
+      ["<leader>bp"] = { "<cmd>bprevious<cr>", "Previous Buffer" },
+      ["<leader>be"] = { "<cmd>Neotree buffers reveal float<cr>", "Buffer Explorer" },
     })
     
-    -- Buffer commands
+    -- Buffer navigation with Shift
     wk.register({
-      ["<leader>b"] = {
-        ["b"] = { "<cmd>e #<cr>", "Switch to Other Buffer" },
-        ["d"] = { "<cmd>bdelete<cr>", "Delete Buffer" },
-        ["f"] = { "<cmd>bfirst<cr>", "First Buffer" },
-        ["h"] = { "<cmd>Telescope buffers<cr>", "Find Buffer" },
-        ["l"] = { "<cmd>blast<cr>", "Last Buffer" },
-        ["n"] = { "<cmd>bnext<cr>", "Next Buffer" },
-        ["p"] = { "<cmd>bprevious<cr>", "Previous Buffer" },
-        ["e"] = { "<cmd>Neotree buffers reveal float<cr>", "Buffer Explorer" },
-      },
+      ["<S-h>"] = { "<cmd>bprevious<cr>", "Previous buffer" },
+      ["<S-l>"] = { "<cmd>bnext<cr>", "Next buffer" },
+      ["[b"] = { "<cmd>bprevious<cr>", "Previous buffer" },
+      ["]b"] = { "<cmd>bnext<cr>", "Next buffer" },
     })
     
-    -- Code/LSP commands
+    -- LSP and Code actions
     wk.register({
-      ["<leader>c"] = {
-        name = "Code/LSP",
-        ["a"] = { vim.lsp.buf.code_action, "Code Action" },
-        ["d"] = { vim.diagnostic.open_float, "Line Diagnostics" },
-        ["f"] = { vim.lsp.buf.format, "Format" },
-        ["F"] = { "<cmd>FormatToggle<CR>", "Toggle Format on Save" },
-        ["i"] = { "<cmd>LspInfo<cr>", "LSP Info" },
-        ["l"] = { "<cmd>lua require('lint').try_lint()<cr>", "Trigger Linting" },
-        ["r"] = { vim.lsp.buf.rename, "Rename Symbol" },
-        ["s"] = { "<cmd>Telescope lsp_document_symbols<cr>", "Document Symbols" },
-        ["S"] = { "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>", "Workspace Symbols" },
-        ["g"] = { 
-          name = "+GOTH",
-          ["c"] = { function() require("config.utils").new_templ_component() end, "New Templ Component" },
-          ["t"] = { "<cmd>!go test ./...<cr>", "Run Go Tests" }, 
-        },
-        ["n"] = { 
-          name = "+Next.js",
-          ["c"] = { function() require("config.utils").new_nextjs_component("client") end, "New Client Component" },
-          ["s"] = { function() require("config.utils").new_nextjs_component("server") end, "New Server Component" },
-        },
-      }
+      ["<leader>ca"] = { vim.lsp.buf.code_action, "Code Action" },
+      ["<leader>cd"] = { vim.diagnostic.open_float, "Line Diagnostics" },
+      ["<leader>cf"] = { function() vim.lsp.buf.format({ async = true }) end, "Format" },
+      ["<leader>cF"] = { "<cmd>FormatToggle<CR>", "Toggle Format on Save" },
+      ["<leader>ci"] = { "<cmd>LspInfo<cr>", "LSP Info" },
+      ["<leader>cl"] = { "<cmd>lua require('lint').try_lint()<cr>", "Trigger Linting" },
+      ["<leader>cr"] = { vim.lsp.buf.rename, "Rename Symbol" },
+      ["<leader>cs"] = { "<cmd>Telescope lsp_document_symbols<cr>", "Document Symbols" },
+      ["<leader>cS"] = { "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>", "Workspace Symbols" },
+      ["<leader>cR"] = { "<cmd>ReloadConfig<cr>", "Reload Config" },
     })
     
-    -- Debug commands
+    -- GOTH stack specific
     wk.register({
-      ["<leader>d"] = {
-        name = "Debug",
-        ["b"] = { function() require('dap').toggle_breakpoint() end, "Toggle Breakpoint" },
-        ["B"] = { function() require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: ')) end, "Conditional Breakpoint" },
-        ["c"] = { function() require('dap').continue() end, "Continue" },
-        ["C"] = { function() require('dap').run_to_cursor() end, "Run to Cursor" },
-        ["e"] = { function() require('dapui').eval() end, "Evaluate Expression" },
-        ["i"] = { function() require('dap').step_into() end, "Step Into" },
-        ["o"] = { function() require('dap').step_over() end, "Step Over" },
-        ["O"] = { function() require('dap').step_out() end, "Step Out" },
-        ["r"] = { function() require('dap').repl.toggle() end, "Toggle REPL" },
-        ["R"] = { function() require('dap').restart() end, "Restart" },
-        ["t"] = { function() require('dap').terminate() end, "Terminate" },
-        ["u"] = { function() require('dapui').toggle() end, "Toggle UI" },
-      }
+      ["<leader>cg"] = { name = "+GOTH" },
+      ["<leader>cgc"] = { function() require("config.utils").new_templ_component() end, "New Templ Component" },
+      ["<leader>cgt"] = { "<cmd>!go test ./...<cr>", "Run Go Tests" },
+      ["<leader>cgb"] = { "<cmd>!go build<cr>", "Go Build" },
+      ["<leader>cgm"] = { "<cmd>!go mod tidy<cr>", "Go Mod Tidy" },
+      ["<leader>cgr"] = { "<cmd>!go run .<cr>", "Go Run" },
     })
     
-    -- Find/Telescope commands
+    -- Next.js specific
     wk.register({
-      ["<leader>f"] = {
-        name = "Find/Telescope",
-        ["/"] = { "<cmd>Telescope current_buffer_fuzzy_find<cr>", "Find in Buffer" },
-        ["b"] = { "<cmd>Telescope buffers<cr>", "Find Buffer" },
-        ["c"] = { "<cmd>Telescope commands<cr>", "Find Commands" },
-        ["C"] = { function() require("telescope.builtin").find_files({cwd = vim.fn.stdpath("config")}) end, "Find Config Files" },
-        ["d"] = { "<cmd>Telescope diagnostics bufnr=0<cr>", "Find Document Diagnostics" },
-        ["D"] = { "<cmd>Telescope diagnostics<cr>", "Find Workspace Diagnostics" },
-        ["e"] = { "<cmd>Telescope file_browser<cr>", "File Browser" },
-        ["f"] = { "<cmd>Telescope find_files<cr>", "Find Files" },
-        ["g"] = { "<cmd>Telescope live_grep<cr>", "Find Text (Grep)" },
-        ["h"] = { "<cmd>Telescope help_tags<cr>", "Find Help" },
-        ["k"] = { "<cmd>Telescope keymaps<cr>", "Find Keymaps" },
-        ["o"] = { "<cmd>Telescope vim_options<cr>", "Find Options" },
-        ["p"] = { "<cmd>Telescope projects<cr>", "Find Projects" },
-        ["r"] = { "<cmd>Telescope oldfiles<cr>", "Recent Files" },
-        ["R"] = { "<cmd>Telescope frecency<cr>", "Frecent Files" },
-        ["s"] = { "<cmd>Telescope lsp_document_symbols<cr>", "Find Document Symbols" },
-        ["S"] = { "<cmd>Telescope lsp_workspace_symbols<cr>", "Find Workspace Symbols" },
-        ["t"] = { "<cmd>Telescope filetypes<cr>", "Find Filetypes" },
-        ["T"] = { "<cmd>Telescope builtin<cr>", "Find Telescope Pickers" },
-        ["."] = { "<cmd>Telescope resume<cr>", "Resume Last Search" },
-      }
+      ["<leader>cn"] = { name = "+Next.js" },
+      ["<leader>cnc"] = { function() require("config.utils").new_nextjs_component("client") end, "New Client Component" },
+      ["<leader>cns"] = { function() require("config.utils").new_nextjs_component("server") end, "New Server Component" },
+      ["<leader>cnp"] = { function() require("config.utils").new_nextjs_component("page") end, "New Page" },
+      ["<leader>cnl"] = { function() require("config.utils").new_nextjs_component("layout") end, "New Layout" },
+      ["<leader>cnb"] = { "<cmd>!npm run build<cr>", "Next.js Build" },
+      ["<leader>cnd"] = { "<cmd>!npm run dev<cr>", "Next.js Dev" },
+      ["<leader>cnt"] = { "<cmd>!npm test<cr>", "Run Tests" },
+      ["<leader>cni"] = { "<cmd>!npm install<cr>", "NPM Install" },
     })
     
-    -- Git commands
+    -- Debug mode keymaps
     wk.register({
-      ["<leader>g"] = {
-        name = "Git",
-        ["b"] = { "<cmd>Telescope git_branches<cr>", "Git Branches" },
-        ["c"] = { "<cmd>Telescope git_commits<cr>", "Git Commits" },
-        ["d"] = { "<cmd>DiffviewOpen<cr>", "DiffView Open" },
-        ["D"] = { "<cmd>DiffviewClose<cr>", "DiffView Close" },
-        ["e"] = { "<cmd>Neotree git_status reveal float<cr>", "Git Explorer" },
-        ["g"] = { "<cmd>LazyGit<cr>", "Lazygit" },
-        ["h"] = { "<cmd>DiffviewFileHistory %<cr>", "File History" },
-        ["H"] = { "<cmd>DiffviewFileHistory<cr>", "Project History" },
-        ["l"] = { "<cmd>Git pull<cr>", "Git Pull" },
-        ["p"] = { "<cmd>Git push<cr>", "Git Push" },
-        ["s"] = { "<cmd>Telescope git_status<cr>", "Git Status" },
-      }
-    })
-    
-    -- Git Signs / Hunks 
-    wk.register({
-      ["<leader>h"] = {
-        name = "Git Hunks",
-        ["b"] = { function() require("gitsigns").blame_line({ full = true }) end, "Blame Line" },
-        ["B"] = { function() require("gitsigns").toggle_current_line_blame() end, "Toggle Line Blame" },
-        ["d"] = { function() require("gitsigns").diffthis() end, "Diff This" },
-        ["D"] = { function() require("gitsigns").diffthis("~") end, "Diff This ~" },
-        ["p"] = { function() require("gitsigns").preview_hunk() end, "Preview Hunk" },
-        ["r"] = { function() require("gitsigns").reset_hunk() end, "Reset Hunk" },
-        ["R"] = { function() require("gitsigns").reset_buffer() end, "Reset Buffer" },
-        ["s"] = { function() require("gitsigns").stage_hunk() end, "Stage Hunk" },
-        ["S"] = { function() require("gitsigns").stage_buffer() end, "Stage Buffer" },
-        ["u"] = { function() require("gitsigns").undo_stage_hunk() end, "Undo Stage Hunk" },
-      }
-    })
-    
-    -- Terminal commands
-    wk.register({
-      ["<leader>t"] = {
-        name = "Terminal/Toggle",
-        ["f"] = { "<cmd>ToggleTerm direction=float<cr>", "Terminal (float)" },
-        ["h"] = { "<cmd>ToggleTerm direction=horizontal<cr>", "Terminal (horizontal)" },
-        ["v"] = { "<cmd>ToggleTerm direction=vertical<cr>", "Terminal (vertical)" },
-        ["t"] = { "<cmd>ToggleTerm<cr>", "Toggle terminal" },
-        ["b"] = { function() require("gitsigns").toggle_current_line_blame() end, "Toggle Line Blame" },
-        ["d"] = { function() require("gitsigns").toggle_deleted() end, "Toggle Deleted" },
-        ["n"] = { function() _G.toggle_node() end, "Node Terminal" },
-        ["p"] = { function() _G.toggle_python() end, "Python Terminal" },
-        ["c"] = { function() require("config.utils").toggle_colorcolumn() end, "Toggle Color Column" },
-        ["w"] = { function() vim.wo.wrap = not vim.wo.wrap; vim.notify("Wrap " .. (vim.wo.wrap and "enabled" or "disabled")) end, "Toggle Wrap" },
-        ["a"] = { "<cmd>FormatToggle<cr>", "Toggle Auto Format (global)" },
-        ["A"] = { "<cmd>FormatToggleBuffer<cr>", "Toggle Auto Format (buffer)" },
-      }
-    })
-    
-    -- UI toggles and commands
-    wk.register({
-      ["<leader>u"] = {
-        name = "UI",
-        ["c"] = { "<cmd>ColorSchemeToggle<cr>", "Toggle Colorscheme" },
-        ["n"] = { function() require("notify").dismiss({ silent = true, pending = true }) end, "Dismiss Notifications" },
-        ["r"] = { "<Cmd>nohlsearch<Bar>diffupdate<Bar>normal! <C-L><CR>", "Redraw / Clear Highlight" },
-        ["t"] = { "<cmd>ToggleTransparency<cr>", "Toggle Transparency" },
-        ["l"] = { "<cmd>Lazy<cr>", "Lazy Plugin Manager" },
-        ["L"] = { "<cmd>LazyUpdate<cr>", "Update Plugins" },
-        ["m"] = { "<cmd>Mason<cr>", "Mason LSP Manager" },
-        ["M"] = { "<cmd>MasonUpdate<cr>", "Update LSP Servers" },
-      }
-    })
-    
-    -- Windows management
-    wk.register({
-      ["<leader>w"] = {
-        name = "Window",
-        ["-"] = { "<C-W>s", "Split window below" },
-        ["|"] = { "<C-W>v", "Split window right" },
-        ["2"] = { "<C-W>v", "Layout double columns" },
-        ["h"] = { "<C-W>h", "Go to left window" },
-        ["j"] = { "<C-W>j", "Go to lower window" },
-        ["k"] = { "<C-W>k", "Go to upper window" },
-        ["l"] = { "<C-W>l", "Go to right window" },
-        ["q"] = { "<C-W>q", "Close window" },
-        ["w"] = { "<C-W>w", "Other window" },
-        ["="] = { "<C-W>=", "Balance windows" },
-      }
-    })
-    
-    -- Diagnostics and quickfix
-    wk.register({
-      ["<leader>x"] = {
-        name = "Diagnostics/Quickfix",
-        ["d"] = { "<cmd>TroubleToggle document_diagnostics<cr>", "Document Diagnostics" },
-        ["l"] = { "<cmd>TroubleToggle loclist<cr>", "Location List" },
-        ["q"] = { "<cmd>TroubleToggle quickfix<cr>", "Quickfix List" },
-        ["t"] = { "<cmd>TodoTrouble<cr>", "Todo Trouble" },
-        ["T"] = { "<cmd>TodoTrouble keywords=TODO,FIX,FIXME<cr>", "Todo/Fix/Fixme Trouble" },
-        ["w"] = { "<cmd>TroubleToggle workspace_diagnostics<cr>", "Workspace Diagnostics" },
-        ["x"] = { "<cmd>TroubleToggle<cr>", "Toggle Trouble" },
-        ["f"] = { function() require("config.utils").toggle_qf() end, "Toggle Quickfix" },
-      }
-    })
-    
-    -- Navigation key pairs 
-    wk.register({
-      ["["] = {
-        ["b"] = { "<cmd>bprevious<cr>", "Previous Buffer" },
-        ["c"] = { function() require("gitsigns").prev_hunk() end, "Previous Hunk" },
-        ["d"] = { vim.diagnostic.goto_prev, "Previous Diagnostic" },
-        ["l"] = { "<cmd>lprev<cr>", "Previous Location" },
-        ["q"] = { "<cmd>cprev<cr>", "Previous Quickfix" },
-        ["t"] = { function() require("todo-comments").jump_prev() end, "Previous Todo" },
-      },
-      ["]"] = {
-        ["b"] = { "<cmd>bnext<cr>", "Next Buffer" },
-        ["c"] = { function() require("gitsigns").next_hunk() end, "Next Hunk" },
-        ["d"] = { vim.diagnostic.goto_next, "Next Diagnostic" },
-        ["l"] = { "<cmd>lnext<cr>", "Next Location" },
-        ["q"] = { "<cmd>cnext<cr>", "Next Quickfix" },
-        ["t"] = { function() require("todo-comments").jump_next() end, "Next Todo" },
-      },
-    })
-    
-    -- Layout switcher
-    wk.register({
-      ["<leader>L"] = {
-        name = "Layouts",
-        ["1"] = { "<cmd>Layout coding<cr>", "Coding Layout" },
-        ["2"] = { "<cmd>Layout terminal<cr>", "Terminal Layout" },
-        ["3"] = { "<cmd>Layout writing<cr>", "Writing Layout" },
-        ["4"] = { "<cmd>Layout debug<cr>", "Debug Layout" },
-      },
+      ["<leader>db"] = { function() require("dap").toggle_breakpoint() end, "Toggle Breakpoint" },
+      ["<leader>dB"] = { function() require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: ")) end, "Conditional Breakpoint" },
+      ["<leader>dc"] = { function() require("dap").continue() end, "Continue" },
+      ["<leader>dC"] = { function() require("dap").run_to_cursor() end, "Run to Cursor" },
+      ["<leader>de"] = { function() require("dapui").eval() end, "Evaluate Expression" },
+      ["<leader>di"] = { function() require("dap").step_into() end, "Step Into" },
+      ["<leader>do"] = { function() require("dap").step_over() end, "Step Over" },
+      ["<leader>dO"] = { function() require("dap").step_out() end, "Step Out" },
+      ["<leader>dr"] = { function() require("dap").repl.toggle() end, "Toggle REPL" },
+      ["<leader>dR"] = { function() require("dap").restart() end, "Restart" },
+      ["<leader>dt"] = { function() require("dap").terminate() end, "Terminate" },
+      ["<leader>du"] = { function() require("dapui").toggle() end, "Toggle UI" },
+      ["<leader>dg"] = { function() _G.debug_goth_app() end, "Debug GOTH App" },
     })
     
     -- Function keys for debugging
     wk.register({
-      ["<F5>"] = { function() require("dap").continue() end, "Debug: Continue" },
-      ["<F10>"] = { function() require("dap").step_over() end, "Debug: Step Over" },
-      ["<F11>"] = { function() require("dap").step_into() end, "Debug: Step Into" },
-      ["<F12>"] = { function() require("dap").step_out() end, "Debug: Step Out" },
+      ["<F5>"] = { function() require("dap").continue() end, "Continue" },
+      ["<F10>"] = { function() require("dap").step_over() end, "Step Over" },
+      ["<F11>"] = { function() require("dap").step_into() end, "Step Into" },
+      ["<F12>"] = { function() require("dap").step_out() end, "Step Out" },
     })
     
-    -- LSP related keymaps
+    -- Telescope / Find
     wk.register({
-      ["g"] = {
-        ["d"] = { vim.lsp.buf.definition, "Go to Definition" },
-        ["D"] = { vim.lsp.buf.declaration, "Go to Declaration" },
-        ["r"] = { function() require("telescope.builtin").lsp_references() end, "Go to References" },
-        ["i"] = { vim.lsp.buf.implementation, "Go to Implementation" },
-        ["K"] = { vim.lsp.buf.hover, "Show Documentation" },
+      ["<leader>f/"] = { "<cmd>Telescope current_buffer_fuzzy_find<cr>", "Find in Buffer" },
+      ["<leader>fb"] = { "<cmd>Telescope buffers<cr>", "Find Buffer" },
+      ["<leader>fc"] = { "<cmd>Telescope commands<cr>", "Find Commands" },
+      ["<leader>fC"] = { function() require("telescope.builtin").find_files({cwd = vim.fn.stdpath("config")}) end, "Find Config Files" },
+      ["<leader>fd"] = { "<cmd>Telescope diagnostics bufnr=0<cr>", "Find Document Diagnostics" },
+      ["<leader>fD"] = { "<cmd>Telescope diagnostics<cr>", "Find Workspace Diagnostics" },
+      ["<leader>fe"] = { "<cmd>Telescope file_browser<cr>", "File Browser" },
+      ["<leader>ff"] = { "<cmd>Telescope find_files<cr>", "Find Files" },
+      ["<leader>fg"] = { "<cmd>Telescope live_grep<cr>", "Find Text (Grep)" },
+      ["<leader>fh"] = { "<cmd>Telescope help_tags<cr>", "Find Help" },
+      ["<leader>fk"] = { "<cmd>Telescope keymaps<cr>", "Find Keymaps" },
+      ["<leader>fn"] = { "<cmd>Telescope file_browser<cr>", "Browse Next.js Project" },
+      ["<leader>fo"] = { "<cmd>Telescope vim_options<cr>", "Find Options" },
+      ["<leader>fp"] = { "<cmd>Telescope projects<cr>", "Find Projects" },
+      ["<leader>fr"] = { "<cmd>Telescope oldfiles<cr>", "Recent Files" },
+      ["<leader>fR"] = { "<cmd>Telescope frecency<cr>", "Frecent Files" },
+      ["<leader>fs"] = { "<cmd>Telescope lsp_document_symbols<cr>", "Find Document Symbols" },
+      ["<leader>fS"] = { "<cmd>Telescope lsp_workspace_symbols<cr>", "Find Workspace Symbols" },
+      ["<leader>ft"] = { "<cmd>Telescope filetypes<cr>", "Find Filetypes" },
+      ["<leader>fT"] = { "<cmd>Telescope builtin<cr>", "Find Telescope Pickers" },
+      ["<leader>f."] = { "<cmd>Telescope resume<cr>", "Resume Last Search" },
+    })
+    
+    -- Git commands
+    wk.register({
+      ["<leader>gb"] = { "<cmd>Telescope git_branches<cr>", "Git Branches" },
+      ["<leader>gc"] = { "<cmd>Telescope git_commits<cr>", "Git Commits" },
+      ["<leader>gd"] = { "<cmd>DiffviewOpen<cr>", "DiffView Open" },
+      ["<leader>gD"] = { "<cmd>DiffviewClose<cr>", "DiffView Close" },
+      ["<leader>ge"] = { "<cmd>Neotree git_status reveal float<cr>", "Git Explorer" },
+      ["<leader>gg"] = { "<cmd>LazyGit<cr>", "Lazygit" },
+      ["<leader>gh"] = { "<cmd>DiffviewFileHistory %<cr>", "File History" },
+      ["<leader>gH"] = { "<cmd>DiffviewFileHistory<cr>", "Project History" },
+      ["<leader>gl"] = { "<cmd>Git pull<cr>", "Git Pull" },
+      ["<leader>gp"] = { "<cmd>Git push<cr>", "Git Push" },
+      ["<leader>gs"] = { "<cmd>Telescope git_status<cr>", "Git Status" },
+      ["<leader>go"] = { "<cmd>Octo<cr>", "Octo" },
+      ["<leader>gi"] = { "<cmd>Octo issue list<cr>", "Issue List" },
+      ["<leader>gr"] = { "<cmd>Octo pr list<cr>", "PR List" },
+    })
+    
+    -- Git Signs / Hunks 
+    wk.register({
+      ["<leader>hb"] = { function() require("gitsigns").blame_line({ full = true }) end, "Blame Line" },
+      ["<leader>hB"] = { function() require("gitsigns").toggle_current_line_blame() end, "Toggle Line Blame" },
+      ["<leader>hd"] = { function() require("gitsigns").diffthis() end, "Diff This" },
+      ["<leader>hD"] = { function() require("gitsigns").diffthis("~") end, "Diff This ~" },
+      ["<leader>hp"] = { function() require("gitsigns").preview_hunk() end, "Preview Hunk" },
+      ["<leader>hr"] = { function() require("gitsigns").reset_hunk() end, "Reset Hunk" },
+      ["<leader>hR"] = { function() require("gitsigns").reset_buffer() end, "Reset Buffer" },
+      ["<leader>hs"] = { function() require("gitsigns").stage_hunk() end, "Stage Hunk" },
+      ["<leader>hS"] = { function() require("gitsigns").stage_buffer() end, "Stage Buffer" },
+      ["<leader>hu"] = { function() require("gitsigns").undo_stage_hunk() end, "Undo Stage Hunk" },
+    })
+    
+    -- Noice and notifications
+    wk.register({
+      ["<leader>na"] = { function() require("noice").cmd("all") end, "Noice All" },
+      ["<leader>nd"] = { function() require("noice").cmd("dismiss") end, "Dismiss All" },
+      ["<leader>nh"] = { function() require("noice").cmd("history") end, "Noice History" },
+      ["<leader>nl"] = { function() require("noice").cmd("last") end, "Noice Last Message" },
+      ["<leader>ne"] = { function() require("noice").cmd("errors") end, "Noice Errors" },
+      ["<leader>nn"] = { function() require("noice").cmd("telescope") end, "Telescope Noice" },
+    })
+    
+    -- Quick exit and sessions
+    wk.register({
+      ["<leader>qq"] = { "<cmd>qa<cr>", "Quit All" },
+      ["<leader>qw"] = { "<cmd>wqa<cr>", "Save and Quit All" },
+      ["<leader>qs"] = { function() require("persistence").load() end, "Restore Session" },
+      ["<leader>ql"] = { function() require("persistence").load({ last = true }) end, "Restore Last Session" },
+      ["<leader>qd"] = { function() require("persistence").stop() end, "Don't Save Current Session" },
+    })
+    
+    -- Stack-specific commands
+    wk.register({
+      ["<leader>sg"] = { name = "+GOTH Stack" },
+      ["<leader>sgn"] = { function()
+          vim.ui.input({ prompt = "Project name: " }, function(name)
+            if name and name ~= "" then
+              local Terminal = require("toggleterm.terminal").Terminal
+              local goth_init = Terminal:new({
+                cmd = string.format("mkdir -p %s && cd %s && go mod init %s && mkdir -p components handlers static", name, name, name),
+                hidden = false,
+                direction = "float",
+                on_exit = function()
+                  vim.cmd("cd " .. name)
+                  vim.notify("GOTH project '" .. name .. "' initialized!", vim.log.levels.INFO)
+                end,
+              })
+              goth_init:toggle()
+            end
+          end)
+        end, 
+        "New GOTH Project" 
+      },
+      ["<leader>sgr"] = { function()
+          local Terminal = require("toggleterm.terminal").Terminal
+          local goth_run = Terminal:new({
+            cmd = "templ generate && go run .",
+            hidden = false,
+            direction = "horizontal",
+          })
+          goth_run:toggle()
+        end, 
+        "Run GOTH Project" 
+      },
+      ["<leader>sgd"] = { "<cmd>DebugGOTHApp<cr>", "Debug GOTH App" },
+      ["<leader>sgg"] = { "<cmd>!templ generate<cr>", "Generate Templ Files" },
+      ["<leader>sgc"] = { function() require("config.utils").new_templ_component() end, "New Templ Component" },
+      ["<leader>sgt"] = { "<cmd>!go test ./...<cr>", "Run Go Tests" },
+      ["<leader>sgm"] = { "<cmd>!go mod tidy<cr>", "Go Mod Tidy" },
+      ["<leader>sgb"] = { "<cmd>!go build<cr>", "Go Build" },
+      ["<leader>sgp"] = { "<cmd>StackFocus goth<cr>", "Focus GOTH Stack" },
+    })
+    
+    wk.register({
+      ["<leader>sn"] = { name = "+Next.js Stack" },
+      ["<leader>snn"] = { function()
+          vim.ui.input({ prompt = "Project name: " }, function(name)
+            if name and name ~= "" then
+              local Terminal = require("toggleterm.terminal").Terminal
+              local nextjs_init = Terminal:new({
+                cmd = string.format("npx create-next-app@latest %s --typescript --eslint --tailwind --app --src-dir --import-alias '@/*'", name),
+                hidden = false,
+                direction = "float",
+              })
+              nextjs_init:toggle()
+            end
+          end)
+        end,
+        "New Next.js Project" 
+      },
+      ["<leader>snd"] = { function()
+          local Terminal = require("toggleterm.terminal").Terminal
+          local nextjs_dev = Terminal:new({
+            cmd = "npm run dev",
+            hidden = false,
+            direction = "horizontal",
+          })
+          nextjs_dev:toggle()
+        end,
+        "Run Development Server" 
+      },
+      ["<leader>snb"] = { function()
+          local Terminal = require("toggleterm.terminal").Terminal
+          local nextjs_build = Terminal:new({
+            cmd = "npm run build",
+            hidden = false,
+            direction = "horizontal",
+          })
+          nextjs_build:toggle()
+        end,
+        "Build for Production" 
+      },
+      ["<leader>sns"] = { function()
+          local Terminal = require("toggleterm.terminal").Terminal
+          local nextjs_start = Terminal:new({
+            cmd = "npm run start",
+            hidden = false,
+            direction = "horizontal",
+          })
+          nextjs_start:toggle()
+        end,
+        "Start Production Server" 
+      },
+      ["<leader>snt"] = { function()
+          local Terminal = require("toggleterm.terminal").Terminal
+          local nextjs_test = Terminal:new({
+            cmd = "npm run test",
+            hidden = false,
+            direction = "horizontal",
+          })
+          nextjs_test:toggle()
+        end,
+        "Run Tests" 
+      },
+      ["<leader>snl"] = { function()
+          local Terminal = require("toggleterm.terminal").Terminal
+          local nextjs_lint = Terminal:new({
+            cmd = "npm run lint",
+            hidden = false,
+            direction = "horizontal",
+          })
+          nextjs_lint:toggle()
+        end,
+        "Lint Project" 
+      },
+      ["<leader>snc"] = { function() require("config.utils").new_nextjs_component("client") end, "New Client Component" },
+      ["<leader>snS"] = { function() require("config.utils").new_nextjs_component("server") end, "New Server Component" },
+      ["<leader>snp"] = { function() require("config.utils").new_nextjs_component("page") end, "New Page" },
+      ["<leader>snL"] = { function() require("config.utils").new_nextjs_component("layout") end, "New Layout" },
+      ["<leader>snf"] = { "<cmd>StackFocus nextjs<cr>", "Focus Next.js Stack" },
+      ["<leader>sni"] = { function()
+          vim.ui.input({ prompt = "Package name: " }, function(package)
+            if package and package ~= "" then
+              local Terminal = require("toggleterm.terminal").Terminal
+              local npm_install = Terminal:new({
+                cmd = "npm install " .. package,
+                hidden = false,
+                direction = "float",
+              })
+              npm_install:toggle()
+            end
+          end)
+        end,
+        "Install Package"
+      },
+      ["<leader>snD"] = { function()
+          vim.ui.input({ prompt = "Dev package name: " }, function(package)
+            if package and package ~= "" then
+              local Terminal = require("toggleterm.terminal").Terminal
+              local npm_install_dev = Terminal:new({
+                cmd = "npm install -D " .. package,
+                hidden = false,
+                direction = "float",
+              })
+              npm_install_dev:toggle()
+            end
+          end)
+        end,
+        "Install Dev Package"
       },
     })
     
-    -- Additional key mappings
-    vim.keymap.set("n", "<leader>gg", "<cmd>LazyGit<cr>", { desc = "Lazygit" })
-    vim.keymap.set("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle colorscheme" })
-    vim.keymap.set("n", "<leader>uT", "<cmd>ToggleTransparency<cr>", { desc = "Toggle transparency" })
-    vim.keymap.set("n", "<leader>cr", "<cmd>ReloadConfig<cr>", { desc = "Reload config" })
-  end,
+    -- Shared commands
+    wk.register({
+      ["<leader>sr"] = { "<cmd>lua _G.toggle_htmx_server()<cr>", "Run Server" },
+    })
+    
+    -- Terminal commands
+    wk.register({
+      ["<leader>tf"] = { "<cmd>ToggleTerm direction=float<cr>", "Terminal (float)" },
+      ["<leader>th"] = { "<cmd>ToggleTerm direction=horizontal<cr>", "Terminal (horizontal)" },
+      ["<leader>tv"] = { "<cmd>ToggleTerm direction=vertical<cr>", "Terminal (vertical)" },
+      ["<leader>tt"] = { "<cmd>ToggleTerm<cr>", "Toggle terminal" },
+      ["<leader>tb"] = { function() require("gitsigns").toggle_current_line_blame() end, "Toggle Line Blame" },
+      ["<leader>td"] = { function() require("gitsigns").toggle_deleted() end, "Toggle Deleted" },
+      ["<leader>tn"] = { function() _G.toggle_node() end, "Node Terminal" },
+      ["<leader>tp"] = { function() _G.toggle_python() end, "Python Terminal" },
+      ["<leader>tg"] = { function() _G.toggle_go() end, "Go Terminal" },
+      ["<leader>ts"] = { function() _G.toggle_htmx_server() end, "HTMX Server" },
+      ["<leader>tc"] = { function() require("config.utils").toggle_colorcolumn() end, "Toggle Color Column" },
+      ["<leader>tw"] = { function() vim.wo.wrap = not vim.wo.wrap; vim.notify("Wrap " .. (vim.wo.wrap and "enabled" or "disabled")) end, "Toggle Wrap" },
+      ["<leader>ta"] = { "<cmd>FormatToggle<cr>", "Toggle Auto Format (global)" },
+      ["<leader>tA"] = { "<cmd>FormatToggleBuffer<cr>", "Toggle Auto Format (buffer)" },
+    })
+    
+    -- UI toggles and commands
+    wk.register({
+      ["<leader>uc"] = { "<cmd>ColorSchemeToggle<cr>", "Toggle Colorscheme" },
+      ["<leader>un"] = { function() require("notify").dismiss({ silent = true, pending = true }) end, "Dismiss Notifications" },
+      ["<leader>ur"] = { "<Cmd>nohlsearch<Bar>diffupdate<Bar>normal! <C-L><CR>", "Redraw / Clear Highlight" },
+      ["<leader>ut"] = { "<cmd>ToggleTransparency<cr>", "Toggle Transparency" },
+      ["<leader>uT"] = { "<cmd>ToggleTransparency<cr>", "Toggle Transparency" },
+      ["<leader>ul"] = { "<cmd>Lazy<cr>", "Lazy Plugin Manager" },
+      ["<leader>uL"] = { "<cmd>LazyUpdate<cr>", "Update Plugins" },
+      ["<leader>um"] = { "<cmd>Mason<cr>", "Mason LSP Manager" },
+      ["<leader>uM"] = { "<cmd>MasonUpdate<cr>", "Update LSP Servers" },
+      ["<leader>uh"] = { "<cmd>ToggleInlayHints<CR>", "Toggle inlay hints" },
+    })
+
+    -- Windows management
+    wk.register({
+      ["<leader>w-"] = { "<C-W>s", "Split window below" },
+      ["<leader>w|"] = { "<C-W>v", "Split window right" },
+      ["<leader>w2"] = { "<C-W>v", "Layout double columns" },
+      ["<leader>wh"] = { "<C-W>h", "Go to left window" },
+      ["<leader>wj"] = { "<C-W>j", "Go to lower window" },
+      ["<leader>wk"] = { "<C-W>k", "Go to upper window" },
+      ["<leader>wl"] = { "<C-W>l", "Go to right window" },
+      ["<leader>wq"] = { "<C-W>q", "Close window" },
+      ["<leader>ww"] = { "<C-W>w", "Other window" },
+      ["<leader>w="] = { "<C-W>=", "Balance windows" },
+    })
+
+    -- Diagnostics and quickfix
+    wk.register({
+      ["<leader>xx"] = { "<cmd>TroubleToggle<cr>", "Toggle Trouble" },
+      ["<leader>xd"] = { "<cmd>TroubleToggle document_diagnostics<cr>", "Document Diagnostics" },
+      ["<leader>xl"] = { "<cmd>TroubleToggle loclist<cr>", "Location List" },
+      ["<leader>xq"] = { "<cmd>TroubleToggle quickfix<cr>", "Quickfix List" },
+      ["<leader>xt"] = { "<cmd>TodoTrouble<cr>", "Todo Trouble" },
+      ["<leader>xT"] = { "<cmd>TodoTrouble keywords=TODO,FIX,FIXME<cr>", "Todo/Fix/Fixme Trouble" },
+      ["<leader>xw"] = { "<cmd>TroubleToggle workspace_diagnostics<cr>", "Workspace Diagnostics" },
+      ["<leader>xf"] = { function() require("config.utils").toggle_qf() end, "Toggle Quickfix" },
+    })
+
+    -- Navigation key pairs 
+    wk.register({
+      ["[b"] = { "<cmd>bprevious<cr>", "Previous Buffer" },
+      ["[c"] = { function() require("gitsigns").prev_hunk() end, "Previous Hunk" },
+      ["[d"] = { vim.diagnostic.goto_prev, "Previous Diagnostic" },
+      ["[l"] = { "<cmd>lprev<cr>", "Previous Location" },
+      ["[q"] = { "<cmd>cprev<cr>", "Previous Quickfix" },
+      ["[t"] = { function() require("todo-comments").jump_prev() end, "Previous Todo" },
+      
+      ["]b"] = { "<cmd>bnext<cr>", "Next Buffer" },
+      ["]c"] = { function() require("gitsigns").next_hunk() end, "Next Hunk" },
+      ["]d"] = { vim.diagnostic.goto_next, "Next Diagnostic" },
+      ["]l"] = { "<cmd>lnext<cr>", "Next Location" },
+      ["]q"] = { "<cmd>cnext<cr>", "Next Quickfix" },
+      ["]t"] = { function() require("todo-comments").jump_next() end, "Next Todo" },
+    })
+
+    -- Layout switcher
+    wk.register({
+      ["<leader>L1"] = { "<cmd>Layout coding<cr>", "Coding Layout" },
+      ["<leader>L2"] = { "<cmd>Layout terminal<cr>", "Terminal Layout" },
+      ["<leader>L3"] = { "<cmd>Layout writing<cr>", "Writing Layout" },
+      ["<leader>L4"] = { "<cmd>Layout debug<cr>", "Debug Layout" },
+    })
+
+    -- LSP related keymaps
+    wk.register({
+      ["gd"] = { vim.lsp.buf.definition, "Go to Definition" },
+      ["gD"] = { vim.lsp.buf.declaration, "Go to Declaration" },
+      ["gr"] = { function() require("telescope.builtin").lsp_references() end, "Go to References" },
+      ["gi"] = { vim.lsp.buf.implementation, "Go to Implementation" },
+      ["gt"] = { vim.lsp.buf.type_definition, "Type Definition" },
+      ["K"] = { vim.lsp.buf.hover, "Show Documentation" },
+      ["<C-k>"] = { vim.lsp.buf.signature_help, "Signature Help" },
+    })
+
+    -- Explorer
+    wk.register({
+      ["<leader>e"] = { function() require("neo-tree.command").execute({ toggle = true, dir = vim.loop.cwd() }) end, "Explorer NeoTree (cwd)" },
+      ["<leader>E"] = { function() require("neo-tree.command").execute({ toggle = true, dir = vim.fn.stdpath("config") }) end, "Explorer NeoTree (config)" },
+      ["<leader>se"] = { "<cmd>Neotree document_symbols reveal float<cr>", "Symbols Explorer" },
+      ["-"] = { "<CMD>Oil<CR>", "Open parent directory" },
+    })
+
+    -- Move Lines (normal mode)
+    wk.register({
+      ["<A-j>"] = { "<cmd>m .+1<cr>==", "Move line down" },
+      ["<A-k>"] = { "<cmd>m .-2<cr>==", "Move line up" },
+    }, { mode = "n" })
+
+    -- Move Lines (insert mode)
+    wk.register({
+      ["<A-j>"] = { "<esc><cmd>m .+1<cr>==gi", "Move line down" },
+      ["<A-k>"] = { "<esc><cmd>m .-2<cr>==gi", "Move line up" },
+    }, { mode = "i" })
+
+    -- Move Lines (visual mode)
+    wk.register({
+      ["<A-j>"] = { ":m '>+1<cr>gv=gv", "Move selection down" },
+      ["<A-k>"] = { ":m '<-2<cr>gv=gv", "Move selection up" },
+    }, { mode = "v" })
+
+    -- Better window navigation
+    wk.register({
+      ["<C-h>"] = { "<C-w>h", "Go to left window" },
+      ["<C-j>"] = { "<C-w>j", "Go to lower window" },
+      ["<C-k>"] = { "<C-w>k", "Go to upper window" },
+      ["<C-l>"] = { "<C-w>l", "Go to right window" },
+    })
+
+    -- Resize window using <ctrl> arrow keys
+    wk.register({
+      ["<C-Up>"] = { "<cmd>resize +2<cr>", "Increase window height" },
+      ["<C-Down>"] = { "<cmd>resize -2<cr>", "Decrease window height" },
+      ["<C-Left>"] = { "<cmd>vertical resize -2<cr>", "Decrease window width" },
+      ["<C-Right>"] = { "<cmd>vertical resize +2<cr>", "Increase window width" },
+    })
+
+    -- Clear search with <esc>
+    wk.register({
+      ["<esc>"] = { "<cmd>noh<cr><esc>", "Escape and clear hlsearch" },
+    }, { mode = { "i", "n" } })
+
+    -- Save file
+    wk.register({
+      ["<C-s>"] = { "<cmd>w<cr><esc>", "Save file" },
+    }, { mode = { "i", "x", "n", "s" } })
+
+    -- Better indenting
+    wk.register({
+      ["<"] = { "<gv", "Unindent line" },
+      [">"] = { ">gv", "Indent line" },
+    }, { mode = "v" })
+
+    -- Paste over currently selected text without yanking it
+    wk.register({
+      ["p"] = { '"_dP', "Better paste" },
+    }, { mode = "v" })
+
+    -- Maintain cursor position when joining lines
+    wk.register({
+      ["J"] = { "mzJ`z", "Join lines and maintain cursor position" },
+    })
+
+    -- Better navigation
+    wk.register({
+      ["<C-d>"] = { "<C-d>zz", "Scroll down half a page and center" },
+      ["<C-u>"] = { "<C-u>zz", "Scroll up half a page and center" },
+      ["n"] = { "nzzzv", "Next search result and center" },
+      ["N"] = { "Nzzzv", "Previous search result and center" },
+    })
+  end
 }
