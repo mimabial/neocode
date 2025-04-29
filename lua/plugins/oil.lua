@@ -2,7 +2,7 @@
 return {
   "stevearc/oil.nvim",
   lazy = false,
-  priority = 100,
+  priority = 900, -- Increased priority to load before other UI components
   dependencies = { { "nvim-tree/nvim-web-devicons", lazy = true } },
 
   opts = {
@@ -149,17 +149,14 @@ return {
     },
   },
 
-  keys = function()
-    if vim.g.default_explorer == "oil" then
-      return {
-        { "-", "<CMD>Oil<CR>", desc = "Open parent directory" },
-        { "_", "<CMD>Oil .<CR>", desc = "Open project root" },
-        { "<leader>o", "<CMD>Oil --float<CR>", desc = "Open parent (float)" },
-        { "<leader>O", "<CMD>Oil .<CR>", desc = "Open root" },
-      }
-    end
-    return {}
-  end,
+  keys = {
+    { "-", "<CMD>Oil<CR>", desc = "Open parent directory" },
+    { "_", "<CMD>Oil .<CR>", desc = "Open project root" },
+    { "<leader>o", "<CMD>Oil --float<CR>", desc = "Open parent (float)" },
+    { "<leader>O", "<CMD>Oil .<CR>", desc = "Open root" },
+    { "<leader>e", "<CMD>Oil<CR>", desc = "Oil Explorer" },
+    { "<leader>E", "<CMD>Oil --float<CR>", desc = "Oil Explorer (float)" },
+  },
 
   config = function(_, opts)
     local oil = require("oil")
@@ -177,22 +174,35 @@ return {
       vim.notify("Oil focused on Next.js stack", vim.log.levels.INFO)
     end, { desc = "Oil explorer: Next.js stack" })
 
-    -- Gruvbox Material highlights
+    -- Gruvbox Material highlights using local function
     vim.api.nvim_create_autocmd("ColorScheme", {
       callback = function()
-        local hl = vim.api.nvim_get_hl(0, {})
-        local green = M.get_hl_color("GruvboxGreen", "fg", "#89b482")
-        local aqua  = M.get_hl_color("GruvboxAqua",  "fg", "#7daea3")
-        local yellow= M.get_hl_color("GruvboxYellow","fg", "#d8a657")
+        -- Local helper function to safely get highlight colors
+        local function get_hl_color(name, attr, default)
+          local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = name })
+          if ok and hl and hl[attr] then
+            if type(hl[attr]) == "number" then
+              return string.format("#%06x", hl[attr])
+            end
+            return tostring(hl[attr])
+          end
+          return default
+        end
+
+        local green = get_hl_color("GruvboxGreen", "fg", "#89b482")
+        local aqua  = get_hl_color("GruvboxAqua",  "fg", "#7daea3")
+        local yellow= get_hl_color("GruvboxYellow","fg", "#d8a657")
+        local red = get_hl_color("GruvboxRed", "fg", "#ea6962")
+        local purple = get_hl_color("GruvboxPurple", "fg", "#d3869b")
 
         vim.api.nvim_set_hl(0, "OilDir",    { fg = aqua,  bold = true })
         vim.api.nvim_set_hl(0, "OilLink",   { fg = green, underline = true })
         vim.api.nvim_set_hl(0, "OilFile",   { fg = yellow })
         vim.api.nvim_set_hl(0, "OilCreate", { fg = green, bold = true })
-        vim.api.nvim_set_hl(0, "OilDelete", { fg = "#ea6962", bold = true })
-        vim.api.nvim_set_hl(0, "OilMove",   { fg = "#d3869b", bold = true })
-        vim.api.nvim_set_hl(0, "OilCopy",   { fg = "#7daea3", bold = true })
-        vim.api.nvim_set_hl(0, "OilChange", { fg = "#d8a657", bold = true })
+        vim.api.nvim_set_hl(0, "OilDelete", { fg = red, bold = true })
+        vim.api.nvim_set_hl(0, "OilMove",   { fg = purple, bold = true })
+        vim.api.nvim_set_hl(0, "OilCopy",   { fg = aqua, bold = true })
+        vim.api.nvim_set_hl(0, "OilChange", { fg = yellow, bold = true })
       end,
     })
 
@@ -209,9 +219,8 @@ return {
           vim.keymap.set(m, lhs, rhs, { buffer = true, silent = true, desc = desc })
         end
         map("n", "?", "g?", "Show help")
-        map("n", "q", "<cmd>oil.close()<cr>", "Close Oil")
+        map("n", "q", "<cmd>close<cr>", "Close Oil") -- Fixed closing command
       end,
     })
   end,
 }
-

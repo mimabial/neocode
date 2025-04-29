@@ -37,6 +37,9 @@ if vim.g.current_stack == nil then
   end
 end
 
+-- Explicitly set Oil as default explorer
+vim.g.default_explorer = "oil"
+
 -- Setup lazy.nvim with conditional imports and explicit priorities
 require("lazy").setup({
   spec = {
@@ -45,37 +48,23 @@ require("lazy").setup({
       { "nvim-tree/nvim-web-devicons", priority = 1000 },
       { "sainnhe/gruvbox-material", priority = 950 },
       { "folke/tokyonight.nvim", priority = 940 },
-      { "stevearc/oil.nvim", priority = 900 }, -- Keep oil.nvim as it's used by snacks.nvim
-      { "folke/snacks.nvim", priority = 950 }, -- Elevate snacks.nvim priority to load earlier
-      { "folke/which-key.nvim", priority = 800 }, -- High priority for which-key
+      -- Make Oil load before other explorers/pickers
+      { "stevearc/oil.nvim", priority = 900 },
+      -- Keep snacks.nvim for picker functionality only
+      { "folke/snacks.nvim", priority = 800 },
+      { "folke/which-key.nvim", priority = 700 },
       import = "plugins.ui" 
     },
     
-    -- Use snacks.nvim instead of telescope
-    {
-      "folke/snacks.nvim", 
-      priority = 950,
-      enabled = true,
-      -- Disable telescope when using snacks.nvim
-      -- We keep telescope code but disable it to avoid breaking dependencies
-      cond = function()
-        return vim.g.default_picker == "snacks"
-      end,
-    },
-    
-    -- Keep telescope.nvim but with lower priority
-    {
-      "nvim-telescope/telescope.nvim",
-      priority = 200,
-      enabled = function() 
-        -- Only enable if explicitly requested
-        return vim.g.default_picker == "telescope"
-      end,
-    },
-    
-    -- Disable neo-tree plugin
+    -- Explicitly disable Neo-tree plugin
     {
       "nvim-neo-tree/neo-tree.nvim",
+      enabled = false,
+    },
+    
+    -- Explicitly disable telescope.nvim
+    {
+      "nvim-telescope/telescope.nvim",
       enabled = false,
     },
     
@@ -97,7 +86,7 @@ require("lazy").setup({
     },
   },
   defaults = {
-    lazy = false, -- Load plugins eagerly instead of lazy-loading by default
+    lazy = true, -- Lazy-load plugins by default for better startup time
     version = false, -- Always use the latest git commit
   },
   install = {
@@ -171,7 +160,7 @@ vim.api.nvim_create_autocmd("FileType", {
 -- Set up custom commands
 vim.api.nvim_create_user_command("LazyGit", function()
   -- Check if toggleterm is available
-  if _G.utils.has_plugin("toggleterm.nvim") then
+  if _G.utils and _G.utils.has_plugin("toggleterm.nvim") then
     if _G.toggle_lazygit then
       _G.toggle_lazygit()
     else
@@ -198,7 +187,7 @@ end, { desc = "Open Lazygit" })
 -- Create a command to update plugins and Mason packages
 vim.api.nvim_create_user_command("UpdateAll", function()
   vim.cmd("Lazy update")
-  if _G.utils.has_plugin("mason.nvim") then
+  if _G.utils and _G.utils.has_plugin("mason.nvim") then
     vim.cmd("MasonUpdate")
   end
   vim.notify("Updated plugins and Mason packages", vim.log.levels.INFO)
@@ -216,7 +205,7 @@ vim.api.nvim_create_user_command("Profile", function()
   vim.notify("Profiling started, restart Neovim to generate profile.log", vim.log.levels.INFO)
 end, { desc = "Start profiling Neovim" })
 
--- Improved command for switching between stacks with auto-detection
+-- Command for switching between stacks with auto-detection
 vim.api.nvim_create_user_command("StackFocus", function(opts)
   -- Delegate to the stack.lua implementation
   stack.configure_stack(opts.args)
@@ -224,7 +213,7 @@ end, { nargs = "?", desc = "Focus on a specific tech stack", complete = function
   return { "goth", "nextjs" }
 end})
 
--- Create a command to toggle transparency
+-- Command to toggle transparency
 vim.api.nvim_create_user_command("ToggleTransparency", function()
   if vim.g.gruvbox_material_transparent_background == 1 then
     vim.g.gruvbox_material_transparent_background = 0
@@ -238,23 +227,26 @@ vim.api.nvim_create_user_command("ToggleTransparency", function()
   vim.cmd("colorscheme " .. vim.g.colors_name)
 end, { desc = "Toggle background transparency" })
 
--- Create a command to quickly switch between common layouts
+-- Command to quickly switch between common layouts
 vim.api.nvim_create_user_command("Layout", function(opts)
   local layout = opts.args
   
   if layout == "coding" then
-    -- Use snacks.nvim instead of oil.nvim
-    require("snacks.explorer").toggle()
+    -- Use Oil instead of snacks explorer
+    vim.cmd("Oil")
     vim.cmd("wincmd l") -- Move to the right window (main buffer)
   elseif layout == "terminal" then
-    require("snacks.explorer").close()
+    vim.cmd("Oil")
+    vim.cmd("wincmd l") -- Ensure we're in the main window
     vim.cmd("ToggleTerm direction=horizontal")
   elseif layout == "writing" then
-    require("snacks.explorer").close()
+    vim.cmd("only") -- Close all other windows
     vim.cmd("set wrap linebreak")
-    _G.utils.center_buffer()
+    if _G.utils and _G.utils.center_buffer then
+      _G.utils.center_buffer()
+    end
   elseif layout == "debug" then
-    require("snacks.explorer").close()
+    vim.cmd("only") -- Close all other windows
     if package.loaded["dapui"] then
       require("dapui").open()
     else
@@ -267,31 +259,36 @@ end, { nargs = "?", desc = "Switch workspace layout", complete = function()
   return { "coding", "terminal", "writing", "debug" }
 end})
 
+-- Set explorer toggle command to default to Oil
 vim.api.nvim_create_user_command("ExplorerToggle", function(args)
   local explorer_type = args.args
-  if explorer_type == "oil" then
+  if explorer_type == "oil" or explorer_type == "" then
     vim.g.default_explorer = "oil"
     vim.cmd("Oil")
-    -- Update keymaps by reloading config
-    vim.cmd("ReloadConfig")
     vim.notify("Default explorer set to: Oil", vim.log.levels.INFO)
   elseif explorer_type == "snacks" then
     vim.g.default_explorer = "snacks"
-    require("snacks.explorer").toggle()
-    -- Update keymaps by reloading config
-    vim.cmd("ReloadConfig") 
-    vim.notify("Default explorer set to: Snacks", vim.log.levels.INFO)
-  else
-    -- Toggle between explorers
-    if vim.g.default_explorer == "oil" then
-      vim.g.default_explorer = "snacks"
+    if package.loaded["snacks.explorer"] then
       require("snacks.explorer").toggle()
+      vim.notify("Default explorer set to: Snacks", vim.log.levels.INFO)
+    else
+      vim.notify("Snacks explorer not available, using Oil instead", vim.log.levels.WARN)
+      vim.g.default_explorer = "oil"
+      vim.cmd("Oil")
+    end
+  else
+    -- Toggle between explorers (though we prefer Oil)
+    if vim.g.default_explorer == "oil" then
+      if package.loaded["snacks.explorer"] then
+        vim.g.default_explorer = "snacks"
+        require("snacks.explorer").toggle()
+      else
+        vim.cmd("Oil")
+      end
     else
       vim.g.default_explorer = "oil"
       vim.cmd("Oil")
     end
-    -- Update keymaps by reloading config
-    vim.cmd("ReloadConfig")
     vim.notify("Default explorer set to: " .. vim.g.default_explorer, vim.log.levels.INFO)
   end
 end, { nargs = "?", complete = function() return {"oil", "snacks"} end, desc = "Set default explorer" })

@@ -1,4 +1,4 @@
--- Plugin spec for Snacks.nvim (Explorer & Picker replacement)
+-- Plugin spec for Snacks.nvim (Focused on Picker functionality, not Explorer)
 return {
   "folke/snacks.nvim",
   event = "VeryLazy",
@@ -6,51 +6,7 @@ return {
 
   opts = {
     explorer = {
-      enabled = true,
-      border = "rounded",
-      float = { enabled = true, width = 0.8, height = 0.8 },
-
-      oil = { enabled = true },
-
-      highlights = function()
-        local hl = vim.api.nvim_get_hl(0, {})
-        local green = hl.GruvboxGreen and hl.GruvboxGreen.fg or 0x89b482
-        local aqua  = hl.GruvboxAqua  and hl.GruvboxAqua.fg  or 0x7daea3
-        local yellow= hl.GruvboxYellow and hl.GruvboxYellow.fg or 0xd8a657
-        return {
-          ExplorerDirName    = { fg = string.format("#%06x", aqua),  bold = true },
-          ExplorerFileName   = { fg = string.format("#%06x", yellow) },
-          ExplorerSymlinkName= { fg = string.format("#%06x", green), underline = true },
-        }
-      end,
-
-      filter = function(entry)
-        local name = entry.name
-        if name == ".git" or name == ".DS_Store" then
-          return false
-        end
-        local stack = vim.g.current_stack
-        if stack == "goth" then
-          local skip = {"node_modules","vendor","bin","dist","build","go.sum"}
-          if vim.tbl_contains(skip, name) then return false end
-          if entry.type == "file" then
-            local ext = name:match("[^.]+$"):lower()
-            if ext == "go" or ext == "templ" then entry.priority = 10 end
-          end
-        elseif stack == "nextjs" then
-          local skip = {"node_modules",".next","out",".turbo",".vercel"}
-          if vim.tbl_contains(skip, name) then return false end
-          if entry.type == "directory" and vim.tbl_contains({"app","pages","components"}, name) then
-            entry.priority = 10
-          elseif entry.type == "file" then
-            local ext = name:match("[^.]+$"):lower()
-            if ext == "tsx" or ext == "jsx" or name:match("next.config") then
-              entry.priority = 10
-            end
-          end
-        end
-        return true
-      end,
+      enabled = false, -- Disable explorer functionality to use Oil instead
     },
 
     picker = {
@@ -121,6 +77,8 @@ return {
           command = function()
             return [[
             find . -type f \( -name '*.tsx' -o -name '*.jsx' -o -name '*.ts' -o -name '*.js' \)
+              -not -path */node_modules/*
+              -not -path */.next/*
             ]]
           end,
           prompt = "Next.js Files",
@@ -130,11 +88,7 @@ return {
   },
 
   keys = {
-    { "<leader>e", function() require('snacks.explorer').open() end,        desc = "Toggle Explorer" },
-    { "<leader>E", function() require('snacks.explorer').toggle_float() end,  desc = "Explorer Float" },
-    { "-",        function() require('snacks.explorer').open() end,        desc = "Parent Dir" },
-    { "_",        function() require('snacks.explorer').open({ path='.' }) end, desc = "Project Root" },
-
+    -- Picker keymaps only - no explorer keymaps
     { "<leader>ff", function() require('snacks.picker').find_files() end,       desc = "Find Files" },
     { "<leader>fg", function() require('snacks.picker').live_grep() end,        desc = "Live Grep" },
     { "<leader>fb", function() require('snacks.picker').buffers() end,          desc = "Buffers" },
@@ -162,20 +116,8 @@ return {
 
   config = function(_, opts)
     require("snacks").setup(opts)
-
-    local ok, wk = pcall(require, "which-key")
-    if ok then
-      wk.register({
-        ["<leader>sg"] = { e = { function()
-          vim.g.current_stack = "goth"
-          require("snacks.explorer").toggle() end, "GOTH Explorer" },
-        },
-        ["<leader>sn"] = { e = { function()
-          vim.g.current_stack = "nextjs"
-          require("snacks.explorer").toggle() end, "NextJS Explorer" },
-        },
-      })
-    end
+    
+    -- Reset default explorer to Oil even if config loads snacks explorer accidentally
+    vim.g.default_explorer = "oil"
   end,
 }
-

@@ -2,9 +2,13 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
--- Set snacks as the default explorer and picker early
+-- Set Oil as the default explorer and snacks as the default picker
 vim.g.default_explorer = "oil"
 vim.g.default_picker = "snacks"
+
+-- Disable some unused plugins early
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
 
 -- Load configurations
 require("config.options")      -- Load options
@@ -40,31 +44,43 @@ vim.api.nvim_create_user_command("ReloadConfig", function()
   vim.notify("Nvim configuration reloaded!", vim.log.levels.INFO, { title = "Config" })
 end, { desc = "Reload Neovim configuration" })
 
--- Add command to toggle between explorers
+-- Add command to toggle between explorers (with explicit preference for Oil)
 vim.api.nvim_create_user_command("ExplorerToggle", function(args)
   local explorer_type = args.args
-  if explorer_type == "oil" then
+  if explorer_type == "oil" or explorer_type == "" then
     vim.g.default_explorer = "oil"
     vim.cmd("Oil")
-  else
-    -- Default to snacks
+    vim.notify("Default explorer set to: Oil", vim.log.levels.INFO)
+  elseif explorer_type == "snacks" then
+    -- Oil is strongly preferred, but allow snacks if specifically requested
     vim.g.default_explorer = "snacks"
-    require("snacks.explorer").toggle()
+    if package.loaded["snacks.explorer"] then
+      require("snacks.explorer").toggle()
+      vim.notify("Default explorer set to: Snacks", vim.log.levels.INFO)
+    else
+      vim.notify("Snacks explorer not available, using Oil instead", vim.log.levels.WARN)
+      vim.g.default_explorer = "oil"
+      vim.cmd("Oil")
+    end
+  else
+    -- When toggling, prefer Oil
+    if vim.g.default_explorer ~= "oil" then
+      vim.g.default_explorer = "oil"
+      vim.cmd("Oil")
+    elseif package.loaded["snacks.explorer"] then
+      vim.g.default_explorer = "snacks"
+      require("snacks.explorer").toggle()
+    else
+      vim.cmd("Oil")
+    end
+    vim.notify("Default explorer set to: " .. vim.g.default_explorer, vim.log.levels.INFO)
   end
-  vim.notify("Default explorer set to: " .. vim.g.default_explorer, vim.log.levels.INFO)
 end, { nargs = "?", complete = function() return {"oil", "snacks"} end, desc = "Set default explorer" })
 
--- Add command to toggle between pickers
-vim.api.nvim_create_user_command("PickerToggle", function(args)
-  local picker_type = args.args
-  -- Default to snacks
-  vim.g.default_picker = "snacks"
-  vim.notify("Default picker set to: " .. vim.g.default_picker, vim.log.levels.INFO)
-end, { nargs = "?", complete = function() return {"snacks"} end, desc = "Set default picker" })
-
+-- Disable formatoptions that automatically continue comments
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "*",
   callback = function()
-    vim.opt_local.formatoptions:remove("cro") 
+    vim.opt_local.formatoptions:remove({ "c", "r", "o" })
   end,
 })
