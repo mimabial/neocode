@@ -3,10 +3,11 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 -- Load configurations
-require("config.options")   -- Load options
-require("config.autocmds")  -- Load autocommands
-require("config.lazy")      -- Load lazy.nvim configuration
-require("config.keymaps")   -- Load keymaps
+require("config.options")      -- Load options
+require("config.autocmds")     -- Load autocommands
+require("config.stack").setup() -- Set up stack detection before plugins
+require("config.lazy")         -- Load lazy.nvim configuration
+require("config.keymaps")      -- Load keymaps
 
 -- Print a startup message
 vim.api.nvim_create_autocmd("User", {
@@ -16,13 +17,10 @@ vim.api.nvim_create_autocmd("User", {
     local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
     local version = vim.version()
     local nvim_version_info = "v" .. version.major .. "." .. version.minor .. "." .. version.patch
-    local plugins_count = stats.count
-    local plugins_loaded = stats.loaded
-    local startup_time = ms
     
     vim.notify(string.format(
       "Neovim %s loaded %s/%s plugins in %sms",
-      nvim_version_info, plugins_loaded, plugins_count, startup_time
+      nvim_version_info, stats.loaded, stats.count, ms
     ), vim.log.levels.INFO, { title = "Neovim Loaded" })
   end,
 })

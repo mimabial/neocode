@@ -25,41 +25,16 @@ vim.opt.rtp:prepend(lazypath)
 -- Import utility functions
 _G.Util = require("config.utils")
 
--- Check if we're in a GOTH or Next.js project
-local function detect_project_type()
-  -- Check for Go files
-  local has_go = vim.fn.glob("**/*.go") ~= ""
-  local has_templ = vim.fn.glob("**/*.templ") ~= ""
-  local has_go_mod = vim.fn.filereadable("go.mod") == 1
-  
-  -- Check for Next.js files
-  local has_next_config = vim.fn.filereadable("next.config.js") == 1 or 
-                          vim.fn.filereadable("next.config.mjs") == 1 or
-                          vim.fn.filereadable("next.config.ts") == 1
-  local has_package_json = vim.fn.filereadable("package.json") == 1
-  local is_next_js = false
-  
-  if has_package_json then
-    local package_json = vim.fn.readfile("package.json")
-    local package_content = table.concat(package_json, "\n")
-    is_next_js = package_content:find('"next"') ~= nil
-  end
-  
-  -- Determine project type
-  if has_go_mod and (has_go or has_templ) then
-    return "goth"
-  elseif is_next_js or has_next_config then
-    return "nextjs"
-  end
-  
-  return nil -- Unknown project type
-end
+-- Use stack detection from config.stack module
+local stack = require("config.stack")
 
--- Detect project type
-local project_type = detect_project_type()
-if project_type then
-  vim.g.current_stack = project_type
-  print("Detected project type: " .. project_type)
+-- Check project type if not already detected by stack.setup()
+if vim.g.current_stack == nil then
+  local project_type = stack.detect_stack()
+  if project_type then
+    vim.g.current_stack = project_type
+    print("Detected project type: " .. project_type)
+  end
 end
 
 -- Setup lazy.nvim with conditional imports
@@ -87,15 +62,12 @@ require("lazy").setup({
     version = false, -- Always use the latest git commit
   },
   install = {
-    colorscheme = { "gruvbox-material", "tokyonight" }, -- Try to load these colorschemes in order
-    missing = true, -- Install missing plugins on startup
+    colorscheme = { "gruvbox-material", "tokyonight" },
+    missing = true,
   },
   ui = {
-    border = "rounded", -- Use rounded borders in the lazy UI
-    size = {
-      width = 0.8,
-      height = 0.8,
-    },
+    border = "rounded",
+    size = { width = 0.8, height = 0.8 },
     icons = {
       loaded = "●",
       not_loaded = "○",
@@ -115,13 +87,13 @@ require("lazy").setup({
     },
   },
   checker = {
-    enabled = true, -- Check for updates automatically
-    notify = false, -- Don't notify about updates
-    frequency = 3600, -- Check once every hour
+    enabled = true,
+    notify = false,
+    frequency = 3600,
   },
   change_detection = {
-    enabled = true, -- Auto reload config when plugins change
-    notify = false, -- Don't notify about config changes
+    enabled = true,
+    notify = false,
   },
   performance = {
     rtp = {
@@ -133,18 +105,13 @@ require("lazy").setup({
         "zipPlugin",
       },
     },
-    cache = {
-      enabled = true,
-    },
-    reset_packpath = true, -- Reset packpath
-    reset_rtp = false, -- Don't reset rtp
+    cache = { enabled = true },
+    reset_packpath = true,
+    reset_rtp = false,
   },
   dev = {
-    -- Directory where you store your local plugin projects
     path = "~/projects/nvim-plugins",
-    -- Patterns to detect plugin directories
-    patterns = {}, -- For example {"folke"}
-    -- Create symlink instead of cloning the plugin
+    patterns = {},
     fallback = false,
   },
   debug = false,
@@ -175,9 +142,7 @@ vim.api.nvim_create_user_command("LazyGit", function()
         cmd = "lazygit",
         hidden = true,
         direction = "float",
-        float_opts = {
-          border = "rounded",
-        },
+        float_opts = { border = "rounded" },
         on_open = function(term)
           vim.cmd("startinsert!")
           vim.api.nvim_buf_set_keymap(term.bufnr, "n", "q", "<cmd>close<CR>", {noremap = true, silent = true})
@@ -193,20 +158,15 @@ end, { desc = "Open Lazygit" })
 
 -- Create a command to update plugins and Mason packages
 vim.api.nvim_create_user_command("UpdateAll", function()
-  -- Update plugins
   vim.cmd("Lazy update")
-  
-  -- Check if Mason is available
   if _G.utils.has_plugin("mason.nvim") then
     vim.cmd("MasonUpdate")
   end
-  
   vim.notify("Updated plugins and Mason packages", vim.log.levels.INFO)
 end, { desc = "Update all plugins and Mason packages" })
 
 -- Create a command to profile startup time
 vim.api.nvim_create_user_command("Profile", function()
-  -- Check existing profile data
   local has_plenary, plenary_profile = pcall(require, "plenary.profile")
   if not has_plenary then
     vim.notify("Plenary is required for profiling", vim.log.levels.ERROR)
@@ -219,87 +179,14 @@ end, { desc = "Start profiling Neovim" })
 
 -- Improved command for switching between stacks with auto-detection
 vim.api.nvim_create_user_command("StackFocus", function(opts)
-  local stack = opts.args
-  
-  -- Auto-detect stack if no argument provided
-  if stack == "" then
-    stack = detect_project_type() or ""
-    if stack == "" then
-      vim.notify("Could not auto-detect stack type. Please specify 'goth' or 'nextjs'", vim.log.levels.WARN)
-      return
-    end
-  elseif not (stack == "goth" or stack == "nextjs") then
-    vim.notify("Please specify a valid stack: 'goth' or 'nextjs'", vim.log.levels.ERROR)
-    return
-  end
-  
-  -- Store the current stack preference
-  vim.g.current_stack = stack
-  
-  -- Configure specific settings for the selected stack
-  if stack == "goth" then
-    -- Go + Templ + HTMX stack settings
-    vim.notify("Focused on GOTH stack (Go + Templ + HTMX)", vim.log.levels.INFO)
-    
-    -- Set specific configuration for Go development
-    vim.g.go_highlight_types = 1
-    vim.g.go_highlight_fields = 1
-    vim.g.go_highlight_functions = 1
-    vim.g.go_highlight_function_calls = 1
-    
-    -- Configure linters and formatters
-    if package.loaded["conform"] then
-      require("conform").setup({
-        formatters_by_ft = {
-          go = { "gofumpt", "goimports" },
-          templ = { "templ" },
-        },
-      })
-    end
-    
-    -- Load/Focus GOTH-specific LSP settings
-    if package.loaded["lspconfig"] then
-      vim.cmd("LspGOTH")
-    end
-    
-  elseif stack == "nextjs" then
-    -- Next.js stack settings
-    vim.notify("Focused on Next.js stack", vim.log.levels.INFO)
-    
-    -- Set specific configuration for JavaScript/TypeScript development
-    vim.g.typescript_indent_disable = 1
-    
-    -- Configure linters and formatters for JS/TS
-    if package.loaded["conform"] then
-      require("conform").setup({
-        formatters_by_ft = {
-          javascript = { "prettierd", "prettier" },
-          typescript = { "prettierd", "prettier" },
-          javascriptreact = { "prettierd", "prettier" },
-          typescriptreact = { "prettierd", "prettier" },
-          json = { "prettierd", "prettier" },
-          css = { "prettierd", "prettier" },
-          html = { "prettierd", "prettier" },
-        },
-      })
-    end
-    
-    -- Load/Focus Next.js-specific LSP settings
-    if package.loaded["lspconfig"] then
-      vim.cmd("LspNextJS")
-    end
-  end
-  
-  -- Reload relevant configurations
-  vim.cmd("LspRestart")
-  
+  -- Delegate to the stack.lua implementation
+  stack.configure_stack(opts.args)
 end, { nargs = "?", desc = "Focus on a specific tech stack", complete = function()
   return { "goth", "nextjs" }
 end})
 
 -- Create a command to toggle transparency
 vim.api.nvim_create_user_command("ToggleTransparency", function()
-  -- For gruvbox-material
   if vim.g.gruvbox_material_transparent_background == 1 then
     vim.g.gruvbox_material_transparent_background = 0
     vim.notify("Transparency disabled", vim.log.levels.INFO)
@@ -320,21 +207,16 @@ vim.api.nvim_create_user_command("Layout", function(opts)
   local layout = opts.args
   
   if layout == "coding" then
-    -- Setup a coding layout with NeoTree and main buffer
     vim.cmd("Neotree show left")
     vim.cmd("wincmd l") -- Move to the right window (main buffer)
   elseif layout == "terminal" then
-    -- Setup for terminal work with main editor and terminal
     vim.cmd("Neotree close")
     vim.cmd("ToggleTerm direction=horizontal")
   elseif layout == "writing" then
-    -- Distraction-free writing layout
     vim.cmd("Neotree close")
     vim.cmd("set wrap linebreak")
-    -- Center buffer content
     _G.utils.center_buffer()
   elseif layout == "debug" then
-    -- Debug layout
     vim.cmd("Neotree close")
     if package.loaded["dapui"] then
       require("dapui").open()
@@ -347,21 +229,3 @@ vim.api.nvim_create_user_command("Layout", function(opts)
 end, { nargs = "?", desc = "Switch workspace layout", complete = function()
   return { "coding", "terminal", "writing", "debug" }
 end})
-
--- Setup auto-detection for project when starting Neovim
-vim.api.nvim_create_autocmd("VimEnter", {
-  callback = function()
-    if vim.g.current_stack == nil then
-      local detected = detect_project_type()
-      if detected then
-        vim.g.current_stack = detected
-        vim.notify("Auto-detected " .. detected .. " stack", vim.log.levels.INFO)
-        
-        -- Apply stack-specific settings
-        vim.defer_fn(function()
-          vim.cmd("StackFocus " .. detected)
-        end, 1000) -- Delay to ensure all plugins are loaded
-      end
-    end
-  end,
-})
