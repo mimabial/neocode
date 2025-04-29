@@ -46,6 +46,8 @@ require("lazy").setup({
       { "sainnhe/gruvbox-material", priority = 950 },
       { "folke/tokyonight.nvim", priority = 940 },
       { "stevearc/oil.nvim", priority = 900 }, -- Make sure oil loads before neo-tree
+      { "folke/which-key.nvim", priority = 850 }, -- High priority for which-key
+      { "folke/flash.nvim", priority = 800 }, -- Add flash.nvim with high priority
       import = "plugins.ui" 
     },
     
@@ -207,9 +209,6 @@ vim.api.nvim_create_user_command("ToggleTransparency", function()
   -- Re-apply colorscheme
   vim.cmd("colorscheme " .. vim.g.colors_name)
 end, { desc = "Toggle background transparency" })
-
--- Add a keymap for transparency toggle
-vim.keymap.set("n", "<leader>uT", "<cmd>ToggleTransparency<cr>", { desc = "Toggle Transparency" })
 
 -- Create a command to quickly switch between common layouts
 vim.api.nvim_create_user_command("Layout", function(opts)
