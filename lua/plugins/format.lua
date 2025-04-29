@@ -151,6 +151,8 @@ return {
 
       -- Lua
       stylua = {
+        config_path = vim.fn.stdpath("config") .. "/stylua.toml",
+
         args = function(self, ctx)
           local args = {
             "--search-parent-directories",
@@ -159,21 +161,10 @@ return {
             ctx.filename,
             "-"
           }
-
-          local conf_path = require("conform.util").root_file({
-            "stylua.toml",
-            ".stylua.toml",
-          }, ctx.filename)
-
-          if conf_path then
-            table.insert(args, 1, conf_path)
-            table.insert(args, 1, "--config-path")
-          end
-
+          -- no need to insert --config-path here, Conform will handle it
           return args
         end,
       },
-
 
       -- Go & GOTH stack
       gofumpt = {

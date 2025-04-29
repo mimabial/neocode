@@ -1,5 +1,6 @@
 return {
   "folke/which-key.nvim",
+  dependencies = { "folke/snacks.nvim" },
   event = "VeryLazy",
   init = function()
     vim.o.timeout = true
@@ -51,7 +52,7 @@ return {
     wk.setup(opts)
     
     -- Root groups
-    wk.register({
+    wk.add({
       ["<leader>b"] = { name = "+Buffer" },
       ["<leader>c"] = { name = "+Code/LSP" },
       ["<leader>d"] = { name = "+Debug" },
@@ -73,7 +74,7 @@ return {
     })
       
     -- Buffer management
-    wk.register({
+    wk.add({
       ["<leader>bb"] = { "<cmd>e #<cr>", "Switch to Other Buffer" },
       ["<leader>bd"] = { "<cmd>bdelete<cr>", "Delete Buffer" },
       ["<leader>bf"] = { "<cmd>bfirst<cr>", "First Buffer" },
@@ -85,7 +86,7 @@ return {
     })
     
     -- Buffer navigation with Shift
-    wk.register({
+    wk.add({
       ["<S-h>"] = { "<cmd>bprevious<cr>", "Previous buffer" },
       ["<S-l>"] = { "<cmd>bnext<cr>", "Next buffer" },
       ["[b"] = { "<cmd>bprevious<cr>", "Previous buffer" },
@@ -93,7 +94,7 @@ return {
     })
     
     -- LSP and Code actions
-    wk.register({
+    wk.add({
       ["<leader>ca"] = { vim.lsp.buf.code_action, "Code Action" },
       ["<leader>cd"] = { vim.diagnostic.open_float, "Line Diagnostics" },
       ["<leader>cf"] = { function() vim.lsp.buf.format({ async = true }) end, "Format" },
@@ -107,7 +108,7 @@ return {
     })
     
     -- GOTH stack specific
-    wk.register({
+    wk.add({
       ["<leader>cg"] = { name = "+GOTH" },
       ["<leader>cgc"] = { function() require("config.utils").new_templ_component() end, "New Templ Component" },
       ["<leader>cgt"] = { "<cmd>!go test ./...<cr>", "Run Go Tests" },
@@ -117,7 +118,7 @@ return {
     })
     
     -- Next.js specific
-    wk.register({
+    wk.add({
       ["<leader>cn"] = { name = "+Next.js" },
       ["<leader>cnc"] = { function() require("config.utils").new_nextjs_component("client") end, "New Client Component" },
       ["<leader>cns"] = { function() require("config.utils").new_nextjs_component("server") end, "New Server Component" },
@@ -130,7 +131,7 @@ return {
     })
     
     -- Debug mode keymaps
-    wk.register({
+    wk.add({
       ["<leader>db"] = { function() require("dap").toggle_breakpoint() end, "Toggle Breakpoint" },
       ["<leader>dB"] = { function() require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: ")) end, "Conditional Breakpoint" },
       ["<leader>dc"] = { function() require("dap").continue() end, "Continue" },
@@ -147,7 +148,7 @@ return {
     })
     
     -- Function keys for debugging
-    wk.register({
+    wk.add({
       ["<F5>"] = { function() require("dap").continue() end, "Continue" },
       ["<F10>"] = { function() require("dap").step_over() end, "Step Over" },
       ["<F11>"] = { function() require("dap").step_into() end, "Step Into" },
@@ -155,7 +156,7 @@ return {
     })
     
     -- Telescope / Find
-    wk.register({
+    wk.add({
       ["<leader>f/"] = { "<cmd>Telescope current_buffer_fuzzy_find<cr>", "Find in Buffer" },
       ["<leader>fb"] = { "<cmd>Telescope buffers<cr>", "Find Buffer" },
       ["<leader>fc"] = { "<cmd>Telescope commands<cr>", "Find Commands" },
@@ -180,7 +181,7 @@ return {
     })
     
     -- Git commands
-    wk.register({
+    wk.add({
       ["<leader>gb"] = { "<cmd>Telescope git_branches<cr>", "Git Branches" },
       ["<leader>gc"] = { "<cmd>Telescope git_commits<cr>", "Git Commits" },
       ["<leader>gd"] = { "<cmd>DiffviewOpen<cr>", "DiffView Open" },
@@ -198,7 +199,7 @@ return {
     })
     
     -- Git Signs / Hunks 
-    wk.register({
+    wk.add({
       ["<leader>hb"] = { function() require("gitsigns").blame_line({ full = true }) end, "Blame Line" },
       ["<leader>hB"] = { function() require("gitsigns").toggle_current_line_blame() end, "Toggle Line Blame" },
       ["<leader>hd"] = { function() require("gitsigns").diffthis() end, "Diff This" },
@@ -208,11 +209,11 @@ return {
       ["<leader>hR"] = { function() require("gitsigns").reset_buffer() end, "Reset Buffer" },
       ["<leader>hs"] = { function() require("gitsigns").stage_hunk() end, "Stage Hunk" },
       ["<leader>hS"] = { function() require("gitsigns").stage_buffer() end, "Stage Buffer" },
-      ["<leader>hu"] = { function() require("gitsigns").undo_stage_hunk() end, "Undo Stage Hunk" },
+      ["<leader>hu"] = { function() require("gitsigns").stage_hunk() end, "Undo Stage Hunk" },
     })
     
     -- Noice and notifications
-    wk.register({
+    wk.add({
       ["<leader>na"] = { function() require("noice").cmd("all") end, "Noice All" },
       ["<leader>nd"] = { function() require("noice").cmd("dismiss") end, "Dismiss All" },
       ["<leader>nh"] = { function() require("noice").cmd("history") end, "Noice History" },
@@ -222,7 +223,7 @@ return {
     })
     
     -- Quick exit and sessions
-    wk.register({
+    wk.add({
       ["<leader>qq"] = { "<cmd>qa<cr>", "Quit All" },
       ["<leader>qw"] = { "<cmd>wqa<cr>", "Save and Quit All" },
       ["<leader>qs"] = { function() require("persistence").load() end, "Restore Session" },
@@ -231,7 +232,7 @@ return {
     })
     
     -- Stack-specific commands
-    wk.register({
+    wk.add({
       ["<leader>sg"] = { name = "+GOTH Stack" },
       ["<leader>sgn"] = { function()
           vim.ui.input({ prompt = "Project name: " }, function(name)
@@ -272,7 +273,7 @@ return {
       ["<leader>sgp"] = { "<cmd>StackFocus goth<cr>", "Focus GOTH Stack" },
     })
     
-    wk.register({
+    wk.add({
       ["<leader>sn"] = { name = "+Next.js Stack" },
       ["<leader>snn"] = { function()
           vim.ui.input({ prompt = "Project name: " }, function(name)
@@ -382,12 +383,12 @@ return {
     })
     
     -- Shared commands
-    wk.register({
+    wk.add({
       ["<leader>sr"] = { "<cmd>lua _G.toggle_htmx_server()<cr>", "Run Server" },
     })
     
     -- Terminal commands
-    wk.register({
+    wk.add({
       ["<leader>tf"] = { "<cmd>ToggleTerm direction=float<cr>", "Terminal (float)" },
       ["<leader>th"] = { "<cmd>ToggleTerm direction=horizontal<cr>", "Terminal (horizontal)" },
       ["<leader>tv"] = { "<cmd>ToggleTerm direction=vertical<cr>", "Terminal (vertical)" },
@@ -405,7 +406,7 @@ return {
     })
     
     -- UI toggles and commands
-    wk.register({
+    wk.add({
       ["<leader>uc"] = { "<cmd>ColorSchemeToggle<cr>", "Toggle Colorscheme" },
       ["<leader>un"] = { function() require("notify").dismiss({ silent = true, pending = true }) end, "Dismiss Notifications" },
       ["<leader>ur"] = { "<Cmd>nohlsearch<Bar>diffupdate<Bar>normal! <C-L><CR>", "Redraw / Clear Highlight" },
@@ -419,7 +420,7 @@ return {
     })
 
     -- Windows management
-    wk.register({
+    wk.add({
       ["<leader>w-"] = { "<C-W>s", "Split window below" },
       ["<leader>w|"] = { "<C-W>v", "Split window right" },
       ["<leader>w2"] = { "<C-W>v", "Layout double columns" },
@@ -433,7 +434,7 @@ return {
     })
 
     -- Diagnostics and quickfix
-    wk.register({
+    wk.add({
       ["<leader>xx"] = { "<cmd>TroubleToggle<cr>", "Toggle Trouble" },
       ["<leader>xd"] = { "<cmd>TroubleToggle document_diagnostics<cr>", "Document Diagnostics" },
       ["<leader>xl"] = { "<cmd>TroubleToggle loclist<cr>", "Location List" },
@@ -445,7 +446,7 @@ return {
     })
 
     -- Navigation key pairs 
-    wk.register({
+    wk.add({
       ["[b"] = { "<cmd>bprevious<cr>", "Previous Buffer" },
       ["[c"] = { function() require("gitsigns").prev_hunk() end, "Previous Hunk" },
       ["[d"] = { vim.diagnostic.goto_prev, "Previous Diagnostic" },
@@ -462,7 +463,7 @@ return {
     })
 
     -- Layout switcher
-    wk.register({
+    wk.add({
       ["<leader>L1"] = { "<cmd>Layout coding<cr>", "Coding Layout" },
       ["<leader>L2"] = { "<cmd>Layout terminal<cr>", "Terminal Layout" },
       ["<leader>L3"] = { "<cmd>Layout writing<cr>", "Writing Layout" },
@@ -470,7 +471,7 @@ return {
     })
 
     -- LSP related keymaps
-    wk.register({
+    wk.add({
       ["gd"] = { vim.lsp.buf.definition, "Go to Definition" },
       ["gD"] = { vim.lsp.buf.declaration, "Go to Declaration" },
       ["gr"] = { function() require("telescope.builtin").lsp_references() end, "Go to References" },
@@ -481,7 +482,7 @@ return {
     })
 
     -- Explorer related keymaps
-    wk.register({
+    wk.add({
       ["<leader>e"] = { function() require("config.utils").open_oil() end, "File Explorer (Oil)" },
       ["<leader>E"] = { function() require("config.utils").open_oil(nil, true) end, "File Explorer Float (Oil)" },
       ["-"] = { "<CMD>Oil<CR>", "Open parent directory" },
@@ -489,7 +490,7 @@ return {
     })
 
     -- Add Explorer section to root groups
-    wk.register({
+    wk.add({
       ["<leader>f"] = { 
         name = "+Find/Telescope/Files",
         e = { function() require("config.utils").open_oil() end, "Oil Explorer" },
@@ -497,12 +498,12 @@ return {
         n = { "<cmd>Neotree toggle<cr>", "Neo-tree Explorer" },
         N = { "<cmd>Neotree float<cr>", "Neo-tree Explorer (float)" },
         t = { function() require("config.utils").toggle_explorer() end, "Toggle Explorer Type" },
-        g = { function() require("config.utils").oil_git_root() end, "Browse Git Root" },
+        g = { function() require("snacks").picker.grep() end, "Live Grep" },
       },
     })
 
     -- Stack-specific oil commands
-    wk.register({
+    wk.add({
       ["<leader>sg"] = { 
         name = "+GOTH Stack",
         -- Add oil commands for GOTH
@@ -518,25 +519,25 @@ return {
     })
 
     -- Move Lines (normal mode)
-    wk.register({
+    wk.add({
       ["<A-j>"] = { "<cmd>m .+1<cr>==", "Move line down" },
       ["<A-k>"] = { "<cmd>m .-2<cr>==", "Move line up" },
     }, { mode = "n" })
 
     -- Move Lines (insert mode)
-    wk.register({
+    wk.add({
       ["<A-j>"] = { "<esc><cmd>m .+1<cr>==gi", "Move line down" },
       ["<A-k>"] = { "<esc><cmd>m .-2<cr>==gi", "Move line up" },
     }, { mode = "i" })
 
     -- Move Lines (visual mode)
-    wk.register({
+    wk.add({
       ["<A-j>"] = { ":m '>+1<cr>gv=gv", "Move selection down" },
       ["<A-k>"] = { ":m '<-2<cr>gv=gv", "Move selection up" },
     }, { mode = "v" })
 
     -- Better window navigation
-    wk.register({
+    wk.add({
       ["<C-h>"] = { "<C-w>h", "Go to left window" },
       ["<C-j>"] = { "<C-w>j", "Go to lower window" },
       ["<C-k>"] = { "<C-w>k", "Go to upper window" },
@@ -544,7 +545,7 @@ return {
     })
 
     -- Resize window using <ctrl> arrow keys
-    wk.register({
+    wk.add({
       ["<C-Up>"] = { "<cmd>resize +2<cr>", "Increase window height" },
       ["<C-Down>"] = { "<cmd>resize -2<cr>", "Decrease window height" },
       ["<C-Left>"] = { "<cmd>vertical resize -2<cr>", "Decrease window width" },
@@ -552,33 +553,33 @@ return {
     })
 
     -- Clear search with <esc>
-    wk.register({
+    wk.add({
       ["<esc>"] = { "<cmd>noh<cr><esc>", "Escape and clear hlsearch" },
     }, { mode = { "i", "n" } })
 
     -- Save file
-    wk.register({
+    wk.add({
       ["<C-s>"] = { "<cmd>w<cr><esc>", "Save file" },
     }, { mode = { "i", "x", "n", "s" } })
 
     -- Better indenting
-    wk.register({
+    wk.add({
       ["<"] = { "<gv", "Unindent line" },
       [">"] = { ">gv", "Indent line" },
     }, { mode = "v" })
 
     -- Paste over currently selected text without yanking it
-    wk.register({
+    wk.add({
       ["p"] = { '"_dP', "Better paste" },
     }, { mode = "v" })
 
     -- Maintain cursor position when joining lines
-    wk.register({
+    wk.add({
       ["J"] = { "mzJ`z", "Join lines and maintain cursor position" },
     })
 
     -- Better navigation
-    wk.register({
+    wk.add({
       ["<C-d>"] = { "<C-d>zz", "Scroll down half a page and center" },
       ["<C-u>"] = { "<C-u>zz", "Scroll up half a page and center" },
       ["n"] = { "nzzzv", "Next search result and center" },

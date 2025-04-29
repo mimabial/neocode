@@ -55,7 +55,20 @@ vim.api.nvim_create_autocmd({ "BufLeave", "FocusLost", "InsertEnter", "WinLeave"
 -- Set filetype-specific indentation
 vim.api.nvim_create_autocmd("FileType", {
   group = augroup,
-  pattern = { "lua", "javascript", "typescript", "json", "html", "css", "yaml", "markdown", "svelte", "tsx", "jsx", "templ" },
+  pattern = {
+    "lua",
+    "javascript",
+    "typescript",
+    "json",
+    "html",
+    "css",
+    "yaml",
+    "markdown",
+    "svelte",
+    "tsx",
+    "jsx",
+    "templ",
+  },
   callback = function()
     vim.bo.tabstop = 2
     vim.bo.shiftwidth = 2
@@ -111,11 +124,18 @@ vim.api.nvim_create_autocmd("BufEnter", {
   callback = function()
     local bufname = vim.api.nvim_buf_get_name(0)
     if vim.fn.isdirectory(bufname) == 1 then
-      if vim.g.default_explorer == "oil" then
-        vim.cmd("Oil " .. bufname)
+      if package.loaded["oil"] then
+        -- already loaded, just open
+        require("oil").open(bufname)
       else
-        -- Default to snacks
-        require("snacks.explorer").toggle({ path = bufname })
+        -- use Lua API to load the plugin
+        require("lazy").load({ plugins = { "oil.nvim" } })
+        -- after a short delay, open the directory
+        vim.defer_fn(function()
+          if package.loaded["oil"] then
+            require("oil").open(bufname)
+          end
+        end, 100)
       end
     end
   end,
@@ -172,11 +192,11 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = { "html", "templ" },
   callback = function()
     -- Define HTMX attributes for highlighting
-    vim.cmd [[
+    vim.cmd([[
       syntax match htmlArg contained "\<hx-[a-zA-Z\-]\+\>"
       syntax match htmlArg contained "\<data-hx-[a-zA-Z\-]\+\>"
       highlight link htmlArg Keyword
-    ]]
+    ]])
   end,
   desc = "Highlight HTMX attributes",
 })
@@ -198,19 +218,23 @@ vim.api.nvim_create_autocmd("LspAttach", {
     vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
     vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
     vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
-    
+
     -- Use snacks.picker for references if available
     if package.loaded["snacks.picker"] then
-      vim.keymap.set("n", "gr", function() require("snacks.picker").lsp_references() end, opts)
+      vim.keymap.set("n", "gr", function()
+        require("snacks.picker").lsp_references()
+      end, opts)
     else
       vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
     end
-    
+
     vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
     vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, opts)
     vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, opts)
     vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
-    vim.keymap.set("n", "<leader>cf", function() vim.lsp.buf.format({ async = true }) end, opts)
+    vim.keymap.set("n", "<leader>cf", function()
+      vim.lsp.buf.format({ async = true })
+    end, opts)
 
     -- Show diagnostics in a floating window
     vim.keymap.set("n", "<leader>cd", vim.diagnostic.open_float, opts)
@@ -295,6 +319,100 @@ vim.api.nvim_create_autocmd("TermClose", {
   desc = "Refresh gitsigns when closing lazygit",
 })
 
+-- Configure oil-specific settings
+vim.api.nvim_create_autocmd("FileType", {
+  group = augroup,
+  pattern = "oil",
+  callback = function()
+    -- Disable numbers in Oil
+    vim.wo.number = false
+    vim.wo.relativenumber = false
+
+    -- Enable cursorline for better visibility
+    vim.wo.cursorline = true
+
+    -- Set custom highlights
+    if vim.g.colors_name == "gruvbox-material" then
+      vim.cmd("highlight link OilDir GruvboxAqua")
+      vim.cmd("highlight link OilDirIcon GruvboxAqua")
+      vim.cmd("highlight link OilLink GruvboxGreen")
+    end
+
+    -- Stack-specific filters
+    if vim.g.current_stack == "goth" then
+      -- Apply GOTH-specific filters if needed
+      vim.b.oil_filter_pattern = "node_modules/|vendor/|go.sum"
+    elseif vim.g.current_stack == "nextjs" then
+      -- Apply Next.js-specific filters if needed
+      vim.b.oil_filter_pattern = "node_modules/|.next/|.vercel/|out/|.turbo/"
+    end
+  end,
+  desc = "Oil-specific settings",
+})
+
+-- LSP inlay hints (where supported)
+vim.api.nvim_create_autocmd("LspAttach", {
+  group = augroup,
+  callback = function(args)
+    local client = vim.lsp.get_client_by_id(args.data.client_id)
+
+    -- Enable inlay hints for supported clients
+    if client and client.supports_method("textDocument/inlayHint") then
+      -- Using vim.lsp.inlay_hint instead of the deprecated vim.lsp.buf.inlay_hint
+      -- Only available in Neovim 0.10+
+      if vim.lsp.inlay_hint then
+        vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
+      end
+    end
+  end,
+  desc = "Enable LSP inlay hints",
+})
+
+-- Update Vim title
+vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost", "VimResume" }, {
+  group = augroup,
+  callback = function()
+    local icon = "  "
+    local filename = vim.fn.expand("%:t")
+    local filetype = vim.bo.filetype
+
+    if filename == "" then
+      filename = "Untitled"
+    end
+
+    -- Add an icon based on filetype if available
+    if filetype == "lua" then
+      icon = "  "
+    elseif
+      filetype == "javascript"
+      or filetype == "javascriptreact"
+      or filetype == "typescript"
+      or filetype == "typescriptreact"
+    then
+      icon = "  "
+    elseif filetype == "go" then
+      icon = "  "
+    elseif filetype == "templ" then
+      icon = "  "
+    elseif filetype == "python" then
+      icon = "  "
+    elseif filetype == "rust" then
+      icon = "  "
+    elseif filetype == "markdown" then
+      icon = "  "
+    end
+
+    vim.opt.titlestring = icon .. " " .. filename .. " - NVIM"
+  end,
+  desc = "Update Vim title",
+})
+
+-- Load more autocmds from project-specific config if exists
+local project_config = vim.fn.getcwd() .. "/.nvim/autocmds.lua"
+if vim.fn.filereadable(project_config) == 1 then
+  dofile(project_config)
+end
+
 -- Start screen
 vim.api.nvim_create_autocmd("VimEnter", {
   group = augroup,
@@ -353,13 +471,21 @@ vim.api.nvim_create_autocmd("VimEnter", {
         local opts = { buffer = buf, silent = true }
         vim.keymap.set("n", "q", "<cmd>quit<CR>", opts)
         vim.keymap.set("n", "<ESC>", "<cmd>quit<CR>", opts)
-        
+
         -- Use snacks.picker instead of telescope if available
-        vim.keymap.set("n", "ff", function() require("snacks.picker").find_files() end, opts)
-        vim.keymap.set("n", "fg", function() require("snacks.picker").live_grep() end, opts)
-        vim.keymap.set("n", "fb", function() require("snacks.picker").buffers() end, opts)
-        vim.keymap.set("n", "fr", function() require("snacks.picker").oldfiles() end, opts)
-        
+        vim.keymap.set("n", "ff", function()
+          require("snacks.picker").find_files()
+        end, opts)
+        vim.keymap.set("n", "fg", function()
+          require("snacks.picker").live_grep()
+        end, opts)
+        vim.keymap.set("n", "fb", function()
+          require("snacks.picker").buffers()
+        end, opts)
+        vim.keymap.set("n", "fr", function()
+          require("snacks.picker").oldfiles()
+        end, opts)
+
         vim.keymap.set("n", "L1", "<cmd>Layout coding<CR>", opts)
         vim.keymap.set("n", "L2", "<cmd>Layout terminal<CR>", opts)
         vim.keymap.set("n", "L3", "<cmd>Layout writing<CR>", opts)
@@ -400,132 +526,3 @@ vim.api.nvim_create_autocmd("VimEnter", {
   end,
   desc = "Show custom start screen",
 })
-
--- Configure snacks-specific settings
-vim.api.nvim_create_autocmd("FileType", {
-  group = augroup,
-  pattern = "snacks-explorer",
-  callback = function()
-    -- Disable numbers in explorer
-    vim.wo.number = false
-    vim.wo.relativenumber = false
-    
-    -- Enable cursorline for better visibility
-    vim.wo.cursorline = true
-    
-    -- Stack-specific filters are handled by the snacks.nvim config
-  end,
-  desc = "Snacks-specific settings",
-})
-
--- Configure oil-specific settings
-vim.api.nvim_create_autocmd("FileType", {
-  group = augroup,
-  pattern = "oil",
-  callback = function()
-    -- Disable numbers in Oil
-    vim.wo.number = false
-    vim.wo.relativenumber = false
-    
-    -- Enable cursorline for better visibility
-    vim.wo.cursorline = true
-    
-    -- Set custom highlights
-    if vim.g.colors_name == "gruvbox-material" then
-      vim.cmd("highlight link OilDir GruvboxAqua")
-      vim.cmd("highlight link OilDirIcon GruvboxAqua")
-      vim.cmd("highlight link OilLink GruvboxGreen")
-    end
-    
-    -- Stack-specific filters
-    if vim.g.current_stack == "goth" then
-      -- Apply GOTH-specific filters if needed
-      vim.b.oil_filter_pattern = "node_modules/|vendor/|go.sum"
-    elseif vim.g.current_stack == "nextjs" then
-      -- Apply Next.js-specific filters if needed
-      vim.b.oil_filter_pattern = "node_modules/|.next/|.vercel/|out/|.turbo/"
-    end
-  end,
-  desc = "Oil-specific settings",
-})
-
--- LSP inlay hints (where supported)
-vim.api.nvim_create_autocmd("LspAttach", {
-  group = augroup,
-  callback = function(args)
-    local client = vim.lsp.get_client_by_id(args.data.client_id)
-
-    -- Enable inlay hints for supported clients
-    if client and client.supports_method("textDocument/inlayHint") then
-      -- Using vim.lsp.inlay_hint instead of the deprecated vim.lsp.buf.inlay_hint
-      -- Only available in Neovim 0.10+
-      if vim.lsp.inlay_hint then
-        vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
-      end
-    end
-  end,
-  desc = "Enable LSP inlay hints",
-})
-
--- Update lightbulb when code actions are available
-vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-  group = augroup,
-  callback = function()
-    local has_lightbulb, lightbulb = pcall(require, "nvim-lightbulb")
-    if has_lightbulb then
-      lightbulb.update_lightbulb()
-    end
-  end,
-  desc = "Update lightbulb for code actions",
-})
-
--- Customize specific file types for better usability
-vim.api.nvim_create_autocmd("FileType", {
-  group = augroup,
-  pattern = { "json", "jsonc" },
-  callback = function()
-    -- Conceal quotes in JSON files for better readability
-    vim.opt_local.conceallevel = 0
-  end,
-  desc = "JSON specific settings",
-})
-
--- Update Vim title
-vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost", "VimResume" }, {
-  group = augroup,
-  callback = function()
-    local icon = "  "
-    local filename = vim.fn.expand("%:t")
-    local filetype = vim.bo.filetype
-
-    if filename == "" then
-      filename = "Untitled"
-    end
-
-    -- Add an icon based on filetype if available
-    if filetype == "lua" then
-      icon = "  "
-    elseif filetype == "javascript" or filetype == "javascriptreact" or filetype == "typescript" or filetype == "typescriptreact" then
-      icon = "  "
-    elseif filetype == "go" then
-      icon = "  "
-    elseif filetype == "templ" then
-      icon = "  "
-    elseif filetype == "python" then
-      icon = "  "
-    elseif filetype == "rust" then
-      icon = "  "
-    elseif filetype == "markdown" then
-      icon = "  "
-    end
-
-    vim.opt.titlestring = icon .. " " .. filename .. " - NVIM"
-  end,
-  desc = "Update Vim title",
-})
-
--- Load more autocmds from project-specific config if exists
-local project_config = vim.fn.getcwd() .. "/.nvim/autocmds.lua"
-if vim.fn.filereadable(project_config) == 1 then
-  dofile(project_config)
-end

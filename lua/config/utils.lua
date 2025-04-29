@@ -398,4 +398,25 @@ function M.new_templ_component()
   vim.cmd('startinsert')
 end
 
+
+-- Function to display search count in statusline
+function M.search_count()
+  local search = vim.fn.searchcount({ maxcount = 0 })
+  if search.total > 0 then
+    return string.format("[%d/%d]", search.current, search.total)
+  else
+    return ""
+  end
+end
+
+function M.open_oil(path, float)
+  vim.g.default_explorer = "oil"
+  M.open_explorer(path, float)
+end
+
+function M.oil_git_root()
+  vim.g.default_explorer = "oil"
+  M.explorer_git_root()
+end
+
 return M

@@ -11,6 +11,7 @@ vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
 -- Load configurations
+require("config.diagnostics").setup()
 require("config.options")      -- Load options
 require("config.autocmds")     -- Load autocommands
 require("config.stack").setup() -- Set up stack detection before plugins
@@ -23,19 +24,21 @@ vim.api.nvim_create_autocmd("User", {
   callback = function()
     local stats = require("lazy").stats()
     local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
-    local version = vim.version()
-    local nvim_version_info = "v" .. version.major .. "." .. version.minor .. "." .. version.patch
-    
-    vim.notify(string.format(
-      "Neovim %s loaded %s/%s plugins in %sms",
-      nvim_version_info, stats.loaded, stats.count, ms
-    ), vim.log.levels.INFO, { title = "Neovim Loaded" })
+    local v = vim.version()
+    vim.notify(
+      string.format(
+        "Neovim v%d.%d.%d loaded %d/%d plugins in %sms",
+        v.major, v.minor, v.patch,
+        stats.loaded, stats.count, ms
+      ),
+      vim.log.levels.INFO, { title = "Neovim Loaded" }
+    )
   end,
 })
 
--- Add custom commands
+-- ReloadConfig command
 vim.api.nvim_create_user_command("ReloadConfig", function()
-  for name, _ in pairs(package.loaded) do
+  for name,_ in pairs(package.loaded) do
     if name:match("^config") or name:match("^plugins") then
       package.loaded[name] = nil
     end
@@ -44,43 +47,40 @@ vim.api.nvim_create_user_command("ReloadConfig", function()
   vim.notify("Nvim configuration reloaded!", vim.log.levels.INFO, { title = "Config" })
 end, { desc = "Reload Neovim configuration" })
 
--- Add command to toggle between explorers (with explicit preference for Oil)
-vim.api.nvim_create_user_command("ExplorerToggle", function(args)
-  local explorer_type = args.args
-  if explorer_type == "oil" or explorer_type == "" then
-    vim.g.default_explorer = "oil"
-    vim.cmd("Oil")
-    vim.notify("Default explorer set to: Oil", vim.log.levels.INFO)
-  elseif explorer_type == "snacks" then
-    -- Oil is strongly preferred, but allow snacks if specifically requested
+-- ExplorerToggle command
+vim.api.nvim_create_user_command("ExplorerToggle", function(opts)
+  local ex = opts.args
+  if ex == "snacks" then
     vim.g.default_explorer = "snacks"
-    if package.loaded["snacks.explorer"] then
-      require("snacks.explorer").toggle()
-      vim.notify("Default explorer set to: Snacks", vim.log.levels.INFO)
-    else
-      vim.notify("Snacks explorer not available, using Oil instead", vim.log.levels.WARN)
-      vim.g.default_explorer = "oil"
-      vim.cmd("Oil")
-    end
+    -- open snacks explorer
+    require("snacks.explorer").open()
+    vim.notify("Default explorer set to: Snacks", vim.log.levels.INFO)
   else
-    -- When toggling, prefer Oil
-    if vim.g.default_explorer ~= "oil" then
-      vim.g.default_explorer = "oil"
-      vim.cmd("Oil")
-    elseif package.loaded["snacks.explorer"] then
-      vim.g.default_explorer = "snacks"
-      require("snacks.explorer").toggle()
+    -- default to oil
+    vim.g.default_explorer = "oil"
+    if package.loaded["oil"] then
+      require("oil").open()
     else
-      vim.cmd("Oil")
+      require("lazy").load({ plugins = { "oil.nvim" } })
+      vim.defer_fn(function()
+        if package.loaded["oil"] then require("oil").open() end
+      end, 100)
     end
-    vim.notify("Default explorer set to: " .. vim.g.default_explorer, vim.log.levels.INFO)
+    vim.notify("Default explorer set to: Oil", vim.log.levels.INFO)
   end
-end, { nargs = "?", complete = function() return {"oil", "snacks"} end, desc = "Set default explorer" })
+end, {
+  nargs = "?",
+  complete = function() return { "oil", "snacks" } end,
+  desc = "Set and open default explorer (oil or snacks)",
+})
 
 -- Disable formatoptions that automatically continue comments
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "*",
   callback = function()
-    vim.opt_local.formatoptions:remove({ "c", "r", "o" })
+    -- remove c, r and o flags in one call
+    vim.opt_local.formatoptions:remove("cro")
   end,
+  desc = "Disable auto comment continuation",
 })
+

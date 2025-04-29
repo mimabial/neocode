@@ -88,30 +88,32 @@ return {
   },
 
   keys = {
+    { "<leader>se", function() require("snacks").explorer() end, desc = "Toggle Snacks Explorer" },
+    { "<leader>sE", function() require("snacks").explorer({ float = true }) end, desc = "Toggle Snacks Explorer (float)" },
     -- Picker keymaps only - no explorer keymaps
-    { "<leader>ff", function() require('snacks.picker').find_files() end,       desc = "Find Files" },
-    { "<leader>fg", function() require('snacks.picker').live_grep() end,        desc = "Live Grep" },
+    { "<leader>ff", function() require('snacks.picker').files() end,       desc = "Find Files" },
+    { "<leader>fg", function() require('snacks.picker').grep() end,        desc = "Live Grep" },
     { "<leader>fb", function() require('snacks.picker').buffers() end,          desc = "Buffers" },
-    { "<leader>fh", function() require('snacks.picker').help_tags() end,        desc = "Help Tags" },
-    { "<leader>fr", function() require('snacks.picker').oldfiles() end,         desc = "Recent Files" },
-    { "<leader>fR", function() require('snacks.picker').frecency() end,         desc = "Frecent" },
+    { "<leader>fh", function() require('snacks.picker').help() end,        desc = "Help Tags" },
+    { "<leader>fr", function() require('snacks.picker').recent() end,         desc = "Recent Files" },
+    { "<leader>fR", function() require('snacks.picker').smart() end,         desc = "Smart Files" },
     { "<leader>fp", function() require('snacks.picker').projects() end,        desc = "Projects" },
     { "<leader>fc", function() require('snacks.picker').commands() end,        desc = "Commands" },
     { "<leader>fk", function() require('snacks.picker').keymaps() end,         desc = "Keymaps" },
-    { "<leader>f/", function() require('snacks.picker').current_buffer_fuzzy_find() end, desc = "Buffer Fuzzy Find" },
+    { "<leader>f/", function() require('snacks.picker').lines() end, desc = "Buffer Fuzzy Find" },
     { "<leader>f.", function() require('snacks.picker').resume() end,          desc = "Resume Search" },
 
     { "<leader>gs", function() require('snacks.picker').git_status() end,       desc = "Git Status" },
-    { "<leader>gc", function() require('snacks.picker').git_commits() end,      desc = "Git Commits" },
+    { "<leader>gc", function() require('snacks.picker').git_log() end,      desc = "Git Commits" },
     { "<leader>gb", function() require('snacks.picker').git_branches() end,     desc = "Git Branches" },
 
     { "<leader>fd", function() require('snacks.picker').diagnostics({ bufnr=0 }) end, desc = "Doc Diagnostics" },
     { "<leader>fD", function() require('snacks.picker').diagnostics() end,      desc = "Workspace Diagnostics" },
-    { "<leader>fs", function() require('snacks.picker').lsp_document_symbols() end, desc = "Doc Symbols" },
+    { "<leader>fs", function() require('snacks.picker').lsp_symbols() end, desc = "Doc Symbols" },
     { "<leader>fS", function() require('snacks.picker').lsp_workspace_symbols() end, desc = "Workspace Symbols" },
 
-    { "<leader>sgg", function() require('snacks.picker').custom('goth_files') end, desc = "GOTH Files" },
-    { "<leader>sng", function() require('snacks.picker').custom('nextjs_files') end, desc = "Next.js Files" },
+    { "<leader>sgg", function() require('snacks.picker').pick('goth_files') end, desc = "GOTH Files" },
+    { "<leader>sng", function() require('snacks.picker').pick('nextjs_files') end, desc = "Next.js Files" },
   },
 
   config = function(_, opts)
