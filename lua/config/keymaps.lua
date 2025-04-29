@@ -40,7 +40,7 @@ vim.keymap.set("n", "<leader>bf", "<cmd>bfirst<cr>", { desc = "First Buffer" })
 vim.keymap.set("n", "<leader>bl", "<cmd>blast<cr>", { desc = "Last Buffer" })
 vim.keymap.set("n", "<leader>bn", "<cmd>bnext<cr>", { desc = "Next Buffer" })
 vim.keymap.set("n", "<leader>bp", "<cmd>bprevious<cr>", { desc = "Previous Buffer" })
-vim.keymap.set("n", "<leader>be", "<cmd>Neotree buffers reveal float<cr>", { desc = "Buffer Explorer" })
+vim.keymap.set("n", "<leader>be", function() require("snacks.explorer").toggle() end, { desc = "Buffer Explorer" })
 
 -- Buffer navigation with Shift
 vim.keymap.set("n", "<S-h>", "<cmd>bprevious<cr>", { desc = "Previous buffer" })
@@ -136,7 +136,7 @@ vim.keymap.set("n", "_", function() require("snacks.explorer").toggle({ path = "
 -- Git commands
 vim.keymap.set("n", "<leader>gd", "<cmd>DiffviewOpen<cr>", { desc = "DiffView Open" })
 vim.keymap.set("n", "<leader>gD", "<cmd>DiffviewClose<cr>", { desc = "DiffView Close" })
-vim.keymap.set("n", "<leader>ge", "<cmd>Neotree git_status reveal float<cr>", { desc = "Git Explorer" })
+vim.keymap.set("n", "<leader>ge", function() require("snacks.explorer").toggle({ filter = "git_status" }) end, { desc = "Git Explorer" })
 vim.keymap.set("n", "<leader>gg", "<cmd>LazyGit<cr>", { desc = "Lazygit" })
 vim.keymap.set("n", "<leader>gh", "<cmd>DiffviewFileHistory %<cr>", { desc = "File History" })
 vim.keymap.set("n", "<leader>gH", "<cmd>DiffviewFileHistory<cr>", { desc = "Project History" })
@@ -440,4 +440,3 @@ vim.keymap.set("n", "<C-d>", "<C-d>zz", { desc = "Scroll down half a page and ce
 vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "Scroll up half a page and center" })
 vim.keymap.set("n", "n", "nzzzv", { desc = "Next search result and center" })
 vim.keymap.set("n", "N", "Nzzzv", { desc = "Previous search result and center" })
-

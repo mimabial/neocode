@@ -451,30 +451,6 @@ return snippets
     priority = 60,
   },
   
-  -- Better file browser for Next.js project navigation
-  {
-    "nvim-telescope/telescope-file-browser.nvim",
-    dependencies = { "nvim-telescope/telescope.nvim" },
-    config = function()
-      require("telescope").load_extension("file_browser")
-      
-      -- Add custom mapping for Next.js project structure
-      vim.keymap.set("n", "<leader>fn", function()
-        local opts = {
-          path = "%:p:h",
-          cwd = vim.fn.getcwd(),
-          respect_gitignore = false,
-          hidden = true,
-          grouped = true,
-          initial_mode = "normal",
-          layout_config = { height = 40 },
-        }
-        require("telescope").extensions.file_browser.file_browser(opts)
-      end, { desc = "Browse Next.js Project" })
-    end,
-    priority = 55,
-  },
-  
   -- Next.js utilities
   {
     "nvim-lua/plenary.nvim",

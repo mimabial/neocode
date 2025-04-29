@@ -373,13 +373,6 @@ function M.open_explorer(path, float)
     end
     
     vim.cmd(cmd)
-  elseif vim.g.default_explorer == "neo-tree" then
-    -- Use neo-tree
-    if float then
-      vim.cmd("Neotree float dir=" .. path)
-    else
-      vim.cmd("Neotree reveal dir=" .. path)
-    end
   else
     -- Default to snacks.nvim
     if package.loaded["snacks.explorer"] then
@@ -444,14 +437,11 @@ function M.toggle_explorer()
       require("snacks.explorer").toggle()
       vim.notify("Switched to Snacks explorer", vim.log.levels.INFO)
     else
-      vim.g.default_explorer = "neo-tree"
-      vim.cmd("Neotree toggle")
-      vim.notify("Switched to Neo-tree explorer", vim.log.levels.INFO)
+      -- Fallback to oil
+      vim.g.default_explorer = "oil"
+      vim.cmd("Oil")
+      vim.notify("Switched to Oil explorer", vim.log.levels.INFO)
     end
-  elseif vim.g.default_explorer == "snacks" then
-    vim.g.default_explorer = "neo-tree"
-    vim.cmd("Neotree toggle")
-    vim.notify("Switched to Neo-tree explorer", vim.log.levels.INFO)
   else
     vim.g.default_explorer = "oil"
     vim.cmd("Oil")
@@ -466,8 +456,6 @@ function M.find_files(opts)
   
   if vim.g.default_picker == "snacks" and package.loaded["snacks.picker"] then
     require("snacks.picker").find_files(opts)
-  elseif package.loaded["telescope.builtin"] then
-    require("telescope.builtin").find_files(opts)
   else
     vim.notify("No picker available", vim.log.levels.ERROR)
   end
@@ -479,14 +467,10 @@ function M.live_grep(opts)
   
   if vim.g.default_picker == "snacks" and package.loaded["snacks.picker"] then
     require("snacks.picker").live_grep(opts)
-  elseif package.loaded["telescope.builtin"] then
-    require("telescope.builtin").live_grep(opts)
   else
     vim.notify("No picker available", vim.log.levels.ERROR)
   end
-end
-
--- Generate a new Next.js component
+end-- Generate a new Next.js component
 function M.new_nextjs_component(type)
   type = type or "client" -- Default to client component
   

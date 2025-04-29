@@ -3,7 +3,7 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 -- Set snacks as the default explorer and picker early
-vim.g.default_explorer = "snacks"
+vim.g.default_explorer = "oil"
 vim.g.default_picker = "snacks"
 
 -- Load configurations
@@ -46,28 +46,21 @@ vim.api.nvim_create_user_command("ExplorerToggle", function(args)
   if explorer_type == "oil" then
     vim.g.default_explorer = "oil"
     vim.cmd("Oil")
-  elseif explorer_type == "neo-tree" then
-    vim.g.default_explorer = "neo-tree"
-    vim.cmd("Neotree toggle")
   else
     -- Default to snacks
     vim.g.default_explorer = "snacks"
     require("snacks.explorer").toggle()
   end
   vim.notify("Default explorer set to: " .. vim.g.default_explorer, vim.log.levels.INFO)
-end, { nargs = "?", complete = function() return {"oil", "snacks", "neo-tree"} end, desc = "Set default explorer" })
+end, { nargs = "?", complete = function() return {"oil", "snacks"} end, desc = "Set default explorer" })
 
 -- Add command to toggle between pickers
 vim.api.nvim_create_user_command("PickerToggle", function(args)
   local picker_type = args.args
-  if picker_type == "telescope" and package.loaded["telescope"] then
-    vim.g.default_picker = "telescope"
-  else
-    -- Default to snacks
-    vim.g.default_picker = "snacks"
-  end
+  -- Default to snacks
+  vim.g.default_picker = "snacks"
   vim.notify("Default picker set to: " .. vim.g.default_picker, vim.log.levels.INFO)
-end, { nargs = "?", complete = function() return {"snacks", "telescope"} end, desc = "Set default picker" })
+end, { nargs = "?", complete = function() return {"snacks"} end, desc = "Set default picker" })
 
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "*",

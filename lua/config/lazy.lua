@@ -73,6 +73,12 @@ require("lazy").setup({
       end,
     },
     
+    -- Disable neo-tree plugin
+    {
+      "nvim-neo-tree/neo-tree.nvim",
+      enabled = false,
+    },
+    
     -- Import all other plugins from lua/plugins directory
     { import = "plugins" },
     
@@ -270,12 +276,9 @@ vim.api.nvim_create_user_command("ExplorerToggle", function(args)
   elseif explorer_type == "snacks" then
     vim.g.default_explorer = "snacks"
     require("snacks.explorer").toggle()
-  elseif explorer_type == "neo-tree" or explorer_type == "neotree" then
-    vim.g.default_explorer = "neo-tree"
-    vim.cmd("Neotree toggle")
   else
     -- Default to snacks
     require("snacks.explorer").toggle()
   end
   vim.notify("Default explorer set to: " .. vim.g.default_explorer, vim.log.levels.INFO)
-end, { nargs = "?", complete = function() return {"oil", "snacks", "neo-tree"} end, desc = "Set default explorer" })
+end, { nargs = "?", complete = function() return {"oil", "snacks"} end, desc = "Set default explorer" })

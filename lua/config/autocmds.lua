@@ -105,18 +105,14 @@ vim.api.nvim_create_autocmd("FileType", {
   desc = "Set markdown-specific settings",
 })
 
--- Auto open directory with snacks.nvim explorer
+-- Auto open directory with oil
 vim.api.nvim_create_autocmd("BufEnter", {
   group = augroup,
   callback = function()
     local bufname = vim.api.nvim_buf_get_name(0)
     if vim.fn.isdirectory(bufname) == 1 then
-      if vim.g.default_explorer == "snacks" and package.loaded["snacks.explorer"] then
-        require("snacks.explorer").toggle({ path = bufname })
-      elseif vim.g.default_explorer == "oil" then
+      if vim.g.default_explorer == "oil" then
         vim.cmd("Oil " .. bufname)
-      elseif vim.g.default_explorer == "neo-tree" then
-        vim.cmd("Neotree position=current dir=" .. bufname)
       else
         -- Default to snacks
         require("snacks.explorer").toggle({ path = bufname })
@@ -359,17 +355,10 @@ vim.api.nvim_create_autocmd("VimEnter", {
         vim.keymap.set("n", "<ESC>", "<cmd>quit<CR>", opts)
         
         -- Use snacks.picker instead of telescope if available
-        if package.loaded["snacks.picker"] then
-          vim.keymap.set("n", "ff", function() require("snacks.picker").find_files() end, opts)
-          vim.keymap.set("n", "fg", function() require("snacks.picker").live_grep() end, opts)
-          vim.keymap.set("n", "fb", function() require("snacks.picker").buffers() end, opts)
-          vim.keymap.set("n", "fr", function() require("snacks.picker").oldfiles() end, opts)
-        else
-          vim.keymap.set("n", "ff", "<cmd>Telescope find_files<CR>", opts)
-          vim.keymap.set("n", "fg", "<cmd>Telescope live_grep<CR>", opts)
-          vim.keymap.set("n", "fb", "<cmd>Telescope buffers<CR>", opts)
-          vim.keymap.set("n", "fr", "<cmd>Telescope oldfiles<CR>", opts)
-        end
+        vim.keymap.set("n", "ff", function() require("snacks.picker").find_files() end, opts)
+        vim.keymap.set("n", "fg", function() require("snacks.picker").live_grep() end, opts)
+        vim.keymap.set("n", "fb", function() require("snacks.picker").buffers() end, opts)
+        vim.keymap.set("n", "fr", function() require("snacks.picker").oldfiles() end, opts)
         
         vim.keymap.set("n", "L1", "<cmd>Layout coding<CR>", opts)
         vim.keymap.set("n", "L2", "<cmd>Layout terminal<CR>", opts)

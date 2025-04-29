@@ -111,16 +111,6 @@ return {
         respect_gitignore = true,
         follow_symlinks = true,
       },
-      -- Load telescope-compatible extensions if available
-      extensions = {
-        fzf = true,
-        file_browser = true,
-        project = true, 
-        frecency = true,
-        ["ui-select"] = {
-          theme = "dropdown",
-        },
-      },
       -- Configure default commands for file finding
       find_files = {
         hidden = true,
