@@ -13,7 +13,7 @@ function M.get_root()
   ---@type string[]
   local roots = {}
   if path then
-    for _, client in pairs(vim.lsp.get_active_clients({ bufnr = 0 })) do
+    for _, client in pairs(vim.lsp.get_clients({ bufnr = 0 })) do
       local workspace = client.config.workspace_folders
       local paths = workspace and vim.tbl_map(function(ws)
         return vim.uri_to_fname(ws.uri)
@@ -522,6 +522,16 @@ function M.new_templ_component()
   
   -- Enter insert mode
   vim.cmd("startinsert!")
+end
+
+-- Function to display search count in statusline
+function M.search_count()
+  local search = vim.fn.searchcount({maxcount = 0})
+  if search.total > 0 then
+    return string.format("[%d/%d]", search.current, search.total)
+  else
+    return ""
+  end
 end
 
 return M

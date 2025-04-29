@@ -73,6 +73,12 @@ local options = {
   fillchars = { eob = " " },    -- Hide tilde on empty lines
 }
 
+-- Show search count message when searching
+vim.opt.shortmess:remove("S")
+
+-- Enhanced search count display
+vim.opt.statusline:append("%=%{v:lua.require'config.utils'.search_count()}")
+
 -- Apply all options
 for k, v in pairs(options) do
   vim.opt[k] = v

@@ -279,7 +279,7 @@ return {
           event = "msg_show",
           kind = "search_count",
         },
-        opts = { view = "virtualtext" },
+        opts = { view = "virtualtext", position = {row = 1, col = -1} },
       },
       {
         filter = {
