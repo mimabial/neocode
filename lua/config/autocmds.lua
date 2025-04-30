@@ -54,22 +54,15 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 })
 
 -- Toggle between relative and absolute line numbers based on mode
-vim.api.nvim_create_user_command("ToggleRelativeNumber", function()
-  vim.g.disable_relative_number = not vim.g.disable_relative_number
-
-  -- Make sure number is always enabled first
-  vim.wo.number = true
-
-  if vim.g.disable_relative_number then
-    -- Disable relative numbers
-    vim.wo.relativenumber = false
-    vim.notify("Relative line numbers disabled", vim.log.levels.INFO)
-  else
-    -- Enable relative numbers
-    vim.wo.relativenumber = vim.fn.mode() ~= "i"
-    vim.notify("Relative line numbers enabled", vim.log.levels.INFO)
-  end
-end, { desc = "Toggle relative line numbers" })
+vim.api.nvim_create_autocmd("InsertLeave", {
+  group = augroup,
+  callback = function()
+    if vim.wo.number and not vim.g.disable_relative_number then
+      vim.wo.relativenumber = true
+    end
+  end,
+  desc = "Enable relative number when exiting insert mode",
+})
 
 vim.api.nvim_create_autocmd({ "BufLeave", "FocusLost", "InsertEnter", "WinLeave" }, {
   group = augroup,
@@ -80,23 +73,6 @@ vim.api.nvim_create_autocmd({ "BufLeave", "FocusLost", "InsertEnter", "WinLeave"
   end,
   desc = "Disable relative number when in insert mode",
 })
-
--- Command to toggle relative line numbers manually
-vim.api.nvim_create_user_command("ToggleRelativeNumber", function()
-  vim.g.disable_relative_number = not vim.g.disable_relative_number
-  if vim.g.disable_relative_number then
-    -- Disable relative numbers
-    vim.wo.relativenumber = false
-    vim.notify("Relative line numbers disabled", vim.log.levels.INFO)
-  else
-    -- Enable relative numbers
-    vim.wo.relativenumber = vim.fn.mode() ~= "i"
-    vim.notify("Relative line numbers enabled", vim.log.levels.INFO)
-  end
-end, { desc = "Toggle relative line numbers" })
-
--- Keymapping for the toggle command
-vim.keymap.set("n", "<leader>uz", "<cmd>ToggleRelativeNumber<CR>", { desc = "Toggle relative numbers" })
 
 -- Set filetype-specific indentation
 vim.api.nvim_create_autocmd("FileType", {

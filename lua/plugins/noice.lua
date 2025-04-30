@@ -2,13 +2,13 @@ return {
   "folke/noice.nvim",
   event = "VeryLazy",
   dependencies = {
-    { 
+    {
       "MunifTanjim/nui.nvim",
       priority = 70,
     },
-    { 
+    {
       "rcarriga/nvim-notify",
-      priority = 90, 
+      priority = 90,
     },
   },
   keys = {
@@ -50,7 +50,7 @@ return {
       silent = true,
       expr = true,
       desc = "Scroll forward",
-      mode = {"i", "n", "s"}
+      mode = { "i", "n", "s" },
     },
     {
       "<c-b>",
@@ -62,7 +62,7 @@ return {
       silent = true,
       expr = true,
       desc = "Scroll backward",
-      mode = {"i", "n", "s"}
+      mode = { "i", "n", "s" },
     },
   },
   opts = {
@@ -269,6 +269,13 @@ return {
       {
         filter = {
           event = "msg_show",
+          kind = "search_count",
+        },
+        opts = { skip = true },
+      },
+      {
+        filter = {
+          event = "msg_show",
           kind = "",
           find = "written",
         },
@@ -279,7 +286,7 @@ return {
           event = "msg_show",
           kind = "search_count",
         },
-        opts = { view = "virtualtext", position = {row = 1, col = -1} },
+        opts = { view = "virtualtext", position = { row = 1, col = -1 } },
       },
       {
         filter = {
@@ -299,15 +306,15 @@ return {
   },
   config = function(_, opts)
     require("noice").setup(opts)
-    
+
     -- Add keymaps for quick noice navigation
     vim.keymap.set("n", "<leader>nn", function()
       require("noice").cmd("telescope")
     end, { desc = "Telescope Noice" })
-    
+
     -- Hide cmdline for specific filetypes
     vim.api.nvim_create_autocmd("FileType", {
-      pattern = {"neo-tree", "dashboard", "alpha", "lazy"},
+      pattern = { "neo-tree", "dashboard", "alpha", "lazy" },
       callback = function()
         vim.b.noice_disable = true
       end,

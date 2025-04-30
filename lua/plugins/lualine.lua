@@ -3,11 +3,11 @@ return {
   event = "VeryLazy",
   priority = 50, -- Ensure it loads after colorscheme and icons
   dependencies = {
-    { 
+    {
       "nvim-tree/nvim-web-devicons",
       priority = 100,
     },
-    { 
+    {
       "lewis6991/gitsigns.nvim",
       priority = 60,
     },
@@ -130,19 +130,19 @@ return {
       end
       return ""
     end
-    
+
     -- LSP status component
     local function lsp_server()
       local buf_clients = vim.lsp.get_clients({ bufnr = 0 })
       if #buf_clients == 0 then
         return ""
       end
-      
+
       local buf_client_names = {}
       for _, client in pairs(buf_clients) do
         table.insert(buf_client_names, client.name)
       end
-      
+
       return " " .. table.concat(buf_client_names, ", ")
     end
 
@@ -151,16 +151,16 @@ return {
         theme = "gruvbox-material",
         globalstatus = vim.o.laststatus == 3,
         disabled_filetypes = { statusline = { "dashboard", "alpha", "neo-tree", "lazy" } },
-        component_separators = { left = '', right = '' },
-        section_separators = { left = '', right = '' }, 
+        component_separators = { left = "", right = "" },
+        section_separators = { left = "", right = "" },
       },
       sections = {
-        lualine_a = { 
-          { "mode", separator = { left = '', right = '' }, right_padding = 2 } 
+        lualine_a = {
+          { "mode", separator = { left = "", right = "" }, right_padding = 2 },
         },
-        lualine_b = { 
+        lualine_b = {
           { "branch", icon = "" },
-          { 
+          {
             "diff",
             symbols = {
               added = icons.diff.add,
@@ -172,8 +172,8 @@ return {
               modified = { fg = get_highlight_color("GitSignsChange") },
               removed = { fg = get_highlight_color("GitSignsDelete") },
             },
-          }
-        },      
+          },
+        },
         lualine_c = {
           root_dir(),
           {
@@ -191,6 +191,21 @@ return {
           { stack_badge, color = { fg = "#a89984", gui = "bold" } },
         },
         lualine_x = {
+          -- search count
+          {
+            function()
+              local search = vim.fn.searchcount({ maxcount = 0 })
+              if search.total > 0 then
+                return string.format("%d/%d", search.current, search.total)
+              else
+                return ""
+              end
+            end,
+            cond = function()
+              return vim.v.hlsearch ~= 0
+            end,
+            color = { fg = "#d8a657" },
+          },
           -- noice command status
           {
             function()
@@ -253,8 +268,8 @@ return {
             function()
               return " " .. os.date("%H:%M")
             end,
-            separator = { left = '', right = '' },
-            left_padding = 2
+            separator = { left = "", right = "" },
+            left_padding = 2,
           },
         },
       },
@@ -300,15 +315,15 @@ return {
   end,
   config = function(_, opts)
     require("lualine").setup(opts)
-    
+
     -- Set up special filetype handlers
     vim.api.nvim_create_autocmd("FileType", {
-      pattern = {"neo-tree", "alpha", "dashboard", "lazy", "mason"},
+      pattern = { "neo-tree", "alpha", "dashboard", "lazy", "mason" },
       callback = function()
         vim.opt_local.statusline = nil
-      end
+      end,
     })
-    
+
     -- Make sure lualine reloads when colorscheme changes
     vim.api.nvim_create_autocmd("ColorScheme", {
       callback = function()
@@ -316,20 +331,20 @@ return {
         local theme = vim.g.colors_name
         if theme == "gruvbox-material" or theme == "tokyonight" then
           require("lualine").setup({
-            options = { 
+            options = {
               theme = theme,
               -- Keep other options the same
               globalstatus = vim.o.laststatus == 3,
               disabled_filetypes = opts.options.disabled_filetypes,
               component_separators = opts.options.component_separators,
               section_separators = opts.options.section_separators,
-            }
+            },
           })
         else
           -- Reload with auto theme
           require("lualine").setup(opts)
         end
-      end
+      end,
     })
   end,
 }
