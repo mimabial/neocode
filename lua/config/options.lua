@@ -16,6 +16,9 @@ opt.signcolumn = "yes" -- Always show sign column
 opt.termguicolors = true -- Enable true color support
 opt.background = "dark" -- Dark background
 
+-- Ensure line numbers are globally enabled as defaults
+vim.g.disable_relative_number = false
+
 -- Scrolling
 opt.scrolloff = 8 -- Keep 8 lines on screen when scrolling
 opt.sidescrolloff = 8

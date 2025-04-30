@@ -35,6 +35,12 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 vim.api.nvim_create_autocmd({ "BufEnter", "FocusGained", "InsertLeave", "WinEnter" }, {
   group = augroup,
   callback = function()
+    -- Skip special buffers where line numbers shouldn't be enabled
+    local ft = vim.bo.filetype
+    if ft == "oil" or ft == "terminal" or ft == "starter" then
+      return
+    end
+
     if vim.wo.number and not vim.g.disable_relative_number then
       vim.wo.relativenumber = true
     end
@@ -51,6 +57,23 @@ vim.api.nvim_create_autocmd({ "BufLeave", "FocusLost", "InsertEnter", "WinLeave"
   end,
   desc = "Disable relative number when in insert mode",
 })
+
+-- Add command to toggle relative line numbers
+vim.api.nvim_create_user_command("ToggleRelativeNumber", function()
+  vim.g.disable_relative_number = not vim.g.disable_relative_number
+  if vim.g.disable_relative_number then
+    -- Disable relative numbers
+    vim.wo.relativenumber = false
+    vim.notify("Relative line numbers disabled", vim.log.levels.INFO)
+  else
+    -- Enable relative numbers
+    vim.wo.relativenumber = vim.fn.mode() ~= "i"
+    vim.notify("Relative line numbers enabled", vim.log.levels.INFO)
+  end
+end, { desc = "Toggle relative line numbers" })
+
+-- Add keymapping for the toggle command
+vim.keymap.set("n", "<leader>uz", "<cmd>ToggleRelativeNumber<CR>", { desc = "Toggle relative numbers" })
 
 -- Set filetype-specific indentation
 vim.api.nvim_create_autocmd("FileType", {
@@ -289,9 +312,9 @@ vim.api.nvim_create_autocmd("FileType", {
 vim.api.nvim_create_autocmd("TermOpen", {
   group = augroup,
   callback = function()
-    -- Disable line numbers in terminal
-    vim.wo.number = false
-    vim.wo.relativenumber = false
+    -- Disable line numbers in terminal buffer only
+    vim.opt_local.number = false
+    vim.opt_local.relativenumber = false
 
     -- Start in insert mode
     vim.cmd("startinsert")
