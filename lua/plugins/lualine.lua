@@ -191,21 +191,6 @@ return {
           { stack_badge, color = { fg = "#a89984", gui = "bold" } },
         },
         lualine_x = {
-          -- search count
-          {
-            function()
-              local search = vim.fn.searchcount({ maxcount = 0 })
-              if search.total > 0 then
-                return string.format("%d/%d", search.current, search.total)
-              else
-                return ""
-              end
-            end,
-            cond = function()
-              return vim.v.hlsearch ~= 0
-            end,
-            color = { fg = "#d8a657" },
-          },
           -- noice command status
           {
             function()

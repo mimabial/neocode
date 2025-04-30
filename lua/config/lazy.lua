@@ -34,16 +34,29 @@ require("lazy").setup({
     -- 2) then list your high-priority overrides at the top level
     { "sainnhe/gruvbox-material", lazy = false, priority = 1000 },
     { "nvim-tree/nvim-web-devicons", lazy = false, priority = 950 },
-    { "folke/tokyonight.nvim", lazy = true,  priority = 900 },
-    { "stevearc/oil.nvim",           lazy = false, priority = 800 },
+    { "rcarriga/nvim-notify", lazy = false, priority = 940 },
+    { "folke/tokyonight.nvim", lazy = true, priority = 900 },
+    { "nvim-lua/plenary.nvim", lazy = false, priority = 900 },
+    { "stevearc/oil.nvim", lazy = false, priority = 850 },
+    { "folke/which-key.nvim", event = "VeryLazy", priority = 820 },
+    { "folke/snacks.nvim", event = "VeryLazy", priority = 800 },
+    { "neovim/nvim-lspconfig", priority = 700 },
+    { "hrsh7th/nvim-cmp", priority = 600 },
+    { "kevinhwang91/nvim-hlslens", priority = 60 },
 
-    -- 3) disable these plugins
-    { "nvim-neo-tree/neo-tree.nvim", enabled = false },
-    { "nvim-telescope/telescope.nvim", enabled = false },
-
-    -- 4) conditional imports
-    { import = "plugins.goth",   cond = function() return vim.g.current_stack ~= "nextjs" end },
-    { import = "plugins.nextjs", cond = function() return vim.g.current_stack ~= "goth"   end },
+    -- 3) conditional imports
+    {
+      import = "plugins.goth",
+      cond = function()
+        return vim.g.current_stack ~= "nextjs"
+      end,
+    },
+    {
+      import = "plugins.nextjs",
+      cond = function()
+        return vim.g.current_stack ~= "goth"
+      end,
+    },
   },
   defaults = {
     lazy = true, -- Lazy-load plugins by default for better startup time
@@ -99,7 +112,7 @@ require("lazy").setup({
   },
 })
 
--- Set up custom commands 
+-- Set up custom commands
 vim.api.nvim_create_user_command("LazyGit", function()
   -- Check if toggleterm is available
   if package.loaded["toggleterm"] then
@@ -115,7 +128,7 @@ vim.api.nvim_create_user_command("LazyGit", function()
         float_opts = { border = "rounded" },
         on_open = function(term)
           vim.cmd("startinsert!")
-          vim.api.nvim_buf_set_keymap(term.bufnr, "n", "q", "<cmd>close<CR>", {noremap = true, silent = true})
+          vim.api.nvim_buf_set_keymap(term.bufnr, "n", "q", "<cmd>close<CR>", { noremap = true, silent = true })
         end,
       }).toggle
       _G.toggle_lazygit()
@@ -139,9 +152,13 @@ end, { desc = "Update all plugins and Mason packages" })
 vim.api.nvim_create_user_command("StackFocus", function(opts)
   -- Call the stack module's configure function
   require("config.stack").configure_stack(opts.args)
-end, { nargs = "?", desc = "Focus on a specific tech stack", complete = function()
-  return { "goth", "nextjs" }
-end})
+end, {
+  nargs = "?",
+  desc = "Focus on a specific tech stack",
+  complete = function()
+    return { "goth", "nextjs" }
+  end,
+})
 
 -- Command to toggle transparency
 vim.api.nvim_create_user_command("ToggleTransparency", function()
@@ -152,7 +169,7 @@ vim.api.nvim_create_user_command("ToggleTransparency", function()
     vim.g.gruvbox_material_transparent_background = 1
     vim.notify("Transparency enabled", vim.log.levels.INFO)
   end
-  
+
   -- Re-apply colorscheme
   vim.cmd("colorscheme " .. vim.g.colors_name)
 end, { desc = "Toggle background transparency" })
@@ -160,7 +177,7 @@ end, { desc = "Toggle background transparency" })
 -- Command to quickly switch between common layouts
 vim.api.nvim_create_user_command("Layout", function(opts)
   local layout = opts.args
-  
+
   if layout == "coding" then
     -- Use Oil instead of snacks explorer
     if package.loaded["oil"] then
@@ -214,9 +231,13 @@ vim.api.nvim_create_user_command("Layout", function(opts)
   else
     vim.notify("Available layouts: coding, terminal, writing, debug", vim.log.levels.INFO)
   end
-end, { nargs = "?", desc = "Switch workspace layout", complete = function()
-  return { "coding", "terminal", "writing", "debug" }
-end})
+end, {
+  nargs = "?",
+  desc = "Switch workspace layout",
+  complete = function()
+    return { "coding", "terminal", "writing", "debug" }
+  end,
+})
 
 -- Create ColorSchemeToggle command
 vim.api.nvim_create_user_command("ColorSchemeToggle", function()

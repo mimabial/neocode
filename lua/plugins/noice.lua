@@ -269,13 +269,6 @@ return {
       {
         filter = {
           event = "msg_show",
-          kind = "search_count",
-        },
-        opts = { skip = true },
-      },
-      {
-        filter = {
-          event = "msg_show",
           kind = "",
           find = "written",
         },
@@ -286,7 +279,7 @@ return {
           event = "msg_show",
           kind = "search_count",
         },
-        opts = { view = "virtualtext", position = { row = 1, col = -1 } },
+        opts = { view = "virtualtext" },
       },
       {
         filter = {

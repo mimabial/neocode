@@ -77,33 +77,4 @@ opt.fillchars = { eob = " " } -- Hide end-of-buffer tildes
 -- Statusline: append search count
 opt.statusline:append(" %=%{v:lua.require'config.utils'.search_count()}")
 
--- Diagnostics setup
-local signs = { Error = "", Warn = "", Info = "", Hint = "" }
-local sign_values = {}
-for type, icon in pairs(signs) do
-  table.insert(sign_values, {
-    name = "DiagnosticSign" .. type,
-    text = icon,
-    texthl = "DiagnosticSign" .. type,
-    numhl = "DiagnosticSign" .. type,
-  })
-end
-vim.diagnostic.config({
-  signs = { values = sign_values },
-  virtual_text = {
-    prefix = "●",
-    spacing = 4,
-    source = "if_many",
-    severity = { min = vim.diagnostic.severity.HINT },
-  },
-  float = {
-    border = "rounded",
-    source = true,
-    severity_sort = true,
-  },
-  underline = true,
-  update_in_insert = false,
-  severity_sort = true,
-})
-
 return {} -- No module export needed

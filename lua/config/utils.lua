@@ -13,8 +13,11 @@ function M.get_root()
   if path then
     for _, client in pairs(vim.lsp.get_clients({ bufnr = 0 })) do
       local folders = client.config.workspace_folders
-        and vim.tbl_map(function(ws) return vim.uri_to_fname(ws.uri) end, folders)
-        or client.config.root_dir and { client.config.root_dir } or {}
+          and vim.tbl_map(function(ws)
+            return vim.uri_to_fname(ws.uri)
+          end, folders)
+        or client.config.root_dir and { client.config.root_dir }
+        or {}
 
       for _, p in ipairs(folders) do
         local real = vim.loop.fs_realpath(p)
@@ -25,7 +28,9 @@ function M.get_root()
     end
   end
 
-  table.sort(roots, function(a, b) return #a > #b end)
+  table.sort(roots, function(a, b)
+    return #a > #b
+  end)
   local root = roots[1]
 
   if not root then
@@ -136,7 +141,9 @@ end
 ---@return boolean
 function M.file_exists(path)
   local f = io.open(path, "r")
-  if f then f:close() end
+  if f then
+    f:close()
+  end
   return f ~= nil
 end
 
@@ -155,20 +162,20 @@ end
 
 -- Get visual selection text
 function M.get_visual_selection()
-  local save_reg, save_type = vim.fn.getreg('v'), vim.fn.getregtype('v')
+  local save_reg, save_type = vim.fn.getreg("v"), vim.fn.getregtype("v")
   vim.cmd('noau normal! gv"vy')
-  local text = vim.fn.getreg('v')
-  vim.fn.setreg('v', save_reg, save_type)
+  local text = vim.fn.getreg("v")
+  vim.fn.setreg("v", save_reg, save_type)
   return text:gsub("\r?\n?%s*$", "")
 end
 
 -- Generate random UUID v4
 function M.uuid()
   math.randomseed(os.time())
-  local template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-  return template:gsub('[xy]', function(c)
-    local v = (c == 'x') and math.random(0, 0xf) or math.random(8, 0xb)
-    return string.format('%x', v)
+  local template = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+  return template:gsub("[xy]", function(c)
+    local v = (c == "x") and math.random(0, 0xf) or math.random(8, 0xb)
+    return string.format("%x", v)
   end)
 end
 
@@ -181,21 +188,29 @@ function M.debounce(fn, ms)
   local running = false
   return function(...)
     local args = { ... }
-    if running then timer:stop() end
+    if running then
+      timer:stop()
+    end
     running = true
-    timer:start(ms, 0, vim.schedule_wrap(function()
-      fn(unpack(args))
-      running = false
-    end))
+    timer:start(
+      ms,
+      0,
+      vim.schedule_wrap(function()
+        fn(unpack(args))
+        running = false
+      end)
+    )
   end
 end
 
 -- Extend table without overwriting nested
 function M.extend_tbl(default, opts)
-  if type(opts) ~= 'table' then return default end
+  if type(opts) ~= "table" then
+    return default
+  end
   local result = vim.deepcopy(default)
   for k, v in pairs(opts) do
-    if type(v) == 'table' and type(result[k]) == 'table' then
+    if type(v) == "table" and type(result[k]) == "table" then
       result[k] = M.extend_tbl(result[k], v)
     else
       result[k] = v
@@ -214,10 +229,10 @@ end
 
 -- Format buffer via available plugins or LSP
 function M.format_buffer()
-  if pcall(require, 'conform') then
-    require('conform').format({ async = false, lsp_fallback = true })
-  elseif pcall(require, 'formatter') then
-    vim.cmd('Format')
+  if pcall(require, "conform") then
+    require("conform").format({ async = false, lsp_fallback = true })
+  elseif pcall(require, "formatter") then
+    vim.cmd("Format")
   else
     vim.lsp.buf.format({ async = false })
   end
@@ -227,185 +242,229 @@ end
 ---@param s string
 ---@return string
 function M.trim(s)
-  return (s or ''):match('^%s*(.-)%s*$')
+  return (s or ""):match("^%s*(.-)%s*$")
 end
 
 -- Git branch for statusline
 function M.git_branch()
-  local branch = vim.fn.systemlist('git rev-parse --abbrev-ref HEAD')[1] or ''
-  return branch ~= '' and ' ' .. branch or ''
+  local branch = vim.fn.systemlist("git rev-parse --abbrev-ref HEAD")[1] or ""
+  return branch ~= "" and " " .. branch or ""
 end
 
 -- Filename or placeholder
 function M.filename()
-  local name = vim.fn.expand('%:t')
-  return name ~= '' and name or '[No Name]'
+  local name = vim.fn.expand("%:t")
+  return name ~= "" and name or "[No Name]"
 end
 
 -- File info (format | encoding)
 function M.fileinfo()
   local fmt = vim.bo.fileformat or vim.o.fileformat
   local enc = vim.bo.fileencoding or vim.o.encoding
-  return fmt .. ' | ' .. enc
+  return fmt .. " | " .. enc
 end
 
 -- Toggle quickfix list
 function M.toggle_qf()
   local qf = vim.fn.getqflist()
   if vim.fn.getwininfo()[1].quickfix == 1 then
-    vim.cmd('cclose')
+    vim.cmd("cclose")
   elseif not vim.tbl_isempty(qf) then
-    vim.cmd('copen')
+    vim.cmd("copen")
   end
 end
 
 -- Toggle colorcolumn presets
 function M.toggle_colorcolumn()
-  vim.wo.colorcolumn = vim.wo.colorcolumn == '' and '80,100,120' or ''
+  vim.wo.colorcolumn = vim.wo.colorcolumn == "" and "80,100,120" or ""
 end
 
 -- Execute shell command, trim output
 function M.exec_cmd(cmd)
   local ok, out = pcall(vim.fn.system, cmd)
-  return ok and M.trim(out) or ''
+  return ok and M.trim(out) or ""
+end
+
+-- Search count for statusline (with hlslens integration)
+function M.search_count()
+  local search = vim.fn.searchcount({ maxcount = 999, timeout = 500 })
+  local active = vim.v.hlsearch == 1 and search.total > 0
+  if not active then
+    return ""
+  end
+
+  -- Format for statusline
+  return string.format("[%d/%d]", search.current, search.total)
+end
+
+-- Activate hlslens if available
+function M.activate_hlslens()
+  if package.loaded["hlslens"] then
+    require("hlslens").start()
+  end
 end
 
 -- Explorer integration (Oil | Snacks)
 ---@param path string? optional path
 ---@param float boolean? float window
 function M.open_explorer(path, float)
-  path = path or vim.fn.expand('%:p:h')
-  if vim.g.default_explorer == 'oil' then
-    local cmd = 'Oil' .. (float and ' --float' or '') .. ' ' .. path
+  path = path or vim.fn.expand("%:p:h")
+  if vim.g.default_explorer == "oil" then
+    local cmd = "Oil" .. (float and " --float" or "") .. " " .. path
     vim.cmd(cmd)
-  elseif package.loaded['snacks.explorer'] then
-    require('snacks.explorer').toggle({ path = path, float = float })
+  elseif package.loaded["snacks.explorer"] then
+    require("snacks.explorer").toggle({ path = path, float = float })
   else
-    vim.cmd('Oil ' .. path)
+    vim.cmd("Oil " .. path)
   end
 end
 
 -- Explorer commands
 function M.explorer_git_root()
-  local root = M.exec_cmd('git rev-parse --show-toplevel')
-  if root ~= '' then return M.open_explorer(root) end
-  vim.notify('Not in Git repo', vim.log.levels.WARN)
+  local root = M.exec_cmd("git rev-parse --show-toplevel")
+  if root ~= "" then
+    return M.open_explorer(root)
+  end
+  vim.notify("Not in Git repo", vim.log.levels.WARN)
   M.open_explorer()
 end
 
 function M.explorer_stack(stack, float)
-  if stack then vim.g.current_stack = stack end
+  if stack then
+    vim.g.current_stack = stack
+  end
   M.open_explorer(nil, float)
   if stack then
-    vim.notify('Explorer on ' .. stack .. ' stack', vim.log.levels.INFO)
+    vim.notify("Explorer on " .. stack .. " stack", vim.log.levels.INFO)
   end
 end
 
-M.explorer_goth   = function(float) M.explorer_stack('goth', float) end
-M.explorer_nextjs = function(float) M.explorer_stack('nextjs', float) end
+M.explorer_goth = function(float)
+  M.explorer_stack("goth", float)
+end
+M.explorer_nextjs = function(float)
+  M.explorer_stack("nextjs", float)
+end
 
 function M.toggle_explorer()
-  if vim.g.default_explorer == 'oil' then
-    vim.g.default_explorer = 'snacks'
+  if vim.g.default_explorer == "oil" then
+    vim.g.default_explorer = "snacks"
   else
-    vim.g.default_explorer = 'oil'
+    vim.g.default_explorer = "oil"
   end
   M.open_explorer()
-  vim.notify('Switched to ' .. vim.g.default_explorer .. ' explorer', vim.log.levels.INFO)
+  vim.notify("Switched to " .. vim.g.default_explorer .. " explorer", vim.log.levels.INFO)
 end
 
 -- Picker integration (Snacks)
 function M.find_files(opts)
-  if vim.g.default_picker == 'snacks' and package.loaded['snacks.picker'] then
-    require('snacks.picker').find_files(opts or {})
+  if vim.g.default_picker == "snacks" and package.loaded["snacks.picker"] then
+    require("snacks.picker").find_files(opts or {})
   else
-    vim.notify('Picker not available', vim.log.levels.ERROR)
+    vim.notify("Picker not available", vim.log.levels.ERROR)
   end
 end
 
 function M.live_grep(opts)
-  if vim.g.default_picker == 'snacks' and package.loaded['snacks.picker'] then
-    require('snacks.picker').live_grep(opts or {})
+  if vim.g.default_picker == "snacks" and package.loaded["snacks.picker"] then
+    require("snacks.picker").live_grep(opts or {})
   else
-    vim.notify('Picker not available', vim.log.levels.ERROR)
+    vim.notify("Picker not available", vim.log.levels.ERROR)
   end
 end
 
 -- Generate components
 ---@param type string 'client'|'server'|'page'|'layout'
 function M.new_nextjs_component(type)
-  type = type or 'client'
-  local name = vim.fn.input('Component Name: ')
-  if name == '' then return vim.notify('Name required', vim.log.levels.ERROR) end
+  type = type or "client"
+  local name = vim.fn.input("Component Name: ")
+  if name == "" then
+    return vim.notify("Name required", vim.log.levels.ERROR)
+  end
 
-  local ft = 'typescriptreact'
+  local ft = "typescriptreact"
   local buf = vim.api.nvim_create_buf(true, false)
-  vim.api.nvim_buf_set_name(buf, name .. (type=='page' and '.tsx' or '.tsx'))
-  vim.api.nvim_buf_set_option(buf, 'filetype', ft)
+  vim.api.nvim_buf_set_name(buf, name .. (type == "page" and ".tsx" or ".tsx"))
+  vim.api.nvim_buf_set_option(buf, "filetype", ft)
 
   local tpl = {
     client = {
-      "'use client'", '',
-      'import React from "react"', '',
-      ('export default function %s(props: {}): JSX.Element {'):format(name),
-      '  return (<div>'..name..' Component</div>)',
-      '}',
+      "'use client'",
+      "",
+      'import React from "react"',
+      "",
+      ("export default function %s(props: {}): JSX.Element {"):format(name),
+      "  return (<div>" .. name .. " Component</div>)",
+      "}",
     },
     server = {
-      'import React from "react"', '',
-      ('export default async function %s(): Promise<JSX.Element> {'):format(name),
-      '  return (<div>'..name..' Server Component</div>)',
-      '}',
+      'import React from "react"',
+      "",
+      ("export default async function %s(): Promise<JSX.Element> {"):format(name),
+      "  return (<div>" .. name .. " Server Component</div>)",
+      "}",
     },
     page = {
-      'import React from "react"', '',
-      ('export const metadata = { title: "%s", description: "%s page" };'):format(name, name), '',
-      'export default function Page() {',
-      '  return (<main><h1>'..name..' Page</h1></main>)',
-      '}',
+      'import React from "react"',
+      "",
+      ('export const metadata = { title: "%s", description: "%s page" };'):format(name, name),
+      "",
+      "export default function Page() {",
+      "  return (<main><h1>" .. name .. " Page</h1></main>)",
+      "}",
     },
     layout = {
-      'import React from "react"', '',
-      ('export default function %sLayout({ children }: { children: React.ReactNode }) {'):format(name),
-      '  return <div>{children}</div>',
-      '}',
+      'import React from "react"',
+      "",
+      ("export default function %sLayout({ children }: { children: React.ReactNode }) {"):format(name),
+      "  return <div>{children}</div>",
+      "}",
     },
   }
 
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, tpl[type] or tpl.client)
   vim.api.nvim_win_set_buf(0, buf)
-  vim.cmd('startinsert')
+  vim.cmd("startinsert")
 end
 
 -- Generate Go Templ component
 function M.new_templ_component()
-  local name = vim.fn.input('Component Name: ')
-  if name == '' then return vim.notify('Name required', vim.log.levels.ERROR) end
+  local name = vim.fn.input("Component Name: ")
+  if name == "" then
+    return vim.notify("Name required", vim.log.levels.ERROR)
+  end
 
   local buf = vim.api.nvim_create_buf(true, false)
-  vim.api.nvim_buf_set_name(buf, name .. '.templ')
-  vim.api.nvim_buf_set_option(buf, 'filetype', 'templ')
+  vim.api.nvim_buf_set_name(buf, name .. ".templ")
+  vim.api.nvim_buf_set_option(buf, "filetype", "templ")
 
   local lines = {
-    'package components', '',
-    ('type %sProps struct {'):format(name), '  -- props', '}', '',
-    ('templ %s(props %sProps) {'):format(name, name),
-    '  <div>', '    <h1>'..name..' Component</h1>', '  </div>', '}',
+    "package components",
+    "",
+    ("type %sProps struct {"):format(name),
+    "  -- props",
+    "}",
+    "",
+    ("templ %s(props %sProps) {"):format(name, name),
+    "  <div>",
+    "    <h1>" .. name .. " Component</h1>",
+    "  </div>",
+    "}",
   }
 
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.api.nvim_win_set_buf(0, buf)
-  vim.cmd('startinsert')
+  vim.cmd("startinsert")
 end
 
-
--- Function to display search count in statusline
-function M.search_count()
-  local search = vim.fn.searchcount({ maxcount = 0 })
-  if search.total > 0 then
-    return string.format("[%d/%d]", search.current, search.total)
-  else
-    return ""
+-- Center buffer content for writing mode
+function M.center_buffer()
+  local width = vim.api.nvim_win_get_width(0)
+  local max_width = 80
+  if width > max_width + 4 then
+    local padding = math.floor((width - max_width) / 2)
+    vim.wo.foldcolumn = padding
+    vim.wo.signcolumn = "no"
   end
 end
 

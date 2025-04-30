@@ -12,11 +12,11 @@ vim.g.loaded_netrwPlugin = 1
 
 -- Load configurations
 require("config.diagnostics").setup()
-require("config.options")      -- Load options
-require("config.autocmds")     -- Load autocommands
+require("config.options") -- Load options
+require("config.autocmds") -- Load autocommands
 require("config.stack").setup() -- Set up stack detection before plugins
-require("config.lazy")         -- Load lazy.nvim configuration
-require("config.keymaps")      -- Load keymaps
+require("config.lazy") -- Load lazy.nvim configuration
+require("config.keymaps") -- Load keymaps
 
 -- Print a startup message
 vim.api.nvim_create_autocmd("User", {
@@ -28,17 +28,22 @@ vim.api.nvim_create_autocmd("User", {
     vim.notify(
       string.format(
         "Neovim v%d.%d.%d loaded %d/%d plugins in %sms",
-        v.major, v.minor, v.patch,
-        stats.loaded, stats.count, ms
+        v.major,
+        v.minor,
+        v.patch,
+        stats.loaded,
+        stats.count,
+        ms
       ),
-      vim.log.levels.INFO, { title = "Neovim Loaded" }
+      vim.log.levels.INFO,
+      { title = "Neovim Loaded" }
     )
   end,
 })
 
 -- ReloadConfig command
 vim.api.nvim_create_user_command("ReloadConfig", function()
-  for name,_ in pairs(package.loaded) do
+  for name, _ in pairs(package.loaded) do
     if name:match("^config") or name:match("^plugins") then
       package.loaded[name] = nil
     end
@@ -63,18 +68,22 @@ vim.api.nvim_create_user_command("ExplorerToggle", function(opts)
     else
       require("lazy").load({ plugins = { "oil.nvim" } })
       vim.defer_fn(function()
-        if package.loaded["oil"] then require("oil").open() end
+        if package.loaded["oil"] then
+          require("oil").open()
+        end
       end, 100)
     end
     vim.notify("Default explorer set to: Oil", vim.log.levels.INFO)
   end
 end, {
   nargs = "?",
-  complete = function() return { "oil", "snacks" } end,
+  complete = function()
+    return { "oil", "snacks" }
+  end,
   desc = "Set and open default explorer (oil or snacks)",
 })
 
--- Disable formatoptions that automatically continue comments
+-- Disable formatoptions that automatically continue comments NO_OP
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "*",
   callback = function()
@@ -84,3 +93,28 @@ vim.api.nvim_create_autocmd("FileType", {
   desc = "Disable auto comment continuation",
 })
 
+-- Integrate hlslens for better search highlighting
+vim.api.nvim_create_user_command("HlsLensToggle", function()
+  if vim.g.hlslens_disabled then
+    vim.g.hlslens_disabled = false
+    vim.notify("HlsLens enabled", vim.log.levels.INFO)
+
+    -- Re-enable search highlighting if there's a current search
+    if vim.fn.getreg("/") ~= "" then
+      vim.cmd("set hlsearch")
+      require("hlslens").start()
+    end
+  else
+    vim.g.hlslens_disabled = true
+    vim.notify("HlsLens disabled", vim.log.levels.INFO)
+  end
+end, { desc = "Toggle HlsLens search highlighting" })
+
+-- Add hlslens to which-key group
+if package.loaded["which-key"] then
+  require("which-key").add({
+    ["<leader>u"] = {
+      h = { "<cmd>HlsLensToggle<cr>", "Toggle HlsLens" },
+    },
+  })
+end
