@@ -19,7 +19,9 @@ vim.keymap.set("n", "]b", "<cmd>bnext<cr>", { desc = "Next buffer" })
 -- LSP and Code actions
 vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "Code Action" })
 vim.keymap.set("n", "<leader>cd", vim.diagnostic.open_float, { desc = "Line Diagnostics" })
-vim.keymap.set("n", "<leader>cf", function() vim.lsp.buf.format({ async = true }) end, { desc = "Format" })
+vim.keymap.set("n", "<leader>cf", function()
+  vim.lsp.buf.format({ async = true })
+end, { desc = "Format" })
 vim.keymap.set("n", "<leader>cF", "<cmd>FormatToggle<CR>", { desc = "Toggle Format on Save" })
 vim.keymap.set("n", "<leader>ci", "<cmd>LspInfo<cr>", { desc = "LSP Info" })
 vim.keymap.set("n", "<leader>cl", "<cmd>lua require('lint').try_lint()<cr>", { desc = "Trigger Linting" })
@@ -27,7 +29,7 @@ vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, { desc = "Rename Symbol" }
 vim.keymap.set("n", "<leader>cR", "<cmd>ReloadConfig<cr>", { desc = "Reload Config" })
 
 -- GOTH stack specific
-vim.keymap.set("n", "<leader>cgc", function() 
+vim.keymap.set("n", "<leader>cgc", function()
   if require("config.utils").new_templ_component then
     require("config.utils").new_templ_component()
   else
@@ -40,14 +42,14 @@ vim.keymap.set("n", "<leader>cgb", "<cmd>!go build<cr>", { desc = "Go Build" })
 vim.keymap.set("n", "<leader>cgr", "<cmd>!go run .<cr>", { desc = "Go Run" })
 
 -- Next.js specific
-vim.keymap.set("n", "<leader>cnc", function() 
+vim.keymap.set("n", "<leader>cnc", function()
   if require("config.utils").new_nextjs_component then
     require("config.utils").new_nextjs_component("client")
   else
     vim.notify("Next.js component creator not found", vim.log.levels.ERROR)
   end
 end, { desc = "New Client Component" })
-vim.keymap.set("n", "<leader>cns", function() 
+vim.keymap.set("n", "<leader>cns", function()
   if require("config.utils").new_nextjs_component then
     require("config.utils").new_nextjs_component("server")
   else
@@ -55,7 +57,7 @@ vim.keymap.set("n", "<leader>cns", function()
   end
 end, { desc = "New Server Component" })
 vim.keymap.set("n", "<leader>cnp", function()
-  if require("config.utils").new_nextjs_component then 
+  if require("config.utils").new_nextjs_component then
     require("config.utils").new_nextjs_component("page")
   else
     vim.notify("Next.js component creator not found", vim.log.levels.ERROR)
@@ -74,128 +76,128 @@ vim.keymap.set("n", "<leader>cnt", "<cmd>!npm test<cr>", { desc = "Run Tests" })
 vim.keymap.set("n", "<leader>cni", "<cmd>!npm install<cr>", { desc = "NPM Install" })
 
 -- Debug mode keymaps
-vim.keymap.set("n", "<leader>db", function() 
+vim.keymap.set("n", "<leader>db", function()
   if package.loaded["dap"] then
-    require("dap").toggle_breakpoint() 
+    require("dap").toggle_breakpoint()
   end
 end, { desc = "Toggle Breakpoint" })
-vim.keymap.set("n", "<leader>dB", function() 
+vim.keymap.set("n", "<leader>dB", function()
   if package.loaded["dap"] then
-    require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: ")) 
+    require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
   end
 end, { desc = "Conditional Breakpoint" })
-vim.keymap.set("n", "<leader>dc", function() 
+vim.keymap.set("n", "<leader>dc", function()
   if package.loaded["dap"] then
-    require("dap").continue() 
+    require("dap").continue()
   end
 end, { desc = "Continue" })
-vim.keymap.set("n", "<leader>dC", function() 
+vim.keymap.set("n", "<leader>dC", function()
   if package.loaded["dap"] then
-    require("dap").run_to_cursor() 
+    require("dap").run_to_cursor()
   end
 end, { desc = "Run to Cursor" })
 vim.keymap.set("n", "<leader>de", function()
-  if package.loaded["dapui"] then 
-    require("dapui").eval() 
+  if package.loaded["dapui"] then
+    require("dapui").eval()
   end
 end, { desc = "Evaluate Expression" })
-vim.keymap.set("n", "<leader>di", function() 
+vim.keymap.set("n", "<leader>di", function()
   if package.loaded["dap"] then
-    require("dap").step_into() 
+    require("dap").step_into()
   end
 end, { desc = "Step Into" })
-vim.keymap.set("n", "<leader>do", function() 
+vim.keymap.set("n", "<leader>do", function()
   if package.loaded["dap"] then
-    require("dap").step_over() 
+    require("dap").step_over()
   end
 end, { desc = "Step Over" })
-vim.keymap.set("n", "<leader>dO", function() 
+vim.keymap.set("n", "<leader>dO", function()
   if package.loaded["dap"] then
-    require("dap").step_out() 
+    require("dap").step_out()
   end
 end, { desc = "Step Out" })
-vim.keymap.set("n", "<leader>dr", function() 
+vim.keymap.set("n", "<leader>dr", function()
   if package.loaded["dap"] then
-    require("dap").repl.toggle() 
+    require("dap").repl.toggle()
   end
 end, { desc = "Toggle REPL" })
-vim.keymap.set("n", "<leader>dR", function() 
+vim.keymap.set("n", "<leader>dR", function()
   if package.loaded["dap"] then
-    require("dap").restart() 
+    require("dap").restart()
   end
 end, { desc = "Restart" })
-vim.keymap.set("n", "<leader>dt", function() 
+vim.keymap.set("n", "<leader>dt", function()
   if package.loaded["dap"] then
-    require("dap").terminate() 
+    require("dap").terminate()
   end
 end, { desc = "Terminate" })
-vim.keymap.set("n", "<leader>du", function() 
+vim.keymap.set("n", "<leader>du", function()
   if package.loaded["dapui"] then
-    require("dapui").toggle() 
+    require("dapui").toggle()
   end
 end, { desc = "Toggle UI" })
-vim.keymap.set("n", "<leader>dg", function() 
+vim.keymap.set("n", "<leader>dg", function()
   if _G.debug_goth_app then
-    _G.debug_goth_app() 
+    _G.debug_goth_app()
   end
 end, { desc = "Debug GOTH App" })
 
 -- Function keys for debugging
-vim.keymap.set("n", "<F5>", function() 
+vim.keymap.set("n", "<F5>", function()
   if package.loaded["dap"] then
-    require("dap").continue() 
+    require("dap").continue()
   end
 end, { desc = "Continue" })
-vim.keymap.set("n", "<F10>", function() 
+vim.keymap.set("n", "<F10>", function()
   if package.loaded["dap"] then
-    require("dap").step_over() 
+    require("dap").step_over()
   end
 end, { desc = "Step Over" })
-vim.keymap.set("n", "<F11>", function() 
+vim.keymap.set("n", "<F11>", function()
   if package.loaded["dap"] then
-    require("dap").step_into() 
+    require("dap").step_into()
   end
 end, { desc = "Step Into" })
-vim.keymap.set("n", "<F12>", function() 
+vim.keymap.set("n", "<F12>", function()
   if package.loaded["dap"] then
-    require("dap").step_out() 
+    require("dap").step_out()
   end
 end, { desc = "Step Out" })
 
 -- Snacks Finder keymaps (for file finding, not explorer)
-vim.keymap.set("n", "<leader>ff", function() 
+vim.keymap.set("n", "<leader>ff", function()
   if package.loaded["snacks.picker"] then
-    require("snacks.picker").find_files() 
+    require("snacks.picker").files()
   end
 end, { desc = "Find Files" })
-vim.keymap.set("n", "<leader>fg", function() 
+vim.keymap.set("n", "<leader>fg", function()
   if package.loaded["snacks.picker"] then
-    require("snacks.picker").live_grep() 
+    require("snacks.picker").grep()
   end
 end, { desc = "Find Text (Grep)" })
-vim.keymap.set("n", "<leader>fb", function() 
+vim.keymap.set("n", "<leader>fb", function()
   if package.loaded["snacks.picker"] then
-    require("snacks.picker").buffers() 
+    require("snacks.picker").buffers()
   end
 end, { desc = "Find Buffers" })
-vim.keymap.set("n", "<leader>fh", function() 
+vim.keymap.set("n", "<leader>fh", function()
   if package.loaded["snacks.picker"] then
-    require("snacks.picker").help_tags() 
+    require("snacks.picker").help()
   end
 end, { desc = "Find Help" })
-vim.keymap.set("n", "<leader>fr", function() 
+vim.keymap.set("n", "<leader>fr", function()
   if package.loaded["snacks.picker"] then
-    require("snacks.picker").oldfiles() 
+    require("snacks.picker").recent()
   end
 end, { desc = "Recent Files" })
-vim.keymap.set("n", "<leader>fR", function() 
+vim.keymap.set("n", "<leader>fR", function()
   if package.loaded["snacks.picker"] then
-    require("snacks.picker").frecency() 
+    require("snacks.picker").smart()
   end
 end, { desc = "Frecent Files" })
-vim.keymap.set("n", "<leader>fp", function() 
+vim.keymap.set("n", "<leader>fp", function()
   if package.loaded["snacks.picker"] then
-    require("snacks.picker").projects() 
+    require("snacks.picker").projects()
   end
 end, { desc = "Find Projects" })
 
@@ -222,82 +224,82 @@ vim.keymap.set("n", "<leader>gs", function()
   end
 end, { desc = "Git Status" })
 
--- Git Signs / Hunks 
-vim.keymap.set("n", "<leader>hb", function() 
+-- Git Signs / Hunks
+vim.keymap.set("n", "<leader>hb", function()
   if package.loaded["gitsigns"] then
-    require("gitsigns").blame_line({ full = true }) 
+    require("gitsigns").blame_line({ full = true })
   end
 end, { desc = "Blame Line" })
-vim.keymap.set("n", "<leader>hB", function() 
+vim.keymap.set("n", "<leader>hB", function()
   if package.loaded["gitsigns"] then
-    require("gitsigns").toggle_current_line_blame() 
+    require("gitsigns").toggle_current_line_blame()
   end
 end, { desc = "Toggle Line Blame" })
-vim.keymap.set("n", "<leader>hd", function() 
+vim.keymap.set("n", "<leader>hd", function()
   if package.loaded["gitsigns"] then
-    require("gitsigns").diffthis() 
+    require("gitsigns").diffthis()
   end
 end, { desc = "Diff This" })
-vim.keymap.set("n", "<leader>hD", function() 
+vim.keymap.set("n", "<leader>hD", function()
   if package.loaded["gitsigns"] then
-    require("gitsigns").diffthis("~") 
+    require("gitsigns").diffthis("~")
   end
 end, { desc = "Diff This ~" })
-vim.keymap.set("n", "<leader>hp", function() 
+vim.keymap.set("n", "<leader>hp", function()
   if package.loaded["gitsigns"] then
-    require("gitsigns").preview_hunk() 
+    require("gitsigns").preview_hunk()
   end
 end, { desc = "Preview Hunk" })
-vim.keymap.set("n", "<leader>hr", function() 
+vim.keymap.set("n", "<leader>hr", function()
   if package.loaded["gitsigns"] then
-    require("gitsigns").reset_hunk() 
+    require("gitsigns").reset_hunk()
   end
 end, { desc = "Reset Hunk" })
-vim.keymap.set("n", "<leader>hR", function() 
+vim.keymap.set("n", "<leader>hR", function()
   if package.loaded["gitsigns"] then
-    require("gitsigns").reset_buffer() 
+    require("gitsigns").reset_buffer()
   end
 end, { desc = "Reset Buffer" })
-vim.keymap.set("n", "<leader>hs", function() 
+vim.keymap.set("n", "<leader>hs", function()
   if package.loaded["gitsigns"] then
-    require("gitsigns").stage_hunk() 
+    require("gitsigns").stage_hunk()
   end
 end, { desc = "Stage Hunk" })
-vim.keymap.set("n", "<leader>hS", function() 
+vim.keymap.set("n", "<leader>hS", function()
   if package.loaded["gitsigns"] then
-    require("gitsigns").stage_buffer() 
+    require("gitsigns").stage_buffer()
   end
 end, { desc = "Stage Buffer" })
-vim.keymap.set("n", "<leader>hu", function() 
+vim.keymap.set("n", "<leader>hu", function()
   if package.loaded["gitsigns"] then
-    require("gitsigns").undo_stage_hunk() 
+    require("gitsigns").undo_stage_hunk()
   end
 end, { desc = "Undo Stage Hunk" })
 
 -- Noice and notifications
-vim.keymap.set("n", "<leader>na", function() 
+vim.keymap.set("n", "<leader>na", function()
   if package.loaded["noice"] then
-    require("noice").cmd("all") 
+    require("noice").cmd("all")
   end
 end, { desc = "Noice All" })
-vim.keymap.set("n", "<leader>nd", function() 
+vim.keymap.set("n", "<leader>nd", function()
   if package.loaded["noice"] then
-    require("noice").cmd("dismiss") 
+    require("noice").cmd("dismiss")
   end
 end, { desc = "Dismiss All" })
-vim.keymap.set("n", "<leader>nh", function() 
+vim.keymap.set("n", "<leader>nh", function()
   if package.loaded["noice"] then
-    require("noice").cmd("history") 
+    require("noice").cmd("history")
   end
 end, { desc = "Noice History" })
-vim.keymap.set("n", "<leader>nl", function() 
+vim.keymap.set("n", "<leader>nl", function()
   if package.loaded["noice"] then
-    require("noice").cmd("last") 
+    require("noice").cmd("last")
   end
 end, { desc = "Noice Last Message" })
-vim.keymap.set("n", "<leader>ne", function() 
+vim.keymap.set("n", "<leader>ne", function()
   if package.loaded["noice"] then
-    require("noice").cmd("errors") 
+    require("noice").cmd("errors")
   end
 end, { desc = "Noice Errors" })
 
@@ -313,7 +315,12 @@ vim.keymap.set("n", "<leader>sgn", function()
       if ok then
         local Terminal = Terminal.Terminal
         local goth_init = Terminal:new({
-          cmd = string.format("mkdir -p %s && cd %s && go mod init %s && mkdir -p components handlers static", name, name, name),
+          cmd = string.format(
+            "mkdir -p %s && cd %s && go mod init %s && mkdir -p components handlers static",
+            name,
+            name,
+            name
+          ),
           hidden = false,
           direction = "float",
           on_exit = function()
@@ -347,7 +354,7 @@ end, { desc = "Run GOTH Project" })
 
 vim.keymap.set("n", "<leader>sgd", "<cmd>DebugGOTHApp<cr>", { desc = "Debug GOTH App" })
 vim.keymap.set("n", "<leader>sgg", "<cmd>!templ generate<cr>", { desc = "Generate Templ Files" })
-vim.keymap.set("n", "<leader>sgc", function() 
+vim.keymap.set("n", "<leader>sgc", function()
   if require("config.utils").new_templ_component then
     require("config.utils").new_templ_component()
   end
@@ -369,14 +376,21 @@ vim.keymap.set("n", "<leader>snn", function()
       if ok then
         local Terminal = Terminal.Terminal
         local nextjs_init = Terminal:new({
-          cmd = string.format("npx create-next-app@latest %s --typescript --eslint --tailwind --app --src-dir --import-alias '@/*'", name),
+          cmd = string.format(
+            "npx create-next-app@latest %s --typescript --eslint --tailwind --app --src-dir --import-alias '@/*'",
+            name
+          ),
           hidden = false,
           direction = "float",
         })
         nextjs_init:toggle()
       else
         -- Fallback
-        vim.cmd("!npx create-next-app@latest " .. name .. " --typescript --eslint --tailwind --app --src-dir --import-alias '@/*'")
+        vim.cmd(
+          "!npx create-next-app@latest "
+            .. name
+            .. " --typescript --eslint --tailwind --app --src-dir --import-alias '@/*'"
+        )
       end
     end
   end)
@@ -403,14 +417,14 @@ vim.keymap.set("n", "<leader>tf", "<cmd>ToggleTerm direction=float<cr>", { desc 
 vim.keymap.set("n", "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", { desc = "Terminal (horizontal)" })
 vim.keymap.set("n", "<leader>tv", "<cmd>ToggleTerm direction=vertical<cr>", { desc = "Terminal (vertical)" })
 vim.keymap.set("n", "<leader>tt", "<cmd>ToggleTerm<cr>", { desc = "Toggle terminal" })
-vim.keymap.set("n", "<leader>tc", function() 
+vim.keymap.set("n", "<leader>tc", function()
   if require("config.utils").toggle_colorcolumn then
-    require("config.utils").toggle_colorcolumn() 
+    require("config.utils").toggle_colorcolumn()
   else
     vim.wo.colorcolumn = vim.wo.colorcolumn == "" and "80,100,120" or ""
   end
 end, { desc = "Toggle Color Column" })
-vim.keymap.set("n", "<leader>tw", function() 
+vim.keymap.set("n", "<leader>tw", function()
   vim.wo.wrap = not vim.wo.wrap
   vim.notify("Wrap " .. (vim.wo.wrap and "enabled" or "disabled"), vim.log.levels.INFO)
 end, { desc = "Toggle Wrap" })
@@ -419,12 +433,17 @@ vim.keymap.set("n", "<leader>tA", "<cmd>FormatToggleBuffer<cr>", { desc = "Toggl
 
 -- UI toggles and commands
 vim.keymap.set("n", "<leader>uc", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle Colorscheme" })
-vim.keymap.set("n", "<leader>un", function() 
+vim.keymap.set("n", "<leader>un", function()
   if package.loaded["notify"] then
-    require("notify").dismiss({ silent = true, pending = true }) 
+    require("notify").dismiss({ silent = true, pending = true })
   end
 end, { desc = "Dismiss Notifications" })
-vim.keymap.set("n", "<leader>ur", "<Cmd>nohlsearch<Bar>diffupdate<Bar>normal! <C-L><CR>", { desc = "Redraw / Clear Highlight" })
+vim.keymap.set(
+  "n",
+  "<leader>ur",
+  "<Cmd>nohlsearch<Bar>diffupdate<Bar>normal! <C-L><CR>",
+  { desc = "Redraw / Clear Highlight" }
+)
 vim.keymap.set("n", "<leader>ut", "<cmd>ToggleTransparency<cr>", { desc = "Toggle Transparency" })
 vim.keymap.set("n", "<leader>ul", "<cmd>Lazy<cr>", { desc = "Lazy Plugin Manager" })
 vim.keymap.set("n", "<leader>uL", "<cmd>LazyUpdate<cr>", { desc = "Update Plugins" })
@@ -452,45 +471,45 @@ vim.keymap.set("n", "<leader>xq", "<cmd>TroubleToggle quickfix<cr>", { desc = "Q
 vim.keymap.set("n", "<leader>xt", "<cmd>TodoTrouble<cr>", { desc = "Todo Trouble" })
 vim.keymap.set("n", "<leader>xT", "<cmd>TodoTrouble keywords=TODO,FIX,FIXME<cr>", { desc = "Todo/Fix/Fixme Trouble" })
 vim.keymap.set("n", "<leader>xw", "<cmd>TroubleToggle workspace_diagnostics<cr>", { desc = "Workspace Diagnostics" })
-vim.keymap.set("n", "<leader>xf", function() 
+vim.keymap.set("n", "<leader>xf", function()
   if require("config.utils").toggle_qf then
-    require("config.utils").toggle_qf() 
+    require("config.utils").toggle_qf()
   else
     -- Fallback toggle
     if vim.fn.getwininfo(vim.fn.win_getid())[1].quickfix == 1 then
-      vim.cmd('cclose')
+      vim.cmd("cclose")
     else
-      vim.cmd('copen')
+      vim.cmd("copen")
     end
   end
 end, { desc = "Toggle Quickfix" })
 
--- Navigation key pairs 
-vim.keymap.set("n", "[c", function() 
+-- Navigation key pairs
+vim.keymap.set("n", "[c", function()
   if package.loaded["gitsigns"] then
-    require("gitsigns").prev_hunk() 
+    require("gitsigns").prev_hunk()
   end
 end, { desc = "Previous Hunk" })
 vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous Diagnostic" })
 vim.keymap.set("n", "[l", "<cmd>lprev<cr>", { desc = "Previous Location" })
 vim.keymap.set("n", "[q", "<cmd>cprev<cr>", { desc = "Previous Quickfix" })
-vim.keymap.set("n", "[t", function() 
+vim.keymap.set("n", "[t", function()
   if package.loaded["todo-comments"] then
-    require("todo-comments").jump_prev() 
+    require("todo-comments").jump_prev()
   end
 end, { desc = "Previous Todo" })
 
-vim.keymap.set("n", "]c", function() 
+vim.keymap.set("n", "]c", function()
   if package.loaded["gitsigns"] then
-    require("gitsigns").next_hunk() 
+    require("gitsigns").next_hunk()
   end
 end, { desc = "Next Hunk" })
 vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next Diagnostic" })
 vim.keymap.set("n", "]l", "<cmd>lnext<cr>", { desc = "Next Location" })
 vim.keymap.set("n", "]q", "<cmd>cnext<cr>", { desc = "Next Quickfix" })
-vim.keymap.set("n", "]t", function() 
+vim.keymap.set("n", "]t", function()
   if package.loaded["todo-comments"] then
-    require("todo-comments").jump_next() 
+    require("todo-comments").jump_next()
   end
 end, { desc = "Next Todo" })
 
@@ -506,7 +525,7 @@ vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { desc = "Go to Declaration" 
 vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { desc = "Go to Implementation" })
 vim.keymap.set("n", "gr", function()
   if package.loaded["snacks.picker"] then
-    require("snacks.picker").lsp_references() 
+    require("snacks.picker").lsp_references()
   else
     vim.lsp.buf.references()
   end
@@ -540,10 +559,10 @@ vim.keymap.set("n", "<C-Left>", "<cmd>vertical resize -2<cr>", { desc = "Decreas
 vim.keymap.set("n", "<C-Right>", "<cmd>vertical resize +2<cr>", { desc = "Increase window width" })
 
 -- Clear search with <esc>
-vim.keymap.set({"i", "n"}, "<esc>", "<cmd>noh<cr><esc>", { desc = "Escape and clear hlsearch" })
+vim.keymap.set({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", { desc = "Escape and clear hlsearch" })
 
 -- Save file
-vim.keymap.set({"i", "x", "n", "s"}, "<C-s>", "<cmd>w<cr><esc>", { desc = "Save file" })
+vim.keymap.set({ "i", "x", "n", "s" }, "<C-s>", "<cmd>w<cr><esc>", { desc = "Save file" })
 
 -- Better indenting
 vim.keymap.set("v", "<", "<gv", { desc = "Unindent line" })
@@ -578,11 +597,11 @@ if package.loaded["which-key"] then
     ["<leader>u"] = { name = "+UI" },
     ["<leader>w"] = { name = "+Windows" },
     ["<leader>x"] = { name = "+Diagnostics" },
-    
+
     -- Stack specific groups
     ["<leader>sg"] = { name = "+GOTH Stack" },
     ["<leader>sn"] = { name = "+Next.js Stack" },
-    
+
     -- LSP groups
     ["<leader>cg"] = { name = "+GOTH" },
     ["<leader>cn"] = { name = "+Next.js" },
