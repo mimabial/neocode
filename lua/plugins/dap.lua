@@ -1,3 +1,4 @@
+---@diagnostic disable: missing-fields
 return {
   "mfussenegger/nvim-dap",
   dependencies = {
@@ -6,8 +7,8 @@ return {
       "rcarriga/nvim-dap-ui",
       dependencies = {
         -- Required dependency for nvim-dap-ui
-        "nvim-neotest/nvim-nio"
-      }
+        "nvim-neotest/nvim-nio",
+      },
     },
     -- Virtual text for the debugger
     "theHamsta/nvim-dap-virtual-text",
@@ -181,7 +182,7 @@ return {
     local dap = require("dap")
     local dapui = require("dapui")
     local mason_dap = require("mason-nvim-dap")
-    
+
     -- Configure mason-nvim-dap
     mason_dap.setup({
       -- Makes a best effort to setup the various debuggers with
@@ -349,7 +350,7 @@ return {
     end
 
     -- Set up specific DAP configurations
-    
+
     -- Node.js
     dap.adapters.node2 = {
       type = "executable",
@@ -406,9 +407,12 @@ return {
     vim.fn.sign_define("DapBreakpoint", { text = "", texthl = "DiagnosticSignError", linehl = "", numhl = "" })
     vim.fn.sign_define("DapBreakpointCondition", { text = "", texthl = "DiagnosticSignWarn", linehl = "", numhl = "" })
     vim.fn.sign_define("DapLogPoint", { text = "", texthl = "DiagnosticSignInfo", linehl = "", numhl = "" })
-    vim.fn.sign_define("DapStopped", { text = "", texthl = "DiagnosticSignWarn", linehl = "DapStopped", numhl = "DapStopped" })
+    vim.fn.sign_define(
+      "DapStopped",
+      { text = "", texthl = "DiagnosticSignWarn", linehl = "DapStopped", numhl = "DapStopped" }
+    )
     vim.fn.sign_define("DapBreakpointRejected", { text = "", texthl = "DiagnosticSignHint", linehl = "", numhl = "" })
-    
+
     -- Custom function to debug GOTH app
     _G.debug_goth_app = function()
       -- Try to find main.go in workspace
@@ -417,7 +421,7 @@ return {
         vim.notify("Could not find main.go file to debug", vim.log.levels.ERROR)
         return
       end
-      
+
       -- Configure and start debugging
       dap.configurations.go = {
         {
@@ -426,12 +430,12 @@ return {
           request = "launch",
           program = main_file,
           buildFlags = "",
-        }
+        },
       }
-      
+
       dap.continue()
     end
-    
+
     -- Add custom command
     vim.api.nvim_create_user_command("DebugGOTHApp", function()
       _G.debug_goth_app()

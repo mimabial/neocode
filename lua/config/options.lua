@@ -1,144 +1,106 @@
--- Options configured via vim.opt
-local options = {
-  -- Display
-  number = true,         -- Show line numbers
-  relativenumber = true, -- Show relative line numbers
-  cursorline = true,    -- Highlight current line
-  wrap = false,         -- Don't wrap lines
-  scrolloff = 8,        -- Keep 8 lines above/below cursor when scrolling
-  sidescrolloff = 8,    -- Keep 8 columns to the left/right of cursor
-  showmode = false,     -- Hide mode text ('-- INSERT --')
-  showcmd = false,      -- Hide command line
-  cmdheight = 1,        -- Command line height
-  signcolumn = "yes",   -- Always show sign column
-  termguicolors = true, -- True color support
-  background = "dark",  -- Use dark background
+-- lua/config/options.lua
+-- Core editor options
+---@diagnostic disable: missing-fields
+local opt = vim.opt
+local g = vim.g
 
-  -- Status line
-  laststatus = 3, -- Global status line
+-- Leader keys
+g.mapleader = " "
+g.maplocalleader = " "
 
-  -- Indentation
-  tabstop = 2,        -- Number of spaces tabs count for
-  shiftwidth = 2,     -- Size of an indent
-  expandtab = true,   -- Use spaces instead of tabs
-  smartindent = true, -- Smart indentation
-  breakindent = true, -- Enable break indent
+-- Basic UI
+opt.number = true -- Show absolute line numbers
+opt.relativenumber = true -- Show relative line numbers
+opt.cursorline = true -- Highlight current line
+opt.signcolumn = "yes" -- Always show sign column
+opt.termguicolors = true -- Enable true color support
+opt.background = "dark" -- Dark background
 
-  -- Search
-  ignorecase = true, -- Case insensitive searching
-  smartcase = true,  -- Override ignorecase when search contains uppercase
-  hlsearch = true,   -- Highlight search
+-- Scrolling
+opt.scrolloff = 8 -- Keep 8 lines on screen when scrolling
+opt.sidescrolloff = 8
 
-  -- Files
-  swapfile = false, -- Don't use swapfile
-  backup = false,   -- Don't create backup files
-  undofile = true,  -- Save undo history
+-- Wrapping
+opt.wrap = false -- Disable line wrap
 
-  -- Misc
-  mouse = "a",      -- Enable mouse support
-  updatetime = 250, -- Decrease update time
-  timeoutlen = 300, -- Time in milliseconds to wait for a mapped sequence
+-- Command line
+opt.cmdheight = 1 -- Command line height
+opt.showmode = false -- Don't show mode (handled by statusline)
+opt.showcmd = false -- Don't show partial commands
+opt.shortmess:remove("S") -- Allow `search_count()` in statusline
 
-  -- Split windows
-  splitright = true, -- Split windows right
-  splitbelow = true, -- Split windows below
+-- Indentation
+opt.tabstop = 2 -- Number of spaces tabs count for
+opt.shiftwidth = 2 -- Size of an indent
+opt.expandtab = true -- Use spaces instead of tabs
+opt.smartindent = true -- Smart indenting
+opt.breakindent = true -- Wrapped lines maintain indent
 
-  -- Completion
-  completeopt = "menu,menuone,noselect", -- Better completion experience
+-- Search
+opt.ignorecase = true -- Case-insensitive search
+opt.smartcase = true -- Smart case
+opt.hlsearch = true -- Highlight search results
+opt.incsearch = true -- Incremental search
 
-  -- Show invisible characters
-  list = true, -- Show invisible characters
-  listchars = { tab = "» ", trail = "·", nbsp = "␣" }, -- Define which invisibles to show
+-- Files
+opt.swapfile = false -- Don't use swapfile
+opt.backup = false -- Don't create backup files
+opt.undofile = true -- Save undo history
+opt.confirm = true -- Confirm before exiting with unsaved changes
+opt.autowrite = true -- Auto-save before running commands
 
-  -- Clipboard
-  clipboard = "unnamedplus", -- Sync with system clipboard
+-- Splits
+opt.splitright = true -- Splits open to the right
+opt.splitbelow = true -- Splits open below
 
-  -- Prompt confirmation
-  confirm = true, -- Confirm before exiting if unsaved changes
+-- Completion
+opt.completeopt = { "menu", "menuone", "noselect" }
 
-  -- Auto write files
-  autowrite = true, -- Auto save before commands like :next and :make
+-- Invisible characters
+opt.list = true
+opt.listchars = { tab = "» ", trail = "·", nbsp = "␣" }
 
-  -- Popup menu
-  pumheight = 10, -- Maximum number of entries in a popup
+-- Clipboard
+opt.clipboard = "unnamedplus" -- Use system clipboard
 
-  -- Folding
-  foldlevel = 99,
-  foldlevelstart = 99,
-  foldenable = true,
-  foldmethod = "expr",
-  foldexpr = "nvim_treesitter#foldexpr()",
+-- Folding
+opt.foldmethod = "expr"
+opt.foldexpr = "nvim_treesitter#foldexpr()"
+opt.foldlevel = 99
+opt.foldlevelstart = 99
+opt.foldenable = true
+opt.fillchars = { eob = " " } -- Hide end-of-buffer tildes
 
-  -- Hide end-of-buffer tildes
-  fillchars = { eob = " " }, -- Hide tilde on empty lines
-}
+-- Statusline: append search count
+opt.statusline:append(" %=%{v:lua.require'config.utils'.search_count()}")
 
--- Show search count message when searching
-vim.opt.shortmess:remove("S")
-
--- Enhanced search count display
-vim.opt.statusline:append("%=%{v:lua.require'config.utils'.search_count()}")
-
--- Apply all options
-for k, v in pairs(options) do
-  vim.opt[k] = v
-end
-
--- Configure vim.g settings
-vim.g.mapleader = " "
-vim.g.maplocalleader = " "
-
--- Configure signs for diagnostics
-local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }
+-- Diagnostics setup
+local signs = { Error = "", Warn = "", Info = "", Hint = "" }
+local sign_values = {}
 for type, icon in pairs(signs) do
-  local hl = "DiagnosticSign" .. type
-  vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
+  table.insert(sign_values, {
+    name = "DiagnosticSign" .. type,
+    text = icon,
+    texthl = "DiagnosticSign" .. type,
+    numhl = "DiagnosticSign" .. type,
+  })
 end
+vim.diagnostic.config({
+  signs = { values = sign_values },
+  virtual_text = {
+    prefix = "●",
+    spacing = 4,
+    source = "if_many",
+    severity = { min = vim.diagnostic.severity.HINT },
+  },
+  float = {
+    border = "rounded",
+    source = true,
+    severity_sort = true,
+  },
+  underline = true,
+  update_in_insert = false,
+  severity_sort = true,
+})
 
--- Set up global utility functions
-_G.utils = {
-  -- Check if a plugin is installed
-  has_plugin = function(plugin)
-    return require("lazy.core.config").spec.plugins[plugin] ~= nil
-  end,
-
-  -- Check if a command exists
-  has_command = function(cmd)
-    return vim.fn.exists(":" .. cmd) == 2
-  end,
-
-  -- Get the current buffer's working directory
-  get_buf_dir = function()
-    local bufnr = vim.api.nvim_get_current_buf()
-    local bufname = vim.api.nvim_buf_get_name(bufnr)
-    return vim.fn.fnamemodify(bufname, ":p:h")
-  end,
-
-  -- Create a new scratch buffer
-  scratch_buffer = function()
-    vim.cmd([[
-      enew
-      setlocal buftype=nofile
-      setlocal bufhidden=hide
-      setlocal noswapfile
-      setlocal nobuflisted
-    ]])
-    return vim.api.nvim_get_current_buf()
-  end,
-
-  -- Center the current buffer content
-  center_buffer = function()
-    local win_height = vim.api.nvim_win_get_height(0)
-    local buf_height = vim.api.nvim_buf_line_count(0)
-    local padding = math.floor((win_height - buf_height) / 2)
-    if padding > 0 then
-      local lines = {}
-      for _ = 1, padding do
-        table.insert(lines, "")
-      end
-      vim.api.nvim_buf_set_lines(0, 0, 0, false, lines)
-      vim.api.nvim_buf_set_lines(0, buf_height + padding, buf_height + padding, false, lines)
-      vim.api.nvim_win_set_cursor(0, { padding + 1, 0 })
-    end
-  end,
-}
+return {} -- No module export needed
