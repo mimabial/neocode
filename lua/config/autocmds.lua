@@ -140,28 +140,52 @@ vim.api.nvim_create_autocmd("FileType", {
   desc = "Set markdown-specific settings",
 })
 
--- Auto open directory with oil
+-- Auto open directory with dashboard instead of oil
 vim.api.nvim_create_autocmd("BufEnter", {
   group = augroup,
   callback = function()
     local bufname = vim.api.nvim_buf_get_name(0)
     if vim.fn.isdirectory(bufname) == 1 then
-      if package.loaded["oil"] then
-        -- already loaded, just open
-        require("oil").open(bufname)
-      else
-        -- use Lua API to load the plugin
-        require("lazy").load({ plugins = { "oil.nvim" } })
-        -- after a short delay, open the directory
-        vim.defer_fn(function()
-          if package.loaded["oil"] then
-            require("oil").open(bufname)
+      -- Check if dashboard is available
+      if package.loaded["snacks.dashboard"] or (package.loaded["lazy"] and not vim.g.in_open_dashboard) then
+        -- Set flag to prevent recursive triggering
+        vim.g.in_open_dashboard = true
+
+        -- Use vim.schedule to avoid interference with BufEnter event
+        vim.schedule(function()
+          if package.loaded["snacks.dashboard"] then
+            -- Close the directory buffer
+            vim.cmd("bdelete")
+            -- Open dashboard
+            require("snacks.dashboard").open()
+          else
+            -- Load snacks via lazy if not loaded
+            require("lazy").load({ plugins = { "snacks.nvim" } })
+            -- And try opening dashboard after a delay
+            vim.defer_fn(function()
+              if package.loaded["snacks.dashboard"] then
+                require("snacks.dashboard").open()
+              end
+              vim.g.in_open_dashboard = false
+            end, 100)
           end
-        end, 100)
+        end)
+      else
+        -- Fall back to oil if snacks dashboard isn't available
+        if package.loaded["oil"] then
+          require("oil").open(bufname)
+        else
+          require("lazy").load({ plugins = { "oil.nvim" } })
+          vim.defer_fn(function()
+            if package.loaded["oil"] then
+              require("oil").open(bufname)
+            end
+          end, 100)
+        end
       end
     end
   end,
-  desc = "Open directory in file explorer",
+  desc = "Open dashboard for directories instead of oil",
 })
 
 -- Trigger linting when files are saved or opened

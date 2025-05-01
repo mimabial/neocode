@@ -257,3 +257,40 @@ vim.keymap.set("n", "<leader>e", function()
     require("snacks").explorer()
   end
 end, { desc = "Snacks Explorer" })
+
+-- Dashboard keymapping
+vim.keymap.set("n", "<leader>ud", function()
+  if package.loaded["snacks.dashboard"] then
+    require("snacks.dashboard").open()
+  else
+    -- Try to load snacks if not already loaded
+    if package.loaded["lazy"] then
+      require("lazy").load({ plugins = { "snacks.nvim" } })
+      -- Wait a bit for the plugin to load
+      vim.defer_fn(function()
+        if package.loaded["snacks.dashboard"] then
+          require("snacks.dashboard").open()
+        else
+          vim.notify("Failed to load dashboard", vim.log.levels.ERROR)
+        end
+      end, 100)
+    else
+      vim.notify("Lazy.nvim not loaded, can't open dashboard", vim.log.levels.ERROR)
+    end
+  end
+end, { desc = "Open Dashboard" })
+
+-- You can also add keymaps for stack switching via dashboard shortcuts
+vim.keymap.set("n", "<leader>usg", function()
+  vim.cmd("StackFocus goth")
+  if package.loaded["snacks.dashboard"] then
+    require("snacks.dashboard").open()
+  end
+end, { desc = "Focus GOTH Stack + Dashboard" })
+
+vim.keymap.set("n", "<leader>usn", function()
+  vim.cmd("StackFocus nextjs")
+  if package.loaded["snacks.dashboard"] then
+    require("snacks.dashboard").open()
+  end
+end, { desc = "Focus Next.js Stack + Dashboard" })
