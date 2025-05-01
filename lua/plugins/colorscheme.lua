@@ -18,7 +18,7 @@ return {
       vim.g.gruvbox_material_diagnostic_virtual_text = "colored"
       vim.g.gruvbox_material_current_word = "bold"
       vim.g.gruvbox_material_disable_italic_comment = 0
-      
+
       -- Better Colors for UI elements
       vim.g.gruvbox_material_colors_override = {
         bg0 = { "#282828", "235" },
@@ -33,10 +33,10 @@ return {
         bg_blue = { "#394f5a", "17" },
         bg_yellow = { "#4a4940", "136" },
       }
-      
+
       -- Apply colorscheme
       vim.cmd("colorscheme gruvbox-material")
-      
+
       -- Create a function to export Gruvbox Material colors
       -- This allows other plugins to use these colors
       _G.get_gruvbox_colors = function()
@@ -62,7 +62,7 @@ return {
           grey_dim = "#7c6f64",
         }
       end
-      
+
       -- Ensure consistent highlights across all instances of the colorscheme
       local function update_highlights()
         -- Make the line number more visible
@@ -73,58 +73,58 @@ return {
         vim.api.nvim_set_hl(0, "MatchParen", { fg = "#fabd2f", bg = "#504945", bold = true })
         -- Make comments more readable
         vim.api.nvim_set_hl(0, "Comment", { fg = "#928374", italic = true })
-        
+
         -- Improve the color for UI elements
         vim.api.nvim_set_hl(0, "FloatBorder", { fg = "#7c6f64" })
         vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#282828" })
-        
+
         -- Which-key highlights
         vim.api.nvim_set_hl(0, "WhichKey", { fg = "#d8a657", bold = true })
         vim.api.nvim_set_hl(0, "WhichKeyGroup", { fg = "#ea6962" })
         vim.api.nvim_set_hl(0, "WhichKeySeparator", { fg = "#928374" })
         vim.api.nvim_set_hl(0, "WhichKeyDesc", { fg = "#89b482" })
-        
+
         -- Treesitter context
         vim.api.nvim_set_hl(0, "TreesitterContext", { bg = "#32302f" })
         vim.api.nvim_set_hl(0, "TreesitterContextLineNumber", { fg = "#a89984", bg = "#32302f" })
-        
+
         -- Telescope highlights for better integration
         vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = "#a89984" })
         vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = "#a89984" })
         vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { fg = "#a89984" })
         vim.api.nvim_set_hl(0, "TelescopeSelection", { bg = "#3c3836", fg = "#d8a657" })
         vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = "#89b482", bold = true })
-        
+
         -- Make folders in tree have better visibility
         vim.api.nvim_set_hl(0, "NeoTreeDirectoryName", { fg = "#a89984", bold = true })
         vim.api.nvim_set_hl(0, "NeoTreeDirectoryIcon", { fg = "#7daea3" })
-        
+
         -- Enhance syntax highlighting for web development
         vim.api.nvim_set_hl(0, "htmlTag", { fg = "#7daea3", bold = true })
         vim.api.nvim_set_hl(0, "htmlEndTag", { fg = "#7daea3", bold = true })
         vim.api.nvim_set_hl(0, "htmlArg", { fg = "#d8a657", italic = true })
         vim.api.nvim_set_hl(0, "htmlTagName", { fg = "#ea6962" })
-        
+
         -- HTMX specific highlights (for treesitter)
         vim.api.nvim_set_hl(0, "@attribute.htmx", { fg = "#89b482", italic = true, bold = true })
         vim.api.nvim_set_hl(0, "@tag.attribute.htmx", { fg = "#89b482", italic = true, bold = true })
-        
+
         -- Go specific highlights
         vim.api.nvim_set_hl(0, "@type.go", { fg = "#89b482" })
         vim.api.nvim_set_hl(0, "@function.go", { fg = "#7daea3" })
         vim.api.nvim_set_hl(0, "@variable.go", { fg = "#d3869b" })
-        
+
         -- NextJS/React specific highlights
         vim.api.nvim_set_hl(0, "@tag.jsx", { fg = "#ea6962" })
         vim.api.nvim_set_hl(0, "@tag.tsx", { fg = "#ea6962" })
         vim.api.nvim_set_hl(0, "@constructor.jsx", { fg = "#7daea3" })
         vim.api.nvim_set_hl(0, "@constructor.tsx", { fg = "#7daea3" })
-        
+
         -- Status line improvements
         vim.api.nvim_set_hl(0, "StatusLine", { bg = "#3c3836", fg = "#d4be98" })
         vim.api.nvim_set_hl(0, "StatusLineNC", { bg = "#32302f", fg = "#a89984" })
       end
-      
+
       -- Update highlights when changing colorscheme
       vim.api.nvim_create_autocmd("ColorScheme", {
         pattern = "gruvbox-material",
@@ -132,10 +132,10 @@ return {
           update_highlights()
         end,
       })
-      
+
       -- Apply highlights immediately
       update_highlights()
-      
+
       -- Handle filetype detection for GOTH stack
       vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
         pattern = "*.templ",
@@ -143,7 +143,7 @@ return {
           vim.bo.filetype = "templ"
         end,
       })
-      
+
       -- Add custom highlighting for HTMX attributes
       vim.api.nvim_create_autocmd("FileType", {
         pattern = { "html", "templ" },
@@ -178,42 +178,42 @@ return {
       hide_inactive_statusline = false,
       dim_inactive = false,
       lualine_bold = false,
-      
+
       -- Custom overrides
       on_colors = function(colors)
         -- Add specific color overrides for GOTH stack
-        colors.comment = "#9ca0a4"  -- Brighter comments
+        colors.comment = "#9ca0a4" -- Brighter comments
         colors.fg_gutter = "#4a5057" -- Brighter line numbers
       end,
-      
+
       on_highlights = function(highlights, colors)
         -- Improve UI elements
         highlights.LineNr = { fg = colors.fg_gutter }
         highlights.CursorLineNr = { fg = colors.orange }
-        
+
         -- Enhance terminal colors
         highlights.TermCursor = { fg = colors.bg, bg = colors.green }
-        
+
         -- HTMX Specific highlights
         highlights["@attribute.htmx"] = { fg = colors.green, italic = true, bold = true }
         highlights["@tag.attribute.htmx"] = { fg = colors.green, italic = true, bold = true }
-        
+
         -- Go specific highlights
         highlights["@type.go"] = { fg = colors.blue }
         highlights["@function.go"] = { fg = colors.cyan }
-        
+
         -- React/NextJS specific
         highlights["@tag.jsx"] = { fg = colors.red }
         highlights["@tag.tsx"] = { fg = colors.red }
         highlights["@constructor.jsx"] = { fg = colors.blue }
         highlights["@constructor.tsx"] = { fg = colors.blue }
-        
+
         -- Neo-tree integration
         highlights.NeoTreeDirectoryName = { fg = colors.fg_dark, bold = true }
         highlights.NeoTreeDirectoryIcon = { fg = colors.blue }
         highlights.NeoTreeNormal = { bg = colors.bg_dark }
         highlights.NeoTreeIndentMarker = { fg = colors.fg_gutter }
-        
+
         -- Telescope integration
         highlights.TelescopePromptBorder = { fg = colors.blue }
         highlights.TelescopeResultsBorder = { fg = colors.blue }
@@ -243,11 +243,11 @@ return {
           vim.notify("Switched to Gruvbox Material theme", vim.log.levels.INFO)
         end
       end, { desc = "Toggle between Gruvbox Material and TokyoNight" })
-      
+
       -- Create a command to toggle background transparency
       vim.api.nvim_create_user_command("ToggleTransparency", function()
         local current = vim.g.colors_name
-        
+
         if current == "gruvbox-material" then
           -- For gruvbox-material
           if vim.g.gruvbox_material_transparent_background == 1 then
@@ -262,18 +262,21 @@ return {
           -- For tokyonight
           local tokyonight = require("tokyonight")
           local config = tokyonight.options
-          
+
           config.transparent = not config.transparent
           tokyonight.setup(config)
-          
+
           vim.cmd("colorscheme tokyonight")
-          vim.notify("Transparency " .. (config.transparent and "enabled" or "disabled") .. " for TokyoNight", vim.log.levels.INFO)
+          vim.notify(
+            "Transparency " .. (config.transparent and "enabled" or "disabled") .. " for TokyoNight",
+            vim.log.levels.INFO
+          )
         end
       end, { desc = "Toggle background transparency" })
-      
+
       -- Add keymaps for quick access
       vim.keymap.set("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle Colorscheme" })
       vim.keymap.set("n", "<leader>uT", "<cmd>ToggleTransparency<cr>", { desc = "Toggle Transparency" })
     end,
-  }
+  },
 }

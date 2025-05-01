@@ -17,9 +17,10 @@ return {
     },
 
     columns = {
-      "icon",
       "size",
-      { "mtime", highlight = "Comment" },
+      "permissions",
+      -- "mtime",
+      -- "icon",
     },
 
     buf_options = {
