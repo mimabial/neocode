@@ -1,7 +1,7 @@
 return {
   "nvim-lualine/lualine.nvim",
   event = "VeryLazy",
-  priority = 50, -- Ensure it loads after colorscheme and icons
+  priority = 75, -- After icons (100) and Git (60)
   dependencies = {
     {
       "nvim-tree/nvim-web-devicons",
@@ -23,6 +23,7 @@ return {
     end
   end,
   opts = function()
+    -- Define icons for different parts of the statusline
     local icons = {
       diagnostics = {
         Error = " ",
@@ -40,45 +41,11 @@ return {
         modified = " ",
         remove = " ",
       },
-      kinds = {
-        Array = " ",
-        Boolean = " ",
-        Class = " ",
-        Color = " ",
-        Constant = " ",
-        Constructor = " ",
-        Enum = " ",
-        EnumMember = " ",
-        Event = " ",
-        Field = " ",
-        File = " ",
-        Folder = " ",
-        Function = " ",
-        Interface = " ",
-        Key = " ",
-        Keyword = " ",
-        Method = " ",
-        Module = " ",
-        Namespace = " ",
-        Null = "ﳠ ",
-        Number = " ",
-        Object = " ",
-        Operator = " ",
-        Package = " ",
-        Property = " ",
-        Reference = " ",
-        Snippet = " ",
-        String = " ",
-        Struct = " ",
-        Text = " ",
-        TypeParameter = " ",
-        Unit = " ",
-        Value = " ",
-        Variable = " ",
+      stack = {
+        goth = "󰟓",
+        nextjs = "󰟔",
       },
     }
-
-    vim.o.laststatus = vim.g.lualine_laststatus
 
     -- Function to get project root directory
     local function root_dir()
@@ -120,13 +87,13 @@ return {
       return hl and hl.fg and string.format("#%06x", hl.fg) or "NONE"
     end
 
-    -- Stack badge
+    -- Stack badge component
     local function stack_badge()
       local current_stack = vim.g.current_stack or ""
       if current_stack == "goth" then
-        return "󰟓 GOTH"
+        return icons.stack.goth .. " GOTH"
       elseif current_stack == "nextjs" then
-        return "󰟔 NEXT"
+        return icons.stack.nextjs .. " NEXT"
       end
       return ""
     end
@@ -138,21 +105,69 @@ return {
         return ""
       end
 
-      local buf_client_names = {}
+      -- Filter out clients like copilot that don't need to be displayed
+      local client_names = {}
       for _, client in pairs(buf_clients) do
-        table.insert(buf_client_names, client.name)
+        if client.name ~= "copilot" and client.name ~= "null-ls" then
+          table.insert(client_names, client.name)
+        end
       end
 
-      return " " .. table.concat(buf_client_names, ", ")
+      return next(client_names) and " " .. table.concat(client_names, ", ") or ""
     end
 
-    local opts = {
+    -- File size function
+    local function file_size()
+      local function format_file_size(size)
+        local units = { "B", "K", "M", "G" }
+        local unit_index = 1
+        while size > 1024 and unit_index < #units do
+          size = size / 1024
+          unit_index = unit_index + 1
+        end
+        return string.format("%.1f%s", size, units[unit_index])
+      end
+
+      local file = vim.fn.expand("%:p")
+      if string.len(file) == 0 or vim.bo.buftype ~= "" then
+        return ""
+      end
+      local size = vim.fn.getfsize(file)
+      if size <= 0 then
+        return ""
+      end
+      return format_file_size(size)
+    end
+
+    -- Search count for statusline
+    local function search_count()
+      if not package.loaded["hlslens"] or vim.g.hlslens_disabled then
+        return ""
+      end
+
+      local lens = require("hlslens").get_lens_info_fpath()
+      if not lens or lens.total_matches == 0 then
+        return ""
+      end
+
+      return string.format("[%d/%d]", lens.nearest_idx, lens.total_matches)
+    end
+
+    return {
       options = {
         theme = "gruvbox-material",
         globalstatus = vim.o.laststatus == 3,
-        disabled_filetypes = { statusline = { "dashboard", "alpha", "neo-tree", "lazy" } },
+        disabled_filetypes = {
+          statusline = { "dashboard", "alpha", "starter", "neo-tree", "lazy", "oil" },
+          winbar = { "dashboard", "alpha", "starter", "neo-tree", "lazy", "oil" },
+        },
         component_separators = { left = "", right = "" },
         section_separators = { left = "", right = "" },
+        refresh = {
+          statusline = 500,
+          tabline = 1000,
+          winbar = 1000,
+        },
       },
       sections = {
         lualine_a = {
@@ -191,7 +206,7 @@ return {
           { stack_badge, color = { fg = "#a89984", gui = "bold" } },
         },
         lualine_x = {
-          -- noice command status
+          -- Noice command and mode status
           {
             function()
               return require("noice").api.status.command.get()
@@ -203,7 +218,6 @@ return {
               return { fg = get_highlight_color("Statement") }
             end,
           },
-          -- noice mode status
           {
             function()
               return require("noice").api.status.mode.get()
@@ -215,7 +229,7 @@ return {
               return { fg = get_highlight_color("Constant") }
             end,
           },
-          -- dap status
+          -- DAP status
           {
             function()
               return "  " .. require("dap").status()
@@ -227,7 +241,7 @@ return {
               return { fg = get_highlight_color("Debug") }
             end,
           },
-          -- lazy updates
+          -- Lazy updates
           {
             function()
               local lazy_status = require("lazy.status")
@@ -240,9 +254,31 @@ return {
               return { fg = get_highlight_color("Special") }
             end,
           },
+          -- LSP server
           { lsp_server, icon = " LSP:", color = { fg = "#7daea3" } },
-          { "encoding" },
-          { "fileformat", icons_enabled = true },
+          -- Search count
+          { search_count, icon = "󰍉" },
+          -- File size
+          { file_size },
+          -- Encoding & Format
+          {
+            "encoding",
+            cond = function()
+              return vim.bo.fileencoding ~= "utf-8"
+            end,
+          },
+          {
+            "fileformat",
+            icons_enabled = true,
+            symbols = {
+              unix = "LF",
+              dos = "CRLF",
+              mac = "CR",
+            },
+            cond = function()
+              return vim.bo.fileformat ~= "unix"
+            end,
+          },
         },
         lualine_y = {
           { "progress", separator = " ", padding = { left = 1, right = 0 } },
@@ -267,43 +303,15 @@ return {
         lualine_z = {},
       },
       tabline = {},
-      extensions = { "neo-tree", "lazy", "trouble", "toggleterm", "quickfix" },
+      extensions = { "neo-tree", "lazy", "trouble", "toggleterm", "quickfix", "oil" },
     }
-
-    -- Add trouble.nvim integration if available
-    if package.loaded["trouble"] then
-      local trouble = require("trouble")
-      local has_trouble_symbols = trouble.statusline ~= nil
-
-      if has_trouble_symbols then
-        local symbols = trouble.statusline({
-          mode = "symbols",
-          groups = {},
-          title = false,
-          filter = { range = true },
-          format = "{kind_icon}{symbol.name:Normal}",
-          hl_group = "lualine_c_normal",
-        })
-
-        if symbols and symbols.get and symbols.has then
-          table.insert(opts.sections.lualine_c, {
-            symbols.get,
-            cond = function()
-              return vim.b.trouble_lualine ~= false and symbols.has()
-            end,
-          })
-        end
-      end
-    end
-
-    return opts
   end,
   config = function(_, opts)
     require("lualine").setup(opts)
 
     -- Set up special filetype handlers
     vim.api.nvim_create_autocmd("FileType", {
-      pattern = { "neo-tree", "alpha", "dashboard", "lazy", "mason" },
+      pattern = { "neo-tree", "alpha", "dashboard", "starter", "lazy", "mason", "oil" },
       callback = function()
         vim.opt_local.statusline = nil
       end,

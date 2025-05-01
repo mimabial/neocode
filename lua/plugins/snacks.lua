@@ -4,27 +4,41 @@ return {
   lazy = false,
   priority = 800,
 
+  ---@type snacks.Config
   opts = {
+    explorer = {
+      -- your explorer configuration comes here
+      -- or leave it empty to use the default settings
+      -- refer to the configuration section below
+    },
     picker = {
-      layout = {
-        layout = {
-          box = "vertical",
-          backdrop = false,
-          row = -1,
-          width = 0,
-          height = 0.5,
-          border = "top",
-          title = " {title} {live} {flags}",
-          title_pos = "left",
-          { win = "input", height = 1, border = "bottom" },
-          {
-            box = "horizontal",
-            { win = "list", border = "none" },
-            { win = "preview", title = "{preview}", width = 0.6, border = "left" },
-          },
+      sources = {
+        explorer = {
+          -- your explorer picker configuration comes here
+          -- or leave it empty to use the default settings
         },
       },
-
+      layout = {
+        preview = "main",
+        layout = {
+          backdrop = false,
+          width = 40,
+          min_width = 40,
+          height = 0,
+          position = "left",
+          border = "none",
+          box = "vertical",
+          {
+            win = "input",
+            height = 1,
+            border = "rounded",
+            title = "{title} {live} {flags}",
+            title_pos = "center",
+          },
+          { win = "list", border = "none" },
+          { win = "preview", title = "{preview}", height = 0.4, border = "top" },
+        },
+      },
       -- fuzzy-matcher defaults
       matcher = { fuzzy = true, smartcase = true, filename_bonus = true },
 

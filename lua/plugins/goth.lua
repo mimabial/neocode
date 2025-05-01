@@ -6,7 +6,7 @@ return {
     ft = "templ",
     priority = 90,
   },
-  
+
   -- Live HTML/Templ preview
   {
     "turbio/bracey.vim",
@@ -40,7 +40,7 @@ return {
     end,
     priority = 70,
   },
-  
+
   -- Comprehensive Go support
   {
     "ray-x/go.nvim",
@@ -110,7 +110,7 @@ return {
     ft = { "go", "gomod", "gosum", "gowork", "gotmpl", "gohtmltmpl", "templ" },
     config = function(_, opts)
       require("go").setup(opts)
-      
+
       -- Create command to run the current Go project
       vim.api.nvim_create_user_command("GoRun", function()
         local Terminal = require("toggleterm.terminal").Terminal
@@ -124,7 +124,7 @@ return {
         })
         go_run:toggle()
       end, { desc = "Run Go project" })
-      
+
       -- Create command to start a GOTH server (go run + templ generate)
       vim.api.nvim_create_user_command("GOTHServer", function()
         local Terminal = require("toggleterm.terminal").Terminal
@@ -187,30 +187,35 @@ return {
     },
     priority = 50,
   },
-  
+
   -- Enhance tree-sitter for Go/Templ
   {
     "nvim-treesitter/nvim-treesitter",
     opts = function(_, opts)
       if type(opts.ensure_installed) == "table" then
         vim.list_extend(opts.ensure_installed, {
-          "go", "gomod", "gosum", "gowork", "html", "css"
+          "go",
+          "gomod",
+          "gosum",
+          "gowork",
+          "html",
+          "css",
         })
       end
-      
+
       -- Add templ parser configuration
       local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
-      
+
       -- Make sure templ parser is properly configured
       parser_config.templ = {
         install_info = {
           url = "https://github.com/vrischmann/tree-sitter-templ.git",
-          files = {"src/parser.c", "src/scanner.c"},
+          files = { "src/parser.c", "src/scanner.c" },
           branch = "master",
         },
         filetype = "templ",
       }
-      
+
       -- Add HTMX queries for syntax highlighting
       local htmx_queries = [[
         ;; HTMX attributes
@@ -228,7 +233,7 @@ return {
          ;; Label this tag node
          @tag.htmx)
       ]]
-      
+
       -- Try to safely add the queries
       local ok, queries = pcall(require, "nvim-treesitter.query")
       if ok and queries then
@@ -246,7 +251,7 @@ return {
     end,
     priority = 65,
   },
-  
+
   -- Go debugging support
   {
     "leoluz/nvim-dap-go",
@@ -285,18 +290,18 @@ return {
           build_flags = "",
         },
       })
-      
-      -- Create a command to debug the GOTH app 
+
+      -- Create a command to debug the GOTH app
       vim.api.nvim_create_user_command("GOTHDebug", function()
         local dap = require("dap")
-        
+
         -- Try to find main.go
         local main_file = vim.fn.findfile("main.go", vim.fn.getcwd() .. "/**")
         if main_file == "" then
           vim.notify("Could not find main.go file to debug", vim.log.levels.ERROR)
           return
         end
-        
+
         -- Configure and start debugging
         dap.configurations.go = {
           {
@@ -305,26 +310,26 @@ return {
             request = "launch",
             program = main_file,
             buildFlags = "",
-          }
+          },
         }
-        
+
         -- Run templ generate first
         local result = vim.fn.system("templ generate")
         if vim.v.shell_error ~= 0 then
           vim.notify("Error generating templ files: " .. result, vim.log.levels.ERROR)
           return
         end
-        
+
         dap.continue()
       end, { desc = "Debug GOTH Application" })
-      
+
       -- Add keymapping for GOTH debugging
       vim.keymap.set("n", "<leader>dg", "<cmd>GOTHDebug<CR>", { desc = "Debug GOTH App" })
     end,
     ft = { "go", "templ" },
     priority = 70,
   },
-  
+
   -- Add utility functions specific to GOTH stack
   {
     "nvim-lua/plenary.nvim",
@@ -338,16 +343,16 @@ return {
           vim.notify("Component name cannot be empty", vim.log.levels.ERROR)
           return
         end
-        
+
         -- Create a new buffer
         local bufnr = vim.api.nvim_create_buf(true, false)
-        
+
         -- Set buffer name
         vim.api.nvim_buf_set_name(bufnr, component_name .. ".templ")
-        
+
         -- Set filetype
         vim.api.nvim_buf_set_option(bufnr, "filetype", "templ")
-        
+
         -- Generate component content
         local content = {
           "package components",
@@ -361,27 +366,27 @@ return {
           "    <h1>" .. component_name .. " Component</h1>",
           "    <p>Content goes here</p>",
           "  </div>",
-          "}"
+          "}",
         }
-        
+
         -- Set buffer content
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
-        
+
         -- Open the buffer in the current window
         vim.api.nvim_win_set_buf(0, bufnr)
-        
+
         -- Position cursor at the props section
-        vim.api.nvim_win_set_cursor(0, {4, 0})
-        
+        vim.api.nvim_win_set_cursor(0, { 4, 0 })
+
         -- Enter insert mode
         vim.cmd("startinsert!")
       end
-      
+
       -- Create a command to create a new templ component
       vim.api.nvim_create_user_command("TemplNew", function()
         _G.new_templ_component()
       end, { desc = "Create a new Templ component" })
-      
+
       -- Create a command to reload all templ files
       vim.api.nvim_create_user_command("TemplReload", function()
         local result = vim.fn.system("templ generate")
@@ -391,7 +396,7 @@ return {
           vim.notify("Templ files regenerated", vim.log.levels.INFO)
         end
       end, { desc = "Regenerate all Templ files" })
-      
+
       -- Add GOTH stack keymaps
       vim.api.nvim_create_autocmd("FileType", {
         pattern = { "go", "templ" },
@@ -401,12 +406,12 @@ return {
           vim.keymap.set("n", "<leader>sgd", "<cmd>GOTHDebug<CR>", { buffer = true, desc = "Debug GOTH project" })
           vim.keymap.set("n", "<leader>sgt", "<cmd>TemplNew<CR>", { buffer = true, desc = "New Templ component" })
           vim.keymap.set("n", "<leader>sgR", "<cmd>TemplReload<CR>", { buffer = true, desc = "Reload Templ files" })
-        end
+        end,
       })
     end,
     priority = 60,
   },
-  
+
   -- Create snippets directory and file for Go and Templ
   {
     "nvim-lua/plenary.nvim",
@@ -417,7 +422,7 @@ return {
       if vim.fn.isdirectory(snippets_dir) == 0 then
         vim.fn.mkdir(snippets_dir, "p")
       end
-      
+
       -- Create Go snippets file
       local go_snippets_file = snippets_dir .. "/go.lua"
       if vim.fn.filereadable(go_snippets_file) == 0 then
@@ -470,7 +475,7 @@ return snippets
           vim.notify("Created Go snippets file", vim.log.levels.INFO)
         end
       end
-      
+
       -- Create Templ snippets file
       local templ_snippets_file = snippets_dir .. "/templ.lua"
       if vim.fn.filereadable(templ_snippets_file) == 0 then
