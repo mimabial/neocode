@@ -19,33 +19,6 @@ return {
     end,
     config = function(_, opts)
       require("mini.ai").setup(opts)
-
-      -- Add key mappings for treesitter textobjects that just use a and i instead of requiring the full tag
-      local ts_repeat_keys = { "a", "i" }
-      local function ts_extend_repeat(mode)
-        local map = vim.keymap.set
-
-        for _, key in ipairs(ts_repeat_keys) do
-          map(mode, key, function()
-            local cl = vim.api.nvim_get_current_line()
-            local cc = vim.api.nvim_win_get_cursor(0)[2] + 1
-            local reg = cl:sub(cc, cc)
-
-            if reg:match("%a") then
-              vim.cmd([[normal! ]] .. key .. reg)
-            else
-              vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(key, true, false, true), "n", true)
-            end
-          end, { silent = true, buffer = true })
-        end
-      end
-
-      vim.api.nvim_create_autocmd("FileType", {
-        callback = function()
-          ts_extend_repeat("o")
-          ts_extend_repeat("x")
-        end,
-      })
     end,
   },
 
@@ -279,38 +252,6 @@ return {
           vim.b.miniindentscope_disable = true
         end,
       })
-    end,
-  },
-
-  -- Better notification manager
-  {
-    "rcarriga/nvim-notify",
-    keys = {
-      {
-        "<leader>un",
-        function()
-          require("notify").dismiss({ silent = true, pending = true })
-        end,
-        desc = "Dismiss all notifications",
-      },
-    },
-    opts = {
-      timeout = 3000,
-      max_height = function()
-        return math.floor(vim.o.lines * 0.75)
-      end,
-      max_width = function()
-        return math.floor(vim.o.columns * 0.75)
-      end,
-      on_open = function(win)
-        vim.api.nvim_win_set_config(win, { zindex = 100 })
-      end,
-    },
-    init = function()
-      -- When noice is not enabled, install notify on VeryLazy
-      if not require("lazy.core.config").spec.plugins["noice.nvim"] then
-        require("lazy").load({ plugins = { "nvim-notify" } })
-      end
     end,
   },
 
