@@ -1,14 +1,28 @@
 -- Plugin spec for Snacks.nvim (Focused on Picker functionality, not Explorer)
 return {
   "folke/snacks.nvim",
-  event = "VeryLazy",
+  lazy = false,
   priority = 800,
 
   opts = {
     picker = {
-      preset = "ivy",
       layout = {
-        position = "bottom",
+        layout = {
+          box = "vertical",
+          backdrop = false,
+          row = -1,
+          width = 0,
+          height = 0.4,
+          border = "top",
+          title = " {title} {live} {flags}",
+          title_pos = "left",
+          { win = "input", height = 1, border = "bottom" },
+          {
+            box = "horizontal",
+            { win = "list", border = "none" },
+            { win = "preview", title = "{preview}", width = 0.6, border = "left" },
+          },
+        },
       },
 
       -- fuzzy-matcher defaults
@@ -78,13 +92,9 @@ return {
         },
       },
     },
-
-    explorer = { preset = "sidebar", layout = { position = "right" } },
   },
 
   config = function(_, opts)
     require("snacks").setup(opts)
-    -- Reset default explorer to Oil even if config loads snacks explorer accidentally
-    vim.g.default_explorer = "oil"
   end,
 }

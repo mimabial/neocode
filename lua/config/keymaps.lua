@@ -251,12 +251,16 @@ vim.keymap.set("n", "<leader>o", "<CMD>Oil<CR>", { desc = "Oil Explorer" })
 vim.keymap.set("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
 vim.keymap.set("n", "_", "<CMD>Oil .<CR>", { desc = "Open project root" })
 
--- Snacks explorer keymaps (alternative file explorer)
-vim.keymap.set("n", "<leader>e", function()
-  if package.loaded["snacks"] then
-    require("snacks").explorer()
-  end
-end, { desc = "Snacks Explorer" })
+-- Neo-tree explorer keymaps (secandary file explorer)
+-- Sidebar (default)
+vim.keymap.set("n", "<leader>ef", ":Neotree toggle filesystem<CR>", {
+  desc = "Neo-Tree Sidebar",
+})
+
+-- “Netrw” (current window) style
+vim.keymap.set("n", "<leader>ec", ":Neotree position=current filesystem<CR>", {
+  desc = "Neo-Tree in Current Window",
+})
 
 -- Git commands
 vim.keymap.set("n", "<leader>gd", "<cmd>DiffviewOpen<cr>", { desc = "DiffView Open" })
