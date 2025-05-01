@@ -4,7 +4,7 @@ return {
   lazy = false, -- Ensure it's loaded immediately
   priority = 900, -- Very high priority
   dependencies = { "nvim-tree/nvim-web-devicons" },
-  
+
   opts = {
     default_file_explorer = true,
     use_default_keymaps = true,
@@ -15,18 +15,18 @@ return {
     lsp_file_methods = {
       autosave_changes = true,
     },
-    
+
     columns = {
       "icon",
       "size",
       { "mtime", highlight = "Comment" },
     },
-    
+
     buf_options = {
       buflisted = false,
       bufhidden = "hide",
     },
-    
+
     win_options = {
       wrap = false,
       signcolumn = "no",
@@ -37,7 +37,7 @@ return {
       conceallevel = 3,
       concealcursor = "nvic",
     },
-    
+
     -- Add your keymaps with oil-specific actions
     keymaps = {
       ["g?"] = "actions.show_help",
@@ -57,7 +57,7 @@ return {
       ["g."] = "actions.toggle_hidden",
       ["g\\"] = "actions.toggle_trash",
     },
-    
+
     view_options = {
       show_hidden = false,
       is_hidden_file = function(name, bufnr)
@@ -67,7 +67,7 @@ return {
         return false
       end,
     },
-    
+
     float = {
       padding = 2,
       max_width = 0,
@@ -77,7 +77,7 @@ return {
         winblend = 0,
       },
     },
-    
+
     preview = {
       max_width = 0.9,
       min_width = { 40, 0.4 },
@@ -90,7 +90,7 @@ return {
         winblend = 0,
       },
     },
-    
+
     progress = {
       max_width = 0.9,
       min_width = { 40, 0.4 },
@@ -105,50 +105,39 @@ return {
       },
     },
   },
-  
-  -- Define keybindings to access oil
-  keys = {
-    { "-", "<CMD>Oil<CR>", desc = "Open parent directory with Oil" },
-    { "_", "<CMD>Oil .<CR>", desc = "Open project root with Oil" },
-    { "<leader>o", "<CMD>Oil<CR>", desc = "Open Oil" },
-    { "<leader>O", "<CMD>Oil --float<CR>", desc = "Open Oil in float" },
-  },
-  
+
   config = function(_, opts)
     require("oil").setup(opts)
-    
+
     -- Set up commands for stack-specific Oil views
     vim.api.nvim_create_user_command("OilGOTH", function()
       vim.g.current_stack = "goth"
       require("oil").open()
       vim.notify("Oil focused on GOTH stack", vim.log.levels.INFO)
     end, { desc = "Oil explorer: GOTH stack" })
-    
+
     vim.api.nvim_create_user_command("OilNextJS", function()
       vim.g.current_stack = "nextjs"
       require("oil").open()
       vim.notify("Oil focused on Next.js stack", vim.log.levels.INFO)
     end, { desc = "Oil explorer: Next.js stack" })
-    
+
     -- Stack-specific filters for Oil's view_options
     vim.api.nvim_create_autocmd("FileType", {
       pattern = "oil",
       callback = function()
         -- Get the current stack
         local stack = vim.g.current_stack
-        
+
         if stack == "goth" then
           -- Apply GOTH stack specific filters
           require("oil").setup({
             view_options = {
               show_hidden = true,
               is_hidden_file = function(name, bufnr)
-                return vim.startswith(name, ".") or 
-                  name == "vendor" or
-                  name == "node_modules" or
-                  name == "go.sum"
+                return vim.startswith(name, ".") or name == "vendor" or name == "node_modules" or name == "go.sum"
               end,
-            }
+            },
           })
         elseif stack == "nextjs" then
           -- Apply Next.js stack specific filters
@@ -156,26 +145,25 @@ return {
             view_options = {
               show_hidden = true,
               is_hidden_file = function(name, bufnr)
-                return vim.startswith(name, ".") or 
-                  name == "node_modules" or
-                  name == ".next" or
-                  name == ".turbo" or
-                  name == "out" or
-                  name == ".vercel"
+                return vim.startswith(name, ".")
+                  or name == "node_modules"
+                  or name == ".next"
+                  or name == ".turbo"
+                  or name == "out"
+                  or name == ".vercel"
               end,
-            }
+            },
           })
         end
-        
-        -- Special UI setup for Oil buffer
+        -- Disable numbers in Oil
+        vim.wo.number = false
+        vim.wo.relativenumber = true
+
+        -- Enable cursorline for better visibility
         vim.wo.cursorline = true
+
         vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = true, silent = true, desc = "Close Oil" })
-      end,
-    })
-    
-    -- Set up Gruvbox Material highlights for Oil
-    vim.api.nvim_create_autocmd("ColorScheme", {
-      callback = function()
+
         if vim.g.colors_name == "gruvbox-material" then
           vim.api.nvim_set_hl(0, "OilDir", { fg = "#7daea3", bold = true })
           vim.api.nvim_set_hl(0, "OilDirIcon", { fg = "#7daea3", bold = true })
@@ -186,7 +174,7 @@ return {
           vim.api.nvim_set_hl(0, "OilTypeSymlink", { link = "OilLink" })
           vim.api.nvim_set_hl(0, "OilColumn", { link = "Comment" })
         end
-      end
+      end,
     })
   end,
 }

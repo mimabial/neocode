@@ -6,15 +6,15 @@ return {
 
   opts = {
     picker = {
-      -- actual root **box**
+      -- top-level layout **config**
       layout = {
-        preview = "main",
+        -- actual root **box**
         layout = {
           box = "vertical",
           backdrop = false,
+          row = -1,
           width = 0,
-          height = 0.4,
-          position = "bottom",
+          height = 0.5,
           border = "top",
           title = " {title} {live} {flags}",
           title_pos = "left",
@@ -26,7 +26,6 @@ return {
           },
         },
       },
-
       -- applies to every picker window
       win = { border = "rounded" },
 
@@ -95,6 +94,29 @@ return {
           end,
           prompt = "Next.js Files",
         },
+      },
+
+      explorer = {},
+    },
+    -- Configure explorer as a sidebar
+    explorer = {
+      layout = {
+        -- custom sidebar layout: vertical full-height split
+        width = 0.3,
+        height = 1.0,
+        layout = {
+          box = "horizontal",
+          { win = "list" },
+          { win = "preview", width = 0.7 },
+        },
+      },
+      win = { border = "double" },
+      -- explorer-specific settings
+      file_browser = {
+        git_icons = true,
+        hidden = true,
+        respect_gitignore = true,
+        follow_symlinks = true,
       },
     },
   },

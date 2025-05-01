@@ -341,37 +341,6 @@ vim.api.nvim_create_autocmd("TermClose", {
   desc = "Refresh gitsigns when closing lazygit",
 })
 
--- Configure oil-specific settings
-vim.api.nvim_create_autocmd("FileType", {
-  group = augroup,
-  pattern = "oil",
-  callback = function()
-    -- Disable numbers in Oil
-    vim.wo.number = false
-    vim.wo.relativenumber = false
-
-    -- Enable cursorline for better visibility
-    vim.wo.cursorline = true
-
-    -- Set custom highlights
-    if vim.g.colors_name == "gruvbox-material" then
-      vim.cmd("highlight link OilDir GruvboxAqua")
-      vim.cmd("highlight link OilDirIcon GruvboxAqua")
-      vim.cmd("highlight link OilLink GruvboxGreen")
-    end
-
-    -- Stack-specific filters
-    if vim.g.current_stack == "goth" then
-      -- Apply GOTH-specific filters if needed
-      vim.b.oil_filter_pattern = "node_modules/|vendor/|go.sum"
-    elseif vim.g.current_stack == "nextjs" then
-      -- Apply Next.js-specific filters if needed
-      vim.b.oil_filter_pattern = "node_modules/|.next/|.vercel/|out/|.turbo/"
-    end
-  end,
-  desc = "Oil-specific settings",
-})
-
 -- LSP inlay hints (where supported)
 vim.api.nvim_create_autocmd("LspAttach", {
   group = augroup,
