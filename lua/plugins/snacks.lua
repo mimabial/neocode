@@ -5,23 +5,33 @@ return {
   priority = 800,
 
   opts = {
-    explorer = {
-      enabled = false, -- Disable explorer functionality to use Oil instead
-    },
-
     picker = {
-      enabled = true,
-      border = "rounded",
-      width = 0.8,
-      height = 0.8,
-      telesync = true,
-
-      fzf = {
-        fuzzy = true,
-        override_file_sorter = true,
-        override_generic_sorter = true,
-        case_mode = "smart_case",
+      -- actual root **box**
+      layout = {
+        preview = "main",
+        layout = {
+          box = "vertical",
+          backdrop = false,
+          width = 0,
+          height = 0.4,
+          position = "bottom",
+          border = "top",
+          title = " {title} {live} {flags}",
+          title_pos = "left",
+          { win = "input", height = 1, border = "bottom" },
+          {
+            box = "horizontal",
+            { win = "list", border = "none" },
+            { win = "preview", title = "{preview}", width = 0.6, border = "left" },
+          },
+        },
       },
+
+      -- applies to every picker window
+      win = { border = "rounded" },
+
+      -- fuzzy-matcher defaults (rename the old `fzf` block)
+      matcher = { fuzzy = true, smartcase = true, filename_bonus = true },
 
       highlights = function()
         local hl = vim.api.nvim_get_hl(0, {})
@@ -85,253 +95,13 @@ return {
           end,
           prompt = "Next.js Files",
         },
-        lsp_references = {
-          init = function()
-            local params = vim.lsp.util.make_position_params()
-            return vim.lsp.buf_request_sync(0, "textDocument/references", params, 1000)
-          end,
-          format = function(results)
-            local locations = {}
-            for _, result in pairs(results or {}) do
-              for _, loc in pairs(result.result or {}) do
-                table.insert(locations, loc)
-              end
-            end
-            return vim.lsp.util.locations_to_items(locations)
-          end,
-          prompt = "LSP References",
-        },
-        lsp_definitions = {
-          init = function()
-            local params = vim.lsp.util.make_position_params()
-            return vim.lsp.buf_request_sync(0, "textDocument/definition", params, 1000)
-          end,
-          format = function(results)
-            local locations = {}
-            for _, result in pairs(results or {}) do
-              for _, loc in pairs(result.result or {}) do
-                table.insert(locations, loc)
-              end
-            end
-            return vim.lsp.util.locations_to_items(locations)
-          end,
-          prompt = "LSP Definitions",
-        },
-        lsp_implementations = {
-          init = function()
-            local params = vim.lsp.util.make_position_params()
-            return vim.lsp.buf_request_sync(0, "textDocument/implementation", params, 1000)
-          end,
-          format = function(results)
-            local locations = {}
-            for _, result in pairs(results or {}) do
-              for _, loc in pairs(result.result or {}) do
-                table.insert(locations, loc)
-              end
-            end
-            return vim.lsp.util.locations_to_items(locations)
-          end,
-          prompt = "LSP Implementations",
-        },
       },
-    },
-  },
-
-  keys = {
-    -- Explorer keymaps - explicitly listed to ensure they appear in which-key
-    {
-      "<leader>se",
-      function()
-        require("snacks").explorer()
-      end,
-      desc = "Toggle Snacks Explorer",
-    },
-    {
-      "<leader>sE",
-      function()
-        require("snacks").explorer({ float = true })
-      end,
-      desc = "Toggle Snacks Explorer (float)",
-    },
-    -- Picker keymaps - explicitly listed to ensure they appear in which-key
-    {
-      "<leader>ff",
-      function()
-        require("snacks.picker").files()
-      end,
-      desc = "Find Files",
-    },
-    {
-      "<leader>fg",
-      function()
-        require("snacks.picker").grep()
-      end,
-      desc = "Live Grep",
-    },
-    {
-      "<leader>fb",
-      function()
-        require("snacks.picker").buffers()
-      end,
-      desc = "Buffers",
-    },
-    {
-      "<leader>fh",
-      function()
-        require("snacks.picker").help()
-      end,
-      desc = "Help Tags",
-    },
-    {
-      "<leader>fr",
-      function()
-        require("snacks.picker").recent()
-      end,
-      desc = "Recent Files",
-    },
-    {
-      "<leader>fR",
-      function()
-        require("snacks.picker").smart()
-      end,
-      desc = "Smart Files",
-    },
-    {
-      "<leader>fp",
-      function()
-        require("snacks.picker").projects()
-      end,
-      desc = "Projects",
-    },
-    {
-      "<leader>fc",
-      function()
-        require("snacks.picker").commands()
-      end,
-      desc = "Commands",
-    },
-    {
-      "<leader>fk",
-      function()
-        require("snacks.picker").keymaps()
-      end,
-      desc = "Keymaps",
-    },
-    {
-      "<leader>f/",
-      function()
-        require("snacks.picker").lines()
-      end,
-      desc = "Buffer Fuzzy Find",
-    },
-    {
-      "<leader>f.",
-      function()
-        require("snacks.picker").resume()
-      end,
-      desc = "Resume Search",
-    },
-
-    -- Git integration
-    {
-      "<leader>gs",
-      function()
-        require("snacks.picker").git_status()
-      end,
-      desc = "Git Status",
-    },
-    {
-      "<leader>gc",
-      function()
-        require("snacks.picker").git_log()
-      end,
-      desc = "Git Commits",
-    },
-    {
-      "<leader>gb",
-      function()
-        require("snacks.picker").git_branches()
-      end,
-      desc = "Git Branches",
-    },
-
-    -- LSP integration
-    {
-      "<leader>fd",
-      function()
-        require("snacks.picker").diagnostics({ bufnr = 0 })
-      end,
-      desc = "Doc Diagnostics",
-    },
-    {
-      "<leader>fD",
-      function()
-        require("snacks.picker").diagnostics()
-      end,
-      desc = "Workspace Diagnostics",
-    },
-    {
-      "<leader>fs",
-      function()
-        require("snacks.picker").lsp_symbols()
-      end,
-      desc = "Doc Symbols",
-    },
-    {
-      "<leader>fS",
-      function()
-        require("snacks.picker").lsp_workspace_symbols()
-      end,
-      desc = "Workspace Symbols",
-    },
-
-    -- Stack-specific
-    {
-      "<leader>sgg",
-      function()
-        require("snacks.picker").pick("goth_files")
-      end,
-      desc = "GOTH Files",
-    },
-    {
-      "<leader>sng",
-      function()
-        require("snacks.picker").pick("nextjs_files")
-      end,
-      desc = "Next.js Files",
-    },
-
-    -- LSP navigation replacements (instead of telescope)
-    {
-      "gr",
-      function()
-        require("snacks.picker").pick("lsp_references")
-      end,
-      desc = "Go to References",
-    },
-    {
-      "gd",
-      function()
-        require("snacks.picker").pick("lsp_definitions")
-      end,
-      desc = "Go to Definition",
-    },
-    {
-      "gi",
-      function()
-        require("snacks.picker").pick("lsp_implementations")
-      end,
-      desc = "Go to Implementation",
     },
   },
 
   config = function(_, opts)
     require("snacks").setup(opts)
-
     -- Reset default explorer to Oil even if config loads snacks explorer accidentally
     vim.g.default_explorer = "oil"
-
-    -- Export the pickers to _G so they can be easily accessed from keymaps
-    _G.snacks_picker = require("snacks.picker")
   end,
 }

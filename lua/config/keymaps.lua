@@ -1,6 +1,8 @@
 -- Define keymaps using vim.keymap.set directly
 -- Instead of defining keymaps through which-key, let which-key detect them
 
+local picker = require("snacks.picker")
+
 -- Buffer management
 vim.keymap.set("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to Other Buffer" })
 vim.keymap.set("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Delete Buffer" })
@@ -164,48 +166,97 @@ vim.keymap.set("n", "<F12>", function()
   end
 end, { desc = "Step Out" })
 
--- Snacks Finder keymaps (for file finding, not explorer)
+-- Snacks Finder keymaps
 vim.keymap.set("n", "<leader>ff", function()
-  if package.loaded["snacks.picker"] then
-    require("snacks.picker").files()
-  end
+  picker.files()
 end, { desc = "Find Files" })
+
 vim.keymap.set("n", "<leader>fg", function()
-  if package.loaded["snacks.picker"] then
-    require("snacks.picker").grep()
-  end
+  picker.grep()
 end, { desc = "Find Text (Grep)" })
+
 vim.keymap.set("n", "<leader>fb", function()
-  if package.loaded["snacks.picker"] then
-    require("snacks.picker").buffers()
-  end
+  picker.buffers()
 end, { desc = "Find Buffers" })
+
 vim.keymap.set("n", "<leader>fh", function()
-  if package.loaded["snacks.picker"] then
-    require("snacks.picker").help()
-  end
+  picker.help()
 end, { desc = "Find Help" })
+
 vim.keymap.set("n", "<leader>fr", function()
-  if package.loaded["snacks.picker"] then
-    require("snacks.picker").recent()
-  end
+  picker.recent()
 end, { desc = "Recent Files" })
+
 vim.keymap.set("n", "<leader>fR", function()
-  if package.loaded["snacks.picker"] then
-    require("snacks.picker").smart()
-  end
+  picker.smart()
 end, { desc = "Frecent Files" })
+
 vim.keymap.set("n", "<leader>fp", function()
-  if package.loaded["snacks.picker"] then
-    require("snacks.picker").projects()
-  end
+  picker.projects()
 end, { desc = "Find Projects" })
 
+vim.keymap.set("n", "<leader>fc", function()
+  picker.commands()
+end, { desc = "Commands" })
+
+vim.keymap.set("n", "<leader>fk", function()
+  picker.keymaps()
+end, { desc = "Keymaps" })
+
+vim.keymap.set("n", "<leader>f/", function()
+  picker.lines()
+end, { desc = "Buffer Fuzzy Find" })
+
+vim.keymap.set("n", "<leader>f.", function()
+  picker.resume()
+end, { desc = "Resume Search" })
+
+-- Git integration (additional)
+vim.keymap.set("n", "<leader>gc", function()
+  picker.git_log()
+end, { desc = "Git Commits" })
+
+vim.keymap.set("n", "<leader>gb", function()
+  picker.git_branches()
+end, { desc = "Git Branches" })
+
+-- LSP integration
+vim.keymap.set("n", "<leader>fd", function()
+  picker.diagnostics({ bufnr = 0 })
+end, { desc = "Doc Diagnostics" })
+
+vim.keymap.set("n", "<leader>fD", function()
+  picker.diagnostics()
+end, { desc = "Workspace Diagnostics" })
+
+vim.keymap.set("n", "<leader>fs", function()
+  picker.lsp_symbols()
+end, { desc = "Doc Symbols" })
+
+vim.keymap.set("n", "<leader>fS", function()
+  picker.lsp_workspace_symbols()
+end, { desc = "Workspace Symbols" })
+
+-- Stack-specific
+vim.keymap.set("n", "<leader>sgg", function()
+  picker.pick("goth_files")
+end, { desc = "GOTH Files" })
+
+vim.keymap.set("n", "<leader>sng", function()
+  picker.pick("nextjs_files")
+end, { desc = "Next.js Files" })
+
 -- Oil explorer keymaps (primary file explorer)
-vim.keymap.set("n", "<leader>e", "<CMD>Oil<CR>", { desc = "Oil Explorer" })
-vim.keymap.set("n", "<leader>E", "<CMD>Oil --float<CR>", { desc = "Oil Explorer (float)" })
+vim.keymap.set("n", "<leader>o", "<CMD>Oil<CR>", { desc = "Oil Explorer" })
 vim.keymap.set("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
 vim.keymap.set("n", "_", "<CMD>Oil .<CR>", { desc = "Open project root" })
+
+-- Snacks explorer keymaps (alternative file explorer)
+vim.keymap.set("n", "<leader>e", function()
+  if package.loaded["snacks"] then
+    require("snacks").explorer()
+  end
+end, { desc = "Snacks Explorer" })
 
 -- Git commands
 vim.keymap.set("n", "<leader>gd", "<cmd>DiffviewOpen<cr>", { desc = "DiffView Open" })
@@ -520,9 +571,23 @@ vim.keymap.set("n", "<leader>L3", "<cmd>Layout writing<cr>", { desc = "Writing L
 vim.keymap.set("n", "<leader>L4", "<cmd>Layout debug<cr>", { desc = "Debug Layout" })
 
 -- LSP related keymaps
-vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to Definition" })
-vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { desc = "Go to Declaration" })
-vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { desc = "Go to Implementation" })
+
+vim.keymap.set("n", "gd", function()
+  if package.loaded["snacks.picker"] then
+    require("snacks.picker").lsp_definitions()
+  else
+    vim.lsp.buf.definition()
+  end
+end, { desc = "Go to Definition" })
+
+vim.keymap.set("n", "gi", function()
+  if package.loaded["snacks.picker"] then
+    require("snacks.picker").lsp_implementations()
+  else
+    vim.lsp.buf.implementation()
+  end
+end, { desc = "Go to Implementation" })
+
 vim.keymap.set("n", "gr", function()
   if package.loaded["snacks.picker"] then
     require("snacks.picker").lsp_references()
@@ -530,6 +595,8 @@ vim.keymap.set("n", "gr", function()
     vim.lsp.buf.references()
   end
 end, { desc = "Go to References" })
+
+vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { desc = "Go to Declaration" })
 vim.keymap.set("n", "gt", vim.lsp.buf.type_definition, { desc = "Type Definition" })
 vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "Show Documentation" })
 vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, { desc = "Signature Help" })
