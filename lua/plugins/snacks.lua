@@ -6,30 +6,12 @@ return {
 
   opts = {
     picker = {
-      -- top-level layout **config**
+      preset = "ivy",
       layout = {
-        -- actual root **box**
-        layout = {
-          box = "vertical",
-          backdrop = false,
-          row = -1,
-          width = 0,
-          height = 0.5,
-          border = "top",
-          title = " {title} {live} {flags}",
-          title_pos = "left",
-          { win = "input", height = 1, border = "bottom" },
-          {
-            box = "horizontal",
-            { win = "list", border = "none" },
-            { win = "preview", title = "{preview}", width = 0.6, border = "left" },
-          },
-        },
+        position = "bottom",
       },
-      -- applies to every picker window
-      win = { border = "rounded" },
 
-      -- fuzzy-matcher defaults (rename the old `fzf` block)
+      -- fuzzy-matcher defaults
       matcher = { fuzzy = true, smartcase = true, filename_bonus = true },
 
       highlights = function()
@@ -95,30 +77,9 @@ return {
           prompt = "Next.js Files",
         },
       },
+    },
 
-      explorer = {},
-    },
-    -- Configure explorer as a sidebar
-    explorer = {
-      layout = {
-        -- custom sidebar layout: vertical full-height split
-        width = 0.3,
-        height = 1.0,
-        layout = {
-          box = "horizontal",
-          { win = "list" },
-          { win = "preview", width = 0.7 },
-        },
-      },
-      win = { border = "double" },
-      -- explorer-specific settings
-      file_browser = {
-        git_icons = true,
-        hidden = true,
-        respect_gitignore = true,
-        follow_symlinks = true,
-      },
-    },
+    explorer = { preset = "sidebar", layout = { position = "right" } },
   },
 
   config = function(_, opts)
