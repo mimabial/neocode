@@ -15,6 +15,13 @@ local function safe_require(mod)
   return result
 end
 
+-- Modified icons for consistent appearance
+local stack_icons = {
+  ["goth"] = "󰟓 ",
+  ["nextjs"] = " ",
+  ["both"] = "󰡄 ",
+}
+
 --- Checks if any file matching patterns exists in cwd
 -- @param patterns string|table file pattern(s) to check
 -- @return boolean

@@ -81,16 +81,30 @@ function M.setup()
 
   -- Search with Snacks/Telescope
   local ok_picker, picker = pcall(require, "snacks.picker")
-  
+
   if ok_picker then
     -- Snacks picker
-    map("n", "<leader>ff", function() picker.files() end, { desc = "Find files" })
-    map("n", "<leader>fg", function() picker.grep() end, { desc = "Live grep" })
-    map("n", "<leader>fb", function() picker.buffers() end, { desc = "Find buffers" })
-    map("n", "<leader>fr", function() picker.recent() end, { desc = "Recent files" })
-    map("n", "<leader>fh", function() picker.help() end, { desc = "Help tags" })
-    map("n", "<leader>fs", function() picker.lsp_symbols() end, { desc = "Find symbols" })
-    map("n", "<leader>fd", function() picker.diagnostics() end, { desc = "Diagnostics" })
+    map("n", "<leader>ff", function()
+      picker.files()
+    end, { desc = "Find files" })
+    map("n", "<leader>fg", function()
+      picker.grep()
+    end, { desc = "Live grep" })
+    map("n", "<leader>fb", function()
+      picker.buffers()
+    end, { desc = "Find buffers" })
+    map("n", "<leader>fr", function()
+      picker.recent()
+    end, { desc = "Recent files" })
+    map("n", "<leader>fh", function()
+      picker.help()
+    end, { desc = "Help tags" })
+    map("n", "<leader>fs", function()
+      picker.lsp_symbols()
+    end, { desc = "Find symbols" })
+    map("n", "<leader>fd", function()
+      picker.diagnostics()
+    end, { desc = "Diagnostics" })
   else
     -- Fallback to Telescope if Snacks not available
     local has_telescope, _ = pcall(require, "telescope.builtin")
@@ -117,12 +131,24 @@ function M.setup()
 
   -- GitSigns navigation (depends on gitsigns.nvim)
   if package.loaded["gitsigns"] then
-    map("n", "]g", function() require("gitsigns").next_hunk() end, { desc = "Next git hunk" })
-    map("n", "[g", function() require("gitsigns").prev_hunk() end, { desc = "Previous git hunk" })
-    map("n", "<leader>hs", function() require("gitsigns").stage_hunk() end, { desc = "Stage hunk" })
-    map("n", "<leader>hr", function() require("gitsigns").reset_hunk() end, { desc = "Reset hunk" })
-    map("n", "<leader>hb", function() require("gitsigns").blame_line() end, { desc = "Blame line" })
-    map("n", "<leader>hd", function() require("gitsigns").diffthis() end, { desc = "Diff this" })
+    map("n", "]g", function()
+      require("gitsigns").next_hunk()
+    end, { desc = "Next git hunk" })
+    map("n", "[g", function()
+      require("gitsigns").prev_hunk()
+    end, { desc = "Previous git hunk" })
+    map("n", "<leader>hs", function()
+      require("gitsigns").stage_hunk()
+    end, { desc = "Stage hunk" })
+    map("n", "<leader>hr", function()
+      require("gitsigns").reset_hunk()
+    end, { desc = "Reset hunk" })
+    map("n", "<leader>hb", function()
+      require("gitsigns").blame_line()
+    end, { desc = "Blame line" })
+    map("n", "<leader>hd", function()
+      require("gitsigns").diffthis()
+    end, { desc = "Diff this" })
   end
 
   -- ========================================
@@ -216,10 +242,10 @@ function M.setup()
   -- Next.js stack-specific keymaps for all users
   map("n", "<leader>nd", "<cmd>NextDev<cr>", { desc = "Next.js dev server" })
   map("n", "<leader>nb", "<cmd>NextBuild<cr>", { desc = "Next.js build" })
-  map("n, "<leader>nl", "<cmd>NextLint<cr>", { desc = "Next.js lint" })
+  map("n", "<leader>nl", "<cmd>NextLint<cr>", { desc = "Next.js lint" })
   map("n", "<leader>nc", "<cmd>NextNewComponent<cr>", { desc = "New Next.js component" })
   map("n", "<leader>np", "<cmd>NextNewPage<cr>", { desc = "New Next.js page" })
-  
+
   -- Create file-type specific keymaps through autocmd
   vim.api.nvim_create_autocmd("FileType", {
     pattern = { "go", "templ" },
@@ -230,16 +256,21 @@ function M.setup()
       map("n", "<leader>gt", "<cmd>GoTest<CR>", vim.tbl_extend("force", buf_opts, { desc = "Run Go tests" }))
       map("n", "<leader>gi", "<cmd>GoImports<CR>", vim.tbl_extend("force", buf_opts, { desc = "Go imports" }))
       map("n", "<leader>gf", "<cmd>GoFmt<CR>", vim.tbl_extend("force", buf_opts, { desc = "Go format" }))
-      
+
       -- Add extra mappings if go.nvim is available
       if package.loaded["go"] then
         map("n", "<leader>ge", "<cmd>GoIfErr<CR>", vim.tbl_extend("force", buf_opts, { desc = "Add if err" }))
         map("n", "<leader>gfs", "<cmd>GoFillStruct<CR>", vim.tbl_extend("force", buf_opts, { desc = "Fill struct" }))
       end
-      
+
       -- Templ-specific keymaps
       if vim.bo.filetype == "templ" then
-        map("n", "<leader>tg", "<cmd>TemplGenerate<CR>", vim.tbl_extend("force", buf_opts, { desc = "Generate templates" }))
+        map(
+          "n",
+          "<leader>tg",
+          "<cmd>TemplGenerate<CR>",
+          vim.tbl_extend("force", buf_opts, { desc = "Generate templates" })
+        )
       end
     end,
   })
@@ -252,12 +283,17 @@ function M.setup()
       map("n", "<leader>nr", "<cmd>NextDev<CR>", vim.tbl_extend("force", buf_opts, { desc = "Run Next.js dev" }))
       map("n", "<leader>nb", "<cmd>NextBuild<CR>", vim.tbl_extend("force", buf_opts, { desc = "Build Next.js" }))
       map("n", "<leader>nl", "<cmd>NextLint<CR>", vim.tbl_extend("force", buf_opts, { desc = "Lint Next.js" }))
-      
+
       -- TypeScript-specific keymaps
       if package.loaded["typescript-tools"] then
         local api = require("typescript-tools.api")
         map("n", "<leader>toi", api.organize_imports, vim.tbl_extend("force", buf_opts, { desc = "Organize imports" }))
-        map("n", "<leader>tmi", api.add_missing_imports, vim.tbl_extend("force", buf_opts, { desc = "Add missing imports" }))
+        map(
+          "n",
+          "<leader>tmi",
+          api.add_missing_imports,
+          vim.tbl_extend("force", buf_opts, { desc = "Add missing imports" })
+        )
         map("n", "<leader>tru", api.remove_unused, vim.tbl_extend("force", buf_opts, { desc = "Remove unused" }))
         map("n", "<leader>tfa", api.fix_all, vim.tbl_extend("force", buf_opts, { desc = "Fix all issues" }))
       end
