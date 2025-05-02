@@ -10,12 +10,14 @@ return {
       "williamboman/mason-lspconfig.nvim",
       -- LSP completion
       "hrsh7th/cmp-nvim-lsp",
+      -- Schemas for JSON/YAML
+      "b0o/SchemaStore.nvim",
     },
     config = function()
       -- Set up Mason first for server management
       require("mason").setup({
         ui = {
-          border = "single",
+          border = "rounded",
           icons = {
             package_installed = "✓",
             package_pending = "➜",
@@ -31,9 +33,9 @@ return {
           -- GOTH stack
           "gopls",
           "templ",
-          "htmx",
+          "html",
           -- Next.js stack
-          "ts_ls",
+          "tsserver",
           "tailwindcss",
           "cssls",
           "eslint",
@@ -47,9 +49,7 @@ return {
       capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
 
       -- Enable inlay hints if Neovim >= 0.10
-      local inlay_hints = {
-        enabled = vim.fn.has("nvim-0.10") == 1,
-      }
+      local inlay_hints_supported = vim.fn.has("nvim-0.10") == 1
 
       -- Configure keymaps when LSP attaches to buffer
       local on_attach = function(client, bufnr)
@@ -58,7 +58,73 @@ return {
           return
         end
 
-        -- LSP buffer-specific keymaps are handled in autocmds.lua
+        -- Set up buffer-local keymaps
+        local function buf_set_keymap(mode, lhs, rhs, opts)
+          opts = opts or {}
+          opts.buffer = bufnr
+          vim.keymap.set(mode, lhs, rhs, opts)
+        end
+
+        -- LSP navigation
+        buf_set_keymap("n", "gd", vim.lsp.buf.definition, { desc = "Go to definition" })
+        buf_set_keymap("n", "gD", vim.lsp.buf.declaration, { desc = "Go to declaration" })
+        buf_set_keymap("n", "gr", vim.lsp.buf.references, { desc = "Find references" })
+        buf_set_keymap("n", "gi", vim.lsp.buf.implementation, { desc = "Go to implementation" })
+        buf_set_keymap("n", "gt", vim.lsp.buf.type_definition, { desc = "Go to type definition" })
+
+        -- LSP information
+        buf_set_keymap("n", "K", vim.lsp.buf.hover, { desc = "Show hover information" })
+        buf_set_keymap("n", "<C-k>", vim.lsp.buf.signature_help, { desc = "Show signature help" })
+
+        -- LSP actions
+        buf_set_keymap("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "Code actions" })
+        buf_set_keymap("n", "<leader>cr", vim.lsp.buf.rename, { desc = "Rename symbol" })
+        buf_set_keymap("n", "<leader>cf", function()
+          vim.lsp.buf.format({ async = true })
+        end, { desc = "Format buffer" })
+
+        -- Diagnostics
+        buf_set_keymap("n", "<leader>cd", vim.diagnostic.open_float, { desc = "Show diagnostics" })
+        buf_set_keymap("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous diagnostic" })
+        buf_set_keymap("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
+        buf_set_keymap("n", "<leader>cq", vim.diagnostic.setloclist, { desc = "Diagnostics to loclist" })
+
+        -- Stack-specific keymaps
+        if client.name == "gopls" then
+          -- Go-specific keymaps
+          buf_set_keymap("n", "<leader>goi", "<cmd>GoImports<CR>", { desc = "Organize imports" })
+          buf_set_keymap("n", "<leader>gie", "<cmd>GoIfErr<CR>", { desc = "Add if err" })
+          buf_set_keymap("n", "<leader>gfs", "<cmd>GoFillStruct<CR>", { desc = "Fill struct" })
+        end
+
+        if client.name == "tsserver" or client.name == "typescript-tools" then
+          -- TypeScript-specific keymaps
+          buf_set_keymap("n", "<leader>toi", "<cmd>TypescriptOrganizeImports<CR>", { desc = "Organize imports" })
+          buf_set_keymap("n", "<leader>tru", "<cmd>TypescriptRemoveUnused<CR>", { desc = "Remove unused" })
+          buf_set_keymap("n", "<leader>tfa", "<cmd>TypescriptFixAll<CR>", { desc = "Fix all" })
+          buf_set_keymap("n", "<leader>tai", "<cmd>TypescriptAddMissingImports<CR>", { desc = "Add missing imports" })
+        end
+
+        -- Enable inlay hints if supported
+        if inlay_hints_supported and client.server_capabilities.inlayHintProvider then
+          if vim.lsp.inlay_hint and vim.lsp.inlay_hint.enable then
+            vim.lsp.inlay_hint.enable(bufnr, true)
+          end
+        end
+
+        -- Setup lsp_signature if available
+        local signature_ok, signature = pcall(require, "lsp_signature")
+        if signature_ok then
+          signature.on_attach({
+            bind = true,
+            handler_opts = { border = "rounded" },
+            hint_enable = true,
+            hint_prefix = "🔍 ",
+            hint_scheme = "String",
+            hi_parameter = "IncSearch",
+            toggle_key = "<C-k>",
+          }, bufnr)
+        end
       end
 
       -- Configure language servers
@@ -77,12 +143,19 @@ return {
               checkThirdParty = false,
             },
             telemetry = { enable = false },
-            inlayHints = inlay_hints,
+            hint = {
+              enable = inlay_hints_supported,
+              setType = true,
+              paramType = true,
+              paramName = "All",
+              semicolon = "All",
+              arrayIndex = "All",
+            },
           },
         },
       })
 
-      -- Go LSP configuration
+      -- Go LSP configuration (GOTH stack)
       lspconfig.gopls.setup({
         on_attach = on_attach,
         capabilities = capabilities,
@@ -94,6 +167,7 @@ return {
               fieldalignment = true,
               nilness = true,
               unusedwrite = true,
+              useany = true,
             },
             staticcheck = true,
             gofumpt = true,
@@ -116,23 +190,34 @@ return {
         },
       })
 
-      -- Templ LSP configuration
+      -- Templ LSP configuration (GOTH stack)
       lspconfig.templ.setup({
         on_attach = on_attach,
         capabilities = capabilities,
       })
 
-      -- HTMX LSP configuration (if available)
-      if lspconfig.htmx then
-        lspconfig.htmx.setup({
-          on_attach = on_attach,
-          capabilities = capabilities,
-          filetypes = { "html", "templ" },
-        })
-      end
+      -- HTML LSP configuration (shared by both stacks)
+      lspconfig.html.setup({
+        on_attach = on_attach,
+        capabilities = capabilities,
+        filetypes = { "html", "templ" }, -- Support both HTML and Templ files
+        settings = {
+          html = {
+            format = {
+              indentInnerHtml = true,
+              wrapLineLength = 100,
+              wrapAttributes = "auto",
+            },
+            hover = {
+              documentation = true,
+              references = true,
+            },
+          },
+        },
+      })
 
-      -- TypeScript/JavaScript configuration
-      lspconfig.ts_ls.setup({
+      -- TypeScript/JavaScript configuration (Next.js stack)
+      lspconfig.tsserver.setup({
         on_attach = function(client, bufnr)
           -- Disable formatting if using prettier through null-ls/conform
           client.server_capabilities.documentFormattingProvider = false
@@ -166,7 +251,7 @@ return {
         },
       })
 
-      -- Tailwind CSS configuration
+      -- Tailwind CSS configuration (Next.js stack, but also available for GOTH)
       lspconfig.tailwindcss.setup({
         on_attach = on_attach,
         capabilities = capabilities,
@@ -178,7 +263,7 @@ return {
           "javascriptreact",
           "typescript",
           "typescriptreact",
-          "templ",
+          "templ", -- Also available for templ files
         },
         init_options = {
           userLanguages = {
@@ -187,13 +272,13 @@ return {
         },
       })
 
-      -- CSS configuration
+      -- CSS configuration (Next.js stack)
       lspconfig.cssls.setup({
         on_attach = on_attach,
         capabilities = capabilities,
       })
 
-      -- ESLint configuration
+      -- ESLint configuration (Next.js stack)
       lspconfig.eslint.setup({
         on_attach = on_attach,
         capabilities = capabilities,
@@ -261,7 +346,7 @@ return {
     end,
   },
 
-  -- LSP UI and additional features
+  -- Signature help
   {
     "ray-x/lsp_signature.nvim",
     event = "LspAttach",
@@ -275,12 +360,6 @@ return {
       fix_pos = false,
       toggle_key = "<C-k>",
     },
-  },
-
-  -- SchemaStore for JSON validation
-  {
-    "b0o/SchemaStore.nvim",
-    lazy = true,
   },
 
   -- Inlay hints for Neovim < 0.10
@@ -361,21 +440,27 @@ return {
     },
     config = function(_, opts)
       -- Setup only for Next.js stack or if both stacks are active
-      if not vim.g.current_stack or vim.g.current_stack == "nextjs" then
+      if not vim.g.current_stack or vim.g.current_stack == "nextjs" or vim.g.current_stack == "goth+nextjs" then
         require("typescript-tools").setup(opts)
 
         -- Create TypeScript commands
         local api = require("typescript-tools.api")
         for cmd, fn in pairs({
-          TSOrganizeImports = api.organize_imports,
-          TSRenameFile = api.rename_file,
-          TSAddMissingImports = api.add_missing_imports,
-          TSRemoveUnused = api.remove_unused,
-          TSFixAll = api.fix_all,
+          TypescriptOrganizeImports = api.organize_imports,
+          TypescriptRenameFile = api.rename_file,
+          TypescriptAddMissingImports = api.add_missing_imports,
+          TypescriptRemoveUnused = api.remove_unused,
+          TypescriptFixAll = api.fix_all,
         }) do
           vim.api.nvim_create_user_command(cmd, fn, { desc = cmd })
         end
       end
     end,
+  },
+
+  -- JSON schema support
+  {
+    "b0o/SchemaStore.nvim",
+    lazy = true,
   },
 }

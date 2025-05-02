@@ -20,7 +20,7 @@ function M.setup()
       vim.notify("Error generating templ files: " .. result, vim.log.levels.ERROR)
       return
     end
-    vim.notify("Successfully generated templ components", vim.log.levels.INFO)
+    vim.notify("󰟓 Successfully generated templ components", vim.log.levels.INFO, { title = "GOTH" })
   end, { desc = "Generate Templ components" })
 
   -- TemplNew: create a new Templ component
@@ -68,29 +68,9 @@ function M.setup()
 
     -- Enter insert mode
     vim.cmd("startinsert!")
+
+    vim.notify("Created new templ component: " .. component_name, vim.log.levels.INFO, { title = "GOTH" })
   end, { desc = "Create a new Templ component" })
-
-  -- GoRun: run Go project
-  vim.api.nvim_create_user_command("GoRun", function()
-    -- Check if toggleterm is available
-    local ok, term = pcall(require, "toggleterm.terminal")
-    if not ok then
-      vim.cmd("!go run .")
-      return
-    end
-
-    -- Create and toggle terminal
-    local Terminal = term.Terminal
-    local t = Terminal:new({
-      cmd = "go run .",
-      direction = "float",
-      close_on_exit = false,
-      on_open = function()
-        vim.cmd("startinsert!")
-      end,
-    })
-    t:toggle()
-  end, { desc = "Run Go project" })
 
   -- GOTHServer: run GOTH stack server
   vim.api.nvim_create_user_command("GOTHServer", function()
@@ -122,11 +102,56 @@ function M.setup()
       close_on_exit = false,
       on_open = function()
         vim.cmd("startinsert!")
-        vim.notify("Starting GOTH server...", vim.log.levels.INFO)
+        vim.notify("󰟓 Starting GOTH server...", vim.log.levels.INFO, { title = "GOTH" })
       end,
     })
     t:toggle()
   end, { desc = "Run GOTH server" })
+
+  -- GoRun: run Go project
+  vim.api.nvim_create_user_command("GoRun", function()
+    -- Check if toggleterm is available
+    local ok, term = pcall(require, "toggleterm.terminal")
+    if not ok then
+      vim.cmd("!go run .")
+      return
+    end
+
+    -- Create and toggle terminal
+    local Terminal = term.Terminal
+    local t = Terminal:new({
+      cmd = "go run .",
+      direction = "float",
+      close_on_exit = false,
+      on_open = function()
+        vim.cmd("startinsert!")
+      end,
+    })
+    t:toggle()
+  end, { desc = "Run Go project" })
+
+  -- GoTest: run Go tests
+  vim.api.nvim_create_user_command("GoTest", function()
+    -- Check if toggleterm is available
+    local ok, term = pcall(require, "toggleterm.terminal")
+    if not ok then
+      vim.cmd("!go test ./...")
+      return
+    end
+
+    -- Create and toggle terminal
+    local Terminal = term.Terminal
+    local t = Terminal:new({
+      cmd = "go test ./...",
+      direction = "float",
+      close_on_exit = false,
+      on_open = function()
+        vim.cmd("startinsert!")
+        vim.notify("Running Go tests...", vim.log.levels.INFO, { title = "GOTH" })
+      end,
+    })
+    t:toggle()
+  end, { desc = "Run Go tests" })
 
   -- ==================================
   -- Next.js Stack Commands
@@ -149,7 +174,7 @@ function M.setup()
       close_on_exit = false,
       on_open = function()
         vim.cmd("startinsert!")
-        vim.notify("Starting Next.js development server...", vim.log.levels.INFO)
+        vim.notify(" Starting Next.js development server...", vim.log.levels.INFO, { title = "Next.js" })
       end,
     })
     t:toggle()
@@ -172,7 +197,7 @@ function M.setup()
       close_on_exit = false,
       on_open = function()
         vim.cmd("startinsert!")
-        vim.notify("Building Next.js application...", vim.log.levels.INFO)
+        vim.notify(" Building Next.js application...", vim.log.levels.INFO, { title = "Next.js" })
       end,
     })
     t:toggle()
@@ -195,7 +220,7 @@ function M.setup()
       close_on_exit = false,
       on_open = function()
         vim.cmd("startinsert!")
-        vim.notify("Running Next.js tests...", vim.log.levels.INFO)
+        vim.notify(" Running Next.js tests...", vim.log.levels.INFO, { title = "Next.js" })
       end,
     })
     t:toggle()
@@ -218,7 +243,7 @@ function M.setup()
       close_on_exit = false,
       on_open = function()
         vim.cmd("startinsert!")
-        vim.notify("Running Next.js linter...", vim.log.levels.INFO)
+        vim.notify(" Running Next.js linter...", vim.log.levels.INFO, { title = "Next.js" })
       end,
     })
     t:toggle()
@@ -290,7 +315,7 @@ function M.setup()
 
     -- Save the file
     vim.cmd("write")
-    vim.notify("Created new page: " .. file_path, vim.log.levels.INFO)
+    vim.notify(" Created new page: " .. file_path, vim.log.levels.INFO, { title = "Next.js" })
   end, { desc = "Create a new Next.js page" })
 
   -- NextNewComponent: create a new Next.js component
@@ -353,8 +378,84 @@ function M.setup()
 
     -- Save the file
     vim.cmd("write")
-    vim.notify("Created new component: " .. file_path, vim.log.levels.INFO)
+    vim.notify(" Created new component: " .. file_path, vim.log.levels.INFO, { title = "Next.js" })
   end, { desc = "Create a new Next.js component" })
+
+  -- ==================================
+  -- Shared Commands
+  -- ==================================
+
+  -- LazyGit: Open LazyGit with optional path
+  vim.api.nvim_create_user_command("LazyGit", function(opts)
+    local path = opts.args
+    local cmd = "lazygit"
+
+    if path and path ~= "" then
+      cmd = cmd .. " -p " .. path
+    end
+
+    -- Check if toggleterm is available
+    local ok, term = pcall(require, "toggleterm.terminal")
+    if not ok then
+      vim.cmd("!" .. cmd)
+      return
+    end
+
+    -- Create and toggle terminal
+    local Terminal = term.Terminal
+    local t = Terminal:new({
+      cmd = cmd,
+      direction = "float",
+      close_on_exit = true,
+      on_open = function()
+        vim.cmd("startinsert!")
+      end,
+      on_exit = function()
+        -- Refresh git status if gitsigns is available
+        local gs_ok, gs = pcall(require, "gitsigns")
+        if gs_ok and gs.refresh then
+          gs.refresh()
+        end
+      end,
+    })
+    t:toggle()
+  end, {
+    nargs = "?",
+    desc = "Open LazyGit in the specified directory",
+    complete = function()
+      return vim.fn.getcompletion("", "dir")
+    end,
+  })
+
+  -- ColorSchemeToggle: Toggle between colorschemes
+  vim.api.nvim_create_user_command("ColorSchemeToggle", function()
+    local themes = { "gruvbox-material", "everforest", "kanagawa" }
+    local current = vim.g.colors_name or "gruvbox-material"
+
+    -- Find current theme index
+    local current_idx = 1
+    for i, theme in ipairs(themes) do
+      if current == theme then
+        current_idx = i
+        break
+      end
+    end
+
+    -- Get next theme
+    local next_idx = current_idx % #themes + 1
+    local next_theme = themes[next_idx]
+
+    -- Add icons for themes
+    local theme_icons = {
+      ["gruvbox-material"] = "󰈰 ",
+      ["everforest"] = "󰪶 ",
+      ["kanagawa"] = "󰖭 ",
+    }
+
+    -- Apply theme
+    vim.cmd("colorscheme " .. next_theme)
+    vim.notify(theme_icons[next_theme] .. "Switched to " .. next_theme .. " theme", vim.log.levels.INFO)
+  end, { desc = "Toggle between color schemes" })
 end
 
 return M

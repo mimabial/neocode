@@ -74,6 +74,27 @@ return {
       vim.g.everforest_diagnostic_line_highlight = 1
       vim.g.everforest_diagnostic_virtual_text = "colored"
       vim.g.everforest_current_word = "bold"
+
+      -- Add custom export function for colors
+      _G.get_everforest_colors = function()
+        return {
+          bg = "#2b3339",
+          bg1 = "#323c41",
+          bg2 = "#323c41",
+          bg3 = "#3a454a",
+          bg4 = "#3a454a",
+          bg5 = "#46525a",
+          red = "#e67e80",
+          orange = "#e69875",
+          yellow = "#dbbc7f",
+          green = "#a7c080",
+          aqua = "#83c092",
+          blue = "#7fbbb3",
+          purple = "#d699b6",
+          grey = "#859289",
+          grey_dim = "#738686",
+        }
+      end
     end,
   },
 
@@ -108,6 +129,27 @@ return {
         },
       },
       overrides = function(colors)
+        -- Export palette via global function
+        _G.get_kanagawa_colors = function()
+          return {
+            bg = colors.sumiInk1,
+            bg1 = colors.sumiInk2,
+            bg2 = colors.sumiInk2,
+            bg3 = colors.sumiInk3,
+            bg4 = colors.sumiInk4,
+            bg5 = colors.sumiInk5,
+            red = colors.peachRed,
+            orange = colors.surimiOrange,
+            yellow = colors.carpYellow,
+            green = colors.springGreen,
+            aqua = colors.waveAqua1,
+            blue = colors.crystalBlue,
+            purple = colors.oniViolet,
+            grey = colors.fujiGray,
+            grey_dim = colors.oldWhite,
+          }
+        end
+
         return {
           -- Custom overrides for GOTH stack
           ["@attribute.htmx"] = { fg = colors.springGreen, italic = true, bold = true },
@@ -146,6 +188,28 @@ return {
         sidebars = "dark",
         floats = "dark",
       },
+      on_colors = function(colors)
+        -- Export palette via global function
+        _G.get_tokyonight_colors = function()
+          return {
+            bg = colors.bg,
+            bg1 = colors.bg_dark,
+            bg2 = colors.bg_dark,
+            bg3 = colors.bg_highlight,
+            bg4 = colors.bg_highlight,
+            bg5 = colors.bg_popup,
+            red = colors.red,
+            orange = colors.orange,
+            yellow = colors.yellow,
+            green = colors.green,
+            aqua = colors.teal,
+            blue = colors.blue,
+            purple = colors.purple,
+            grey = colors.comment,
+            grey_dim = colors.fg_gutter,
+          }
+        end
+      end,
     },
   },
 
@@ -169,9 +233,17 @@ return {
       local next_idx = current_idx % #themes + 1
       local next_theme = themes[next_idx]
 
+      -- Add icons for themes
+      local theme_icons = {
+        ["gruvbox-material"] = "󰈰 ",
+        ["everforest"] = "󰪶 ",
+        ["kanagawa"] = "󰖭 ",
+        ["tokyonight"] = "󱉭 ",
+      }
+
       -- Apply theme
       vim.cmd("colorscheme " .. next_theme)
-      vim.notify("Switched to " .. next_theme .. " theme", vim.log.levels.INFO)
+      vim.notify(theme_icons[next_theme] .. "Switched to " .. next_theme .. " theme", vim.log.levels.INFO)
     end, { desc = "Toggle between color schemes" })
 
     -- Transparency toggle command
@@ -182,14 +254,14 @@ return {
         vim.g.gruvbox_material_transparent_background = vim.g.gruvbox_material_transparent_background == 1 and 0 or 1
         vim.cmd("colorscheme gruvbox-material")
         vim.notify(
-          "Transparency " .. (vim.g.gruvbox_material_transparent_background == 1 and "enabled" or "disabled"),
+          "󱙱 Transparency " .. (vim.g.gruvbox_material_transparent_background == 1 and "enabled" or "disabled"),
           vim.log.levels.INFO
         )
       elseif current == "everforest" then
         vim.g.everforest_transparent_background = vim.g.everforest_transparent_background == 1 and 0 or 1
         vim.cmd("colorscheme everforest")
         vim.notify(
-          "Transparency " .. (vim.g.everforest_transparent_background == 1 and "enabled" or "disabled"),
+          "󱙱 Transparency " .. (vim.g.everforest_transparent_background == 1 and "enabled" or "disabled"),
           vim.log.levels.INFO
         )
       elseif current == "kanagawa" then
@@ -199,13 +271,13 @@ return {
         config.transparent = not config.transparent
         kanagawa.setup(config)
         vim.cmd("colorscheme kanagawa")
-        vim.notify("Transparency " .. (config.transparent and "enabled" or "disabled"), vim.log.levels.INFO)
+        vim.notify("󱙱 Transparency " .. (config.transparent and "enabled" or "disabled"), vim.log.levels.INFO)
       elseif current == "tokyonight" then
         local tn = require("tokyonight")
         tn.setup(vim.tbl_extend("force", tn.options, { transparent = not tn.options.transparent }))
         vim.cmd("colorscheme tokyonight")
         vim.notify(
-          "Transparency " .. (require("tokyonight").options.transparent and "enabled" or "disabled"),
+          "󱙱 Transparency " .. (require("tokyonight").options.transparent and "enabled" or "disabled"),
           vim.log.levels.INFO
         )
       end
@@ -215,6 +287,61 @@ return {
     if not vim.g.colors_name then
       vim.cmd("colorscheme gruvbox-material")
     end
+
+    -- Apply stack-specific highlighting enhancements
+    vim.api.nvim_create_autocmd("ColorScheme", {
+      callback = function()
+        -- Get the current colorscheme and stack
+        local colorscheme = vim.g.colors_name or "gruvbox-material"
+        local stack = vim.g.current_stack or ""
+
+        -- Get color palette based on current theme
+        local colors
+        if colorscheme == "gruvbox-material" and _G.get_gruvbox_colors then
+          colors = _G.get_gruvbox_colors()
+        elseif colorscheme == "everforest" and _G.get_everforest_colors then
+          colors = _G.get_everforest_colors()
+        elseif colorscheme == "kanagawa" and _G.get_kanagawa_colors then
+          colors = _G.get_kanagawa_colors()
+        elseif colorscheme == "tokyonight" and _G.get_tokyonight_colors then
+          colors = _G.get_tokyonight_colors()
+        else
+          -- Default fallback palette
+          colors = {
+            red = "#f7768e",
+            green = "#9ece6a",
+            blue = "#7aa2f7",
+            yellow = "#e0af68",
+            purple = "#bb9af7",
+            aqua = "#2ac3de",
+            orange = "#ff9e64",
+          }
+        end
+
+        -- Apply stack-specific highlighting
+        if stack == "goth" or stack == "goth+nextjs" then
+          -- GOTH stack highlighting
+          vim.api.nvim_set_hl(0, "@type.go", { fg = colors.yellow, bold = true })
+          vim.api.nvim_set_hl(0, "@function.go", { fg = colors.blue })
+          vim.api.nvim_set_hl(0, "@attribute.htmx", { fg = colors.green, italic = true, bold = true })
+          vim.api.nvim_set_hl(0, "@tag.attribute.htmx", { fg = colors.green, italic = true, bold = true })
+        end
+
+        if stack == "nextjs" or stack == "goth+nextjs" then
+          -- Next.js stack highlighting
+          vim.api.nvim_set_hl(0, "@tag.tsx", { fg = colors.red })
+          vim.api.nvim_set_hl(0, "@tag.delimiter.tsx", { fg = colors.orange })
+          vim.api.nvim_set_hl(0, "@constructor.tsx", { fg = colors.purple })
+          vim.api.nvim_set_hl(0, "@type.typescript", { fg = colors.yellow, bold = true })
+        end
+
+        -- AI integration highlighting
+        vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = "#6CC644", bold = true })
+        vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2", bold = true })
+        vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = colors.grey or "#928374", italic = true })
+        vim.api.nvim_set_hl(0, "CodeiumSuggestion", { fg = colors.grey or "#928374", italic = true })
+      end,
+    })
 
     -- Keymaps
     vim.keymap.set("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle Colorscheme" })

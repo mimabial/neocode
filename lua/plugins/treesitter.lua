@@ -192,9 +192,9 @@ return {
       end
 
       -- templ parser support
-      local parsers = require("nvim-treesitter.parsers").get_parser_configs()
-      if not parsers.templ then
-        parsers.templ = {
+      local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
+      if not parser_config.templ then
+        parser_config.templ = {
           install_info = {
             url = "https://github.com/vrischmann/tree-sitter-templ.git",
             files = { "src/parser.c", "src/scanner.c" },
@@ -204,10 +204,12 @@ return {
         }
       end
 
-      -- Add HTMX attribute highlighting
-      local ft_to_parser = require("nvim-treesitter.parsers").filetype_to_parsername
-      ft_to_parser.templ = "templ"
-      ft_to_parser.html = "html"
+      -- Add HTMX attribute highlighting - FIX: use direct references to the parse module instead of local variables
+      local parsers = require("nvim-treesitter.parsers")
+      if parsers and parsers.filetype_to_parsername then
+        parsers.filetype_to_parsername.templ = "templ"
+        parsers.filetype_to_parsername.html = "html"
+      end
 
       -- Create HTMX injection for HTML files
       vim.treesitter.query.set(
