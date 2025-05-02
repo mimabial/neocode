@@ -138,25 +138,35 @@ return {
       copilot_cmp.setup(opts)
 
       -- Add custom formatting for better Copilot suggestions display
-      if require("cmp.config").get().formatting then
-        local format_kinds = require("cmp.config").get().formatting.format
-        require("cmp.config").set({
-          formatting = {
-            format = function(entry, item)
-              if format_kinds then
-                format_kinds(entry, item)
-              end
+      -- Fix: Check if cmp is available and only try to modify formatting if it exists
+      local has_cmp, cmp = pcall(require, "cmp")
+      if has_cmp then
+        -- Get current formatting config
+        local cmp_config = cmp.get_config()
 
-              -- Add symbol for Copilot
-              if entry.source.name == "copilot" then
-                item.kind = "Copilot"
-                item.kind_hl_group = "CmpItemKindCopilot"
-              end
+        if cmp_config and cmp_config.formatting and cmp_config.formatting.format then
+          local current_format = cmp_config.formatting.format
 
-              return item
-            end,
-          },
-        })
+          -- Apply a new configuration that wraps the existing formatter
+          cmp.setup({
+            formatting = {
+              format = function(entry, item)
+                -- Call the existing formatter first
+                if current_format then
+                  current_format(entry, item)
+                end
+
+                -- Add symbol for Copilot
+                if entry.source.name == "copilot" then
+                  item.kind = "Copilot"
+                  item.kind_hl_group = "CmpItemKindCopilot"
+                end
+
+                return item
+              end,
+            },
+          })
+        end
       end
     end,
   },
