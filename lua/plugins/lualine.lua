@@ -53,11 +53,12 @@ return {
         goth = "󰟓 GO·TEMPL·HTMX",
         nextjs = " NEXT·TS·REACT",
         ["goth+nextjs"] = "󰡄 FULLSTACK",
+        [""] = "󱍛  Stack",
       },
       mode = {
-        ["n"] = " ",
-        ["no"] = " ",
-        ["v"] = " ",
+        ["n"] = "󰋜 ",
+        ["no"] = "󰋜 ",
+        ["v"] = "󰈈 ",
         ["V"] = " ",
         [""] = " ",
         ["s"] = " ",
@@ -171,8 +172,41 @@ return {
           end
         end,
         cond = function()
-          return vim.g.current_stack ~= nil and vim.g.current_stack ~= ""
+          -- Always show stack indicator, with more graceful fallback
+          return true
         end,
+      }
+    end
+
+    -- Enhanced LSP indicator with icons
+    local function lsp_status()
+      return {
+        function()
+          local buf_clients = vim.lsp.get_clients({ bufnr = 0 })
+          if #buf_clients == 0 then
+            return "󰅠 No LSP"
+          end
+
+          local lsp_names = {}
+          -- Filter out copilot, conform, etc.
+          for _, client in ipairs(buf_clients) do
+            if not vim.tbl_contains({ "copilot", "null-ls", "conform" }, client.name) then
+              table.insert(lsp_names, client.name)
+            end
+          end
+
+          local names_str = table.concat(lsp_names, ", ")
+          -- If the name string is too long, truncate it
+          if #names_str > 30 then
+            names_str = string.sub(names_str, 1, 27) .. "..."
+          end
+
+          return " " .. names_str
+        end,
+        color = { fg = colors.green, gui = "bold" },
+        cond = function()
+          return true
+        end, -- Always show LSP status
       }
     end
 
@@ -192,6 +226,28 @@ return {
         color = { fg = colors.green },
         cond = function()
           return #vim.lsp.get_clients({ bufnr = 0 }) > 0
+        end,
+      }
+    end
+
+    -- AI assistant indicators
+    local function ai_indicators()
+      return {
+        function()
+          local indicators = {}
+          -- Check both Copilot and Codeium status
+          if vim.g.copilot_enabled ~= 0 then
+            table.insert(indicators, " Copilot")
+          end
+          if vim.g.codeium_enabled then
+            table.insert(indicators, "󰧑 Codeium")
+          end
+
+          return #indicators > 0 and table.concat(indicators, " ") or ""
+        end,
+        color = { fg = colors.purple },
+        cond = function()
+          return vim.g.copilot_enabled ~= 0 or vim.g.codeium_enabled
         end,
       }
     end
@@ -323,16 +379,18 @@ return {
           statusline = { "alpha", "dashboard", "neo-tree", "oil", "Trouble", "lazy" },
         },
       },
+      -- Add custom indicators for both stacks
       sections = {
         lualine_a = {
           {
             mode,
             color = function()
               local m = vim.api.nvim_get_mode().mode
-              return { bg = mode_color[m], fg = colors.bg, gui = "bold" }
+              return { bg = mode_color[m] or colors.blue, fg = colors.bg, gui = "bold" }
             end,
             padding = { left = 1, right = 1 },
           },
+          stack_badge(),
         },
         lualine_b = {
           git_branch(),
@@ -353,7 +411,8 @@ return {
           stack_badge(),
         },
         lualine_x = {
-          lsp_servers(),
+          ai_indicators(),
+          lsp_status(),
           file_size(),
           search_count(),
           { "filetype", icon_only = true },

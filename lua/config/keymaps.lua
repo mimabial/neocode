@@ -19,7 +19,7 @@ function M.setup()
   map("v", ">", ">gv", vim.tbl_extend("force", opts, { desc = "Indent and keep selection" }))
   map("v", "<", "<gv", vim.tbl_extend("force", opts, { desc = "Outdent and keep selection" }))
 
-  -- Window navigation
+  -- Better window navigation
   map("n", "<C-h>", "<C-w>h", opts)
   map("n", "<C-j>", "<C-w>j", opts)
   map("n", "<C-k>", "<C-w>k", opts)
@@ -37,6 +37,17 @@ function M.setup()
 
   -- Lazy package manager
   map("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy" })
+
+  -- Move lines up and down
+  map("v", "J", ":m '>+1<CR>gv=gv", opts)
+  map("v", "K", ":m '<-2<CR>gv=gv", opts)
+
+  -- Keep cursor centered when searching
+  map("n", "n", "nzzzv", opts)
+  map("n", "N", "Nzzzv", opts)
+
+  -- Keep cursor centered when joining lines
+  map("n", "J", "mzJ`z", opts)
 
   -- ========================================
   -- Buffer management
@@ -147,15 +158,6 @@ function M.setup()
     for _, m in ipairs(snack_maps) do
       map(m[1], m[2], m[3], vim.tbl_extend("force", opts, { desc = m[4] }))
     end
-  end
-
-  -- Fallback to Telescope if Snacks not available
-  if not ok_picker and pcall(require, "telescope.builtin") then
-    local telescope = require("telescope.builtin")
-    map("n", "<leader>ff", telescope.find_files, { desc = "Find Files" })
-    map("n", "<leader>fg", telescope.live_grep, { desc = "Find Text (Grep)" })
-    map("n", "<leader>fb", telescope.buffers, { desc = "Find Buffers" })
-    map("n", "<leader>fh", telescope.help_tags, { desc = "Find Help" })
   end
 
   -- ========================================

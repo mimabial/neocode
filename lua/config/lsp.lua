@@ -68,10 +68,12 @@ M.on_attach = function(client, bufnr)
     }, bufnr)
   end
 
-  -- Enable inlay hints for applicable servers (Neovim >=0.10)
-  if vim.fn.has("nvim-0.10") == 1 and client.server_capabilities.inlayHintProvider then
+  -- Enable inlay hints for applicable servers
+  local inlay_hints_supported = vim.fn.has("nvim-0.10") == 1
+
+  if inlay_hints_supported and client.server_capabilities.inlayHintProvider then
     if vim.lsp.inlay_hint and vim.lsp.inlay_hint.enable then
-      vim.lsp.inlay_hint.enable(bufnr, true)
+      vim.lsp.inlay_hint.enable(true, { bufnr = bufnr }) -- Correct parameter structure
     end
   end
 end
@@ -119,7 +121,7 @@ M.server_configs = {
   },
 
   -- TypeScript/JavaScript
-  tsserver = {
+  ts_ls = {
     settings = {
       typescript = {
         inlayHints = {
@@ -325,7 +327,7 @@ function M.setup()
         "templ",
 
         -- Next.js stack
-        "tsserver",
+        "ts_ls",
         "eslint",
         "cssls",
         "html",

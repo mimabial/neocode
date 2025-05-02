@@ -110,27 +110,17 @@ return {
       "nvim-lua/plenary.nvim",
       "hrsh7th/nvim-cmp",
     },
-    enabled = true, -- Always enable so it can be a fallback
-    opts = {
-      tools = {
-        language_server = {
-          enabled = true,
-        },
-        path_deny_list = { "oil://*" },
-      },
-      filetypes = {
-        ["*"] = true,
-        TelescopePrompt = false,
-        ["neo-tree"] = false,
-        lazy = false,
-        ["neo-tree-popup"] = false,
-        ["oil"] = false,
-      },
-    },
-    config = function(_, opts)
-      require("codeium").setup(opts)
+    enabled = true, -- Always enable so it can act as a fallback
+    config = function()
+      -- Use all of the built-in defaults
+      require("codeium").setup()
 
-      -- Highlight group for Codeium
+      -- Ensure Codeium is enabled by default
+      if vim.g.codeium_enabled == nil then
+        vim.g.codeium_enabled = true
+      end
+
+      -- Highlight groups for suggestions
       vim.api.nvim_create_autocmd("ColorScheme", {
         pattern = "*",
         callback = function()
@@ -139,7 +129,7 @@ return {
         end,
       })
 
-      -- Register toggle keybinding
+      -- Toggle Codeium on/off
       vim.keymap.set("n", "<leader>ui", function()
         if vim.g.codeium_enabled then
           vim.cmd("CodeiumDisable")
@@ -150,7 +140,7 @@ return {
         end
       end, { desc = "Toggle Codeium" })
 
-      -- Insert mode keymaps
+      -- Insert-mode keymaps
       local keymaps = {
         ["<C-g>"] = { vim.fn["codeium#Accept"], "Accept" },
         ["<C-;>"] = {
@@ -192,44 +182,38 @@ return {
       local cmp = require("cmp")
       local luasnip = require("luasnip")
 
+      -- Ensure AI completion sources have proper priorities
+      local sources = {
+        { name = "copilot", group_index = 1, priority = 100 }, -- Highest priority
+        { name = "codeium", group_index = 1, priority = 95 }, -- Fallback AI
+        { name = "nvim_lsp", group_index = 1, priority = 90 }, -- LSP comes after AI
+        { name = "luasnip", group_index = 1, priority = 80 },
+        { name = "buffer", group_index = 2, priority = 70, keyword_length = 3 },
+        { name = "path", group_index = 2, priority = 60 },
+      }
+
       -- AI suggestion priority comparator
       local function ai_priority(entry1, entry2)
         local name1, name2 = entry1.source.name, entry2.source.name
 
-        -- Priority ratings: copilot > codeium > lsp > others
-        local priorities = {
-          copilot = 100,
-          codeium = 95,
-          nvim_lsp = 90,
-          luasnip = 80,
-          buffer = 70,
-          path = 60,
-        }
-
-        local p1 = priorities[name1] or 0
-        local p2 = priorities[name2] or 0
+        -- Set explicit priorities for AI sources vs others
+        local p1 = name1 == "copilot" and 100 or (name1 == "codeium" and 95 or (name1 == "nvim_lsp" and 90 or 0))
+        local p2 = name2 == "copilot" and 100 or (name2 == "codeium" and 95 or (name2 == "nvim_lsp" and 90 or 0))
 
         if p1 ~= p2 then
           return p1 > p2
         end
       end
 
-      -- Build sources with both AI tools enabled
-      local sources = {
-        { name = "copilot", group_index = 1, priority = 100 },
-        { name = "codeium", group_index = 1, priority = 95 },
-        { name = "nvim_lsp", group_index = 1, priority = 90 },
-        { name = "luasnip", group_index = 1, priority = 80 },
-        { name = "buffer", group_index = 2, priority = 70, keyword_length = 3 },
-        { name = "path", group_index = 2, priority = 60 },
-      }
-
       -- Special window with highlights for completion
       local winhl = "Normal:NormalFloat,FloatBorder:FloatBorder,CursorLine:PmenuSel,Search:None"
 
       -- Configure with AI-friendly settings
       cmp.setup({
-        completion = { completeopt = "menu,menuone,noinsert" },
+        completion = {
+          completeopt = "menu,menuone,noinsert",
+          autocomplete = { require("cmp.types").cmp.TriggerEvent.TextChanged },
+        },
         snippet = {
           expand = function(args)
             luasnip.lsp_expand(args.body)
@@ -347,6 +331,12 @@ return {
           vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = "#6CC644", bold = true })
           vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2", bold = true })
         end,
+      })
+
+      -- Provide additional visual feedback with ghost text
+      cmp.setup({
+        experimental = { ghost_text = { hl_group = "Comment" } },
+        view = { entries = { name = "custom", selection_order = "near_cursor" } },
       })
     end,
   },

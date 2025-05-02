@@ -24,17 +24,21 @@ local stack_icons = {
 
 --- Checks if any file matching patterns exists in cwd
 -- @param patterns string|table file pattern(s) to check
--- @return boolean
+-- @return boolean with error handling
 local function exists(patterns)
-  if type(patterns) == "string" then
-    return fn.glob(patterns) ~= ""
-  end
-  for _, pat in ipairs(patterns) do
-    if fn.glob(pat) ~= "" then
-      return true
+  local ok, result = pcall(function()
+    if type(patterns) == "string" then
+      return vim.fn.glob(patterns) ~= ""
     end
-  end
-  return false
+    for _, pat in ipairs(patterns) do
+      if vim.fn.glob(pat) ~= "" then
+        return true
+      end
+    end
+    return false
+  end)
+
+  return ok and result or false
 end
 
 --- Search file contents for pattern
@@ -43,108 +47,96 @@ end
 -- @param max_lines number max lines to check
 -- @return boolean
 local function file_contains(file, pattern, max_lines)
-  max_lines = max_lines or 100
-  if fn.filereadable(file) == 0 then
-    return false
-  end
+  local ok, result = pcall(function()
+    max_lines = max_lines or 100
+    if vim.fn.filereadable(file) == 0 then
+      return false
+    end
 
-  local lines = fn.readfile(file, "", max_lines)
-  local content = table.concat(lines, "\n")
-  return content:match(pattern) ~= nil
+    local lines = vim.fn.readfile(file, "", max_lines)
+    local content = table.concat(lines, "\n")
+    return content:match(pattern) ~= nil
+  end)
+
+  return ok and result or false
 end
 
 --- Detect current project stack with more accurate heuristics
 -- @return string "goth", "nextjs", "both" or nil
 function M.detect_stack()
   local stacks = {}
+  -- Add safety wrapper around the entire function
+  local ok, result = pcall(function()
+    -- GOTH stack indicators with try/catch safety
+    local goth_score = 0
 
-  -- GOTH stack indicators
-  local goth_score = 0
-
-  -- Check for Go files
-  if exists({ "*.go", "go.mod", "go.sum" }) then
-    goth_score = goth_score + 2
-  end
-
-  -- Check for Templ files
-  if exists({ "*.templ", "**/components/*.templ", "**/templates/*.templ" }) then
-    goth_score = goth_score + 3
-  end
-
-  -- Check for HTMX usage
-  if exists({ "**/htmx*.js", "**/static/**/htmx*.js" }) then
-    goth_score = goth_score + 2
-  end
-
-  -- Check Go imports/usage related to HTMX/Templ
-  local gofiles = fn.glob("**/*.go", false, true)
-  for _, file in ipairs(gofiles) do
-    if file_contains(file, "html/template") or file_contains(file, "htmx") or file_contains(file, "templ") then
+    -- Check safely for Go files
+    if exists({ "*.go", "go.mod", "go.sum" }) then
       goth_score = goth_score + 2
-      break
     end
-  end
 
-  -- Check HTML files for HTMX attributes
-  local htmlfiles = fn.glob("**/*.html", false, true)
-  for _, file in ipairs(htmlfiles) do
-    if file_contains(file, "hx%-") then
+    -- Check safely for Templ files
+    if exists({ "*.templ", "**/components/*.templ", "**/templates/*.templ" }) then
+      goth_score = goth_score + 3
+    end
+
+    -- Check for HTMX usage
+    if exists({ "**/htmx*.js", "**/static/**/htmx*.js" }) then
       goth_score = goth_score + 2
-      break
     end
-  end
 
-  -- Next.js detection
-  local nextjs_score = 0
+    -- Check Go imports/usage related to HTMX/Templ with safety checks
+    local gofiles = fn.glob("**/*.go", false, true)
+    for _, file in ipairs(gofiles) do
+      if file_contains(file, "html/template") or file_contains(file, "htmx") or file_contains(file, "templ") then
+        goth_score = goth_score + 2
+        break
+      end
+    end
 
-  -- Direct Next.js indicators
-  if exists({ "next.config.js", "next.config.mjs", "next.config.ts" }) then
-    nextjs_score = nextjs_score + 3
-  end
+    -- Next.js detection with similar safety enhancements
+    local nextjs_score = 0
 
-  -- App directory structure for newer Next.js
-  if exists("app") and exists({ "app/layout.tsx", "app/page.tsx" }) then
-    nextjs_score = nextjs_score + 3
-  end
-
-  -- Pages directory structure for traditional Next.js
-  if exists("pages") and exists({ "pages/index.tsx", "pages/index.jsx", "pages/_app.tsx" }) then
-    nextjs_score = nextjs_score + 3
-  end
-
-  -- Check package.json for Next.js dependency
-  if exists("package.json") then
-    if file_contains("package.json", [["next"]]) then
+    -- Direct Next.js indicators
+    if exists({ "next.config.js", "next.config.mjs", "next.config.ts" }) then
       nextjs_score = nextjs_score + 3
     end
+
+    -- App directory structure for newer Next.js
+    if exists("app") and exists({ "app/layout.tsx", "app/page.tsx" }) then
+      nextjs_score = nextjs_score + 3
+    end
+
+    -- Add logging for stack detection (helps with debugging)
+    vim.defer_fn(function()
+      vim.notify(string.format("GOTH score: %d, Next.js score: %d", goth_score, nextjs_score), vim.log.levels.DEBUG)
+    end, 1000)
+
+    -- Determine the result based on scores
+    if goth_score >= 4 and nextjs_score >= 4 then
+      return "both"
+    elseif goth_score >= 4 then
+      return "goth"
+    elseif nextjs_score >= 4 then
+      return "nextjs"
+    end
+
+    -- Default to nil if no clear stack detected
+    return nil
+  end)
+
+  -- If detection fails, provide a fallback
+  if not ok then
+    vim.notify("Stack detection failed: " .. tostring(result), vim.log.levels.WARN)
+    -- Check for some very basic indicators
+    if vim.fn.filereadable("go.mod") == 1 then
+      return "goth"
+    elseif vim.fn.filereadable("next.config.js") == 1 or vim.fn.filereadable("package.json") == 1 then
+      return "nextjs"
+    end
   end
 
-  -- Check for React components
-  if exists({ "**/*.tsx", "**/*.jsx" }) then
-    nextjs_score = nextjs_score + 1
-  end
-
-  -- Check for TypeScript configuration
-  if exists({ "tsconfig.json" }) then
-    nextjs_score = nextjs_score + 1
-  end
-
-  -- Check for Tailwind usage
-  if exists({ "tailwind.config.js" }) or file_contains("package.json", "tailwindcss") then
-    nextjs_score = nextjs_score + 1
-  end
-
-  -- Determine the result based on scores
-  if goth_score >= 4 and nextjs_score >= 4 then
-    return "both"
-  elseif goth_score >= 4 then
-    return "goth"
-  elseif nextjs_score >= 4 then
-    return "nextjs"
-  end
-
-  -- Default to nil if no clear stack detected
-  return nil
+  return result
 end
 
 --- Apply configuration for a given stack
@@ -261,9 +253,9 @@ function M.configure_stack(stack_name)
             },
           })
         end)
-      elseif lspconfig.tsserver then
+      elseif lspconfig.ts_ls then
         -- Fallback to basic tsserver
-        lspconfig.tsserver.setup({
+        lspconfig.ts_ls.setup({
           settings = {
             typescript = {
               inlayHints = {

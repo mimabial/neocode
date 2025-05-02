@@ -170,66 +170,42 @@ return {
     },
   },
 
-  -- Tokyo Night (Also available)
-  {
-    "folke/tokyonight.nvim",
-    lazy = true,
-    priority = 900,
-    opts = {
-      style = "storm", -- Options: 'storm', 'moon', 'night', 'day'
-      light_style = "day",
-      transparent = false,
-      terminal_colors = true,
-      styles = {
-        comments = { italic = true },
-        keywords = { italic = true },
-        functions = {},
-        variables = {},
-        sidebars = "dark",
-        floats = "dark",
-      },
-      on_colors = function(colors)
-        -- Export palette via global function
-        _G.get_tokyonight_colors = function()
-          return {
-            bg = colors.bg,
-            bg1 = colors.bg_dark,
-            bg2 = colors.bg_dark,
-            bg3 = colors.bg_highlight,
-            bg4 = colors.bg_highlight,
-            bg5 = colors.bg_popup,
-            red = colors.red,
-            orange = colors.orange,
-            yellow = colors.yellow,
-            green = colors.green,
-            aqua = colors.teal,
-            blue = colors.blue,
-            purple = colors.purple,
-            grey = colors.comment,
-            grey_dim = colors.fg_gutter,
-          }
-        end
-      end,
-    },
-  },
-
   -- Commands and keymaps
   config = function()
     -- Theme toggle commands
     vim.api.nvim_create_user_command("ColorSchemeToggle", function()
-      local themes = { "gruvbox-material", "everforest", "kanagawa", "tokyonight" }
-      local current = vim.g.colors_name or "gruvbox-material"
+      local themes = { "gruvbox-material", "everforest", "kanagawa" }
+      -- Enhanced current theme detection with fallback
+      local current = vim.g.colors_name
+      if not current then
+        current = "gruvbox-material"
+        vim.notify("Current theme not detected, defaulting to gruvbox-material", vim.log.levels.WARN)
+      end
 
       -- Find current theme index
       local current_idx = 1
-      for i, theme in ipairs(themes) do
-        if current == theme then
-          current_idx = i
-          break
+      local ok, err = pcall(function()
+        for i, theme in ipairs(themes) do
+          if current == theme then
+            current_idx = i
+            return true
+          end
         end
+        return false
+      end)
+
+      if not ok then
+        vim.notify("Error finding current theme: " .. tostring(err), vim.log.levels.WARN)
+        current_idx = 1 -- Default to first theme
       end
 
-      -- Get next theme
+      -- Check if the chosen theme module is available
+      local next_theme_avail = {}
+      for _, theme in ipairs(themes) do
+        next_theme_avail[theme] = (theme == "gruvbox-material") or pcall(require, theme:gsub("-", "."))
+      end
+
+      -- Get next theme with fallback to a theme we know exists
       local next_idx = current_idx % #themes + 1
       local next_theme = themes[next_idx]
 
@@ -238,49 +214,68 @@ return {
         ["gruvbox-material"] = "󰈰 ",
         ["everforest"] = "󰪶 ",
         ["kanagawa"] = "󰖭 ",
-        ["tokyonight"] = "󱉭 ",
       }
 
-      -- Apply theme
-      vim.cmd("colorscheme " .. next_theme)
-      vim.notify(theme_icons[next_theme] .. "Switched to " .. next_theme .. " theme", vim.log.levels.INFO)
-    end, { desc = "Toggle between color schemes" })
+      -- Ensure we have a valid icon
+      local theme_icon = theme_icons[next_theme] or "󰏘 "
 
-    -- Transparency toggle command
+      -- Apply theme with safety checks
+      local applied_ok = pcall(vim.cmd, "colorscheme " .. next_theme)
+
+      if not applied_ok then
+        vim.notify("Failed to apply " .. next_theme .. " theme, falling back to gruvbox-material", vim.log.levels.WARN)
+
+        -- Try to fall back to gruvbox-material
+        if next_theme ~= "gruvbox-material" then
+          pcall(vim.cmd, "colorscheme gruvbox-material")
+          vim.notify("Fell back to gruvbox-material theme", vim.log.levels.INFO)
+          theme_icon = theme_icons["gruvbox-material"]
+          next_theme = "gruvbox-material"
+        end
+      end
+
+      vim.notify(theme_icon .. "Switched to " .. next_theme .. " theme", vim.log.levels.INFO)
+    end, { desc = "Toggle between color schemes (fail-safe)" })
+
+    -- Add transparency toggle with similar safety features
     vim.api.nvim_create_user_command("ToggleTransparency", function()
+      -- Determine current theme and toggle its transparency
       local current = vim.g.colors_name or "gruvbox-material"
 
       if current == "gruvbox-material" then
         vim.g.gruvbox_material_transparent_background = vim.g.gruvbox_material_transparent_background == 1 and 0 or 1
-        vim.cmd("colorscheme gruvbox-material")
-        vim.notify(
-          "󱙱 Transparency " .. (vim.g.gruvbox_material_transparent_background == 1 and "enabled" or "disabled"),
-          vim.log.levels.INFO
-        )
+        pcall(vim.cmd, "colorscheme gruvbox-material") -- Reapply with pcall for safety
       elseif current == "everforest" then
         vim.g.everforest_transparent_background = vim.g.everforest_transparent_background == 1 and 0 or 1
-        vim.cmd("colorscheme everforest")
-        vim.notify(
-          "󱙱 Transparency " .. (vim.g.everforest_transparent_background == 1 and "enabled" or "disabled"),
-          vim.log.levels.INFO
-        )
+        pcall(vim.cmd, "colorscheme everforest")
       elseif current == "kanagawa" then
-        -- For kanagawa, we need to toggle the option and re-setup
-        local kanagawa = require("kanagawa")
-        local config = kanagawa.config
-        config.transparent = not config.transparent
-        kanagawa.setup(config)
-        vim.cmd("colorscheme kanagawa")
-        vim.notify("󱙱 Transparency " .. (config.transparent and "enabled" or "disabled"), vim.log.levels.INFO)
-      elseif current == "tokyonight" then
-        local tn = require("tokyonight")
-        tn.setup(vim.tbl_extend("force", tn.options, { transparent = not tn.options.transparent }))
-        vim.cmd("colorscheme tokyonight")
-        vim.notify(
-          "󱙱 Transparency " .. (require("tokyonight").options.transparent and "enabled" or "disabled"),
-          vim.log.levels.INFO
-        )
+        local ok, kanagawa = pcall(require, "kanagawa")
+        if ok then
+          local config = kanagawa.config
+          config.transparent = not config.transparent
+          kanagawa.setup(config)
+          pcall(vim.cmd, "colorscheme kanagawa")
+        end
       end
+
+      -- Notify of transparency change
+      local is_transparent = false
+      if current == "gruvbox-material" then
+        is_transparent = vim.g.gruvbox_material_transparent_background == 1
+      elseif current == "everforest" then
+        is_transparent = vim.g.everforest_transparent_background == 1
+      elseif current == "kanagawa" then
+        local ok, kanagawa = pcall(require, "kanagawa")
+        if ok then
+          is_transparent = kanagawa.config and kanagawa.config.transparent
+        end
+      end
+
+      vim.notify(
+        "󱙱 Transparency " .. (is_transparent and "enabled" or "disabled"),
+        vim.log.levels.INFO,
+        { title = "Theme Changed" }
+      )
     end, { desc = "Toggle background transparency" })
 
     -- Set default colorscheme if not already set
@@ -303,8 +298,6 @@ return {
           colors = _G.get_everforest_colors()
         elseif colorscheme == "kanagawa" and _G.get_kanagawa_colors then
           colors = _G.get_kanagawa_colors()
-        elseif colorscheme == "tokyonight" and _G.get_tokyonight_colors then
-          colors = _G.get_tokyonight_colors()
         else
           -- Default fallback palette
           colors = {

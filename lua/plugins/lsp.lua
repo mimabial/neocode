@@ -35,7 +35,7 @@ return {
           "templ",
           "html",
           -- Next.js stack
-          "tsserver",
+          "ts_ls",
           "tailwindcss",
           "cssls",
           "eslint",
@@ -97,7 +97,7 @@ return {
           buf_set_keymap("n", "<leader>gfs", "<cmd>GoFillStruct<CR>", { desc = "Fill struct" })
         end
 
-        if client.name == "tsserver" or client.name == "typescript-tools" then
+        if client.name == "ts_ls" or client.name == "typescript-tools" then
           -- TypeScript-specific keymaps
           buf_set_keymap("n", "<leader>toi", "<cmd>TypescriptOrganizeImports<CR>", { desc = "Organize imports" })
           buf_set_keymap("n", "<leader>tru", "<cmd>TypescriptRemoveUnused<CR>", { desc = "Remove unused" })
@@ -108,7 +108,7 @@ return {
         -- Enable inlay hints if supported
         if inlay_hints_supported and client.server_capabilities.inlayHintProvider then
           if vim.lsp.inlay_hint and vim.lsp.inlay_hint.enable then
-            vim.lsp.inlay_hint.enable(bufnr, true)
+            vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
           end
         end
 
@@ -217,7 +217,7 @@ return {
       })
 
       -- TypeScript/JavaScript configuration (Next.js stack)
-      lspconfig.tsserver.setup({
+      lspconfig.ts_ls.setup({
         on_attach = function(client, bufnr)
           -- Disable formatting if using prettier through null-ls/conform
           client.server_capabilities.documentFormattingProvider = false
