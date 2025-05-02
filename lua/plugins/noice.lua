@@ -129,7 +129,20 @@ return {
       documentation = { view = "hover", opts = { lang = "markdown", replace = true, render = "plain" } },
     },
     markdown = {
-      hover = { ["|(%S-)|"] = vim.cmd.help, ["%[.-%]%((%S-)%)"] = require("noice.util").open },
+      hover = {
+        ["|(%S-)|"] = vim.cmd.help,
+        ["%[.-%]%((%S-)%)"] = function(url)
+          -- Safe fallback if noice.util is not available
+          local ok, util = pcall(require, "noice.util")
+          if ok and util and util.open then
+            return util.open(url)
+          else
+            -- Fallback: try basic URL opening with system command
+            vim.fn.system(string.format("xdg-open %s || open %s", url, url))
+            return true
+          end
+        end,
+      },
       highlights = { ["|%S-|"] = "@text.reference", ["@%S+"] = "@parameter", ["^%s*(Parameters:)"] = "@text.title" },
     },
     override = {
@@ -156,7 +169,22 @@ return {
 
   -- Setup and custom autocmds
   config = function(_, opts)
-    require("noice").setup(opts)
+    -- Safe loading of noice
+    local ok, noice = pcall(require, "noice")
+    if not ok then
+      vim.notify("[ERROR] Failed to load noice.nvim: " .. tostring(noice), vim.log.levels.ERROR)
+      return
+    end
+
+    -- Setup noice with error handling
+    local setup_ok, err = pcall(function()
+      noice.setup(opts)
+    end)
+
+    if not setup_ok then
+      vim.notify("[ERROR] Failed to setup noice.nvim: " .. tostring(err), vim.log.levels.ERROR)
+      return
+    end
 
     -- Hide Noice for certain filetypes
     vim.api.nvim_create_autocmd("FileType", {
