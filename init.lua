@@ -88,7 +88,7 @@ if lazy then
 end
 
 -- 6) Detect and configure stack
-local stack = safe_require("config.stack")
+local stack = safe_require("config.stacks")
 if stack and type(stack.setup) == "function" then
   stack.setup()
 end

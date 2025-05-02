@@ -1,5 +1,5 @@
 -- lua/plugins/ai.lua
--- Integrated AI completion with Copilot and Codeium
+-- Enhanced AI integration for GitHub Copilot and Codeium
 
 return {
   -- GitHub Copilot integration
@@ -12,31 +12,100 @@ return {
       "nvim-lua/plenary.nvim",
     },
     opts = {
-      suggestion = { enabled = false },
-      panel = { enabled = false },
+      suggestion = {
+        enabled = true,
+        auto_trigger = true,
+        debounce = 75,
+        keymap = {
+          accept = "<C-]>",
+          accept_word = "<M-]>",
+          accept_line = "<C-l>",
+          next = "<M-]>",
+          prev = "<M-[>",
+          dismiss = "<C-[>",
+        },
+      },
+      panel = {
+        enabled = true,
+        auto_refresh = true,
+        keymap = {
+          jump_prev = "[[",
+          jump_next = "]]",
+          accept = "<CR>",
+          refresh = "gr",
+          open = "<M-CR>",
+        },
+        layout = {
+          position = "bottom",
+          ratio = 0.4,
+        },
+      },
       filetypes = {
-        markdown = true,
-        yaml = true,
+        -- Enable for all filetypes
+        ["*"] = true,
+        -- Except these
+        TelescopePrompt = false,
+        DressingInput = false,
+        ["neo-tree-popup"] = false,
+        ["oil"] = false,
         help = false,
+        git = false,
         gitcommit = false,
         gitrebase = false,
-        hgcommit = false,
-        ["."] = false,
+        -- Stack-specific filetypes
+        go = true,
+        templ = true,
+        typescript = true,
+        javascript = true,
+        typescriptreact = true,
+        javascriptreact = true,
+        html = true,
+        css = true,
       },
+      copilot_node_command = "node",
+      server_opts_overrides = {},
+      ft_disable = { "markdown", "text" },
     },
     config = function(_, opts)
       require("copilot").setup(opts)
-      -- Register keymaps for toggling
+
+      -- Highlight groups for copilot
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        pattern = "*",
+        callback = function()
+          -- Set highlight groups compatible with gruvbox-material
+          vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = "#928374", italic = true })
+          vim.api.nvim_set_hl(0, "CopilotAnnotation", { fg = "#928374", italic = true })
+          vim.api.nvim_set_hl(
+            0,
+            "CopilotSuggestionActive",
+            { bg = "#32302f", fg = "#a89984", italic = true, bold = true }
+          )
+        end,
+      })
+
+      -- Toggle keymap with fancy notification
       vim.keymap.set("n", "<leader>uc", function()
-        local copilot_client = vim.lsp.get_clients({ name = "copilot" })[1]
-        if copilot_client then
-          copilot_client.stop()
-          vim.notify("Copilot disabled", vim.log.levels.INFO)
+        local status = require("copilot.client").is_started()
+        if status then
+          vim.cmd("Copilot disable")
+          vim.notify(" Copilot disabled", vim.log.levels.INFO, { title = "Copilot" })
         else
-          require("copilot").setup(opts)
-          vim.notify("Copilot enabled", vim.log.levels.INFO)
+          vim.cmd("Copilot enable")
+          vim.notify(" Copilot enabled", vim.log.levels.INFO, { title = "Copilot" })
         end
       end, { desc = "Toggle Copilot" })
+
+      -- Filetype-specific keymaps
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = { "go", "templ", "typescript", "javascript", "typescriptreact", "javascriptreact" },
+        callback = function(event)
+          -- Local buffer keymap for revealing panel
+          vim.keymap.set("i", "<C-A-p>", function()
+            vim.cmd("Copilot panel")
+          end, { buffer = event.buf, desc = "Copilot Panel" })
+        end,
+      })
     end,
   },
 
@@ -44,7 +113,15 @@ return {
   {
     "zbirenbaum/copilot-cmp",
     dependencies = "copilot.lua",
-    opts = {},
+    opts = {
+      method = "getCompletionsCycling",
+      formatters = {
+        label = require("copilot_cmp.format").format_label_with_indent,
+        insert_text = require("copilot_cmp.format").format_insert_text,
+        preview = require("copilot_cmp.format").deindent,
+      },
+      event_type = "confirm_done",
+    },
     config = function(_, opts)
       local copilot_cmp = require("copilot_cmp")
       copilot_cmp.setup(opts)
@@ -61,7 +138,7 @@ return {
 
               -- Add symbol for Copilot
               if entry.source.name == "copilot" then
-                item.kind = " Copilot"
+                item.kind = "Copilot"
                 item.kind_hl_group = "CmpItemKindCopilot"
               end
 
@@ -73,7 +150,7 @@ return {
     end,
   },
 
-  -- Codeium integration
+  -- Codeium integration (as fallback if Copilot unavailable)
   {
     "Exafunction/codeium.nvim",
     dependencies = {
@@ -81,28 +158,150 @@ return {
       "hrsh7th/nvim-cmp",
     },
     cmd = "Codeium",
+    event = "InsertEnter",
     build = ":Codeium Auth",
+    enabled = function()
+      -- Disable Codeium if Copilot is active
+      return not require("lazy.core.config").plugins["copilot.lua"]._.loaded
+    end,
     opts = {
       enable_chat = false,
       tools = {
         language_server = {
           enabled = true,
         },
+        path_deny_list = { "oil://*" },
+      },
+      filetypes = {
+        ["*"] = true,
+        TelescopePrompt = false,
+        ["neo-tree"] = false,
+        lazy = false,
+        ["neo-tree-popup"] = false,
+        ["oil"] = false,
       },
     },
     config = function(_, opts)
       require("codeium").setup(opts)
 
+      -- Highlight group for Codeium
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        pattern = "*",
+        callback = function()
+          vim.api.nvim_set_hl(0, "CodeiumSuggestion", { fg = "#928374", italic = true })
+          vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2", bold = true })
+        end,
+      })
+
       -- Register toggle keybinding
       vim.keymap.set("n", "<leader>ui", function()
         if vim.g.codeium_enabled then
           vim.cmd("CodeiumDisable")
-          vim.notify("Codeium disabled", vim.log.levels.INFO)
+          vim.notify("󰧑 Codeium disabled", vim.log.levels.INFO, { title = "Codeium" })
         else
           vim.cmd("CodeiumEnable")
-          vim.notify("Codeium enabled", vim.log.levels.INFO)
+          vim.notify("󰧑 Codeium enabled", vim.log.levels.INFO, { title = "Codeium" })
         end
       end, { desc = "Toggle Codeium" })
+
+      -- Insert mode keymaps
+      local keymaps = {
+        ["<C-g>"] = { vim.fn["codeium#Accept"], "Accept" },
+        ["<C-;>"] = { vim.fn["codeium#CycleCompletions"], "Next completion", 1 },
+        ["<C-,>"] = { vim.fn["codeium#CycleCompletions"], "Prev completion", -1 },
+        ["<C-x>"] = { vim.fn["codeium#Clear"], "Clear suggestions" },
+      }
+
+      for key, mapping in pairs(keymaps) do
+        vim.keymap.set("i", key, function()
+          if #mapping > 2 then
+            return mapping[1](mapping[3])
+          else
+            return mapping[1]()
+          end
+        end, { expr = true, desc = "Codeium: " .. mapping[2] })
+      end
     end,
+  },
+
+  -- Enhanced completion integration for AI tools
+  {
+    "hrsh7th/nvim-cmp",
+    optional = true,
+    opts = function(_, opts)
+      -- Enhanced completion sources with AI prioritization
+      local sources = opts.sources
+        or {
+          { name = "nvim_lsp" },
+          { name = "luasnip" },
+          { name = "buffer" },
+          { name = "path" },
+        }
+
+      -- Add AI sources at the top if available
+      if require("lazy.core.config").spec.plugins["copilot-cmp"] then
+        table.insert(sources, 1, {
+          name = "copilot",
+          group_index = 1,
+          priority = 100,
+        })
+      end
+
+      if require("lazy.core.config").spec.plugins["codeium.nvim"] then
+        table.insert(sources, 1, {
+          name = "codeium",
+          group_index = 1,
+          priority = 90,
+        })
+      end
+
+      -- Custom AI priority comparator
+      local function ai_priority(entry1, entry2)
+        local name1, name2 = entry1.source.name, entry2.source.name
+        local p1 = name1 == "copilot" and 100 or (name1 == "codeium" and 90 or 0)
+        local p2 = name2 == "copilot" and 100 or (name2 == "codeium" and 90 or 0)
+        if p1 ~= p2 then
+          return p1 > p2
+        end
+      end
+
+      -- Add AI priority to comparators
+      if opts.sorting and opts.sorting.comparators then
+        table.insert(opts.sorting.comparators, 1, ai_priority)
+      end
+
+      -- Return enhanced options
+      return vim.tbl_deep_extend("force", opts, {
+        sources = sources,
+        sorting = {
+          priority_weight = 2,
+          comparators = opts.sorting and opts.sorting.comparators or {
+            ai_priority,
+            require("cmp.config.compare").offset,
+            require("cmp.config.compare").exact,
+            require("cmp.config.compare").score,
+            require("cmp.config.compare").recently_used,
+            require("cmp.config.compare").locality,
+            require("cmp.config.compare").kind,
+            require("cmp.config.compare").sort_text,
+            require("cmp.config.compare").length,
+            require("cmp.config.compare").order,
+          },
+        },
+      })
+    end,
+  },
+
+  -- Custom key binding helper
+  {
+    "folke/which-key.nvim",
+    optional = true,
+    opts = {
+      defaults = {
+        ["<leader>u"] = { name = "+UI/AI" },
+        ["<leader>uc"] = { "Toggle Copilot" },
+        ["<leader>ui"] = { "Toggle Codeium" },
+      },
+    },
   },
 }

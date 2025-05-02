@@ -1,4 +1,4 @@
--- lua/config/stacks.lua
+-- lua/config/stack.lua
 -- Enhanced project stack detection and configuration
 
 local M = {}
@@ -21,57 +21,113 @@ local function exists(patterns)
   return false
 end
 
+--- Search file contents for pattern
+-- @param file string  file path
+-- @param pattern string  pattern to search for
+-- @param max_lines number  max lines to check
+-- @return boolean
+local function file_contains(file, pattern, max_lines)
+  max_lines = max_lines or 100
+  if fn.filereadable(file) == 0 then
+    return false
+  end
+
+  local lines = fn.readfile(file, "", max_lines)
+  local content = table.concat(lines, "\n")
+  return content:match(pattern) ~= nil
+end
+
 --- Detect current project stack with more accurate heuristics
--- @return string  "goth", "nextjs", or nil
+-- @return string  "goth", "nextjs", or "both" or nil
 function M.detect_stack()
+  local stacks = {}
+
   -- GOTH stack indicators
+  local goth_score = 0
+
+  -- Check for Go files
   if exists({ "*.go", "go.mod", "go.sum" }) then
-    if exists({ "*.templ", "**/components/*.templ", "**/templates/*.templ" }) then
-      return "goth"
-    end
+    goth_score = goth_score + 2
+  end
 
-    -- Check Go files for HTMX/Templ imports or usage
-    local gofiles = fn.glob("**/*.go", false, true)
-    for _, file in ipairs(gofiles) do
-      local content = table.concat(fn.readfile(file, "", 50), "\n")
-      if content:match("html/template") or content:match("htmx") or content:match("templ") then
-        return "goth"
-      end
-    end
+  -- Check for Templ files
+  if exists({ "*.templ", "**/components/*.templ", "**/templates/*.templ" }) then
+    goth_score = goth_score + 3
+  end
 
-    -- Look for HTMX in the project
-    if exists({ "**/htmx*.js", "**/static/**/htmx*.js" }) then
-      return "goth"
-    end
+  -- Check for HTMX usage
+  if exists({ "**/htmx*.js", "**/static/**/htmx*.js" }) then
+    goth_score = goth_score + 2
+  end
 
-    -- Default for Go projects without strong indicators
-    return "goth"
+  -- Check Go imports/usage related to HTMX/Templ
+  local gofiles = fn.glob("**/*.go", false, true)
+  for _, file in ipairs(gofiles) do
+    if file_contains(file, "html/template") or file_contains(file, "htmx") or file_contains(file, "templ") then
+      goth_score = goth_score + 2
+      break
+    end
+  end
+
+  -- Check HTML files for HTMX attributes
+  local htmlfiles = fn.glob("**/*.html", false, true)
+  for _, file in ipairs(htmlfiles) do
+    if file_contains(file, "hx%-") then
+      goth_score = goth_score + 2
+      break
+    end
   end
 
   -- Next.js detection
+  local nextjs_score = 0
+
+  -- Direct Next.js indicators
   if exists({ "next.config.js", "next.config.mjs", "next.config.ts" }) then
-    return "nextjs"
+    nextjs_score = nextjs_score + 3
   end
 
   -- App directory structure for newer Next.js
   if exists("app") and exists({ "app/layout.tsx", "app/page.tsx" }) then
-    return "nextjs"
+    nextjs_score = nextjs_score + 3
   end
 
   -- Pages directory structure for traditional Next.js
   if exists("pages") and exists({ "pages/index.tsx", "pages/index.jsx", "pages/_app.tsx" }) then
-    return "nextjs"
+    nextjs_score = nextjs_score + 3
   end
 
   -- Check package.json for Next.js dependency
   if exists("package.json") then
-    local lines = fn.readfile("package.json")
-    local content = table.concat(lines, " ")
-    if content:match([["next"]]) then
-      return "nextjs"
+    if file_contains("package.json", [["next"]]) then
+      nextjs_score = nextjs_score + 3
     end
   end
 
+  -- Check for React components
+  if exists({ "**/*.tsx", "**/*.jsx" }) then
+    nextjs_score = nextjs_score + 1
+  end
+
+  -- Check for TypeScript configuration
+  if exists({ "tsconfig.json" }) then
+    nextjs_score = nextjs_score + 1
+  end
+
+  -- Check for Tailwind usage
+  if exists({ "tailwind.config.js" }) or file_contains("package.json", "tailwindcss") then
+    nextjs_score = nextjs_score + 1
+  end
+
+  -- Determine the result based on scores
+  if goth_score >= 4 and nextjs_score >= 4 then
+    return "both"
+  elseif goth_score >= 4 then
+    return "goth"
+  elseif nextjs_score >= 4 then
+    return "nextjs"
+  end
+
+  -- Default to nil if no clear stack detected
   return nil
 end
 
@@ -79,18 +135,29 @@ end
 -- @param stack_name string|nil  Stack name or nil to auto-detect
 function M.configure_stack(stack_name)
   local stack = stack_name or M.detect_stack() or ""
+  local notify_icon = ""
 
   -- Store globally for access by other modules
-  vim.g.current_stack = stack
+  if stack == "both" then
+    vim.g.current_stack = "goth+nextjs"
+    notify_icon = "󰡄 "
+  else
+    vim.g.current_stack = stack
+    if stack == "goth" then
+      notify_icon = "󰟓 "
+    elseif stack == "nextjs" then
+      notify_icon = " "
+    end
+  end
 
   -- Configure for GOTH stack
-  if stack == "goth" then
+  if stack == "goth" or stack == "both" then
     -- Load GOTH-specific LSP and tools
-    api.nvim_notify("Stack focused on GOTH (Go/Templ/HTMX)", vim.log.levels.INFO, { title = "Stack" })
+    api.nvim_notify(notify_icon .. "Stack focused on GOTH (Go/Templ/HTMX)", vim.log.levels.INFO, { title = "Stack" })
 
     -- Ensure gopls is configured optimally
-    local lspconfig = require("lspconfig")
-    if lspconfig.gopls then
+    local lspconfig_ok, lspconfig = pcall(require, "lspconfig")
+    if lspconfig_ok and lspconfig.gopls then
       lspconfig.gopls.setup({
         settings = {
           gopls = {
@@ -98,18 +165,41 @@ function M.configure_stack(stack_name)
               unusedparams = true,
               shadow = true,
               fieldalignment = true,
+              nilness = true,
+              unusedwrite = true,
+              useany = true,
             },
             staticcheck = true,
             gofumpt = true,
             usePlaceholders = true,
             completeUnimported = true,
+            directoryFilters = { "-.git", "-.vscode", "-.idea", "-node_modules" },
+            semanticTokens = true,
+            codelenses = {
+              gc_details = true,
+              generate = true,
+              regenerate_cgo = true,
+              test = true,
+              tidy = true,
+              upgrade_dependency = true,
+              vendor = true,
+            },
+            hints = {
+              assignVariableTypes = true,
+              compositeLiteralFields = true,
+              compositeLiteralTypes = true,
+              constantValues = true,
+              functionTypeParameters = true,
+              parameterNames = true,
+              rangeVariableTypes = true,
+            },
           },
         },
       })
     end
 
     -- Set Templ LSP if available
-    if lspconfig.templ then
+    if lspconfig_ok and lspconfig.templ then
       lspconfig.templ.setup({})
     end
 
@@ -122,45 +212,74 @@ function M.configure_stack(stack_name)
         },
       })
     end)
+  end
 
   -- Configure for Next.js stack
-  elseif stack == "nextjs" then
-    api.nvim_notify("Stack focused on Next.js", vim.log.levels.INFO, { title = "Stack" })
+  if stack == "nextjs" or stack == "both" then
+    api.nvim_notify(notify_icon .. "Stack focused on Next.js", vim.log.levels.INFO, { title = "Stack" })
 
     -- Configure TypeScript LSP with optimal settings
-    local lspconfig = require("lspconfig")
-    if lspconfig.tsserver then
-      lspconfig.tsserver.setup({
-        settings = {
-          typescript = {
-            inlayHints = {
-              includeInlayParameterNameHints = "all",
-              includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-              includeInlayFunctionParameterTypeHints = true,
-              includeInlayVariableTypeHints = true,
-              includeInlayPropertyDeclarationTypeHints = true,
-              includeInlayFunctionLikeReturnTypeHints = true,
-              includeInlayEnumMemberValueHints = true,
+    local lspconfig_ok, lspconfig = pcall(require, "lspconfig")
+    if lspconfig_ok then
+      -- TypeScript configuration
+      if lspconfig.tsserver then
+        lspconfig.tsserver.setup({
+          settings = {
+            typescript = {
+              inlayHints = {
+                includeInlayParameterNameHints = "all",
+                includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                includeInlayFunctionParameterTypeHints = true,
+                includeInlayVariableTypeHints = true,
+                includeInlayPropertyDeclarationTypeHints = true,
+                includeInlayFunctionLikeReturnTypeHints = true,
+                includeInlayEnumMemberValueHints = true,
+              },
+              suggest = {
+                completeFunctionCalls = true,
+              },
+            },
+            javascript = {
+              inlayHints = {
+                includeInlayParameterNameHints = "all",
+                includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                includeInlayFunctionParameterTypeHints = true,
+                includeInlayVariableTypeHints = true,
+                includeInlayPropertyDeclarationTypeHints = true,
+                includeInlayFunctionLikeReturnTypeHints = true,
+                includeInlayEnumMemberValueHints = true,
+              },
+              suggest = {
+                completeFunctionCalls = true,
+              },
             },
           },
-          javascript = {
-            inlayHints = {
-              includeInlayParameterNameHints = "all",
-              includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-              includeInlayFunctionParameterTypeHints = true,
-              includeInlayVariableTypeHints = true,
-              includeInlayPropertyDeclarationTypeHints = true,
-              includeInlayFunctionLikeReturnTypeHints = true,
-              includeInlayEnumMemberValueHints = true,
-            },
-          },
-        },
-      })
-    end
+        })
+      end
 
-    -- Setup ESLint if available
-    if lspconfig.eslint then
-      lspconfig.eslint.setup({})
+      -- Setup Tailwind CSS
+      if lspconfig.tailwindcss then
+        lspconfig.tailwindcss.setup({
+          filetypes = {
+            "html",
+            "css",
+            "scss",
+            "javascript",
+            "javascriptreact",
+            "typescript",
+            "typescriptreact",
+            "templ",
+          },
+          init_options = {
+            userLanguages = { templ = "html" },
+          },
+        })
+      end
+
+      -- Setup ESLint if available
+      if lspconfig.eslint then
+        lspconfig.eslint.setup({})
+      end
     end
 
     -- Configure formatters for JS/TS
@@ -178,8 +297,6 @@ function M.configure_stack(stack_name)
         },
       })
     end)
-  else
-    api.nvim_notify("No specific stack detected", vim.log.levels.INFO, { title = "Stack" })
   end
 
   -- Return the configured stack
@@ -191,9 +308,27 @@ function M.setup()
   if not vim.g.current_stack or vim.g.current_stack == "" then
     local st = M.detect_stack()
     if st then
-      vim.g.current_stack = st
+      if st == "both" then
+        vim.g.current_stack = "goth+nextjs"
+      else
+        vim.g.current_stack = st
+      end
+
       vim.defer_fn(function()
-        api.nvim_notify("Detected project stack: " .. st, vim.log.levels.INFO, { title = "Stack" })
+        local icon = ""
+        if st == "goth" then
+          icon = "󰟓 "
+        elseif st == "nextjs" then
+          icon = " "
+        elseif st == "both" then
+          icon = "󰡄 "
+        end
+
+        api.nvim_notify(
+          icon .. "Detected project stack: " .. (st == "both" and "GOTH+Next.js" or st),
+          vim.log.levels.INFO,
+          { title = "Stack" }
+        )
       end, 500)
     end
   end
@@ -205,7 +340,7 @@ function M.setup()
     nargs = "?",
     desc = "Focus on a specific tech stack",
     complete = function()
-      return { "goth", "nextjs" }
+      return { "goth", "nextjs", "both" }
     end,
   })
 
@@ -223,6 +358,13 @@ function M.setup()
       require("snacks.dashboard").open()
     end
   end, { desc = "Focus Next.js Stack + Dashboard" })
+
+  vim.keymap.set("n", "<leader>usb", function()
+    M.configure_stack("both")
+    if package.loaded["snacks.dashboard"] then
+      require("snacks.dashboard").open()
+    end
+  end, { desc = "Focus Both Stacks + Dashboard" })
 end
 
 return M
