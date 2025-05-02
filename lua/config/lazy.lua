@@ -1,4 +1,4 @@
--- lua/config/lazy.lua – Lazy.nvim configuration and custom commands
+-- lua/config/lazy.lua – Lazy.nvim configuration with enhanced error handling and plugin management
 
 -- 1) Helper for safe loads (avoid dependency on config.utils.safe_require)
 local function safe_require(mod)
@@ -9,7 +9,6 @@ local function safe_require(mod)
   end
   return m
 end
-
 
 -- 2) Bootstrap Lazy.nvim if missing
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -39,26 +38,82 @@ vim.g.use_snacks_ui = true
 lazy.setup({
   spec = {
     { import = "plugins" },
+    -- Core theme plugins with high priority
     { "sainnhe/gruvbox-material", lazy = false, priority = 1000 },
-    { "nvim-tree/nvim-web-devicons", lazy = false, priority = 950 },
-    { "rcarriga/nvim-notify", lazy = false, priority = 940 },
-    { "stevearc/oil.nvim", lazy = false, priority = 850 },
-    { "folke/which-key.nvim", event = "VeryLazy", priority = 820 },
-    { "folke/snacks.nvim", event = "VeryLazy", priority = 800 },
-    { import = "plugins.goth", cond = function()
+    { "sainnhe/everforest", lazy = true, priority = 950 },
+    { "rebelot/kanagawa.nvim", lazy = true, priority = 950 },
+    { "folke/tokyonight.nvim", lazy = true, priority = 940 },
+
+    -- Core UI components
+    { "nvim-tree/nvim-web-devicons", lazy = false, priority = 900 },
+    { "rcarriga/nvim-notify", lazy = false, priority = 890 },
+    { "stevearc/oil.nvim", lazy = false, priority = 880 },
+    { "folke/which-key.nvim", event = "VeryLazy", priority = 870 },
+    { "folke/snacks.nvim", event = "VeryLazy", priority = 860 },
+
+    -- Required plugins for rainbow delimiters
+    { "HiPhish/rainbow-delimiters.nvim", lazy = true, priority = 850 },
+
+    -- AI integration
+    {
+      "zbirenbaum/copilot.lua",
+      event = "InsertEnter",
+      dependencies = { "zbirenbaum/copilot-cmp" },
+      priority = 800,
+    },
+    {
+      "Exafunction/codeium.nvim",
+      event = "InsertEnter",
+      dependencies = { "nvim-lua/plenary.nvim" },
+      priority = 790,
+    },
+
+    -- Stack-specific plugins with conditional loading
+    {
+      import = "plugins.goth",
+      cond = function()
         return vim.g.current_stack ~= "nextjs"
-      end },
-    { import = "plugins.nextjs", cond = function()
+      end,
+    },
+    {
+      import = "plugins.nextjs",
+      cond = function()
         return vim.g.current_stack ~= "goth"
-      end },
+      end,
+    },
   },
   defaults = { lazy = true, version = false },
-  install = { colorscheme = { "gruvbox-material", "tokyonight" }, missing = true },
-  ui = { border = "rounded", size = { width = 0.8, height = 0.8 }, icons = {
-    loaded = "●",
-    not_loaded = "○",
-    lazy = "󰒲 "
-  } },
+  install = {
+    colorscheme = { "gruvbox-material", "everforest", "kanagawa" },
+    missing = true,
+  },
+  ui = {
+    border = "rounded",
+    size = { width = 0.8, height = 0.8 },
+    icons = {
+      loaded = "●",
+      not_loaded = "○",
+      lazy = "󰒲 ",
+      cmd = " ",
+      config = "",
+      event = "",
+      ft = " ",
+      init = " ",
+      keys = " ",
+      plugin = " ",
+      runtime = " ",
+      require = "󰢱 ",
+      source = " ",
+      start = "",
+      task = "✓",
+      list = {
+        "●",
+        "➜",
+        "★",
+        "‒",
+      },
+    },
+  },
   checker = { enabled = true, notify = false, frequency = 3600 },
   change_detection = { enabled = true, notify = false },
   performance = {
@@ -67,12 +122,14 @@ lazy.setup({
     reset_packpath = true,
     reset_rtp = false,
   },
+  -- Enhanced debugging for troubleshooting
+  debug = false,
 })
 
 -- 6) Custom user commands
 local api = vim.api
 
--- Lazygit toggle
+-- Lazygit toggle with fallback
 api.nvim_create_user_command("LazyGit", function()
   local ok, term = pcall(require, "toggleterm.terminal")
   if ok then
@@ -80,7 +137,17 @@ api.nvim_create_user_command("LazyGit", function()
       _G.toggle_lazygit()
     else
       local Terminal = term.Terminal or error("Toggleterm missing Terminal class")
-      _G.toggle_lazygit = Terminal:new({ cmd = "lazygit", direction = "float", float_opts = { border = "rounded" } }).toggle
+      _G.toggle_lazygit = Terminal:new({
+        cmd = "lazygit",
+        direction = "float",
+        float_opts = { border = "rounded" },
+        on_exit = function()
+          -- Try to refresh gitsigns if available
+          pcall(function()
+            require("gitsigns").refresh()
+          end)
+        end,
+      }).toggle
       _G.toggle_lazygit()
     end
   else
@@ -97,35 +164,52 @@ api.nvim_create_user_command("UpdateAll", function()
   vim.notify("Updated plugins and Mason packages", vim.log.levels.INFO)
 end, { desc = "Update all plugins and Mason packages" })
 
--- Toggle background transparency
-api.nvim_create_user_command("ToggleTransparency", function()
-  local flag = vim.g.gruvbox_material_transparent_background == 1 and 0 or 1
-  vim.g.gruvbox_material_transparent_background = flag
-  vim.notify(flag == 1 and "Transparency enabled" or "Transparency disabled", vim.log.levels.INFO)
-  if vim.g.colors_name then
-    vim.cmd("colorscheme " .. vim.g.colors_name)
+-- Reload configuration command
+api.nvim_create_user_command("ReloadConfig", function()
+  -- Clear loaded modules
+  for name, _ in pairs(package.loaded) do
+    if name:match("^(config)\\.") or name:match("^(plugins)\\.") then
+      package.loaded[name] = nil
+    end
   end
-end, { desc = "Toggle background transparency" })
-
--- Color scheme toggle
-api.nvim_create_user_command("ColorSchemeToggle", function()
-  local current = vim.g.colors_name
-  if current == "gruvbox-material" then
-    vim.cmd("colorscheme tokyonight")
-    vim.notify("Switched to TokyoNight theme", vim.log.levels.INFO)
-  else
-    vim.cmd("colorscheme gruvbox-material")
-    vim.notify("Switched to Gruvbox Material theme", vim.log.levels.INFO)
-  end
-end, { desc = "Toggle between color schemes" })
+  -- Reload init.lua
+  dofile(vim.fn.stdpath("config") .. "/init.lua")
+  vim.notify("Nvim configuration reloaded!", vim.log.levels.INFO, { title = "Config" })
+end, { desc = "Reload Neovim configuration" })
 
 -- Stack switching command
 api.nvim_create_user_command("StackFocus", function(opts)
-  require("config.stack").configure_stack(opts.args)
+  local stack_module = safe_require("config.stacks")
+  if stack_module then
+    stack_module.configure_stack(opts.args)
+  else
+    vim.notify("Stack module not available", vim.log.levels.ERROR)
+  end
 end, {
   nargs = "?",
   desc = "Focus on a specific tech stack",
   complete = function()
-    return { "goth", "nextjs" }
+    return { "goth", "nextjs", "both" }
   end,
 })
+
+-- Check and display plugin errors
+api.nvim_create_user_command("PluginCheck", function()
+  local plugins = require("lazy.core.config").plugins
+  local errors = {}
+
+  for name, plugin in pairs(plugins) do
+    if plugin._.error then
+      table.insert(errors, { name = name, error = plugin._.error })
+    end
+  end
+
+  if #errors == 0 then
+    vim.notify("No plugin errors detected!", vim.log.levels.INFO, { title = "Plugin Check" })
+  else
+    vim.notify("Found errors in " .. #errors .. " plugins", vim.log.levels.ERROR, { title = "Plugin Check" })
+    for _, err in ipairs(errors) do
+      vim.notify(err.name .. ": " .. err.error, vim.log.levels.ERROR)
+    end
+  end
+end, { desc = "Check for plugin errors" })

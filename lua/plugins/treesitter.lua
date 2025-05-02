@@ -8,16 +8,8 @@ return {
     event = { "BufReadPost", "BufNewFile" },
     dependencies = {
       "nvim-treesitter/nvim-treesitter-textobjects",
-      {
-        "nvim-treesitter/nvim-treesitter-context",
-        opts = {
-          mode = "cursor",
-          max_lines = 3,
-          trim_scope = "outer",
-          multiline_threshold = 3,
-        },
-      },
-      "HiPhish/rainbow-delimiters.nvim",
+      "nvim-treesitter/nvim-treesitter-context",
+      "HiPhish/rainbow-delimiters.nvim", -- Added as explicit dependency
     },
     cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
     keys = {
@@ -172,29 +164,32 @@ return {
       -- Setup TS
       require("nvim-treesitter.configs").setup(opts)
 
-      -- rainbow-delimiters
-      vim.g.rainbow_delimiters = {
-        strategy = {
-          [""] = require("rainbow-delimiters.strategy").global,
-          vim = require("rainbow-delimiters.strategy")["local"],
-        },
-        query = {
-          [""] = "rainbow-delimiters",
-          lua = "rainbow-blocks",
-          html = "rainbow-tags",
-          tsx = "rainbow-tags",
-          templ = "rainbow-tags",
-        },
-        highlight = {
-          "RainbowDelimiterRed",
-          "RainbowDelimiterYellow",
-          "RainbowDelimiterBlue",
-          "RainbowDelimiterOrange",
-          "RainbowDelimiterGreen",
-          "RainbowDelimiterViolet",
-          "RainbowDelimiterCyan",
-        },
-      }
+      -- Rainbow delimiters setup - fail-safe with pcall
+      local has_rainbow, rainbow_delimiters = pcall(require, "rainbow-delimiters")
+      if has_rainbow then
+        vim.g.rainbow_delimiters = {
+          strategy = {
+            [""] = rainbow_delimiters.strategy.global,
+            vim = rainbow_delimiters.strategy["local"],
+          },
+          query = {
+            [""] = "rainbow-delimiters",
+            lua = "rainbow-blocks",
+            html = "rainbow-tags",
+            tsx = "rainbow-tags",
+            templ = "rainbow-tags",
+          },
+          highlight = {
+            "RainbowDelimiterRed",
+            "RainbowDelimiterYellow",
+            "RainbowDelimiterBlue",
+            "RainbowDelimiterOrange",
+            "RainbowDelimiterGreen",
+            "RainbowDelimiterViolet",
+            "RainbowDelimiterCyan",
+          },
+        }
+      end
 
       -- templ parser support
       local parsers = require("nvim-treesitter.parsers").get_parser_configs()
@@ -298,9 +293,11 @@ return {
     },
     config = function(_, opts)
       require("nvim-autopairs").setup(opts)
-      local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-      local cmp = require("cmp")
-      cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+      local has_cmp, cmp = pcall(require, "cmp")
+      if has_cmp then
+        local cmp_autopairs = require("nvim-autopairs.completion.cmp")
+        cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+      end
     end,
   },
   {

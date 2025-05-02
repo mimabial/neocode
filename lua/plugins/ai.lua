@@ -1,5 +1,5 @@
 -- lua/plugins/ai.lua
--- Enhanced AI integration for GitHub Copilot and Codeium
+-- Enhanced AI integration with both Copilot and Codeium working together
 
 return {
   -- GitHub Copilot integration
@@ -8,8 +8,7 @@ return {
     cmd = "Copilot",
     event = "InsertEnter",
     dependencies = {
-      "zbirenbaum/copilot-cmp",
-      "nvim-lua/plenary.nvim",
+      "zbirenbaum/copilot-cmp", -- For completion menu integration
     },
     opts = {
       suggestion = {
@@ -28,20 +27,9 @@ return {
       panel = {
         enabled = true,
         auto_refresh = true,
-        keymap = {
-          jump_prev = "[[",
-          jump_next = "]]",
-          accept = "<CR>",
-          refresh = "gr",
-          open = "<M-CR>",
-        },
-        layout = {
-          position = "bottom",
-          ratio = 0.4,
-        },
       },
       filetypes = {
-        -- Enable for all filetypes
+        -- Enable for all filetypes including templ
         ["*"] = true,
         -- Except these
         TelescopePrompt = false,
@@ -52,19 +40,7 @@ return {
         git = false,
         gitcommit = false,
         gitrebase = false,
-        -- Stack-specific filetypes
-        go = true,
-        templ = true,
-        typescript = true,
-        javascript = true,
-        typescriptreact = true,
-        javascriptreact = true,
-        html = true,
-        css = true,
       },
-      copilot_node_command = "node",
-      server_opts_overrides = {},
-      ft_disable = { "markdown", "text" },
     },
     config = function(_, opts)
       require("copilot").setup(opts)
@@ -95,25 +71,13 @@ return {
           vim.notify(" Copilot enabled", vim.log.levels.INFO, { title = "Copilot" })
         end
       end, { desc = "Toggle Copilot" })
-
-      -- Filetype-specific keymaps
-      vim.api.nvim_create_autocmd("FileType", {
-        pattern = { "go", "templ", "typescript", "javascript", "typescriptreact", "javascriptreact" },
-        callback = function(event)
-          -- Local buffer keymap for revealing panel
-          vim.keymap.set("i", "<C-A-p>", function()
-            vim.cmd("Copilot panel")
-          end, { buffer = event.buf, desc = "Copilot Panel" })
-        end,
-      })
     end,
   },
 
   -- Copilot CMP integration
   {
     "zbirenbaum/copilot-cmp",
-    dependencies = { "zbirenbaum/copilot.lua" },
-    event = "InsertEnter",
+    dependencies = { "zbirenbaum/copilot.lua", "hrsh7th/nvim-cmp" },
     opts = {
       method = "getCompletionsCycling",
       formatters = {
@@ -131,62 +95,23 @@ return {
           return suggestion.displayText
         end,
       },
-      event_type = "confirm_done",
     },
     config = function(_, opts)
-      local copilot_cmp = require("copilot_cmp")
-      copilot_cmp.setup(opts)
-
-      -- Add custom formatting for better Copilot suggestions display
-      -- Fix: Check if cmp is available and only try to modify formatting if it exists
-      local has_cmp, cmp = pcall(require, "cmp")
-      if has_cmp then
-        -- Get current formatting config
-        local cmp_config = cmp.get_config()
-
-        if cmp_config and cmp_config.formatting and cmp_config.formatting.format then
-          local current_format = cmp_config.formatting.format
-
-          -- Apply a new configuration that wraps the existing formatter
-          cmp.setup({
-            formatting = {
-              format = function(entry, item)
-                -- Call the existing formatter first
-                if current_format then
-                  current_format(entry, item)
-                end
-
-                -- Add symbol for Copilot
-                if entry.source.name == "copilot" then
-                  item.kind = "Copilot"
-                  item.kind_hl_group = "CmpItemKindCopilot"
-                end
-
-                return item
-              end,
-            },
-          })
-        end
-      end
+      require("copilot_cmp").setup(opts)
     end,
   },
 
-  -- Codeium integration (as fallback if Copilot unavailable)
+  -- Codeium integration
   {
     "Exafunction/codeium.nvim",
+    cmd = "Codeium",
+    event = "InsertEnter",
     dependencies = {
       "nvim-lua/plenary.nvim",
       "hrsh7th/nvim-cmp",
     },
-    cmd = "Codeium",
-    event = "InsertEnter",
-    build = ":Codeium Auth",
-    enabled = function()
-      -- Disable Codeium if Copilot is active
-      return not require("lazy.core.config").plugins["copilot.lua"]._.loaded
-    end,
+    enabled = true, -- Always enable so it can be a fallback
     opts = {
-      enable_chat = false,
       tools = {
         language_server = {
           enabled = true,
@@ -249,84 +174,180 @@ return {
     end,
   },
 
-  -- Enhanced completion integration for AI tools
+  -- Enhanced completion integration for both AI tools
   {
     "hrsh7th/nvim-cmp",
-    optional = true,
-    opts = function(_, opts)
-      -- Enhanced completion sources with AI prioritization
-      local sources = opts.sources
-        or {
-          { name = "nvim_lsp" },
-          { name = "luasnip" },
-          { name = "buffer" },
-          { name = "path" },
-        }
+    event = { "InsertEnter", "CmdlineEnter" },
+    dependencies = {
+      { "hrsh7th/cmp-nvim-lsp" },
+      { "hrsh7th/cmp-buffer" },
+      { "hrsh7th/cmp-path" },
+      { "hrsh7th/cmp-cmdline" },
+      { "saadparwaiz1/cmp_luasnip" },
+      { "L3MON4D3/LuaSnip" },
+      { "zbirenbaum/copilot-cmp", optional = true },
+      { "Exafunction/codeium.nvim", optional = true },
+    },
+    config = function()
+      local cmp = require("cmp")
+      local luasnip = require("luasnip")
 
-      -- Add AI sources at the top if available
-      if require("lazy.core.config").spec.plugins["copilot-cmp"] then
-        table.insert(sources, 1, {
-          name = "copilot",
-          group_index = 1,
-          priority = 100,
-        })
-      end
-
-      if require("lazy.core.config").spec.plugins["codeium.nvim"] then
-        table.insert(sources, 1, {
-          name = "codeium",
-          group_index = 1,
-          priority = 90,
-        })
-      end
-
-      -- Custom AI priority comparator
+      -- AI suggestion priority comparator
       local function ai_priority(entry1, entry2)
         local name1, name2 = entry1.source.name, entry2.source.name
-        local p1 = name1 == "copilot" and 100 or (name1 == "codeium" and 90 or 0)
-        local p2 = name2 == "copilot" and 100 or (name2 == "codeium" and 90 or 0)
+
+        -- Priority ratings: copilot > codeium > lsp > others
+        local priorities = {
+          copilot = 100,
+          codeium = 95,
+          nvim_lsp = 90,
+          luasnip = 80,
+          buffer = 70,
+          path = 60,
+        }
+
+        local p1 = priorities[name1] or 0
+        local p2 = priorities[name2] or 0
+
         if p1 ~= p2 then
           return p1 > p2
         end
       end
 
-      -- Add AI priority to comparators
-      if opts.sorting and opts.sorting.comparators then
-        table.insert(opts.sorting.comparators, 1, ai_priority)
-      end
+      -- Build sources with both AI tools enabled
+      local sources = {
+        { name = "copilot", group_index = 1, priority = 100 },
+        { name = "codeium", group_index = 1, priority = 95 },
+        { name = "nvim_lsp", group_index = 1, priority = 90 },
+        { name = "luasnip", group_index = 1, priority = 80 },
+        { name = "buffer", group_index = 2, priority = 70, keyword_length = 3 },
+        { name = "path", group_index = 2, priority = 60 },
+      }
 
-      -- Return enhanced options
-      return vim.tbl_deep_extend("force", opts, {
-        sources = sources,
+      -- Special window with highlights for completion
+      local winhl = "Normal:NormalFloat,FloatBorder:FloatBorder,CursorLine:PmenuSel,Search:None"
+
+      -- Configure with AI-friendly settings
+      cmp.setup({
+        completion = { completeopt = "menu,menuone,noinsert" },
+        snippet = {
+          expand = function(args)
+            luasnip.lsp_expand(args.body)
+          end,
+        },
+        window = {
+          completion = cmp.config.window.bordered({ winhighlight = winhl }),
+          documentation = cmp.config.window.bordered({ winhighlight = winhl }),
+        },
+        mapping = cmp.mapping.preset.insert({
+          ["<C-n>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
+          ["<C-p>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
+          ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+          ["<C-f>"] = cmp.mapping.scroll_docs(4),
+          ["<C-Space>"] = cmp.mapping.complete(),
+          ["<C-e>"] = cmp.mapping.abort(),
+          ["<CR>"] = cmp.mapping.confirm({ select = true }),
+          ["<Tab>"] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_next_item()
+            elseif luasnip.expand_or_jumpable() then
+              luasnip.expand_or_jump()
+            else
+              fallback()
+            end
+          end, { "i", "s" }),
+          ["<S-Tab>"] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_prev_item()
+            elseif luasnip.jumpable(-1) then
+              luasnip.jump(-1)
+            else
+              fallback()
+            end
+          end, { "i", "s" }),
+        }),
+        sources = cmp.config.sources(sources),
         sorting = {
           priority_weight = 2,
-          comparators = opts.sorting and opts.sorting.comparators or {
-            ai_priority,
-            require("cmp.config.compare").offset,
-            require("cmp.config.compare").exact,
-            require("cmp.config.compare").score,
-            require("cmp.config.compare").recently_used,
-            require("cmp.config.compare").locality,
-            require("cmp.config.compare").kind,
-            require("cmp.config.compare").sort_text,
-            require("cmp.config.compare").length,
-            require("cmp.config.compare").order,
+          comparators = {
+            ai_priority, -- Our custom AI comparator first
+            cmp.config.compare.offset,
+            cmp.config.compare.exact,
+            cmp.config.compare.score,
+            cmp.config.compare.recently_used,
+            cmp.config.compare.locality,
+            cmp.config.compare.kind,
+            cmp.config.compare.sort_text,
+            cmp.config.compare.length,
+            cmp.config.compare.order,
           },
         },
+        formatting = {
+          format = function(entry, vim_item)
+            -- Try to use lspkind if available
+            local has_lspkind, lspkind = pcall(require, "lspkind")
+            if has_lspkind then
+              vim_item = lspkind.cmp_format({
+                mode = "symbol_text",
+                maxwidth = 50,
+                ellipsis_char = "...",
+                menu = {
+                  buffer = "[Buf]",
+                  nvim_lsp = "[LSP]",
+                  luasnip = "[Snip]",
+                  nvim_lua = "[Lua]",
+                  path = "[Path]",
+                  copilot = "[CP]",
+                  codeium = "[CI]",
+                },
+              })(entry, vim_item)
+            else
+              -- Basic formatting without lspkind
+              local source_names = {
+                copilot = "[CP]",
+                codeium = "[CI]",
+                nvim_lsp = "[LSP]",
+                luasnip = "[Snip]",
+                buffer = "[Buf]",
+                path = "[Path]",
+              }
+              vim_item.menu = source_names[entry.source.name] or "[" .. entry.source.name .. "]"
+            end
+
+            -- Special handling for AI sources
+            if entry.source.name == "copilot" then
+              vim_item.kind = "Copilot"
+              vim_item.kind_hl_group = "CmpItemKindCopilot"
+            elseif entry.source.name == "codeium" then
+              vim_item.kind = "Codeium"
+              vim_item.kind_hl_group = "CmpItemKindCodeium"
+            end
+
+            return vim_item
+          end,
+        },
+        experimental = { ghost_text = { hl_group = "LspCodeLens" } },
+      })
+
+      -- Cmdline completions
+      cmp.setup.cmdline(":", {
+        mapping = cmp.mapping.preset.cmdline(),
+        sources = cmp.config.sources({ { name = "path" } }, { { name = "cmdline" } }),
+      })
+
+      cmp.setup.cmdline("/", {
+        mapping = cmp.mapping.preset.cmdline(),
+        sources = { { name = "buffer" } },
+      })
+
+      -- Ensure AI highlight groups are set
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        pattern = "*",
+        callback = function()
+          vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = "#6CC644", bold = true })
+          vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2", bold = true })
+        end,
       })
     end,
-  },
-
-  -- Custom key binding helper
-  {
-    "folke/which-key.nvim",
-    optional = true,
-    opts = {
-      defaults = {
-        ["<leader>u"] = { name = "+UI/AI" },
-        ["<leader>uc"] = { "Toggle Copilot" },
-        ["<leader>ui"] = { "Toggle Codeium" },
-      },
-    },
   },
 }

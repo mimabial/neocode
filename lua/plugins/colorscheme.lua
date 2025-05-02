@@ -1,5 +1,5 @@
 -- lua/plugins/colorscheme.lua
--- Enhanced colorscheme configuration with Gruvbox Material and Tokyo Night
+-- Enhanced colorscheme configuration with Gruvbox Material, Everforest and Kanagawa
 
 return {
   -- Gruvbox Material (Primary)
@@ -38,9 +38,6 @@ return {
         bg_yellow = { "#4a4940", "136" },
       }
 
-      -- Apply colorscheme and export palette
-      vim.cmd("colorscheme gruvbox-material")
-
       -- Create a function to export the palette for other plugins to use
       _G.get_gruvbox_colors = function()
         return {
@@ -61,74 +58,77 @@ return {
           grey_dim = "#7c6f64",
         }
       end
-
-      -- Stack-specific highlight enhancements
-      local hl_overrides = {
-        -- UI elements
-        LineNr = { fg = "#a89984" },
-        Visual = { bg = "#504945", bold = true },
-        MatchParen = { fg = "#fabd2f", bg = "#504945", bold = true },
-        Comment = { fg = "#928374", italic = true },
-        FloatBorder = { fg = "#7c6f64" },
-        NormalFloat = { bg = "#282828" },
-
-        -- UI plugins
-        WhichKey = { fg = "#d8a657", bold = true },
-        WhichKeyGroup = { fg = "#ea6962" },
-        WhichKeySeparator = { fg = "#928374" },
-        WhichKeyDesc = { fg = "#89b482" },
-        TelescopePromptBorder = { fg = "#a89984" },
-        TelescopeResultsBorder = { fg = "#a89984" },
-        TelescopePreviewBorder = { fg = "#a89984" },
-        TelescopeSelection = { bg = "#3c3836", fg = "#d8a657" },
-        TelescopeMatching = { fg = "#89b482", bold = true },
-
-        -- GOTH stack specifics
-        ["@attribute.htmx"] = { fg = "#89b482", italic = true, bold = true },
-        ["@tag.attribute.htmx"] = { fg = "#89b482", italic = true, bold = true },
-        ["@type.go"] = { fg = "#89b482" },
-        ["@function.go"] = { fg = "#7daea3" },
-        ["@variable.go"] = { fg = "#d3869b" },
-
-        -- Next.js stack specifics
-        ["@tag.jsx"] = { fg = "#ea6962" },
-        ["@tag.tsx"] = { fg = "#ea6962" },
-        ["@constructor.jsx"] = { fg = "#7daea3" },
-        ["@constructor.tsx"] = { fg = "#7daea3" },
-
-        -- AI integrations
-        CmpItemKindCopilot = { fg = "#6CC644", bold = true },
-        CmpItemKindCodeium = { fg = "#09B6A2", bold = true },
-      }
-
-      -- Apply highlight overrides
-      local function update_highlights()
-        for group, opts in pairs(hl_overrides) do
-          vim.api.nvim_set_hl(0, group, opts)
-        end
-      end
-
-      -- Ensure highlights are applied when colorscheme changes
-      vim.api.nvim_create_autocmd("ColorScheme", {
-        pattern = "gruvbox-material",
-        callback = update_highlights,
-      })
-
-      -- Apply highlights immediately
-      update_highlights()
-
-      -- HTMX attribute syntax (for GOTH stack)
-      vim.api.nvim_create_autocmd("FileType", {
-        pattern = { "html", "templ" },
-        callback = function()
-          vim.cmd([[syntax match htmlArg contained "\<hx-[a-zA-Z\-]\+\>" ]])
-          vim.cmd([[highlight link htmlArg @attribute.htmx]])
-        end,
-      })
     end,
   },
 
-  -- Tokyo Night (Alternative)
+  -- Everforest theme
+  {
+    "sainnhe/everforest",
+    lazy = true,
+    priority = 900,
+    config = function()
+      vim.g.everforest_background = "medium"
+      vim.g.everforest_better_performance = 1
+      vim.g.everforest_enable_italic = 1
+      vim.g.everforest_diagnostic_text_highlight = 1
+      vim.g.everforest_diagnostic_line_highlight = 1
+      vim.g.everforest_diagnostic_virtual_text = "colored"
+      vim.g.everforest_current_word = "bold"
+    end,
+  },
+
+  -- Kanagawa theme
+  {
+    "rebelot/kanagawa.nvim",
+    lazy = true,
+    priority = 900,
+    opts = {
+      compile = true,
+      undercurl = true,
+      commentStyle = { italic = true },
+      functionStyle = {},
+      keywordStyle = { italic = true },
+      statementStyle = { bold = true },
+      typeStyle = {},
+      transparent = false,
+      dimInactive = false,
+      terminalColors = true,
+      theme = "wave", -- wave, dragon, lotus
+      background = {
+        dark = "wave",
+        light = "lotus",
+      },
+      colors = {
+        theme = {
+          all = {
+            ui = {
+              bg_gutter = "none",
+            },
+          },
+        },
+      },
+      overrides = function(colors)
+        return {
+          -- Custom overrides for GOTH stack
+          ["@attribute.htmx"] = { fg = colors.springGreen, italic = true, bold = true },
+          ["@tag.attribute.htmx"] = { fg = colors.springGreen, italic = true, bold = true },
+          ["@type.go"] = { fg = colors.carpYellow },
+          ["@function.go"] = { fg = colors.crystalBlue },
+
+          -- Custom overrides for Next.js stack
+          ["@tag.tsx"] = { fg = colors.peachRed },
+          ["@tag.delimiter.tsx"] = { fg = colors.surimiOrange },
+          ["@constructor.tsx"] = { fg = colors.oniViolet },
+
+          -- AI completions
+          CmpItemKindCopilot = { fg = "#6CC644", bold = true },
+          CmpItemKindCodeium = { fg = "#09B6A2", bold = true },
+        }
+      end,
+    },
+  },
+
+  -- Tokyo Night (Also available)
   {
     "folke/tokyonight.nvim",
     lazy = true,
@@ -146,101 +146,75 @@ return {
         sidebars = "dark",
         floats = "dark",
       },
-      sidebars = { "qf", "help", "terminal", "packer", "neo-tree", "trouble", "oil" },
-      day_brightness = 0.3,
-      hide_inactive_statusline = false,
-      dim_inactive = false,
-      lualine_bold = false,
-
-      -- Palette customizations for better code readability
-      on_colors = function(colors)
-        colors.comment = "#9ca0a4" -- Slightly brighter comments
-        colors.fg_gutter = "#4a5057" -- Better gutter contrast
-
-        -- Enhanced colors for stack-specific syntax
-        colors.green1 = "#73daca" -- For HTMX attributes
-        colors.blue1 = "#7aa2f7" -- For TypeScript/React
-        colors.purple = "#bb9af7" -- For Go types
-      end,
-
-      -- Highlight group overrides
-      on_highlights = function(highlights, colors)
-        -- Stack-specific highlights
-        local override = {
-          -- GOTH stack
-          ["@attribute.htmx"] = { fg = colors.green1, italic = true, bold = true },
-          ["@tag.attribute.htmx"] = { fg = colors.green1, italic = true, bold = true },
-          ["@type.go"] = { fg = colors.blue },
-          ["@function.go"] = { fg = colors.cyan },
-
-          -- Next.js stack
-          ["@tag.jsx"] = { fg = colors.red },
-          ["@tag.tsx"] = { fg = colors.red },
-          ["@constructor.jsx"] = { fg = colors.blue },
-          ["@constructor.tsx"] = { fg = colors.blue },
-
-          -- UI elements
-          LineNr = { fg = colors.fg_gutter },
-          CursorLineNr = { fg = colors.orange },
-          TermCursor = { fg = colors.bg, bg = colors.green },
-          NeoTreeDirectoryName = { fg = colors.fg_dark, bold = true },
-          NeoTreeDirectoryIcon = { fg = colors.blue },
-          TelescopePromptBorder = { fg = colors.blue },
-          TelescopeResultsBorder = { fg = colors.blue },
-          TelescopePreviewBorder = { fg = colors.blue },
-          TelescopeSelection = { bg = colors.bg_highlight, fg = colors.fg },
-          TelescopeMatching = { fg = colors.cyan, bold = true },
-
-          -- AI integrations
-          CmpItemKindCopilot = { fg = "#6CC644", bold = true },
-          CmpItemKindCodeium = { fg = "#09B6A2", bold = true },
-        }
-
-        -- Apply all overrides
-        for group, opts in pairs(override) do
-          highlights[group] = opts
-        end
-      end,
     },
   },
 
-  -- Commands
+  -- Commands and keymaps
   config = function()
     -- Theme toggle commands
     vim.api.nvim_create_user_command("ColorSchemeToggle", function()
-      local current = vim.g.colors_name
-      if current == "gruvbox-material" then
-        vim.cmd("colorscheme tokyonight")
-        vim.notify("Switched to TokyoNight theme", vim.log.levels.INFO)
-      else
-        vim.cmd("colorscheme gruvbox-material")
-        vim.notify("Switched to Gruvbox Material theme", vim.log.levels.INFO)
+      local themes = { "gruvbox-material", "everforest", "kanagawa", "tokyonight" }
+      local current = vim.g.colors_name or "gruvbox-material"
+
+      -- Find current theme index
+      local current_idx = 1
+      for i, theme in ipairs(themes) do
+        if current == theme then
+          current_idx = i
+          break
+        end
       end
+
+      -- Get next theme
+      local next_idx = current_idx % #themes + 1
+      local next_theme = themes[next_idx]
+
+      -- Apply theme
+      vim.cmd("colorscheme " .. next_theme)
+      vim.notify("Switched to " .. next_theme .. " theme", vim.log.levels.INFO)
     end, { desc = "Toggle between color schemes" })
 
     -- Transparency toggle command
     vim.api.nvim_create_user_command("ToggleTransparency", function()
-      if vim.g.colors_name == "gruvbox-material" then
+      local current = vim.g.colors_name or "gruvbox-material"
+
+      if current == "gruvbox-material" then
         vim.g.gruvbox_material_transparent_background = vim.g.gruvbox_material_transparent_background == 1 and 0 or 1
         vim.cmd("colorscheme gruvbox-material")
         vim.notify(
-          "Transparency "
-            .. (vim.g.gruvbox_material_transparent_background == 1 and "enabled" or "disabled")
-            .. " for Gruvbox Material",
+          "Transparency " .. (vim.g.gruvbox_material_transparent_background == 1 and "enabled" or "disabled"),
           vim.log.levels.INFO
         )
-      else
+      elseif current == "everforest" then
+        vim.g.everforest_transparent_background = vim.g.everforest_transparent_background == 1 and 0 or 1
+        vim.cmd("colorscheme everforest")
+        vim.notify(
+          "Transparency " .. (vim.g.everforest_transparent_background == 1 and "enabled" or "disabled"),
+          vim.log.levels.INFO
+        )
+      elseif current == "kanagawa" then
+        -- For kanagawa, we need to toggle the option and re-setup
+        local kanagawa = require("kanagawa")
+        local config = kanagawa.config
+        config.transparent = not config.transparent
+        kanagawa.setup(config)
+        vim.cmd("colorscheme kanagawa")
+        vim.notify("Transparency " .. (config.transparent and "enabled" or "disabled"), vim.log.levels.INFO)
+      elseif current == "tokyonight" then
         local tn = require("tokyonight")
         tn.setup(vim.tbl_extend("force", tn.options, { transparent = not tn.options.transparent }))
         vim.cmd("colorscheme tokyonight")
         vim.notify(
-          "Transparency "
-            .. (require("tokyonight").options.transparent and "enabled" or "disabled")
-            .. " for TokyoNight",
+          "Transparency " .. (require("tokyonight").options.transparent and "enabled" or "disabled"),
           vim.log.levels.INFO
         )
       end
     end, { desc = "Toggle background transparency" })
+
+    -- Set default colorscheme if not already set
+    if not vim.g.colors_name then
+      vim.cmd("colorscheme gruvbox-material")
+    end
 
     -- Keymaps
     vim.keymap.set("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle Colorscheme" })

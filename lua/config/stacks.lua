@@ -1,13 +1,22 @@
--- lua/config/stack.lua
--- Enhanced project stack detection and configuration
+-- lua/config/stacks.lua
+-- Enhanced and fail-safe stack detection for GOTH and Next.js
 
 local M = {}
 
 local fn = vim.fn
 local api = vim.api
 
+--- Safely load a module
+local function safe_require(mod)
+  local ok, result = pcall(require, mod)
+  if not ok then
+    return nil
+  end
+  return result
+end
+
 --- Checks if any file matching patterns exists in cwd
--- @param patterns string|table  file pattern(s) to check
+-- @param patterns string|table file pattern(s) to check
 -- @return boolean
 local function exists(patterns)
   if type(patterns) == "string" then
@@ -22,9 +31,9 @@ local function exists(patterns)
 end
 
 --- Search file contents for pattern
--- @param file string  file path
--- @param pattern string  pattern to search for
--- @param max_lines number  max lines to check
+-- @param file string file path
+-- @param pattern string pattern to search for
+-- @param max_lines number max lines to check
 -- @return boolean
 local function file_contains(file, pattern, max_lines)
   max_lines = max_lines or 100
@@ -38,7 +47,7 @@ local function file_contains(file, pattern, max_lines)
 end
 
 --- Detect current project stack with more accurate heuristics
--- @return string  "goth", "nextjs", or "both" or nil
+-- @return string "goth", "nextjs", "both" or nil
 function M.detect_stack()
   local stacks = {}
 
@@ -132,7 +141,7 @@ function M.detect_stack()
 end
 
 --- Apply configuration for a given stack
--- @param stack_name string|nil  Stack name or nil to auto-detect
+-- @param stack_name string|nil Stack name or nil to auto-detect
 function M.configure_stack(stack_name)
   local stack = stack_name or M.detect_stack() or ""
   local notify_icon = ""
@@ -156,8 +165,8 @@ function M.configure_stack(stack_name)
     api.nvim_notify(notify_icon .. "Stack focused on GOTH (Go/Templ/HTMX)", vim.log.levels.INFO, { title = "Stack" })
 
     -- Ensure gopls is configured optimally
-    local lspconfig_ok, lspconfig = pcall(require, "lspconfig")
-    if lspconfig_ok and lspconfig.gopls then
+    local lspconfig = safe_require("lspconfig")
+    if lspconfig and lspconfig.gopls then
       lspconfig.gopls.setup({
         settings = {
           gopls = {
@@ -199,18 +208,21 @@ function M.configure_stack(stack_name)
     end
 
     -- Set Templ LSP if available
-    if lspconfig_ok and lspconfig.templ then
+    if lspconfig and lspconfig.templ then
       lspconfig.templ.setup({})
     end
 
     -- Configure formatters for Go/Templ
     pcall(function()
-      require("conform").setup({
-        formatters_by_ft = {
-          go = { "gofumpt", "goimports" },
-          templ = { "templ" },
-        },
-      })
+      local conform = safe_require("conform")
+      if conform then
+        conform.setup({
+          formatters_by_ft = {
+            go = { "gofumpt", "goimports" },
+            templ = { "templ" },
+          },
+        })
+      end
     end)
   end
 
@@ -219,11 +231,32 @@ function M.configure_stack(stack_name)
     api.nvim_notify(notify_icon .. "Stack focused on Next.js", vim.log.levels.INFO, { title = "Stack" })
 
     -- Configure TypeScript LSP with optimal settings
-    local lspconfig_ok, lspconfig = pcall(require, "lspconfig")
-    if lspconfig_ok then
-      -- TypeScript configuration
-      if lspconfig.ts_ls then
-        lspconfig.ts_ls.setup({
+    local lspconfig = safe_require("lspconfig")
+    if lspconfig then
+      -- Prefer typescript-tools over tsserver if available
+      local has_ts_tools = pcall(require, "typescript-tools")
+
+      if has_ts_tools then
+        -- Use typescript-tools.nvim
+        pcall(function()
+          require("typescript-tools").setup({
+            settings = {
+              tsserver_plugins = { "@styled/typescript-styled-plugin" },
+              tsserver_file_preferences = {
+                includeInlayParameterNameHints = "all",
+                includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                includeInlayFunctionParameterTypeHints = true,
+                includeInlayVariableTypeHints = true,
+                includeInlayPropertyDeclarationTypeHints = true,
+                includeInlayFunctionLikeReturnTypeHints = true,
+                includeInlayEnumMemberValueHints = true,
+              },
+            },
+          })
+        end)
+      elseif lspconfig.tsserver then
+        -- Fallback to basic tsserver
+        lspconfig.tsserver.setup({
           settings = {
             typescript = {
               inlayHints = {
@@ -268,10 +301,10 @@ function M.configure_stack(stack_name)
             "javascriptreact",
             "typescript",
             "typescriptreact",
-            "templ",
+            "templ", -- Also for templ files
           },
           init_options = {
-            userLanguages = { templ = "html" },
+            userLanguages = { templ = "html" }, -- Treat templ as HTML
           },
         })
       end
@@ -284,18 +317,21 @@ function M.configure_stack(stack_name)
 
     -- Configure formatters for JS/TS
     pcall(function()
-      require("conform").setup({
-        formatters_by_ft = {
-          javascript = { "prettierd", "prettier" },
-          typescript = { "prettierd", "prettier" },
-          javascriptreact = { "prettierd", "prettier" },
-          typescriptreact = { "prettierd", "prettier" },
-          css = { "prettierd", "prettier" },
-          html = { "prettierd", "prettier" },
-          json = { "prettierd", "prettier" },
-          yaml = { "prettierd", "prettier" },
-        },
-      })
+      local conform = safe_require("conform")
+      if conform then
+        conform.setup({
+          formatters_by_ft = {
+            javascript = { "prettierd", "prettier" },
+            typescript = { "prettierd", "prettier" },
+            javascriptreact = { "prettierd", "prettier" },
+            typescriptreact = { "prettierd", "prettier" },
+            css = { "prettierd", "prettier" },
+            html = { "prettierd", "prettier" },
+            json = { "prettierd", "prettier" },
+            yaml = { "prettierd", "prettier" },
+          },
+        })
+      end
     end)
   end
 

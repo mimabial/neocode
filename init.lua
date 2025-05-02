@@ -1,4 +1,4 @@
--- init.lua – Neovim entrypoint with robust module loading and correct load order
+-- init.lua – Neovim entrypoint with robust module loading and error handling
 
 -- 0) Leader & feature flags
 vim.g.mapleader = " "
@@ -14,7 +14,7 @@ if vim.fn.has("nvim-0.8") == 0 then
   return
 end
 
--- 2) Helper for safe loads
+-- 2) Helper for safe module loading with error handling
 local function safe_require(mod)
   local ok, m = pcall(require, mod)
   if not ok then
@@ -24,60 +24,74 @@ local function safe_require(mod)
   return m
 end
 
--- 3) Load core settings
-local opts = safe_require("config.options")
-if opts and type(opts.setup) == "function" then
-  opts.setup()
+-- 3) Load core settings with error handling
+local function load_module(name, setup_fn)
+  local mod = safe_require(name)
+  if mod and type(mod[setup_fn]) == "function" then
+    local ok, err = pcall(mod[setup_fn])
+    if not ok then
+      vim.notify(string.format("[Error] Failed to run %s.%s: %s", name, setup_fn, err), vim.log.levels.ERROR)
+    end
+    return mod
+  end
+  return nil
 end
+
+-- Apply core options
+load_module("config.options", "setup")
 
 -- 4) Initialize plugin manager (Lazy.nvim)
 safe_require("config.lazy")
 -- config.lazy handles bootstrap and setup
 
 -- 5) Detect and configure tech stack
-local stack = safe_require("config.stacks")
-if stack and type(stack.setup) == "function" then
-  stack.setup()
-end
+load_module("config.stacks", "setup")
 
 -- 6) Load key mappings
-local keys = safe_require("config.keymaps")
-if keys and type(keys.setup) == "function" then
-  keys.setup()
-end
+load_module("config.keymaps", "setup")
 
 -- 7) Load autocommands
-local autocmds = safe_require("config.autocmds")
-if autocmds and type(autocmds.setup) == "function" then
-  autocmds.setup()
-end
+load_module("config.autocmds", "setup")
 
 -- 8) Load custom commands
-local cmds = safe_require("config.commands")
-if cmds and type(cmds.setup) == "function" then
-  cmds.setup()
-end
+load_module("config.commands", "setup")
 
 -- 9) Load stack-specific commands
-local stack_cmds = safe_require("config.stack_commands")
-if stack_cmds and type(stack_cmds.setup) == "function" then
-  stack_cmds.setup()
-end
+load_module("config.stack_commands", "setup")
 
 -- 10) Load diagnostics
-local diag = safe_require("config.diagnostics")
-if diag and type(diag.setup) == "function" then
-  diag.setup()
-end
+load_module("config.diagnostics", "setup")
 
 -- 11) Load LSP configuration
-local lsp = safe_require("config.lsp")
-if lsp and type(lsp.setup) == "function" then
-  lsp.setup()
-end
+load_module("config.lsp", "setup")
 
 -- 12) Load utility modules
 safe_require("utils.init")
 safe_require("utils.format")
 safe_require("utils.goth")
 safe_require("utils.extras")
+
+-- 13) Set default colorscheme if not already set
+if not vim.g.colors_name then
+  pcall(vim.cmd, "colorscheme gruvbox-material")
+end
+
+-- 14) Print startup success message
+vim.api.nvim_create_autocmd("User", {
+  pattern = "LazyVimStarted",
+  callback = function()
+    local lazy_stats = require("lazy").stats()
+    local ms = math.floor(lazy_stats.startuptime * 100 + 0.5) / 100
+    local v = vim.version()
+    local msg = string.format(
+      "⚡ Neovim v%d.%d.%d loaded %d/%d plugins in %.2fms",
+      v.major,
+      v.minor,
+      v.patch,
+      lazy_stats.loaded,
+      lazy_stats.count,
+      ms
+    )
+    vim.notify(msg, vim.log.levels.INFO, { title = "Neovim Started" })
+  end,
+})
