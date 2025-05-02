@@ -131,13 +131,13 @@ return {
 
       -- Toggle Codeium on/off
       vim.keymap.set("n", "<leader>ui", function()
-        if vim.g.codeium_enabled then
-          vim.cmd("CodeiumDisable")
-          vim.notify("󰧑 Codeium disabled", vim.log.levels.INFO, { title = "Codeium" })
-        else
-          vim.cmd("CodeiumEnable")
-          vim.notify("󰧑 Codeium enabled", vim.log.levels.INFO, { title = "Codeium" })
-        end
+        -- the colon here passes the module table in as `self`
+        local enabled = require("codeium.api"):toggle()
+        vim.notify(
+          ("󰧑 Codeium %s"):format(enabled and "enabled" or "disabled"),
+          vim.log.levels.INFO,
+          { title = "Codeium" }
+        )
       end, { desc = "Toggle Codeium" })
 
       -- Insert-mode keymaps

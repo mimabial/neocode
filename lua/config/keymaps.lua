@@ -193,16 +193,16 @@ function M.setup()
     end, { desc = "Toggle Copilot" })
   end
 
-  -- Codeium
-  if vim.fn.exists("g:codeium_enabled") == 1 then
-    map("n", "<leader>ui", function()
-      if vim.g.codeium_enabled then
-        vim.cmd("CodeiumDisable")
-      else
-        vim.cmd("CodeiumEnable")
-      end
-    end, { desc = "Toggle Codeium" })
-  end
+  -- -- Toggle Codeium on/off
+  -- vim.keymap.set("n", "<leader>ui", function()
+  --   -- the colon here passes the module table in as `self`
+  --   local enabled = require("codeium.api"):toggle()
+  --   vim.notify(
+  --     ("󰧑 Codeium %s"):format(enabled and "enabled" or "disabled"),
+  --     vim.log.levels.INFO,
+  --     { title = "Codeium" }
+  --   )
+  -- end, { desc = "Toggle Codeium" })
 
   -- ========================================
   -- Stack-specific keymaps
