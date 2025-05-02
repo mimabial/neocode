@@ -5,7 +5,7 @@ return {
     priority = 1000,
     config = function()
       -- Configure gruvbox-material
-      vim.g.gruvbox_material_background = "medium"
+      vim.g.gruvbox_material_background = "dark"
       vim.g.gruvbox_material_better_performance = 1
       vim.g.gruvbox_material_foreground = "material"
       vim.g.gruvbox_material_ui_contrast = "high"
@@ -121,6 +121,45 @@ return {
           vim.cmd([[highlight link htmlArg @attribute.htmx]])
         end,
       })
+
+      -- Theme toggle commands
+      vim.api.nvim_create_user_command("ColorSchemeToggle", function()
+        local current = vim.g.colors_name
+        if current == "gruvbox-material" then
+          vim.cmd("colorscheme tokyonight")
+          vim.notify("Switched to TokyoNight theme", vim.log.levels.INFO)
+        else
+          vim.cmd("colorscheme gruvbox-material")
+          vim.notify("Switched to Gruvbox Material theme", vim.log.levels.INFO)
+        end
+      end, { desc = "Toggle between Gruvbox Material and TokyoNight" })
+
+      vim.api.nvim_create_user_command("ToggleTransparency", function()
+        if vim.g.colors_name == "gruvbox-material" then
+          vim.g.gruvbox_material_transparent_background = vim.g.gruvbox_material_transparent_background == 1 and 0 or 1
+          vim.cmd("colorscheme gruvbox-material")
+          vim.notify(
+            "Transparency "
+              .. (vim.g.gruvbox_material_transparent_background == 1 and "enabled" or "disabled")
+              .. " for Gruvbox Material",
+            vim.log.levels.INFO
+          )
+        else
+          local tn = require("tokyonight")
+          tn.setup(vim.tbl_extend("force", tn.options, { transparent = not tn.options.transparent }))
+          vim.cmd("colorscheme tokyonight")
+          vim.notify(
+            "Transparency "
+              .. (require("tokyonight").options.transparent and "enabled" or "disabled")
+              .. " for TokyoNight",
+            vim.log.levels.INFO
+          )
+        end
+      end, { desc = "Toggle background transparency" })
+
+      -- Keymaps
+      vim.keymap.set("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle Colorscheme" })
+      vim.keymap.set("n", "<leader>uT", "<cmd>ToggleTransparency<cr>", { desc = "Toggle Transparency" })
     end,
   },
 
@@ -177,49 +216,3 @@ return {
     end,
   },
 
-  {
-    "nvim-lua/plenary.nvim",
-    lazy = true,
-    priority = 100,
-    config = function()
-      -- Theme toggle commands
-      vim.api.nvim_create_user_command("ColorSchemeToggle", function()
-        local current = vim.g.colors_name
-        if current == "gruvbox-material" then
-          vim.cmd("colorscheme tokyonight")
-          vim.notify("Switched to TokyoNight theme", vim.log.levels.INFO)
-        else
-          vim.cmd("colorscheme gruvbox-material")
-          vim.notify("Switched to Gruvbox Material theme", vim.log.levels.INFO)
-        end
-      end, { desc = "Toggle between Gruvbox Material and TokyoNight" })
-
-      vim.api.nvim_create_user_command("ToggleTransparency", function()
-        if vim.g.colors_name == "gruvbox-material" then
-          vim.g.gruvbox_material_transparent_background = vim.g.gruvbox_material_transparent_background == 1 and 0 or 1
-          vim.cmd("colorscheme gruvbox-material")
-          vim.notify(
-            "Transparency "
-              .. (vim.g.gruvbox_material_transparent_background == 1 and "enabled" or "disabled")
-              .. " for Gruvbox Material",
-            vim.log.levels.INFO
-          )
-        else
-          local tn = require("tokyonight")
-          tn.setup(vim.tbl_extend("force", tn.options, { transparent = not tn.options.transparent }))
-          vim.cmd("colorscheme tokyonight")
-          vim.notify(
-            "Transparency "
-              .. (require("tokyonight").options.transparent and "enabled" or "disabled")
-              .. " for TokyoNight",
-            vim.log.levels.INFO
-          )
-        end
-      end, { desc = "Toggle background transparency" })
-
-      -- Keymaps
-      vim.keymap.set("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle Colorscheme" })
-      vim.keymap.set("n", "<leader>uT", "<cmd>ToggleTransparency<cr>", { desc = "Toggle Transparency" })
-    end,
-  },
-}

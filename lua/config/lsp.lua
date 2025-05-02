@@ -32,18 +32,6 @@ function M.setup()
   require("mason").setup()
   require("mason-lspconfig").setup({ ensure_installed = {}, automatic_installation = true })
 
-  -- Null-ls setup for formatters/linters
-  local null_ls = require("null-ls")
-  null_ls.setup({
-    on_attach = on_attach,
-    capabilities = M.capabilities,
-    sources = {
-      null_ls.builtins.formatting.prettier,
-      null_ls.builtins.diagnostics.eslint,
-      null_ls.builtins.formatting.stylua,
-    },
-  })
-
   -- Setup each server
   local lspconfig = require("lspconfig")
   local servers = { "pyright", "tsserver", "gopls", "rust_analyzer", "clangd" }

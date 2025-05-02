@@ -216,7 +216,12 @@ return {
     end,
 
     config = function(_, opts)
-      local cmp = require("cmp")
+      local cmp_ok, cmp = pcall(require, "cmp")
+      if not cmp_ok then
+        vim.notify("nvim-cmp could not be loaded", vim.log.levels.ERROR)
+        return
+      end
+      
       -- Apply base setup
       cmp.setup(opts)
 

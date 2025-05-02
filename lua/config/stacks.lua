@@ -23,14 +23,30 @@ end
 --- Detect current project stack
 -- @return string|nil  "goth", "nextjs", "react" or nil
 function M.detect_stack()
-  -- GOTH: Go + optional templ files
-  if exists({ "*.go", "go.mod" }) then
-    -- presence of templ confirms GOTH stack, but Go alone also implies GOTH
-    return "goth"
+  -- GOTH stack with multiple indicators
+  if exists({ "*.go", "go.mod", "go.sum" }) then
+    if exists({ "*.templ", "*htmx*", "*components*" }) then
+      return "goth"
+    end
+
+    -- Check Go files for HTMX/Templ imports
+    local gofiles = fn.glob("*.go", false, true)
+    for _, file in ipairs(gofiles) do
+      local content = table.concat(fn.readfile(file, "", 50), "\n")
+      if content:match("html/template") or content:match("htmx") then
+        return "goth"
+      end
+    end
+
+    return "goth" -- Fallback - Go files present
   end
 
-  -- Next.js
+  -- Next.js detection with multiple checks
   if exists({ "next.config.js", "next.config.mjs" }) then
+    return "nextjs"
+  end
+
+  if exists("pages") and exists("pages/api") then
     return "nextjs"
   end
 

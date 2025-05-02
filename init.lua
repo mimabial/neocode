@@ -14,20 +14,7 @@ if vim.fn.has("nvim-0.8") == 0 then
   return
 end
 
--- 2) Bootstrap lazy.nvim
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
-  vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    "https://github.com/folke/lazy.nvim.git",
-    lazypath,
-  })
-end
-vim.opt.rtp:prepend(lazypath)
-
--- 3) Helper for safe loads
+-- 2) Helper for safe loads
 local function safe_require(mod)
   local ok, m = pcall(require, mod)
   if not ok then
@@ -35,6 +22,12 @@ local function safe_require(mod)
     return nil
   end
   return m
+end
+
+-- 3) Load lazy.nvim via config.lazy instead of bootstrapping twice
+local lazy_ok = safe_require("config.lazy")
+if not lazy_ok then
+  vim.notify("Failed to load lazy.nvim. Some features may not work.", vim.log.levels.ERROR)
 end
 
 -- 4) Load core settings
@@ -82,9 +75,15 @@ if lsp and type(lsp.setup) == "function" then
   lsp.setup()
 end
 
-require("utils.extras")
-require("utils.format")
-require("utils.goth")
-require("utils.utils")
+-- 11) Load options
+local opts = safe_require("config.options")
+if opts and type(opts.setup) == "function" then
+  opts.setup()
+end
+
+safe_require("utils.extras")
+safe_require("utils.format")
+safe_require("utils.goth")
+safe_require("utils.utils")
 
 -- End of init.lua

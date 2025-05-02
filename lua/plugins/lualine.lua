@@ -68,7 +68,8 @@ return {
         function()
           local names = {}
           for _, c in ipairs(vim.lsp.get_clients({ bufnr = 0 })) do
-            if c.name ~= "copilot" and c.name ~= "null-ls" then
+                    if c.name ~= "copilot" and 
+           c.name ~= "conform" and c.name ~= "nvim-lint" then
               table.insert(names, c.name)
             end
           end

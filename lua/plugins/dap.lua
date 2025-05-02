@@ -119,7 +119,7 @@ return {
     { "<F12>", dap_step_out, desc = "Debug: Step Out" },
     { "<leader>du", dapui_toggle, desc = "Toggle UI" },
     { "<leader>de", dapui_eval, desc = "Evaluate" },
-    { "<leader>dG", debug_goth_app, desc = "Debug GOTH App" },
-    { "<leader>dN", debug_nextjs_app, desc = "Debug Next.js App" },
+    -- { "<leader>dG", debug_goth_app, desc = "Debug GOTH App" },
+    -- { "<leader>dN", debug_nextjs_app, desc = "Debug Next.js App" },
   },
 }
