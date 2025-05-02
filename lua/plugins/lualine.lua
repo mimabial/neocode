@@ -68,8 +68,7 @@ return {
         function()
           local names = {}
           for _, c in ipairs(vim.lsp.get_clients({ bufnr = 0 })) do
-                    if c.name ~= "copilot" and 
-           c.name ~= "conform" and c.name ~= "nvim-lint" then
+            if c.name ~= "copilot" and c.name ~= "conform" and c.name ~= "nvim-lint" then
               table.insert(names, c.name)
             end
           end
@@ -101,11 +100,24 @@ return {
     end
 
     local function search_count()
-      if not pcall(require, "hlslens") or vim.g.hlslens_disabled then
-        return ""
+      -- Try hlslens if available
+      local hlslens_ok, hlslens = pcall(require, "hlslens")
+      if hlslens_ok and not vim.g.hlslens_disabled then
+        -- Use hlslens' exportData function if it exists
+        if hlslens.exportData then
+          local data = hlslens.exportData()
+          if data and data.total_count > 0 then
+            return string.format("[%d/%d]", data.nearest_index or 1, data.total_count)
+          end
+        end
       end
-      local info = require("hlslens").get_lens_info_fpath()
-      return info and info.total_matches > 0 and string.format("[%d/%d]", info.nearest_idx, info.total_matches) or ""
+
+      -- Fall back to vanilla vim searchcount
+      local sc = vim.fn.searchcount({ maxcount = 999, timeout = 500 })
+      if vim.v.hlsearch == 1 and sc.total > 0 then
+        return string.format("[%d/%d]", sc.current, sc.total)
+      end
+      return ""
     end
 
     return {
