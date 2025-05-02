@@ -116,9 +116,19 @@ return {
     opts = {
       method = "getCompletionsCycling",
       formatters = {
-        label = require("copilot_cmp.format").format_label_with_indent,
-        insert_text = require("copilot_cmp.format").format_insert_text,
-        preview = require("copilot_cmp.format").deindent,
+        label = function(suggestion)
+          local label = suggestion.displayText or ""
+          if vim.startswith(label, "copilot:") then
+            label = label:sub(9)
+          end
+          return " " .. label
+        end,
+        insert_text = function(suggestion)
+          return suggestion.insertText
+        end,
+        preview = function(suggestion)
+          return suggestion.displayText
+        end,
       },
       event_type = "confirm_done",
     },
@@ -207,19 +217,23 @@ return {
       -- Insert mode keymaps
       local keymaps = {
         ["<C-g>"] = { vim.fn["codeium#Accept"], "Accept" },
-        ["<C-;>"] = { vim.fn["codeium#CycleCompletions"], "Next completion", 1 },
-        ["<C-,>"] = { vim.fn["codeium#CycleCompletions"], "Prev completion", -1 },
+        ["<C-;>"] = {
+          function()
+            return vim.fn["codeium#CycleCompletions"](1)
+          end,
+          "Next completion",
+        },
+        ["<C-,>"] = {
+          function()
+            return vim.fn["codeium#CycleCompletions"](-1)
+          end,
+          "Prev completion",
+        },
         ["<C-x>"] = { vim.fn["codeium#Clear"], "Clear suggestions" },
       }
 
       for key, mapping in pairs(keymaps) do
-        vim.keymap.set("i", key, function()
-          if #mapping > 2 then
-            return mapping[1](mapping[3])
-          else
-            return mapping[1]()
-          end
-        end, { expr = true, desc = "Codeium: " .. mapping[2] })
+        vim.keymap.set("i", key, mapping[1], { expr = true, desc = "Codeium: " .. mapping[2] })
       end
     end,
   },
