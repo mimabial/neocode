@@ -1,342 +1,142 @@
+-- lua/plugins/lualine.lua
+-- Refactored lualine.nvim setup with cleaner utility integration
 return {
   "nvim-lualine/lualine.nvim",
   event = "VeryLazy",
-  priority = 75, -- After icons (100) and Git (60)
+  priority = 75,
   dependencies = {
-    {
-      "nvim-tree/nvim-web-devicons",
-      priority = 100,
-    },
-    {
-      "lewis6991/gitsigns.nvim",
-      priority = 60,
-    },
+    "nvim-tree/nvim-web-devicons",
+    "lewis6991/gitsigns.nvim",
   },
+
   init = function()
+    -- Preserve laststatus and hide until ready
     vim.g.lualine_laststatus = vim.o.laststatus
     if vim.fn.argc(-1) > 0 then
-      -- set an empty statusline till lualine loads
       vim.o.statusline = " "
     else
-      -- hide the statusline on the starter page
       vim.o.laststatus = 0
     end
   end,
+
   opts = function()
-    -- Define icons for different parts of the statusline
+    local fn = vim.fn
+    local utils = require("config.utils")
     local icons = {
-      diagnostics = {
-        Error = " ",
-        Warn = " ",
-        Info = " ",
-        Hint = " ",
-      },
-      git = {
-        added = "+",
-        modified = "~",
-        removed = "-",
-      },
-      diff = {
-        add = " ",
-        modified = " ",
-        remove = " ",
-      },
-      stack = {
-        goth = "󰟓",
-        nextjs = "󰟔",
-      },
+      diagnostics = { Error = "", Warn = "", Info = "", Hint = "" },
+      git = { added = "+", modified = "~", removed = "-" },
+      stack = { goth = "󰟓 GOTH", nextjs = "󰟔 NEXT" },
     }
 
-    -- Function to get project root directory
     local function root_dir()
       return {
         function()
-          local root = vim.fn.fnamemodify(vim.fn.getcwd(), ":~")
-          if vim.fn.strwidth(root) > 40 then
-            root = vim.fn.pathshorten(root)
-          end
-          return "󰉋 " .. root
+          local cwd = vim.fn.getcwd()
+          local disp = cwd:sub(1, #vim.env.HOME) == vim.env.HOME and "~" .. cwd:sub(#vim.env.HOME + 1) or cwd
+          return "󰉋 " .. (disp:gsub(fn.pathshorten(disp)))
         end,
         cond = function()
           return not vim.b.no_root_dir
         end,
+        color = { fg = utils.get_hl_color("Directory", "fg", "#abb2bf"), bold = true },
       }
     end
 
-    -- Function to get pretty file path
     local function pretty_path()
       return {
         function()
-          local path = vim.fn.expand("%:p")
-          if path == "" then
-            return ""
-          end
-          local filename = vim.fn.expand("%:t")
-          local relative_path = vim.fn.fnamemodify(path, ":~:.:h")
-          if relative_path == "." then
-            return filename
-          end
-          return relative_path .. "/" .. filename
+          local f = vim.fn.expand("%:p:~:.")
+          return vim.fn.fnamemodify(f, ":~:.:%:h") == "." and vim.fn.expand("%:t") or f
+        end,
+        cond = function()
+          return vim.fn.expand("%:t") ~= ""
         end,
       }
     end
 
-    -- Function to get color for specific highlight groups
-    local function get_highlight_color(name)
-      local hl = vim.api.nvim_get_hl(0, { name = name })
-      return hl and hl.fg and string.format("#%06x", hl.fg) or "NONE"
-    end
-
-    -- Stack badge component
     local function stack_badge()
-      local current_stack = vim.g.current_stack or ""
-      if current_stack == "goth" then
-        return icons.stack.goth .. " GOTH"
-      elseif current_stack == "nextjs" then
-        return icons.stack.nextjs .. " NEXT"
-      end
-      return ""
+      return {
+        function()
+          return icons.stack[vim.g.current_stack] or ""
+        end,
+        color = { fg = utils.get_hl_color("Identifier", "fg", "#d19a66"), bold = true },
+      }
     end
 
-    -- LSP status component
-    local function lsp_server()
-      local buf_clients = vim.lsp.get_clients({ bufnr = 0 })
-      if #buf_clients == 0 then
-        return ""
-      end
-
-      -- Filter out clients like copilot that don't need to be displayed
-      local client_names = {}
-      for _, client in pairs(buf_clients) do
-        if client.name ~= "copilot" and client.name ~= "null-ls" then
-          table.insert(client_names, client.name)
-        end
-      end
-
-      return next(client_names) and " " .. table.concat(client_names, ", ") or ""
+    local function lsp_servers()
+      return {
+        function()
+          local names = {}
+          for _, c in ipairs(vim.lsp.get_clients({ bufnr = 0 })) do
+            if c.name ~= "copilot" and c.name ~= "null-ls" then
+              table.insert(names, c.name)
+            end
+          end
+          return names[1] and table.concat(names, ", ") or ""
+        end,
+        icon = " ",
+        cond = function()
+          return #vim.lsp.get_clients({ bufnr = 0 }) > 0
+        end,
+      }
     end
 
-    -- File size function
     local function file_size()
-      local function format_file_size(size)
-        local units = { "B", "K", "M", "G" }
-        local unit_index = 1
-        while size > 1024 and unit_index < #units do
-          size = size / 1024
-          unit_index = unit_index + 1
-        end
-        return string.format("%.1f%s", size, units[unit_index])
-      end
-
-      local file = vim.fn.expand("%:p")
-      if string.len(file) == 0 or vim.bo.buftype ~= "" then
+      local f = vim.fn.expand("%:p")
+      if f == "" or vim.bo.buftype ~= "" then
         return ""
       end
-      local size = vim.fn.getfsize(file)
+      local size = vim.fn.getfsize(f)
       if size <= 0 then
         return ""
       end
-      return format_file_size(size)
+      local units = { "B", "K", "M", "G" }
+      local idx = 1
+      while size > 1024 and idx < #units do
+        size = size / 1024
+        idx = idx + 1
+      end
+      return string.format("%.1f%s", size, units[idx])
     end
 
-    -- Search count for statusline
     local function search_count()
-      if not package.loaded["hlslens"] or vim.g.hlslens_disabled then
+      if not pcall(require, "hlslens") or vim.g.hlslens_disabled then
         return ""
       end
-
-      local lens = require("hlslens").get_lens_info_fpath()
-      if not lens or lens.total_matches == 0 then
-        return ""
-      end
-
-      return string.format("[%d/%d]", lens.nearest_idx, lens.total_matches)
+      local info = require("hlslens").get_lens_info_fpath()
+      return info and info.total_matches > 0 and string.format("[%d/%d]", info.nearest_idx, info.total_matches) or ""
     end
 
     return {
       options = {
         theme = "gruvbox-material",
         globalstatus = vim.o.laststatus == 3,
-        disabled_filetypes = {
-          statusline = { "dashboard", "alpha", "starter", "neo-tree", "lazy", "oil" },
-          winbar = { "dashboard", "alpha", "starter", "neo-tree", "lazy", "oil" },
-        },
-        component_separators = { left = "", right = "" },
-        section_separators = { left = "", right = "" },
-        refresh = {
-          statusline = 500,
-          tabline = 1000,
-          winbar = 1000,
-        },
+        component_separators = "",
+        section_separators = "",
+        disabled_filetypes = { statusline = { "alpha", "dashboard", "neo-tree", "oil" } },
       },
       sections = {
-        lualine_a = {
-          { "mode", separator = { left = "", right = "" }, right_padding = 2 },
-        },
-        lualine_b = {
-          { "branch", icon = "" },
-          {
-            "diff",
-            symbols = {
-              added = icons.diff.add,
-              modified = icons.diff.modified,
-              removed = icons.diff.remove,
-            },
-            diff_color = {
-              added = { fg = get_highlight_color("GitSignsAdd") },
-              modified = { fg = get_highlight_color("GitSignsChange") },
-              removed = { fg = get_highlight_color("GitSignsDelete") },
-            },
-          },
-        },
-        lualine_c = {
-          root_dir(),
-          {
-            "diagnostics",
-            symbols = {
-              error = icons.diagnostics.Error,
-              warn = icons.diagnostics.Warn,
-              info = icons.diagnostics.Info,
-              hint = icons.diagnostics.Hint,
-            },
-            colored = true,
-          },
-          { "filetype", icon_only = true, separator = "", padding = { left = 1, right = 0 } },
-          pretty_path(),
-          { stack_badge, color = { fg = "#a89984", gui = "bold" } },
-        },
-        lualine_x = {
-          -- Noice command and mode status
-          {
-            function()
-              return require("noice").api.status.command.get()
-            end,
-            cond = function()
-              return package.loaded["noice"] and require("noice").api.status.command.has()
-            end,
-            color = function()
-              return { fg = get_highlight_color("Statement") }
-            end,
-          },
-          {
-            function()
-              return require("noice").api.status.mode.get()
-            end,
-            cond = function()
-              return package.loaded["noice"] and require("noice").api.status.mode.has()
-            end,
-            color = function()
-              return { fg = get_highlight_color("Constant") }
-            end,
-          },
-          -- DAP status
-          {
-            function()
-              return "  " .. require("dap").status()
-            end,
-            cond = function()
-              return package.loaded["dap"] and require("dap").status() ~= ""
-            end,
-            color = function()
-              return { fg = get_highlight_color("Debug") }
-            end,
-          },
-          -- Lazy updates
-          {
-            function()
-              local lazy_status = require("lazy.status")
-              return lazy_status.has_updates() and lazy_status.updates() or ""
-            end,
-            cond = function()
-              return package.loaded["lazy.status"] and require("lazy.status").has_updates()
-            end,
-            color = function()
-              return { fg = get_highlight_color("Special") }
-            end,
-          },
-          -- LSP server
-          { lsp_server, icon = " LSP:", color = { fg = "#7daea3" } },
-          -- Search count
-          { search_count, icon = "󰍉" },
-          -- File size
-          { file_size },
-          -- Encoding & Format
-          {
-            "encoding",
-            cond = function()
-              return vim.bo.fileencoding ~= "utf-8"
-            end,
-          },
-          {
-            "fileformat",
-            icons_enabled = true,
-            symbols = {
-              unix = "LF",
-              dos = "CRLF",
-              mac = "CR",
-            },
-            cond = function()
-              return vim.bo.fileformat ~= "unix"
-            end,
-          },
-        },
-        lualine_y = {
-          { "progress", separator = " ", padding = { left = 1, right = 0 } },
-          { "location", padding = { left = 0, right = 1 } },
-        },
-        lualine_z = {
-          {
-            function()
-              return " " .. os.date("%H:%M")
-            end,
-            separator = { left = "", right = "" },
-            left_padding = 2,
-          },
-        },
+        lualine_a = { { "mode", right_padding = 2 } },
+        lualine_b = { { "branch" }, { "diff", symbols = icons.git } },
+        lualine_c = { root_dir(), { "diagnostics", symbols = icons.diagnostics }, pretty_path(), stack_badge() },
+        lualine_x = { lsp_servers(), file_size(), search_count() },
+        lualine_y = { { "filename", path = 1 } },
+        lualine_z = { { "location" }, { "%H:%M" } },
       },
       inactive_sections = {
-        lualine_a = {},
-        lualine_b = {},
         lualine_c = { "filename" },
         lualine_x = { "location" },
-        lualine_y = {},
-        lualine_z = {},
       },
-      tabline = {},
       extensions = { "neo-tree", "lazy", "trouble", "toggleterm", "quickfix", "oil" },
     }
   end,
+
   config = function(_, opts)
     require("lualine").setup(opts)
-
-    -- Set up special filetype handlers
-    vim.api.nvim_create_autocmd("FileType", {
-      pattern = { "neo-tree", "alpha", "dashboard", "starter", "lazy", "mason", "oil" },
-      callback = function()
-        vim.opt_local.statusline = nil
-      end,
-    })
-
-    -- Make sure lualine reloads when colorscheme changes
+    -- restore statusline on colorscheme changes
     vim.api.nvim_create_autocmd("ColorScheme", {
       callback = function()
-        -- Try to apply colorscheme specifically
-        local theme = vim.g.colors_name
-        if theme == "gruvbox-material" or theme == "tokyonight" then
-          require("lualine").setup({
-            options = {
-              theme = theme,
-              -- Keep other options the same
-              globalstatus = vim.o.laststatus == 3,
-              disabled_filetypes = opts.options.disabled_filetypes,
-              component_separators = opts.options.component_separators,
-              section_separators = opts.options.section_separators,
-            },
-          })
-        else
-          -- Reload with auto theme
-          require("lualine").setup(opts)
-        end
+        require("lualine").refresh()
       end,
     })
   end,

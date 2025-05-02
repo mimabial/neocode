@@ -1,7 +1,9 @@
+-- lua/plugins/notify.lua
+-- Refactored nvim-notify plugin specification with streamlined setup and utility API
 return {
   "rcarriga/nvim-notify",
-  event = "VeryLazy", -- Load earlier to ensure it's available for plugins that need it
-  priority = 90,      -- High priority to ensure it loads before depending plugins
+  event = "VeryLazy",
+  priority = 90,
   keys = {
     {
       "<leader>un",
@@ -19,74 +21,56 @@ return {
     max_width = function()
       return math.floor(vim.o.columns * 0.75)
     end,
-    render = "default", -- Options: default, minimal, simple, compact
-    stages = "fade", -- Options: fade, slide, fade_in_slide_out, static
+    render = "default",
+    stages = "fade",
     top_down = true,
     background_colour = "#000000",
-    icons = {
-      ERROR = "",
-      WARN = "",
-      INFO = "",
-      DEBUG = "",
-      TRACE = "✎",
-    },
+    icons = { ERROR = "", WARN = "", INFO = "", DEBUG = "", TRACE = "✎" },
     on_open = function(win)
+      -- ensure on top
       vim.api.nvim_win_set_config(win, { zindex = 100 })
-      -- Set window options for better look in gruvbox-material
+      -- apply highlights
       vim.api.nvim_win_set_option(win, "winhighlight", "Normal:NotifyBackground,FloatBorder:NotifyBorder")
-      
-      -- Prevent closing notifications with ESC when in insert mode
+      -- block ESC in insert mode
       if vim.fn.mode() == "i" then
-        vim.keymap.set("n", "<Esc>", function() end, { buffer = vim.fn.bufnr(), noremap = true, silent = true, nowait = true })
+        local buf = vim.api.nvim_win_get_buf(win)
+        vim.keymap.set("n", "<Esc>", function() end, { buffer = buf, silent = true, nowait = true })
       end
     end,
-    on_close = function() end,
+    on_close = nil,
   },
   init = function()
-    -- When noice is not enabled, install notify on VeryLazy
+    -- ensure notify is loaded if noice.nvim isn't used
     if not require("lazy.core.config").spec.plugins["noice.nvim"] then
       require("lazy").load({ plugins = { "nvim-notify" } })
     end
-    
-    -- Set the highlight colors for notifications to match gruvbox-material
+    -- recolor on colorscheme
     vim.api.nvim_create_autocmd("ColorScheme", {
+      group = vim.api.nvim_create_augroup("NotifyHighlight", { clear = true }),
       callback = function()
-        -- Set color scheme specific highlight groups for notify
-        local success_bg = vim.api.nvim_get_hl(0, { name = "GruvboxGreen" }).fg or "#89b482"
-        local error_bg = vim.api.nvim_get_hl(0, { name = "GruvboxRed" }).fg or "#ea6962"
-        local warn_bg = vim.api.nvim_get_hl(0, { name = "GruvboxYellow" }).fg or "#d8a657"
-        local info_bg = vim.api.nvim_get_hl(0, { name = "GruvboxBlue" }).fg or "#7daea3"
-        local debug_bg = vim.api.nvim_get_hl(0, { name = "GruvboxPurple" }).fg or "#d3869b"
-        local trace_bg = vim.api.nvim_get_hl(0, { name = "GruvboxAqua" }).fg or "#89b482"
-        
-        -- Create better looking notifications with gruvbox colors
+        -- map severities to Gruvbox groups
+        local map = {
+          Error = "GruvboxRed",
+          Warn = "GruvboxYellow",
+          Info = "GruvboxBlue",
+          Debug = "GruvboxPurple",
+          Trace = "GruvboxAqua",
+        }
+        -- base highlights
         vim.api.nvim_set_hl(0, "NotifyBackground", { bg = "#1d2021" })
         vim.api.nvim_set_hl(0, "NotifyBorder", { fg = "#504945" })
-        
-        -- Error notifications
-        vim.api.nvim_set_hl(0, "NotifyERRORBorder", { fg = error_bg })
-        vim.api.nvim_set_hl(0, "NotifyERRORIcon", { fg = error_bg })
-        vim.api.nvim_set_hl(0, "NotifyERRORTitle", { fg = error_bg })
-        
-        -- Warning notifications
-        vim.api.nvim_set_hl(0, "NotifyWARNBorder", { fg = warn_bg })
-        vim.api.nvim_set_hl(0, "NotifyWARNIcon", { fg = warn_bg })
-        vim.api.nvim_set_hl(0, "NotifyWARNTitle", { fg = warn_bg })
-        
-        -- Info notifications
-        vim.api.nvim_set_hl(0, "NotifyINFOBorder", { fg = info_bg })
-        vim.api.nvim_set_hl(0, "NotifyINFOIcon", { fg = info_bg })
-        vim.api.nvim_set_hl(0, "NotifyINFOTitle", { fg = info_bg })
-        
-        -- Debug notifications
-        vim.api.nvim_set_hl(0, "NotifyDEBUGBorder", { fg = debug_bg })
-        vim.api.nvim_set_hl(0, "NotifyDEBUGIcon", { fg = debug_bg })
-        vim.api.nvim_set_hl(0, "NotifyDEBUGTitle", { fg = debug_bg })
-        
-        -- Trace notifications
-        vim.api.nvim_set_hl(0, "NotifyTRACEBorder", { fg = trace_bg })
-        vim.api.nvim_set_hl(0, "NotifyTRACEIcon", { fg = trace_bg })
-        vim.api.nvim_set_hl(0, "NotifyTRACETitle", { fg = trace_bg })
+        -- severity highlights
+        for sev, grp in pairs(map) do
+          -- use nvim_get_hl with name to get highlight table
+          local ok, sg = pcall(vim.api.nvim_get_hl, 0, { name = grp })
+          local col = "#ffffff"
+          if ok and sg and sg.foreground then
+            col = string.format("#%06x", sg.foreground)
+          end
+          for _, t in ipairs({ "Border", "Icon", "Title" }) do
+            vim.api.nvim_set_hl(0, "Notify" .. sev .. t, { fg = col })
+          end
+        end
       end,
     })
   end,
@@ -94,55 +78,24 @@ return {
     local notify = require("notify")
     notify.setup(opts)
     vim.notify = notify
-    
-    -- Create special utility functions for notifications
-    local utils = {}
-    
-    -- Custom notification function with title support
-    utils.notify = function(message, level, opts)
-      opts = opts or {}
-      level = level or vim.log.levels.INFO
-      
-      -- Allow passing a table of messages
-      if type(message) == "table" then
-        message = table.concat(message, "\n")
+
+    -- Global notification utilities
+    local N = {}
+    N.dismiss = function()
+      notify.dismiss({ silent = true, pending = true })
+    end
+    N.notify = function(msg, level, cfg)
+      cfg = cfg or {}
+      if type(msg) == "table" then
+        msg = table.concat(msg, "\n")
       end
-      
-      -- Create a title if specified
-      local title = opts.title
-      if title then
-        message = title .. "\n" .. message
+      notify(msg, level or vim.log.levels.INFO, cfg)
+    end
+    for _, lvl in ipairs({ "info", "warn", "error", "debug", "trace" }) do
+      N[lvl] = function(msg, cfg)
+        N.notify(msg, vim.log.levels[string.upper(lvl)], cfg)
       end
-      
-      -- Set timeout from opts
-      local timeout = opts.timeout or 3000
-      
-      -- Show notification
-      notify(message, level, {
-        title = opts.title,
-        timeout = timeout,
-        icon = opts.icon,
-      })
     end
-    
-    -- Helper functions for different notification types
-    utils.info = function(message, opts)
-      utils.notify(message, vim.log.levels.INFO, opts)
-    end
-    
-    utils.warn = function(message, opts)
-      utils.notify(message, vim.log.levels.WARN, opts)
-    end
-    
-    utils.error = function(message, opts)
-      utils.notify(message, vim.log.levels.ERROR, opts)
-    end
-    
-    utils.debug = function(message, opts)
-      utils.notify(message, vim.log.levels.DEBUG, opts)
-    end
-    
-    -- Make these functions globally available
-    _G.NotifyUtils = utils
+    _G.N = N
   end,
 }

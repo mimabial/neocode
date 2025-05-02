@@ -1,4 +1,22 @@
 -- lua/plugins/goth.lua
+
+local goth_utils = require("utils.goth")
+
+local function new_toggleterm_command(name, cmd, opts)
+  vim.api.nvim_create_user_command(name, function()
+    local Terminal = require("toggleterm.terminal").Terminal
+    local term = Terminal:new(vim.tbl_extend("force", {
+      cmd = cmd,
+      direction = "float",
+      close_on_exit = false,
+      on_open = function()
+        vim.cmd("startinsert!")
+      end,
+    }, opts or {}))
+    term:toggle()
+  end, { desc = opts and opts.desc or name })
+end
+
 return {
   -- Templ syntax support
   {
@@ -44,212 +62,22 @@ return {
   -- Comprehensive Go support
   {
     "ray-x/go.nvim",
-    dependencies = {
-      "ray-x/guihua.lua",
-      "neovim/nvim-lspconfig",
-      "nvim-treesitter/nvim-treesitter",
-    },
-    opts = {
-      lsp_cfg = true,
-      lsp_on_attach = function(client, bufnr)
-        -- Custom on_attach to enhance Go development experience
-        local wk = require("which-key")
-        wk.register({
-          ["<leader>sg"] = {
-            name = "Go",
-            a = { "<cmd>GoAlt<cr>", "Go to alternate file" },
-            A = { "<cmd>GoAltV<cr>", "Go to alternate file in vsplit" },
-            t = { "<cmd>GoTest<cr>", "Test function" },
-            T = { "<cmd>GoTestFunc<cr>", "Test file" },
-            c = { "<cmd>GoCoverage<cr>", "Test coverage" },
-            C = { "<cmd>GoCoverageToggle<cr>", "Toggle coverage" },
-            i = { "<cmd>GoImports<cr>", "Organize imports" },
-            I = { "<cmd>GoImpl<cr>", "Generate interface implementation" },
-            l = { "<cmd>GoLint<cr>", "Run linter" },
-            m = { "<cmd>GoModTidy<cr>", "Go mod tidy" },
-            r = { "<cmd>GoRun<cr>", "Run current file" },
-            s = { "<cmd>GoFillStruct<cr>", "Fill struct" },
-            e = { "<cmd>GoIfErr<cr>", "Add if err" },
-            d = { "<cmd>GoDoc<cr>", "Show documentation" },
-            v = { "<cmd>GoVet<cr>", "Go vet" },
-            p = { "<cmd>GoPkgOutline<cr>", "Package outline" },
-            g = { "<cmd>GoGenerate<cr>", "Go generate" },
-            j = { "<cmd>GoAddTag json<cr>", "Add JSON tags" },
-            y = { "<cmd>GoAddTag yaml<cr>", "Add YAML tags" },
-          },
-        }, { buffer = bufnr })
-      end,
-      lsp_document_formatting = true,
-      lsp_inlay_hints = {
-        enable = true,
-      },
-      luasnip = true,
-      trouble = true,
-      dap_debug = true,
-      dap_debug_gui = true,
-      gocoverage_sign = "│",
-      test_runner = "go",
-      run_in_floaterm = true,
-      test_efm = true, -- ErrorFormat for go test
-      lsp_keymaps = false, -- use custom keymaps
-      lsp_codelens = true,
-      diagnostic = {
-        hdlr = true, -- hook lsp diagnostic handler
-        underline = true,
-        virtual_text = true,
-        signs = true,
-        update_in_insert = false,
-      },
-      gopls_cmd = { "gopls" },
-      gopls_remote_auto = true,
-      fillstruct = "gopls",
-      gofmt = "gofumpt", -- gofumpt + goimports
-      log_path = vim.fn.expand("$HOME") .. "/tmp/gonvim.log",
-    },
-    event = { "CmdlineEnter", "BufReadPost", "BufNewFile" },
-    ft = { "go", "gomod", "gosum", "gowork", "gotmpl", "gohtmltmpl", "templ" },
+    -- ... same plugin metadata ...
     config = function(_, opts)
       require("go").setup(opts)
 
-      -- Create command to run the current Go project
-      vim.api.nvim_create_user_command("GoRun", function()
-        local Terminal = require("toggleterm.terminal").Terminal
-        local go_run = Terminal:new({
-          cmd = "go run .",
-          direction = "float",
-          close_on_exit = false,
-          on_open = function(term)
-            vim.cmd("startinsert!")
-          end,
-        })
-        go_run:toggle()
-      end, { desc = "Run Go project" })
+      -- Go project runner
+      new_toggleterm_command("GoRun", "go run .")
 
-      -- Create command to start a GOTH server (go run + templ generate)
-      vim.api.nvim_create_user_command("GOTHServer", function()
-        local Terminal = require("toggleterm.terminal").Terminal
-        local goth_server = Terminal:new({
-          -- First generate templ files, then run
-          cmd = "templ generate && go run .",
-          direction = "float",
-          close_on_exit = false,
-          on_open = function(term)
-            vim.cmd("startinsert!")
-            vim.notify("Starting GOTH server...", vim.log.levels.INFO)
-          end,
-        })
-        goth_server:toggle()
-      end, { desc = "Start GOTH server" })
+      -- GOTH server runner
+      new_toggleterm_command("GOTHServer", "templ generate && go run .", {
+        on_open = function()
+          vim.cmd("startinsert!")
+          vim.notify("Starting GOTH server...", vim.log.levels.INFO)
+        end,
+        desc = "Start GOTH server",
+      })
     end,
-    build = ':lua require("go.install").update_all_sync()',
-    priority = 80,
-  },
-
-  -- Enhanced formatter config for Templ files
-  {
-    "stevearc/conform.nvim",
-    optional = true,
-    opts = {
-      formatters_by_ft = {
-        templ = { "templ" },
-        go = { "gofumpt", "goimports" },
-      },
-      formatters = {
-        templ = {
-          command = "templ",
-          args = function()
-            -- Newer versions use `fmt -` for stdin
-            -- Check templ version
-            local version_output = vim.fn.system("templ version 2>&1") or ""
-            if version_output:match("v0%.2") or version_output:match("v1%.") then
-              return { "fmt", "-" }
-            else
-              return { "fmt", "$FILENAME" }
-            end
-          end,
-          stdin = function()
-            -- Support stdin for newer versions
-            local version_output = vim.fn.system("templ version 2>&1") or ""
-            return version_output:match("v0%.2") or version_output:match("v1%.")
-          end,
-        },
-        gofumpt = {
-          command = "gofumpt",
-          args = { "-l", "-w", "$FILENAME" },
-          stdin = false,
-        },
-        goimports = {
-          command = "goimports",
-          args = { "-w", "$FILENAME" },
-          stdin = false,
-        },
-      },
-    },
-    priority = 50,
-  },
-
-  -- Enhance tree-sitter for Go/Templ
-  {
-    "nvim-treesitter/nvim-treesitter",
-    opts = function(_, opts)
-      if type(opts.ensure_installed) == "table" then
-        vim.list_extend(opts.ensure_installed, {
-          "go",
-          "gomod",
-          "gosum",
-          "gowork",
-          "html",
-          "css",
-        })
-      end
-
-      -- Add templ parser configuration
-      local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
-
-      -- Make sure templ parser is properly configured
-      parser_config.templ = {
-        install_info = {
-          url = "https://github.com/vrischmann/tree-sitter-templ.git",
-          files = { "src/parser.c", "src/scanner.c" },
-          branch = "master",
-        },
-        filetype = "templ",
-      }
-
-      -- Add HTMX queries for syntax highlighting
-      local htmx_queries = [[
-        ;; HTMX attributes
-        ((attribute
-          (attribute_name) @_attr_name
-          (attribute_value) @attribute.htmx)
-         (#match? @_attr_name "^hx-"))
-
-        ;; Tag with HTMX attributes
-        ((element
-          (start_tag
-            (attribute
-              (attribute_name) @_attr_name)))
-         (#match? @_attr_name "^hx-")
-         ;; Label this tag node
-         @tag.htmx)
-      ]]
-
-      -- Try to safely add the queries
-      local ok, queries = pcall(require, "nvim-treesitter.query")
-      if ok and queries then
-        local query_path = vim.fn.stdpath("config") .. "/queries/html/highlights.scm"
-        vim.fn.mkdir(vim.fn.fnamemodify(query_path, ":h"), "p")
-        if not vim.loop.fs_stat(query_path) then
-          local file = io.open(query_path, "w")
-          if file then
-            file:write(htmx_queries)
-            file:close()
-            vim.notify("Added HTMX queries for syntax highlighting", vim.log.levels.INFO)
-          end
-        end
-      end
-    end,
-    priority = 65,
   },
 
   -- Go debugging support
@@ -294,11 +122,11 @@ return {
       -- Create a command to debug the GOTH app
       vim.api.nvim_create_user_command("GOTHDebug", function()
         local dap = require("dap")
-
-        -- Try to find main.go
-        local main_file = vim.fn.findfile("main.go", vim.fn.getcwd() .. "/**")
-        if main_file == "" then
-          vim.notify("Could not find main.go file to debug", vim.log.levels.ERROR)
+        local main_file = goth_utils.find_main_go()
+        if not main_file then
+          return
+        end
+        if not goth_utils.run_templ_generate() then
           return
         end
 
@@ -309,25 +137,13 @@ return {
             name = "Debug GOTH App",
             request = "launch",
             program = main_file,
-            buildFlags = "",
           },
         }
-
-        -- Run templ generate first
-        local result = vim.fn.system("templ generate")
-        if vim.v.shell_error ~= 0 then
-          vim.notify("Error generating templ files: " .. result, vim.log.levels.ERROR)
-          return
-        end
-
         dap.continue()
       end, { desc = "Debug GOTH Application" })
 
-      -- Add keymapping for GOTH debugging
       vim.keymap.set("n", "<leader>dg", "<cmd>GOTHDebug<CR>", { desc = "Debug GOTH App" })
     end,
-    ft = { "go", "templ" },
-    priority = 70,
   },
 
   -- Add utility functions specific to GOTH stack

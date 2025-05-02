@@ -1,543 +1,367 @@
--- Dedicated autocommand group to avoid duplication
-local augroup = vim.api.nvim_create_augroup("UserAutocmds", { clear = true })
+-- lua/config/autocmds.lua
+-- Refactored autocommand definitions organized into feature-specific augroups
 
--- Keep this at the beginning of the autocommands file
--- Set up number and relativenumber for normal buffers
-vim.api.nvim_create_autocmd("BufWinEnter", {
-  group = augroup,
-  callback = function()
-    -- Skip special filetypes
-    local ft = vim.bo.filetype
-    if ft == "oil" or ft == "terminal" or ft == "starter" or ft == "help" or ft == "lazy" then
-      return
-    end
+local M = {}
 
-    -- Set number for regular buffers
-    vim.wo.number = true
-
-    -- Set relativenumber based on preference
-    if not vim.g.disable_relative_number then
-      vim.wo.relativenumber = true
-    end
-  end,
-  desc = "Ensure line numbers are enabled for normal buffers",
-})
-
--- Highlight text on yank
-vim.api.nvim_create_autocmd("TextYankPost", {
-  group = augroup,
-  callback = function()
-    vim.highlight.on_yank({ timeout = 300 })
-  end,
-  desc = "Highlight text on yank",
-})
-
--- Automatically resize splits when Neovim is resized
-vim.api.nvim_create_autocmd("VimResized", {
-  group = augroup,
-  callback = function()
-    vim.cmd("tabdo wincmd =")
-  end,
-  desc = "Auto-resize splits on Vim resize",
-})
-
--- Remember cursor position when reopening a file
-vim.api.nvim_create_autocmd("BufReadPost", {
-  group = augroup,
-  callback = function()
-    local mark = vim.api.nvim_buf_get_mark(0, '"')
-    if mark[1] > 0 and mark[1] <= vim.api.nvim_buf_line_count(0) then
-      pcall(vim.api.nvim_win_set_cursor, 0, mark)
-    end
-  end,
-  desc = "Go to last location when opening a buffer",
-})
-
--- Toggle between relative and absolute line numbers based on mode
-vim.api.nvim_create_autocmd("InsertLeave", {
-  group = augroup,
-  callback = function()
-    if vim.wo.number and not vim.g.disable_relative_number then
-      vim.wo.relativenumber = true
-    end
-  end,
-  desc = "Enable relative number when exiting insert mode",
-})
-
-vim.api.nvim_create_autocmd({ "BufLeave", "FocusLost", "InsertEnter", "WinLeave" }, {
-  group = augroup,
-  callback = function()
-    if vim.wo.number then
-      vim.wo.relativenumber = false
-    end
-  end,
-  desc = "Disable relative number when in insert mode",
-})
-
--- Set filetype-specific indentation
-vim.api.nvim_create_autocmd("FileType", {
-  group = augroup,
-  pattern = {
-    "lua",
-    "javascript",
-    "typescript",
-    "json",
-    "html",
-    "css",
-    "yaml",
-    "markdown",
-    "svelte",
-    "tsx",
-    "jsx",
-    "templ",
-  },
-  callback = function()
-    vim.bo.tabstop = 2
-    vim.bo.shiftwidth = 2
-  end,
-  desc = "Set indentation to 2 spaces for specified filetypes",
-})
-
-vim.api.nvim_create_autocmd("FileType", {
-  group = augroup,
-  pattern = { "go", "python", "rust", "c", "cpp" },
-  callback = function()
-    vim.bo.tabstop = 4
-    vim.bo.shiftwidth = 4
-  end,
-  desc = "Set indentation to 4 spaces for specified filetypes",
-})
-
--- GOTH stack file detection
-vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-  group = augroup,
-  pattern = { "*.templ" },
-  callback = function()
-    vim.bo.filetype = "templ"
-  end,
-  desc = "Set filetype=templ for .templ files",
-})
-
-vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-  group = augroup,
-  pattern = { "*.go.html", "*.gohtml" },
-  callback = function()
-    vim.bo.filetype = "gohtmltmpl"
-  end,
-  desc = "Set filetype=gohtmltmpl for Go HTML template files",
-})
-
--- Special settings for markdown files
-vim.api.nvim_create_autocmd("FileType", {
-  group = augroup,
-  pattern = { "markdown" },
-  callback = function()
-    vim.opt_local.wrap = true
-    vim.opt_local.linebreak = true
-    vim.opt_local.spell = true
-    vim.opt_local.conceallevel = 0
-  end,
-  desc = "Set markdown-specific settings",
-})
-
--- Auto open directory with dashboard instead of oil
-vim.api.nvim_create_autocmd("BufEnter", {
-  group = augroup,
-  callback = function()
-    local bufname = vim.api.nvim_buf_get_name(0)
-    if vim.fn.isdirectory(bufname) == 1 then
-      -- Check if dashboard is available
-      if package.loaded["snacks.dashboard"] or (package.loaded["lazy"] and not vim.g.in_open_dashboard) then
-        -- Set flag to prevent recursive triggering
-        vim.g.in_open_dashboard = true
-
-        -- Use vim.schedule to avoid interference with BufEnter event
-        vim.schedule(function()
-          if package.loaded["snacks.dashboard"] then
-            -- Close the directory buffer
-            vim.cmd("bdelete")
-            -- Open dashboard
-            require("snacks.dashboard").open()
-          else
-            -- Load snacks via lazy if not loaded
-            require("lazy").load({ plugins = { "snacks.nvim" } })
-            -- And try opening dashboard after a delay
-            vim.defer_fn(function()
-              if package.loaded["snacks.dashboard"] then
-                require("snacks.dashboard").open()
-              end
-              vim.g.in_open_dashboard = false
-            end, 100)
-          end
-        end)
-      else
-        -- Fall back to oil if snacks dashboard isn't available
-        if package.loaded["oil"] then
-          require("oil").open(bufname)
-        else
-          require("lazy").load({ plugins = { "oil.nvim" } })
-          vim.defer_fn(function()
-            if package.loaded["oil"] then
-              require("oil").open(bufname)
-            end
-          end, 100)
-        end
-      end
-    end
-  end,
-  desc = "Open dashboard for directories instead of oil",
-})
-
--- Trigger linting when files are saved or opened
-vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost" }, {
-  group = augroup,
-  callback = function()
-    local lint_ok, lint = pcall(require, "lint")
-    if lint_ok then
-      lint.try_lint()
-    end
-  end,
-  desc = "Trigger linting when file is saved or read",
-})
-
--- Automatically show diagnostic float when cursor is over a diagnostic line
-vim.api.nvim_create_autocmd("CursorHold", {
-  group = augroup,
-  callback = function()
-    local float_opts = {
-      focusable = false,
-      close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
-      border = "rounded",
-      source = "always",
-      prefix = " ",
-      scope = "cursor",
-    }
-    vim.diagnostic.open_float(nil, float_opts)
-  end,
-  desc = "Show diagnostics on cursor hold",
-})
-
--- Auto-reload files if they change on disk
-vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHoldI" }, {
-  group = augroup,
-  callback = function()
-    if vim.fn.mode() ~= "c" then
-      local bufnr = vim.api.nvim_get_current_buf()
-      local modified = vim.api.nvim_buf_get_option(bufnr, "modified")
-      if not modified and vim.fn.expand("%") ~= "" then
-        vim.cmd("checktime")
-      end
-    end
-  end,
-  desc = "Auto-reload changed files",
-})
-
--- Configure HTMX custom syntax highlighting
-vim.api.nvim_create_autocmd("FileType", {
-  group = augroup,
-  pattern = { "html", "templ" },
-  callback = function()
-    -- Define HTMX attributes for highlighting
-    vim.cmd([[
-      syntax match htmlArg contained "\<hx-[a-zA-Z\-]\+\>"
-      syntax match htmlArg contained "\<data-hx-[a-zA-Z\-]\+\>"
-      highlight link htmlArg Keyword
-    ]])
-  end,
-  desc = "Highlight HTMX attributes",
-})
-
--- Set up LSP keymaps when an LSP attaches to a buffer
-vim.api.nvim_create_autocmd("LspAttach", {
-  group = augroup,
-  callback = function(args)
-    local bufnr = args.buf
-    local client = vim.lsp.get_client_by_id(args.data.client_id)
-
-    -- Skip attaching keymaps for certain clients
-    if client.name == "copilot" then
-      return
-    end
-
-    -- Create buffer-local keymaps
-    local opts = { buffer = bufnr }
-    vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
-    vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
-    vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts)
-
-    -- Use snacks.picker for references if available
-    if package.loaded["snacks.picker"] then
-      vim.keymap.set("n", "gr", function()
-        require("snacks.picker").lsp_references()
-      end, opts)
-    else
-      vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
-    end
-
-    vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
-    vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, opts)
-    vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, opts)
-    vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
-    vim.keymap.set("n", "<leader>cf", function()
-      vim.lsp.buf.format({ async = true })
-    end, opts)
-
-    -- Show diagnostics in a floating window
-    vim.keymap.set("n", "<leader>cd", vim.diagnostic.open_float, opts)
-
-    -- Add to the quickfix list
-    vim.keymap.set("n", "<leader>cq", vim.diagnostic.setqflist, opts)
-
-    -- Add formatting capability if supported
-    if client.supports_method("textDocument/formatting") then
-      -- Create a command to manually format
-      vim.api.nvim_buf_create_user_command(bufnr, "Format", function()
-        vim.lsp.buf.format({ bufnr = bufnr })
-      end, { desc = "Format buffer with LSP" })
-    end
-  end,
-  desc = "LSP keymaps setup",
-})
-
--- Handle TEMPL file syntax better
-vim.api.nvim_create_autocmd("FileType", {
-  group = augroup,
-  pattern = "templ",
-  callback = function()
-    -- Special indentation
-    vim.bo.indentexpr = "GetTemplIndent()"
-
-    -- Create the indent function if it doesn't exist
-    if vim.fn.exists("*GetTemplIndent") == 0 then
-      vim.cmd([[
-        function! GetTemplIndent()
-          let curline = getline(v:lnum)
-          if curline =~ '^\s*}'
-            return indent(v:lnum - 1) - &shiftwidth
-          endif
-
-          let prevline = getline(v:lnum - 1)
-          let previndent = indent(v:lnum - 1)
-
-          if prevline =~ '{$'
-            return previndent + &shiftwidth
-          endif
-
-          return previndent
-        endfunction
-      ]])
-    end
-  end,
-  desc = "Setup Templ file indentation",
-})
-
--- Terminal specific configurations
-vim.api.nvim_create_autocmd("TermOpen", {
-  group = augroup,
-  callback = function()
-    -- Disable line numbers in terminal buffer only
-    vim.opt_local.number = false
-    vim.opt_local.relativenumber = false
-
-    -- Start in insert mode
-    vim.cmd("startinsert")
-
-    -- Set terminal-specific keymaps
-    local opts = { buffer = true, silent = true }
-    vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], opts)
-    vim.keymap.set("t", "<C-h>", [[<Cmd>wincmd h<CR>]], opts)
-    vim.keymap.set("t", "<C-j>", [[<Cmd>wincmd j<CR>]], opts)
-    vim.keymap.set("t", "<C-k>", [[<Cmd>wincmd k<CR>]], opts)
-    vim.keymap.set("t", "<C-l>", [[<Cmd>wincmd l<CR>]], opts)
-  end,
-  desc = "Terminal-specific settings",
-})
-
--- Refresh gitsigns when lazygit is closed
-vim.api.nvim_create_autocmd("TermClose", {
-  group = augroup,
-  pattern = "*lazygit",
-  callback = function()
-    if package.loaded["gitsigns"] then
-      require("gitsigns").refresh()
-    end
-  end,
-  desc = "Refresh gitsigns when closing lazygit",
-})
-
--- LSP inlay hints (where supported)
-vim.api.nvim_create_autocmd("LspAttach", {
-  group = augroup,
-  callback = function(args)
-    local client = vim.lsp.get_client_by_id(args.data.client_id)
-
-    -- Enable inlay hints for supported clients
-    if client and client.supports_method("textDocument/inlayHint") then
-      -- Using vim.lsp.inlay_hint instead of the deprecated vim.lsp.buf.inlay_hint
-      -- Only available in Neovim 0.10+
-      if vim.lsp.inlay_hint then
-        vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
-      end
-    end
-  end,
-  desc = "Enable LSP inlay hints",
-})
-
--- Update Vim title
-vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost", "VimResume" }, {
-  group = augroup,
-  callback = function()
-    local icon = "  "
-    local filename = vim.fn.expand("%:t")
-    local filetype = vim.bo.filetype
-
-    if filename == "" then
-      filename = "Untitled"
-    end
-
-    -- Add an icon based on filetype if available
-    if filetype == "lua" then
-      icon = "  "
-    elseif
-      filetype == "javascript"
-      or filetype == "javascriptreact"
-      or filetype == "typescript"
-      or filetype == "typescriptreact"
-    then
-      icon = "  "
-    elseif filetype == "go" then
-      icon = "  "
-    elseif filetype == "templ" then
-      icon = "  "
-    elseif filetype == "python" then
-      icon = "  "
-    elseif filetype == "rust" then
-      icon = "  "
-    elseif filetype == "markdown" then
-      icon = "  "
-    end
-
-    vim.opt.titlestring = icon .. " " .. filename .. " - NVIM"
-  end,
-  desc = "Update Vim title",
-})
-
--- Load more autocmds from project-specific config if exists
-local project_config = vim.fn.getcwd() .. "/.nvim/autocmds.lua"
-if vim.fn.filereadable(project_config) == 1 then
-  dofile(project_config)
+-- Helper to safely require optional modules
+local function safe_require(mod)
+  local ok, m = pcall(require, mod)
+  if not ok then
+    vim.notify(string.format("[Autocmds] Could not load '%s': %s", mod, m), vim.log.levels.WARN)
+    return nil
+  end
+  return m
 end
 
--- Start screen
-vim.api.nvim_create_autocmd("VimEnter", {
-  group = augroup,
-  callback = function()
-    -- Only show if no arguments were passed and not in diff mode
-    if vim.fn.argc() == 0 and not vim.opt.diff:get() then
-      -- If mini.starter is installed, it will handle this automatically
-      -- Otherwise, can set up a custom start screen
-      if not require("lazy.core.config").plugins["mini.starter"] then
-        -- Create a custom start screen
-        local buf = vim.api.nvim_create_buf(false, true)
-        local width = vim.o.columns
-        local height = vim.o.lines
-
-        -- Create centered window
-        local win = vim.api.nvim_open_win(buf, true, {
-          relative = "editor",
-          width = math.floor(width * 0.8),
-          height = math.floor(height * 0.8),
-          row = math.floor(height * 0.1),
-          col = math.floor(width * 0.1),
-          style = "minimal",
-          border = "rounded",
-        })
-
-        -- Add some welcome content
-        local lines = {
-          "",
-          "   ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗",
-          "   ████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║",
-          "   ██╔██╗ ██║█████╗  ██║   ██║██║   ██║██║██╔████╔██║",
-          "   ██║╚██╗██║██╔══╝  ██║   ██║╚██╗ ██╔╝██║██║╚██╔╝██║",
-          "   ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║",
-          "   ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝",
-          "",
-          "   Welcome to your custom Neovim setup!",
-          "",
-          "   Press 'ff' to find files",
-          "   Press 'fg' to live grep",
-          "   Press 'fb' to browse buffers",
-          "   Press 'fr' to see recent files",
-          "",
-          "   Press 'L1' for coding layout",
-          "   Press 'L2' for terminal layout",
-          "   Press 'L3' for writing layout",
-          "",
-          "   Happy coding!",
-          "",
-        }
-
-        vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-        vim.api.nvim_buf_set_option(buf, "modifiable", false)
-        vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
-
-        -- Set buffer-local keymaps
-        local opts = { buffer = buf, silent = true }
-        vim.keymap.set("n", "q", "<cmd>quit<CR>", opts)
-        vim.keymap.set("n", "<ESC>", "<cmd>quit<CR>", opts)
-
-        -- Use snacks.picker instead of telescope if available
-        vim.keymap.set("n", "ff", function()
-          require("snacks.picker").find_files()
-        end, opts)
-        vim.keymap.set("n", "fg", function()
-          require("snacks.picker").live_grep()
-        end, opts)
-        vim.keymap.set("n", "fb", function()
-          require("snacks.picker").buffers()
-        end, opts)
-        vim.keymap.set("n", "fr", function()
-          require("snacks.picker").oldfiles()
-        end, opts)
-
-        vim.keymap.set("n", "L1", "<cmd>Layout coding<CR>", opts)
-        vim.keymap.set("n", "L2", "<cmd>Layout terminal<CR>", opts)
-        vim.keymap.set("n", "L3", "<cmd>Layout writing<CR>", opts)
-
-        -- Center the text by adding spaces to the beginning of each line
-        local centered_lines = {}
-        for _, line in ipairs(lines) do
-          table.insert(centered_lines, string.rep(" ", 10) .. line)
-        end
-
-        vim.api.nvim_buf_set_lines(buf, 0, -1, false, centered_lines)
-
-        -- Set highlight for the buffer
-        local ns_id = vim.api.nvim_create_namespace("StartScreen")
-
-        -- Apply syntax highlighting to the welcome message
-        vim.api.nvim_buf_add_highlight(buf, ns_id, "Title", 1, 0, -1)
-        vim.api.nvim_buf_add_highlight(buf, ns_id, "Title", 2, 0, -1)
-        vim.api.nvim_buf_add_highlight(buf, ns_id, "Title", 3, 0, -1)
-        vim.api.nvim_buf_add_highlight(buf, ns_id, "Title", 4, 0, -1)
-        vim.api.nvim_buf_add_highlight(buf, ns_id, "Title", 5, 0, -1)
-        vim.api.nvim_buf_add_highlight(buf, ns_id, "Title", 6, 0, -1)
-
-        vim.api.nvim_buf_add_highlight(buf, ns_id, "String", 8, 0, -1)
-
-        vim.api.nvim_buf_add_highlight(buf, ns_id, "Keyword", 10, 0, -1)
-        vim.api.nvim_buf_add_highlight(buf, ns_id, "Keyword", 11, 0, -1)
-        vim.api.nvim_buf_add_highlight(buf, ns_id, "Keyword", 12, 0, -1)
-        vim.api.nvim_buf_add_highlight(buf, ns_id, "Keyword", 13, 0, -1)
-
-        vim.api.nvim_buf_add_highlight(buf, ns_id, "Function", 15, 0, -1)
-        vim.api.nvim_buf_add_highlight(buf, ns_id, "Function", 16, 0, -1)
-        vim.api.nvim_buf_add_highlight(buf, ns_id, "Function", 17, 0, -1)
-
-        vim.api.nvim_buf_add_highlight(buf, ns_id, "Comment", 19, 0, -1)
+function M.setup()
+  -- 1) Line number toggling
+  local num_grp = vim.api.nvim_create_augroup("NumToggle", { clear = true })
+  vim.api.nvim_create_autocmd("BufWinEnter", {
+    group = num_grp,
+    callback = function()
+      local ft = vim.bo.filetype
+      if ft:match("^(oil|terminal|starter|help|lazy)$") then
+        return
       end
-    end
-  end,
-  desc = "Show custom start screen",
-})
+      vim.wo.number = true
+      if not vim.g.disable_relative_number then
+        vim.wo.relativenumber = true
+      end
+    end,
+    desc = "Enable numbers for normal buffers",
+  })
+  vim.api.nvim_create_autocmd({ "InsertEnter", "BufLeave", "FocusLost", "WinLeave" }, {
+    group = num_grp,
+    callback = function()
+      if vim.wo.number then
+        vim.wo.relativenumber = false
+      end
+    end,
+    desc = "Disable relative numbers when leaving buffer or entering insert mode",
+  })
+  vim.api.nvim_create_autocmd("InsertLeave", {
+    group = num_grp,
+    callback = function()
+      if vim.wo.number and not vim.g.disable_relative_number then
+        vim.wo.relativenumber = true
+      end
+    end,
+    desc = "Re-enable relative numbers after insert",
+  })
+
+  -- 2) Yank highlighting
+  vim.api.nvim_create_augroup("YankHighlight", { clear = true })
+  vim.api.nvim_create_autocmd("TextYankPost", {
+    group = "YankHighlight",
+    callback = function()
+      vim.highlight.on_yank({ timeout = 300 })
+    end,
+    desc = "Highlight yanked text",
+  })
+
+  -- 3) Auto-resize splits
+  vim.api.nvim_create_augroup("AutoResizeSplits", { clear = true })
+  vim.api.nvim_create_autocmd("VimResized", {
+    group = "AutoResizeSplits",
+    callback = function()
+      vim.cmd("tabdo wincmd =")
+    end,
+    desc = "Equalize window sizes on resize",
+  })
+
+  -- 4) Restore cursor position
+  vim.api.nvim_create_augroup("RestoreCursor", { clear = true })
+  vim.api.nvim_create_autocmd("BufReadPost", {
+    group = "RestoreCursor",
+    callback = function()
+      local mark = vim.api.nvim_buf_get_mark(0, '"')
+      if mark[1] > 0 and mark[1] <= vim.api.nvim_buf_line_count(0) then
+        pcall(vim.api.nvim_win_set_cursor, 0, mark)
+      end
+    end,
+    desc = "Go to last edit position in file",
+  })
+
+  -- 5) Filetype-specific indentation
+  local indent_grp = vim.api.nvim_create_augroup("FileTypeIndent", { clear = true })
+  vim.api.nvim_create_autocmd("FileType", {
+    group = indent_grp,
+    pattern = {
+      "lua",
+      "javascript",
+      "typescript",
+      "json",
+      "html",
+      "css",
+      "yaml",
+      "markdown",
+      "svelte",
+      "tsx",
+      "jsx",
+      "templ",
+    },
+    callback = function()
+      vim.bo.tabstop = 2
+      vim.bo.shiftwidth = 2
+    end,
+    desc = "Set 2-space indent for web and templating files",
+  })
+  vim.api.nvim_create_autocmd("FileType", {
+    group = indent_grp,
+    pattern = { "go", "python", "rust", "c", "cpp" },
+    callback = function()
+      vim.bo.tabstop = 4
+      vim.bo.shiftwidth = 4
+    end,
+    desc = "Set 4-space indent for compiled languages",
+  })
+
+  -- 6) Directory auto-open
+  vim.api.nvim_create_augroup("DirExplorer", { clear = true })
+  vim.api.nvim_create_autocmd("BufEnter", {
+    group = "DirExplorer",
+    callback = function()
+      local name = vim.api.nvim_buf_get_name(0)
+      if vim.fn.isdirectory(name) == 1 then
+        local explorer = vim.g.default_explorer or "oil"
+        if explorer == "snacks" and safe_require("snacks.explorer") then
+          require("snacks.explorer").open({ path = name })
+        elseif safe_require("oil") then
+          require("oil").open(name)
+        else
+          vim.notify("No explorer available for directory", vim.log.levels.WARN)
+        end
+      end
+    end,
+    desc = "Open directory path in configured explorer",
+  })
+
+  -- 7) Linting on save/open
+  vim.api.nvim_create_augroup("AutoLint", { clear = true })
+  vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost" }, {
+    group = "AutoLint",
+    callback = function()
+      local lint = safe_require("lint")
+      if lint then
+        lint.try_lint()
+      end
+    end,
+    desc = "Run lint checks on file save or open",
+  })
+
+  -- 8) Show diagnostics in float on cursor hold
+  vim.api.nvim_create_augroup("DiagnosticFloat", { clear = true })
+  vim.api.nvim_create_autocmd("CursorHold", {
+    group = "DiagnosticFloat",
+    callback = function()
+      vim.diagnostic.open_float(nil, {
+        focusable = false,
+        close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
+        border = "rounded",
+        source = "always",
+        prefix = " ",
+        scope = "cursor",
+      })
+    end,
+    desc = "Show diagnostics in floating window",
+  })
+
+  -- 9) Auto-reload changed files
+  vim.api.nvim_create_augroup("AutoReload", { clear = true })
+  vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHoldI" }, {
+    group = "AutoReload",
+    callback = function()
+      if vim.fn.mode() ~= "c" and not vim.bo.modified and vim.fn.expand("%") ~= "" then
+        vim.cmd("checktime")
+      end
+    end,
+    desc = "Reload file if changed outside Neovim",
+  })
+
+  -- 10) HTMX attributes highlighting
+  vim.api.nvim_create_augroup("HTMXHighlight", { clear = true })
+  vim.api.nvim_create_autocmd("FileType", {
+    group = "HTMXHighlight",
+    pattern = { "html", "templ" },
+    callback = function()
+      vim.cmd([[syntax match htmlArg contained "\<hx-[a-zA-Z\-]\+" ]])
+      vim.cmd([[syntax match htmlArg contained "\<data-hx-[a-zA-Z\-]\+" ]])
+      vim.cmd([[highlight link htmlArg Keyword]])
+    end,
+    desc = "Highlight HTMX attributes",
+  })
+
+  -- 11) LSP keymaps and formatting
+  vim.api.nvim_create_augroup("LspActions", { clear = true })
+  vim.api.nvim_create_autocmd("LspAttach", {
+    group = "LspActions",
+    callback = function(args)
+      local client = vim.lsp.get_client_by_id(args.data.client_id)
+      if not client or client.name == "copilot" then
+        return
+      end
+      local bufnr = args.buf
+      local function bufmap(lhs, rhs, desc)
+        vim.keymap.set("n", lhs, rhs, { buffer = bufnr, desc = desc })
+      end
+      bufmap("gd", vim.lsp.buf.definition, "Go to Definition")
+      bufmap("gD", vim.lsp.buf.declaration, "Go to Declaration")
+      bufmap("gi", vim.lsp.buf.implementation, "Go to Implementation")
+      if safe_require("snacks.picker") then
+        bufmap("gr", function()
+          require("snacks.picker").lsp_references()
+        end, "Find References")
+      else
+        bufmap("gr", vim.lsp.buf.references, "Find References")
+      end
+      bufmap("K", vim.lsp.buf.hover, "Hover Documentation")
+      bufmap("<C-k>", vim.lsp.buf.signature_help, "Signature Help")
+      bufmap("<leader>cr", vim.lsp.buf.rename, "Rename Symbol")
+      bufmap("<leader>ca", vim.lsp.buf.code_action, "Code Action")
+      bufmap("<leader>cf", function()
+        vim.lsp.buf.format({ bufnr = bufnr })
+      end, "Format Buffer")
+      bufmap("<leader>cd", vim.diagnostic.open_float, "Show Diagnostics")
+      bufmap("<leader>cq", vim.diagnostic.setqflist, "Diagnostics to Quickfix")
+    end,
+    desc = "Setup LSP-specific keybindings",
+  })
+
+  -- 12) Templ indentation
+  vim.api.nvim_create_augroup("TemplIndent", { clear = true })
+  vim.api.nvim_create_autocmd("FileType", {
+    group = "TemplIndent",
+    pattern = "templ",
+    callback = function()
+      vim.bo.indentexpr = "GetTemplIndent()"
+      if vim.fn.exists("*GetTemplIndent") == 0 then
+        vim.cmd([[
+          function! GetTemplIndent()
+            let cl = getline(v:lnum)
+            if cl =~ '^\s*}'
+              return indent(v:lnum-1) - &shiftwidth
+            endif
+            let pl = getline(v:lnum-1)
+            let pi = indent(v:lnum-1)
+            if pl =~ '{$'
+              return pi + &shiftwidth
+            endif
+            return pi
+          endfunction
+        ]])
+      end
+    end,
+    desc = "Configure Templ indentation",
+  })
+
+  -- 13) Terminal mode settings
+  vim.api.nvim_create_augroup("TerminalMode", { clear = true })
+  vim.api.nvim_create_autocmd("TermOpen", {
+    group = "TerminalMode",
+    callback = function()
+      vim.opt_local.number = false
+      vim.opt_local.relativenumber = false
+      vim.cmd("startinsert")
+      local buf = vim.api.nvim_get_current_buf()
+      -- Define terminal-mode mappings
+      local term_mappings = {
+        ["<Esc>"] = "<C-\\><C-n>",
+        ["<C-h>"] = "<C-\\><C-n><C-w>h",
+        ["<C-j>"] = "<C-\\><C-n><C-w>j",
+        ["<C-k>"] = "<C-\\><C-n><C-w>k",
+        ["<C-l>"] = "<C-\\><C-n><C-w>l",
+      }
+      for lhs, rhs in pairs(term_mappings) do
+        vim.keymap.set("t", lhs, rhs, { buffer = buf, silent = true })
+      end
+    end,
+    desc = "Configure terminal keymaps",
+  })
+
+  -- 14) Refresh gitsigns after lazygit after lazygit
+  local git_grp = vim.api.nvim_create_augroup("GitSignsRefresh", { clear = true })
+  vim.api.nvim_create_autocmd("TermClose", {
+    group = git_grp,
+    pattern = "*lazygit",
+    desc = "Refresh gitsigns on lazygit exit",
+    callback = function()
+      local gs = safe_require("gitsigns")
+      if gs and gs.refresh then
+        gs.refresh()
+      end
+    end,
+  })
+
+  -- 15) Inlay hints (Neovim >=0.10)
+  local hint_grp = vim.api.nvim_create_augroup("LspInlayHints", { clear = true })
+  vim.api.nvim_create_autocmd("LspAttach", {
+    group = hint_grp,
+    desc = "Enable LSP inlay hints if supported by the server",
+    callback = function(args)
+      local client = vim.lsp.get_client_by_id(args.data.client_id)
+      if not client or not client.server_capabilities or not client.server_capabilities.inlayHintProvider then
+        return
+      end
+      -- Call the 'enable' method, passing true and the buffer number
+      if vim.lsp.inlay_hint and vim.lsp.inlay_hint.enable then
+        vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
+      end
+    end,
+  })
+
+  -- 16) Update window title) Update window title
+  vim.api.nvim_create_augroup("WinTitle", { clear = true })
+  vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost", "VimResume" }, {
+    group = "WinTitle",
+    callback = function()
+      local name = vim.fn.expand("%:t")
+      if name == "" then
+        name = "Untitled"
+      end
+      vim.opt.titlestring = string.format("%s - NVIM", name)
+      vim.opt.title = true
+    end,
+    desc = "Set window title",
+  })
+
+  -- 17) Project-specific autocmds
+  local proj = vim.fn.getcwd() .. "/.nvim/autocmds.lua"
+  if vim.fn.filereadable(proj) == 1 then
+    pcall(dofile, proj)
+  end
+
+  -- 18) Lazy startup stats
+  vim.api.nvim_create_augroup("LazyStartMsg", { clear = true })
+  vim.api.nvim_create_autocmd("User", {
+    group = "LazyStartMsg",
+    pattern = "LazyVimStarted",
+    callback = function()
+      local lazy = safe_require("lazy")
+      if not lazy then
+        return
+      end
+      local s = lazy.stats()
+      local ms = math.floor(s.startuptime * 100 + 0.5) / 100
+      local v = vim.version()
+      vim.notify(
+        string.format("Neovim v%d.%d.%d loaded %d/%d plugins in %sms", v.major, v.minor, v.patch, s.loaded, s.count, ms),
+        vim.log.levels.INFO,
+        { title = "Neovim Loaded" }
+      )
+    end,
+    desc = "Show plugin load stats",
+  })
+
+  -- 19) Disable auto comment continuation
+  vim.api.nvim_create_augroup("NoCommentCont", { clear = true })
+  vim.api.nvim_create_autocmd("FileType", {
+    group = "NoCommentCont",
+    pattern = "*",
+    callback = function()
+      vim.bo.formatoptions = vim.bo.formatoptions:gsub("[cro]", "")
+    end,
+    desc = "Disable auto comment continuation",
+  })
+end
+
+return M

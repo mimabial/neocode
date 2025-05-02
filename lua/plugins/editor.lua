@@ -1,5 +1,8 @@
+-- lua/plugins/editor.lua
+-- Editor UI and UX enhancements
+---@diagnostic disable: duplicate-set-field
 return {
-  -- Better text objects and motions
+  -- Text objects
   {
     "echasnovski/mini.ai",
     event = "VeryLazy",
@@ -22,7 +25,7 @@ return {
     end,
   },
 
-  -- Easy surround operations
+  -- Surround operations
   {
     "kylechui/nvim-surround",
     version = "*",
@@ -47,34 +50,21 @@ return {
     },
   },
 
-  -- Better commenting
+  -- Commenting
   {
     "numToStr/Comment.nvim",
     event = "VeryLazy",
     opts = {
       padding = true,
       sticky = true,
-      toggler = {
-        line = "gcc",
-        block = "gbc",
-      },
-      opleader = {
-        line = "gc",
-        block = "gb",
-      },
-      extra = {
-        above = "gcO",
-        below = "gco",
-        eol = "gcA",
-      },
-      mappings = {
-        basic = true,
-        extra = true,
-      },
+      toggler = { line = "gcc", block = "gbc" },
+      opleader = { line = "gc", block = "gb" },
+      extra = { above = "gcO", below = "gco", eol = "gcA" },
+      mappings = { basic = true, extra = true },
     },
   },
 
-  -- Better search and replace
+  -- Search and replace
   {
     "nvim-pack/nvim-spectre",
     cmd = "Spectre",
@@ -90,7 +80,7 @@ return {
     opts = { open_cmd = "noswapfile vnew" },
   },
 
-  -- Todo comments highlighting
+  -- Todo highlights
   {
     "folke/todo-comments.nvim",
     cmd = { "TodoTrouble", "TodoTelescope" },
@@ -118,18 +108,19 @@ return {
     },
   },
 
-  -- Better UI elements
+  -- UI enhancements
   {
     "stevearc/dressing.nvim",
     lazy = true,
     init = function()
+      local lazy = require("lazy")
       vim.ui.select = function(...)
-        require("lazy").load({ plugins = { "dressing.nvim" } })
-        return vim.ui.select(...)
+        lazy.load({ plugins = { "dressing.nvim" } })
+        return require("dressing").select(...)
       end
       vim.ui.input = function(...)
-        require("lazy").load({ plugins = { "dressing.nvim" } })
-        return vim.ui.input(...)
+        lazy.load({ plugins = { "dressing.nvim" } })
+        return require("dressing").input(...)
       end
     end,
     opts = {
@@ -145,15 +136,9 @@ return {
         width = nil,
         max_width = { 140, 0.9 },
         min_width = { 20, 0.2 },
-        win_options = {
-          winblend = 0,
-          wrap = false,
-        },
+        win_options = { winblend = 0, wrap = false },
         mappings = {
-          n = {
-            ["<Esc>"] = "Close",
-            ["<CR>"] = "Confirm",
-          },
+          n = { ["<Esc>"] = "Close", ["<CR>"] = "Confirm" },
           i = {
             ["<C-c>"] = "Close",
             ["<CR>"] = "Confirm",
@@ -162,49 +147,16 @@ return {
           },
         },
       },
-      select = {
-        enabled = true,
-        backend = { "telescope", "fzf_lua", "fzf", "builtin", "nui" },
-        trim_prompt = true,
-        telescope = {
-          layout_strategy = "cursor",
-          layout_config = {
-            width = 80,
-            height = 10,
-          },
-        },
-        builtin = {
-          border = "rounded",
-          relative = "editor",
-          win_options = {
-            winblend = 0,
-          },
-          width = nil,
-          max_width = { 140, 0.8 },
-          min_width = { 40, 0.2 },
-          height = nil,
-          max_height = 0.9,
-          min_height = { 10, 0.2 },
-          mappings = {
-            ["<Esc>"] = "Close",
-            ["<C-c>"] = "Close",
-            ["<CR>"] = "Confirm",
-          },
-        },
-      },
     },
   },
 
-  -- Indent guides
+  -- Indent lines
   {
     "lukas-reineke/indent-blankline.nvim",
     main = "ibl",
     event = "VeryLazy",
     opts = {
-      indent = {
-        char = "│",
-        tab_char = "│",
-      },
+      indent = { char = "│", tab_char = "│" },
       scope = { enabled = false },
       exclude = {
         filetypes = {
@@ -224,15 +176,12 @@ return {
     },
   },
 
-  -- Active indent guide and indent text objects
+  -- Indent scope
   {
     "echasnovski/mini.indentscope",
-    version = false, -- wait till new 0.7.0 release to put it back on semver
+    version = false,
     event = "VeryLazy",
-    opts = {
-      symbol = "│",
-      options = { try_as_border = true },
-    },
+    opts = { symbol = "│", options = { try_as_border = true } },
     init = function()
       vim.api.nvim_create_autocmd("FileType", {
         pattern = {
@@ -255,43 +204,33 @@ return {
     end,
   },
 
-  -- Better folds
+  -- Folding
   {
     "kevinhwang91/nvim-ufo",
     dependencies = { "kevinhwang91/promise-async" },
     event = "BufReadPost",
     opts = {
-      provider_selector = function(_, _, _)
+      provider_selector = function()
         return { "treesitter", "indent" }
       end,
       fold_virt_text_handler = function(virtText, lnum, endLnum, width, truncate)
-        local newVirtText = {}
-        local suffix = (" 󰁂 %d "):format(endLnum - lnum)
-        local sufWidth = vim.fn.strdisplaywidth(suffix)
-        local targetWidth = width - sufWidth
-        local curWidth = 0
-
+        local newVirtText, suffix = {}, (" 󰁂 %d "):format(endLnum - lnum)
+        local sufWidth, targetWidth, curWidth =
+          vim.fn.strdisplaywidth(suffix), width - vim.fn.strdisplaywidth(suffix), 0
         for _, chunk in ipairs(virtText) do
-          local chunkText = chunk[1]
-          local chunkWidth = vim.fn.strdisplaywidth(chunkText)
-
+          local chunkText, chunkWidth = chunk[1], vim.fn.strdisplaywidth(chunk[1])
           if targetWidth > curWidth + chunkWidth then
             table.insert(newVirtText, chunk)
           else
             chunkText = truncate(chunkText, targetWidth - curWidth)
-            local hlGroup = chunk[2]
-            table.insert(newVirtText, { chunkText, hlGroup })
-            chunkWidth = vim.fn.strdisplaywidth(chunkText)
-
-            -- str width returned from truncate() may less than 2nd argument, need padding
-            if curWidth + chunkWidth < targetWidth then
-              suffix = suffix .. (" "):rep(targetWidth - curWidth - chunkWidth)
+            table.insert(newVirtText, { chunkText, chunk[2] })
+            if curWidth + vim.fn.strdisplaywidth(chunkText) < targetWidth then
+              suffix = suffix .. string.rep(" ", targetWidth - curWidth - vim.fn.strdisplaywidth(chunkText))
             end
             break
           end
           curWidth = curWidth + chunkWidth
         end
-
         table.insert(newVirtText, { suffix, "MoreMsg" })
         return newVirtText
       end,

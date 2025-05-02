@@ -2,16 +2,16 @@ return {
   {
     "sainnhe/gruvbox-material",
     lazy = false,
-    priority = 1000, -- Highest priority to load before other plugins
+    priority = 1000,
     config = function()
       -- Configure gruvbox-material
-      vim.g.gruvbox_material_background = "medium" -- Options: 'hard', 'medium', 'soft'
+      vim.g.gruvbox_material_background = "medium"
       vim.g.gruvbox_material_better_performance = 1
-      vim.g.gruvbox_material_foreground = "material" -- Options: 'material', 'mix', 'original'
-      vim.g.gruvbox_material_ui_contrast = "high" -- Options: 'low', 'high'
+      vim.g.gruvbox_material_foreground = "material"
+      vim.g.gruvbox_material_ui_contrast = "high"
       vim.g.gruvbox_material_enable_italic = 1
       vim.g.gruvbox_material_enable_bold = 1
-      vim.g.gruvbox_material_transparent_background = 0 -- Set to 1 if you want transparent background
+      vim.g.gruvbox_material_transparent_background = 0
       vim.g.gruvbox_material_sign_column_background = "none"
       vim.g.gruvbox_material_diagnostic_text_highlight = 1
       vim.g.gruvbox_material_diagnostic_line_highlight = 1
@@ -19,7 +19,6 @@ return {
       vim.g.gruvbox_material_current_word = "bold"
       vim.g.gruvbox_material_disable_italic_comment = 0
 
-      -- Better Colors for UI elements
       vim.g.gruvbox_material_colors_override = {
         bg0 = { "#282828", "235" },
         bg1 = { "#32302f", "236" },
@@ -34,11 +33,8 @@ return {
         bg_yellow = { "#4a4940", "136" },
       }
 
-      -- Apply colorscheme
+      -- Apply colorscheme and export palette
       vim.cmd("colorscheme gruvbox-material")
-
-      -- Create a function to export Gruvbox Material colors
-      -- This allows other plugins to use these colors
       _G.get_gruvbox_colors = function()
         return {
           bg = "#282828",
@@ -54,89 +50,62 @@ return {
           aqua = "#7daea3",
           blue = "#7daea3",
           purple = "#d3869b",
-          bg_red = "#4e3e43",
-          bg_green = "#404d44",
-          bg_yellow = "#4a4940",
-          bg_blue = "#394f5a",
           grey = "#928374",
           grey_dim = "#7c6f64",
         }
       end
 
-      -- Ensure consistent highlights across all instances of the colorscheme
+      -- Highlight overrides table
+      local hl_overrides = {
+        LineNr = { fg = "#a89984" },
+        Visual = { bg = "#504945", bold = true },
+        MatchParen = { fg = "#fabd2f", bg = "#504945", bold = true },
+        Comment = { fg = "#928374", italic = true },
+        FloatBorder = { fg = "#7c6f64" },
+        NormalFloat = { bg = "#282828" },
+        WhichKey = { fg = "#d8a657", bold = true },
+        WhichKeyGroup = { fg = "#ea6962" },
+        WhichKeySeparator = { fg = "#928374" },
+        WhichKeyDesc = { fg = "#89b482" },
+        TreesitterContext = { bg = "#32302f" },
+        TreesitterContextLineNumber = { fg = "#a89984", bg = "#32302f" },
+        TelescopePromptBorder = { fg = "#a89984" },
+        TelescopeResultsBorder = { fg = "#a89984" },
+        TelescopePreviewBorder = { fg = "#a89984" },
+        TelescopeSelection = { bg = "#3c3836", fg = "#d8a657" },
+        TelescopeMatching = { fg = "#89b482", bold = true },
+        NeoTreeDirectoryName = { fg = "#a89984", bold = true },
+        NeoTreeDirectoryIcon = { fg = "#7daea3" },
+        htmlTag = { fg = "#7daea3", bold = true },
+        htmlEndTag = { fg = "#7daea3", bold = true },
+        htmlArg = { fg = "#d8a657", italic = true },
+        htmlTagName = { fg = "#ea6962" },
+        ["@attribute.htmx"] = { fg = "#89b482", italic = true, bold = true },
+        ["@tag.attribute.htmx"] = { fg = "#89b482", italic = true, bold = true },
+        ["@type.go"] = { fg = "#89b482" },
+        ["@function.go"] = { fg = "#7daea3" },
+        ["@variable.go"] = { fg = "#d3869b" },
+        ["@tag.jsx"] = { fg = "#ea6962" },
+        ["@tag.tsx"] = { fg = "#ea6962" },
+        ["@constructor.jsx"] = { fg = "#7daea3" },
+        ["@constructor.tsx"] = { fg = "#7daea3" },
+        StatusLine = { bg = "#3c3836", fg = "#d4be98" },
+        StatusLineNC = { bg = "#32302f", fg = "#a89984" },
+      }
+
       local function update_highlights()
-        -- Make the line number more visible
-        vim.api.nvim_set_hl(0, "LineNr", { fg = "#a89984" })
-        -- Enhance the visual selection
-        vim.api.nvim_set_hl(0, "Visual", { bg = "#504945", bold = true })
-        -- Better matching parentheses highlight
-        vim.api.nvim_set_hl(0, "MatchParen", { fg = "#fabd2f", bg = "#504945", bold = true })
-        -- Make comments more readable
-        vim.api.nvim_set_hl(0, "Comment", { fg = "#928374", italic = true })
-
-        -- Improve the color for UI elements
-        vim.api.nvim_set_hl(0, "FloatBorder", { fg = "#7c6f64" })
-        vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#282828" })
-
-        -- Which-key highlights
-        vim.api.nvim_set_hl(0, "WhichKey", { fg = "#d8a657", bold = true })
-        vim.api.nvim_set_hl(0, "WhichKeyGroup", { fg = "#ea6962" })
-        vim.api.nvim_set_hl(0, "WhichKeySeparator", { fg = "#928374" })
-        vim.api.nvim_set_hl(0, "WhichKeyDesc", { fg = "#89b482" })
-
-        -- Treesitter context
-        vim.api.nvim_set_hl(0, "TreesitterContext", { bg = "#32302f" })
-        vim.api.nvim_set_hl(0, "TreesitterContextLineNumber", { fg = "#a89984", bg = "#32302f" })
-
-        -- Telescope highlights for better integration
-        vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = "#a89984" })
-        vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = "#a89984" })
-        vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { fg = "#a89984" })
-        vim.api.nvim_set_hl(0, "TelescopeSelection", { bg = "#3c3836", fg = "#d8a657" })
-        vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = "#89b482", bold = true })
-
-        -- Make folders in tree have better visibility
-        vim.api.nvim_set_hl(0, "NeoTreeDirectoryName", { fg = "#a89984", bold = true })
-        vim.api.nvim_set_hl(0, "NeoTreeDirectoryIcon", { fg = "#7daea3" })
-
-        -- Enhance syntax highlighting for web development
-        vim.api.nvim_set_hl(0, "htmlTag", { fg = "#7daea3", bold = true })
-        vim.api.nvim_set_hl(0, "htmlEndTag", { fg = "#7daea3", bold = true })
-        vim.api.nvim_set_hl(0, "htmlArg", { fg = "#d8a657", italic = true })
-        vim.api.nvim_set_hl(0, "htmlTagName", { fg = "#ea6962" })
-
-        -- HTMX specific highlights (for treesitter)
-        vim.api.nvim_set_hl(0, "@attribute.htmx", { fg = "#89b482", italic = true, bold = true })
-        vim.api.nvim_set_hl(0, "@tag.attribute.htmx", { fg = "#89b482", italic = true, bold = true })
-
-        -- Go specific highlights
-        vim.api.nvim_set_hl(0, "@type.go", { fg = "#89b482" })
-        vim.api.nvim_set_hl(0, "@function.go", { fg = "#7daea3" })
-        vim.api.nvim_set_hl(0, "@variable.go", { fg = "#d3869b" })
-
-        -- NextJS/React specific highlights
-        vim.api.nvim_set_hl(0, "@tag.jsx", { fg = "#ea6962" })
-        vim.api.nvim_set_hl(0, "@tag.tsx", { fg = "#ea6962" })
-        vim.api.nvim_set_hl(0, "@constructor.jsx", { fg = "#7daea3" })
-        vim.api.nvim_set_hl(0, "@constructor.tsx", { fg = "#7daea3" })
-
-        -- Status line improvements
-        vim.api.nvim_set_hl(0, "StatusLine", { bg = "#3c3836", fg = "#d4be98" })
-        vim.api.nvim_set_hl(0, "StatusLineNC", { bg = "#32302f", fg = "#a89984" })
+        for group, opts in pairs(hl_overrides) do
+          vim.api.nvim_set_hl(0, group, opts)
+        end
       end
 
-      -- Update highlights when changing colorscheme
       vim.api.nvim_create_autocmd("ColorScheme", {
         pattern = "gruvbox-material",
-        callback = function()
-          update_highlights()
-        end,
+        callback = update_highlights,
       })
-
-      -- Apply highlights immediately
       update_highlights()
 
-      -- Handle filetype detection for GOTH stack
+      -- Filetype detection for .templ
       vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
         pattern = "*.templ",
         callback = function()
@@ -144,95 +113,76 @@ return {
         end,
       })
 
-      -- Add custom highlighting for HTMX attributes
+      -- HTMX attribute syntax
       vim.api.nvim_create_autocmd("FileType", {
         pattern = { "html", "templ" },
         callback = function()
-          vim.cmd([[
-            syntax match htmlArg contained "\<hx-[a-zA-Z\-]\+\>" 
-            highlight link htmlArg @attribute.htmx
-          ]])
+          vim.cmd([[syntax match htmlArg contained "\<hx-[a-zA-Z\-]\+\>" ]])
+          vim.cmd([[highlight link htmlArg @attribute.htmx]])
         end,
       })
     end,
   },
+
   {
     "folke/tokyonight.nvim",
     lazy = true,
-    priority = 900, -- Load before other plugins but after gruvbox-material
+    priority = 900,
     opts = {
-      style = "storm", -- Options: storm, moon, night, day
+      style = "storm",
       light_style = "day",
       transparent = false,
       terminal_colors = true,
-      styles = {
-        comments = { italic = true },
-        keywords = { italic = true },
-        functions = {},
-        variables = {},
-        sidebars = "dark",
-        floats = "dark",
-      },
+      styles = { comments = { italic = true }, keywords = { italic = true } },
       sidebars = { "qf", "help", "terminal", "packer", "neo-tree", "trouble" },
       day_brightness = 0.3,
       hide_inactive_statusline = false,
       dim_inactive = false,
       lualine_bold = false,
-
-      -- Custom overrides
       on_colors = function(colors)
-        -- Add specific color overrides for GOTH stack
-        colors.comment = "#9ca0a4" -- Brighter comments
-        colors.fg_gutter = "#4a5057" -- Brighter line numbers
+        colors.comment = "#9ca0a4"
+        colors.fg_gutter = "#4a5057"
       end,
-
       on_highlights = function(highlights, colors)
-        -- Improve UI elements
-        highlights.LineNr = { fg = colors.fg_gutter }
-        highlights.CursorLineNr = { fg = colors.orange }
-
-        -- Enhance terminal colors
-        highlights.TermCursor = { fg = colors.bg, bg = colors.green }
-
-        -- HTMX Specific highlights
-        highlights["@attribute.htmx"] = { fg = colors.green, italic = true, bold = true }
-        highlights["@tag.attribute.htmx"] = { fg = colors.green, italic = true, bold = true }
-
-        -- Go specific highlights
-        highlights["@type.go"] = { fg = colors.blue }
-        highlights["@function.go"] = { fg = colors.cyan }
-
-        -- React/NextJS specific
-        highlights["@tag.jsx"] = { fg = colors.red }
-        highlights["@tag.tsx"] = { fg = colors.red }
-        highlights["@constructor.jsx"] = { fg = colors.blue }
-        highlights["@constructor.tsx"] = { fg = colors.blue }
-
-        -- Neo-tree integration
-        highlights.NeoTreeDirectoryName = { fg = colors.fg_dark, bold = true }
-        highlights.NeoTreeDirectoryIcon = { fg = colors.blue }
-        highlights.NeoTreeNormal = { bg = colors.bg_dark }
-        highlights.NeoTreeIndentMarker = { fg = colors.fg_gutter }
-
-        -- Telescope integration
-        highlights.TelescopePromptBorder = { fg = colors.blue }
-        highlights.TelescopeResultsBorder = { fg = colors.blue }
-        highlights.TelescopePreviewBorder = { fg = colors.blue }
-        highlights.TelescopeSelection = { bg = colors.bg_highlight, fg = colors.fg }
-        highlights.TelescopeMatching = { fg = colors.cyan, bold = true }
+        -- UI and syntax overrides
+        local override = {
+          LineNr = { fg = colors.fg_gutter },
+          CursorLineNr = { fg = colors.orange },
+          TermCursor = { fg = colors.bg, bg = colors.green },
+          ["@attribute.htmx"] = { fg = colors.green, italic = true, bold = true },
+          ["@tag.attribute.htmx"] = { fg = colors.green, italic = true, bold = true },
+          ["@type.go"] = { fg = colors.blue },
+          ["@function.go"] = { fg = colors.cyan },
+          ["@tag.jsx"] = { fg = colors.red },
+          ["@tag.tsx"] = { fg = colors.red },
+          ["@constructor.jsx"] = { fg = colors.blue },
+          ["@constructor.tsx"] = { fg = colors.blue },
+          NeoTreeDirectoryName = { fg = colors.fg_dark, bold = true },
+          NeoTreeDirectoryIcon = { fg = colors.blue },
+          NeoTreeNormal = { bg = colors.bg_dark },
+          NeoTreeIndentMarker = { fg = colors.fg_gutter },
+          TelescopePromptBorder = { fg = colors.blue },
+          TelescopeResultsBorder = { fg = colors.blue },
+          TelescopePreviewBorder = { fg = colors.blue },
+          TelescopeSelection = { bg = colors.bg_highlight, fg = colors.fg },
+          TelescopeMatching = { fg = colors.cyan, bold = true },
+        }
+        for group, opts in pairs(override) do
+          highlights[group] = opts
+        end
       end,
     },
     config = function(_, opts)
       require("tokyonight").setup(opts)
     end,
   },
-  -- Utility commands for theme and transparency control
+
   {
     "nvim-lua/plenary.nvim",
     lazy = true,
-    priority = 100, -- Load very early
+    priority = 100,
     config = function()
-      -- Add command to switch between themes
+      -- Theme toggle commands
       vim.api.nvim_create_user_command("ColorSchemeToggle", function()
         local current = vim.g.colors_name
         if current == "gruvbox-material" then
@@ -244,37 +194,30 @@ return {
         end
       end, { desc = "Toggle between Gruvbox Material and TokyoNight" })
 
-      -- Create a command to toggle background transparency
       vim.api.nvim_create_user_command("ToggleTransparency", function()
-        local current = vim.g.colors_name
-
-        if current == "gruvbox-material" then
-          -- For gruvbox-material
-          if vim.g.gruvbox_material_transparent_background == 1 then
-            vim.g.gruvbox_material_transparent_background = 0
-            vim.notify("Transparency disabled for Gruvbox Material", vim.log.levels.INFO)
-          else
-            vim.g.gruvbox_material_transparent_background = 1
-            vim.notify("Transparency enabled for Gruvbox Material", vim.log.levels.INFO)
-          end
+        if vim.g.colors_name == "gruvbox-material" then
+          vim.g.gruvbox_material_transparent_background = vim.g.gruvbox_material_transparent_background == 1 and 0 or 1
           vim.cmd("colorscheme gruvbox-material")
+          vim.notify(
+            "Transparency "
+              .. (vim.g.gruvbox_material_transparent_background == 1 and "enabled" or "disabled")
+              .. " for Gruvbox Material",
+            vim.log.levels.INFO
+          )
         else
-          -- For tokyonight
-          local tokyonight = require("tokyonight")
-          local config = tokyonight.options
-
-          config.transparent = not config.transparent
-          tokyonight.setup(config)
-
+          local tn = require("tokyonight")
+          tn.setup(vim.tbl_extend("force", tn.options, { transparent = not tn.options.transparent }))
           vim.cmd("colorscheme tokyonight")
           vim.notify(
-            "Transparency " .. (config.transparent and "enabled" or "disabled") .. " for TokyoNight",
+            "Transparency "
+              .. (require("tokyonight").options.transparent and "enabled" or "disabled")
+              .. " for TokyoNight",
             vim.log.levels.INFO
           )
         end
       end, { desc = "Toggle background transparency" })
 
-      -- Add keymaps for quick access
+      -- Keymaps
       vim.keymap.set("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle Colorscheme" })
       vim.keymap.set("n", "<leader>uT", "<cmd>ToggleTransparency<cr>", { desc = "Toggle Transparency" })
     end,

@@ -79,7 +79,7 @@ return {
       },
       on_open = function(term)
         vim.cmd("startinsert!")
-        vim.api.nvim_buf_set_keymap(term.bufnr, "n", "q", "<cmd>close<CR>", {noremap = true, silent = true})
+        vim.api.nvim_buf_set_keymap(term.bufnr, "n", "q", "<cmd>close<CR>", { noremap = true, silent = true })
       end,
     })
 
@@ -112,13 +112,13 @@ return {
         if venv ~= "" then
           return venv .. "/bin/python"
         end
-        
+
         -- Check for pipenv
         local pipenv = vim.fn.system("command -v pipenv >/dev/null 2>&1 && echo 'true' || echo 'false'")
         if vim.trim(pipenv) == "true" then
           return "pipenv run python"
         end
-        
+
         -- Fallback to system python
         return "python"
       end,
@@ -135,7 +135,7 @@ return {
     function _G.toggle_python()
       python:toggle()
     end
-    
+
     -- Go terminal
     local go_term = Terminal:new({
       cmd = "go",
@@ -148,11 +148,11 @@ return {
         vim.cmd("startinsert!")
       end,
     })
-    
+
     function _G.toggle_go()
       go_term:toggle()
     end
-    
+
     -- NPM terminal with dev option
     local npm_dev = Terminal:new({
       cmd = "npm run dev",
@@ -165,11 +165,11 @@ return {
         vim.cmd("startinsert!")
       end,
     })
-    
+
     function _G.toggle_npm_dev()
       npm_dev:toggle()
     end
-    
+
     -- Htmx terminal with server option (for GOTH stack)
     local htmx_server = Terminal:new({
       cmd = function()
@@ -178,7 +178,7 @@ return {
         if has_templ then
           return "go run ."
         end
-        
+
         -- Fallback to a simple HTTP server
         return "python -m http.server"
       end,
@@ -194,7 +194,7 @@ return {
         vim.cmd("startinsert!")
       end,
     })
-    
+
     function _G.toggle_htmx_server()
       htmx_server:toggle()
     end
@@ -206,24 +206,24 @@ return {
     vim.api.nvim_set_keymap("n", "<leader>tg", "<cmd>lua toggle_go()<CR>", { noremap = true, silent = true })
     vim.api.nvim_set_keymap("n", "<leader>td", "<cmd>lua toggle_npm_dev()<CR>", { noremap = true, silent = true })
     vim.api.nvim_set_keymap("n", "<leader>ts", "<cmd>lua toggle_htmx_server()<CR>", { noremap = true, silent = true })
-    
+
     -- Stack-specific keymaps
     vim.api.nvim_create_autocmd("FileType", {
-      pattern = {"go", "templ"},
+      pattern = { "go", "templ" },
       callback = function()
         vim.keymap.set("n", "<leader>sr", function()
           toggle_htmx_server()
         end, { buffer = true, desc = "Run GOTH Server" })
-      end
+      end,
     })
-    
+
     vim.api.nvim_create_autocmd("FileType", {
-      pattern = {"javascript", "typescript", "javascriptreact", "typescriptreact"},
+      pattern = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
       callback = function()
         vim.keymap.set("n", "<leader>sr", function()
           toggle_npm_dev()
         end, { buffer = true, desc = "Run Next.js Server" })
-      end
+      end,
     })
   end,
 }

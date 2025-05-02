@@ -1,296 +1,225 @@
--- Define keymaps using vim.keymap.set directly
--- Instead of defining keymaps through which-key, let which-key detect them
+-- lua/config/keymaps.lua
+-- Centralized keymap definitions: buffer management, Snacks picker, explorer, and stack commands
 
-local picker = require("snacks.picker")
+local M = {}
 
--- Buffer management
-vim.keymap.set("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to Other Buffer" })
-vim.keymap.set("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Delete Buffer" })
-vim.keymap.set("n", "<leader>bf", "<cmd>bfirst<cr>", { desc = "First Buffer" })
-vim.keymap.set("n", "<leader>bl", "<cmd>blast<cr>", { desc = "Last Buffer" })
-vim.keymap.set("n", "<leader>bn", "<cmd>bnext<cr>", { desc = "Next Buffer" })
-vim.keymap.set("n", "<leader>bp", "<cmd>bprevious<cr>", { desc = "Previous Buffer" })
-vim.keymap.set("n", "<leader>be", "<cmd>Oil<cr>", { desc = "Buffer Explorer (Oil)" })
+function M.setup()
+  local map = vim.keymap.set
+  local opts = { noremap = true, silent = true }
 
--- Buffer navigation with Shift
-vim.keymap.set("n", "<S-h>", "<cmd>bprevious<cr>", { desc = "Previous buffer" })
-vim.keymap.set("n", "<S-l>", "<cmd>bnext<cr>", { desc = "Next buffer" })
-vim.keymap.set("n", "[b", "<cmd>bprevious<cr>", { desc = "Previous buffer" })
-vim.keymap.set("n", "]b", "<cmd>bnext<cr>", { desc = "Next buffer" })
+  -- keep selection when indenting in visual mode
+  map("v", ">", ">gv", vim.tbl_extend("force", opts, { desc = "Indent and keep selection" }))
+  map("v", "<", "<gv", vim.tbl_extend("force", opts, { desc = "Outdent and keep selection" }))
 
--- LSP and Code actions
-vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "Code Action" })
-vim.keymap.set("n", "<leader>cd", vim.diagnostic.open_float, { desc = "Line Diagnostics" })
-vim.keymap.set("n", "<leader>cf", function()
-  vim.lsp.buf.format({ async = true })
-end, { desc = "Format" })
-vim.keymap.set("n", "<leader>cF", "<cmd>FormatToggle<CR>", { desc = "Toggle Format on Save" })
-vim.keymap.set("n", "<leader>ci", "<cmd>LspInfo<cr>", { desc = "LSP Info" })
-vim.keymap.set("n", "<leader>cl", "<cmd>lua require('lint').try_lint()<cr>", { desc = "Trigger Linting" })
-vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, { desc = "Rename Symbol" })
-vim.keymap.set("n", "<leader>cR", "<cmd>ReloadConfig<cr>", { desc = "Reload Config" })
-
--- GOTH stack specific
-vim.keymap.set("n", "<leader>cgc", function()
-  if require("config.utils").new_templ_component then
-    require("config.utils").new_templ_component()
-  else
-    vim.notify("Templ component creator not found", vim.log.levels.ERROR)
+  -- 1) Buffer management
+  local buffer_maps = {
+    { "n", "<leader>bb", "<cmd>e #<cr>", "Switch to Other Buffer" },
+    { "n", "<leader>bd", "<cmd>bdelete<cr>", "Delete Buffer" },
+    { "n", "<leader>bf", "<cmd>bfirst<cr>", "First Buffer" },
+    { "n", "<leader>bl", "<cmd>blast<cr>", "Last Buffer" },
+    { "n", "<leader>bn", "<cmd>bnext<cr>", "Next Buffer" },
+    { "n", "<leader>bp", "<cmd>bprevious<cr>", "Previous Buffer" },
+    { "n", "<leader>be", "<cmd>Oil<cr>", "Buffer Explorer (Oil)" },
+    { "n", "-", "<cmd>Oil<cr>", "Buffer Explorer Parent Dir. (Oil)" },
+    { "n", "_", "<cmd>Oil .<cr>", "Buffer Explorer Root Dir. (Oil)" },
+    -- buffer navigation with Shift
+    { "n", "<S-h>", "<cmd>bprevious<cr>", "Previous Buffer" },
+    { "n", "<S-l>", "<cmd>bnext<cr>", "Next Buffer" },
+  }
+  for _, m in ipairs(buffer_maps) do
+    map(m[1], m[2], m[3], vim.tbl_extend("force", opts, { desc = m[4] }))
   end
-end, { desc = "New Templ Component" })
-vim.keymap.set("n", "<leader>cgt", "<cmd>!go test ./...<cr>", { desc = "Run Go Tests" })
-vim.keymap.set("n", "<leader>cgm", "<cmd>!go mod tidy<cr>", { desc = "Go Mod Tidy" })
-vim.keymap.set("n", "<leader>cgb", "<cmd>!go build<cr>", { desc = "Go Build" })
-vim.keymap.set("n", "<leader>cgr", "<cmd>!go run .<cr>", { desc = "Go Run" })
 
--- Next.js specific
-vim.keymap.set("n", "<leader>cnc", function()
-  if require("config.utils").new_nextjs_component then
-    require("config.utils").new_nextjs_component("client")
-  else
-    vim.notify("Next.js component creator not found", vim.log.levels.ERROR)
-  end
-end, { desc = "New Client Component" })
-vim.keymap.set("n", "<leader>cns", function()
-  if require("config.utils").new_nextjs_component then
-    require("config.utils").new_nextjs_component("server")
-  else
-    vim.notify("Next.js component creator not found", vim.log.levels.ERROR)
-  end
-end, { desc = "New Server Component" })
-vim.keymap.set("n", "<leader>cnp", function()
-  if require("config.utils").new_nextjs_component then
-    require("config.utils").new_nextjs_component("page")
-  else
-    vim.notify("Next.js component creator not found", vim.log.levels.ERROR)
-  end
-end, { desc = "New Page" })
-vim.keymap.set("n", "<leader>cnl", function()
-  if require("config.utils").new_nextjs_component then
-    require("config.utils").new_nextjs_component("layout")
-  else
-    vim.notify("Next.js component creator not found", vim.log.levels.ERROR)
-  end
-end, { desc = "New Layout" })
-vim.keymap.set("n", "<leader>cnd", "<cmd>!npm run dev<cr>", { desc = "Next.js Dev" })
-vim.keymap.set("n", "<leader>cnb", "<cmd>!npm run build<cr>", { desc = "Next.js Build" })
-vim.keymap.set("n", "<leader>cnt", "<cmd>!npm test<cr>", { desc = "Run Tests" })
-vim.keymap.set("n", "<leader>cni", "<cmd>!npm install<cr>", { desc = "NPM Install" })
-
--- Debug mode keymaps
-vim.keymap.set("n", "<leader>db", function()
-  if package.loaded["dap"] then
-    require("dap").toggle_breakpoint()
-  end
-end, { desc = "Toggle Breakpoint" })
-vim.keymap.set("n", "<leader>dB", function()
-  if package.loaded["dap"] then
-    require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
-  end
-end, { desc = "Conditional Breakpoint" })
-vim.keymap.set("n", "<leader>dc", function()
-  if package.loaded["dap"] then
-    require("dap").continue()
-  end
-end, { desc = "Continue" })
-vim.keymap.set("n", "<leader>dC", function()
-  if package.loaded["dap"] then
-    require("dap").run_to_cursor()
-  end
-end, { desc = "Run to Cursor" })
-vim.keymap.set("n", "<leader>de", function()
-  if package.loaded["dapui"] then
-    require("dapui").eval()
-  end
-end, { desc = "Evaluate Expression" })
-vim.keymap.set("n", "<leader>di", function()
-  if package.loaded["dap"] then
-    require("dap").step_into()
-  end
-end, { desc = "Step Into" })
-vim.keymap.set("n", "<leader>do", function()
-  if package.loaded["dap"] then
-    require("dap").step_over()
-  end
-end, { desc = "Step Over" })
-vim.keymap.set("n", "<leader>dO", function()
-  if package.loaded["dap"] then
-    require("dap").step_out()
-  end
-end, { desc = "Step Out" })
-vim.keymap.set("n", "<leader>dr", function()
-  if package.loaded["dap"] then
-    require("dap").repl.toggle()
-  end
-end, { desc = "Toggle REPL" })
-vim.keymap.set("n", "<leader>dR", function()
-  if package.loaded["dap"] then
-    require("dap").restart()
-  end
-end, { desc = "Restart" })
-vim.keymap.set("n", "<leader>dt", function()
-  if package.loaded["dap"] then
-    require("dap").terminate()
-  end
-end, { desc = "Terminate" })
-vim.keymap.set("n", "<leader>du", function()
-  if package.loaded["dapui"] then
-    require("dapui").toggle()
-  end
-end, { desc = "Toggle UI" })
-vim.keymap.set("n", "<leader>dg", function()
-  if _G.debug_goth_app then
-    _G.debug_goth_app()
-  end
-end, { desc = "Debug GOTH App" })
-
--- Function keys for debugging
-vim.keymap.set("n", "<F5>", function()
-  if package.loaded["dap"] then
-    require("dap").continue()
-  end
-end, { desc = "Continue" })
-vim.keymap.set("n", "<F10>", function()
-  if package.loaded["dap"] then
-    require("dap").step_over()
-  end
-end, { desc = "Step Over" })
-vim.keymap.set("n", "<F11>", function()
-  if package.loaded["dap"] then
-    require("dap").step_into()
-  end
-end, { desc = "Step Into" })
-vim.keymap.set("n", "<F12>", function()
-  if package.loaded["dap"] then
-    require("dap").step_out()
-  end
-end, { desc = "Step Out" })
-
--- Snacks Finder keymaps
-vim.keymap.set("n", "<leader>ff", function()
-  picker.files()
-end, { desc = "Find Files" })
-
-vim.keymap.set("n", "<leader>fg", function()
-  picker.grep()
-end, { desc = "Find Text (Grep)" })
-
-vim.keymap.set("n", "<leader>fb", function()
-  picker.buffers()
-end, { desc = "Find Buffers" })
-
-vim.keymap.set("n", "<leader>fh", function()
-  picker.help()
-end, { desc = "Find Help" })
-
-vim.keymap.set("n", "<leader>fr", function()
-  picker.recent()
-end, { desc = "Recent Files" })
-
-vim.keymap.set("n", "<leader>fR", function()
-  picker.smart()
-end, { desc = "Frecent Files" })
-
-vim.keymap.set("n", "<leader>fp", function()
-  picker.projects()
-end, { desc = "Find Projects" })
-
-vim.keymap.set("n", "<leader>fc", function()
-  picker.commands()
-end, { desc = "Commands" })
-
-vim.keymap.set("n", "<leader>fk", function()
-  picker.keymaps()
-end, { desc = "Keymaps" })
-
-vim.keymap.set("n", "<leader>f/", function()
-  picker.lines()
-end, { desc = "Buffer Fuzzy Find" })
-
-vim.keymap.set("n", "<leader>f.", function()
-  picker.resume()
-end, { desc = "Resume Search" })
-
--- Git integration (additional)
-vim.keymap.set("n", "<leader>gc", function()
-  picker.git_log()
-end, { desc = "Git Commits" })
-
-vim.keymap.set("n", "<leader>gb", function()
-  picker.git_branches()
-end, { desc = "Git Branches" })
-
--- LSP integration
-vim.keymap.set("n", "<leader>fd", function()
-  picker.diagnostics({ bufnr = 0 })
-end, { desc = "Doc Diagnostics" })
-
-vim.keymap.set("n", "<leader>fD", function()
-  picker.diagnostics()
-end, { desc = "Workspace Diagnostics" })
-
-vim.keymap.set("n", "<leader>fs", function()
-  picker.lsp_symbols()
-end, { desc = "Doc Symbols" })
-
-vim.keymap.set("n", "<leader>fS", function()
-  picker.lsp_workspace_symbols()
-end, { desc = "Workspace Symbols" })
-
--- Stack-specific
-vim.keymap.set("n", "<leader>sgg", function()
-  picker.pick("goth_files")
-end, { desc = "GOTH Files" })
-
-vim.keymap.set("n", "<leader>sng", function()
-  picker.pick("nextjs_files")
-end, { desc = "Next.js Files" })
-
--- Oil explorer keymaps (primary file explorer)
-vim.keymap.set("n", "<leader>o", "<CMD>Oil<CR>", { desc = "Oil Explorer" })
-vim.keymap.set("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
-vim.keymap.set("n", "_", "<CMD>Oil .<CR>", { desc = "Open project root" })
-
--- Snacks explorer keymaps (alternative file explorer)
-vim.keymap.set("n", "<leader>e", function()
-  if package.loaded["snacks"] then
-    require("snacks").explorer()
-  end
-end, { desc = "Snacks Explorer" })
-
--- Dashboard keymapping
-vim.keymap.set("n", "<leader>ud", function()
-  if package.loaded["snacks.dashboard"] then
-    require("snacks.dashboard").open()
-  else
-    -- Try to load snacks if not already loaded
-    if package.loaded["lazy"] then
-      require("lazy").load({ plugins = { "snacks.nvim" } })
-      -- Wait a bit for the plugin to load
-      vim.defer_fn(function()
-        if package.loaded["snacks.dashboard"] then
-          require("snacks.dashboard").open()
-        else
-          vim.notify("Failed to load dashboard", vim.log.levels.ERROR)
-        end
-      end, 100)
-    else
-      vim.notify("Lazy.nvim not loaded, can't open dashboard", vim.log.levels.ERROR)
+  -- 2) Snacks picker mappings
+  local ok_picker, picker = pcall(require, "snacks.picker")
+  if ok_picker then
+    local snack_maps = {
+      {
+        "n",
+        "<leader>ff",
+        function()
+          picker.files()
+        end,
+        "Find Files",
+      },
+      {
+        "n",
+        "<leader>fg",
+        function()
+          picker.grep()
+        end,
+        "Find Text (Grep)",
+      },
+      {
+        "n",
+        "<leader>fb",
+        function()
+          picker.buffers()
+        end,
+        "Find Buffers",
+      },
+      {
+        "n",
+        "<leader>fh",
+        function()
+          picker.help()
+        end,
+        "Find Help",
+      },
+      {
+        "n",
+        "<leader>fr",
+        function()
+          picker.recent()
+        end,
+        "Recent Files",
+      },
+      {
+        "n",
+        "<leader>fR",
+        function()
+          picker.smart()
+        end,
+        "Frecent Files",
+      },
+      {
+        "n",
+        "<leader>fp",
+        function()
+          picker.projects()
+        end,
+        "Find Projects",
+      },
+      {
+        "n",
+        "<leader>fc",
+        function()
+          picker.commands()
+        end,
+        "Commands",
+      },
+      {
+        "n",
+        "<leader>fk",
+        function()
+          picker.keymaps()
+        end,
+        "Keymaps",
+      },
+      {
+        "n",
+        "<leader>f/",
+        function()
+          picker.lines()
+        end,
+        "Buffer Fuzzy Find",
+      },
+      {
+        "n",
+        "<leader>f.",
+        function()
+          picker.resume()
+        end,
+        "Resume Search",
+      },
+      -- git integration
+      {
+        "n",
+        "<leader>gc",
+        function()
+          picker.git_log()
+        end,
+        "Git Commits",
+      },
+      {
+        "n",
+        "<leader>gb",
+        function()
+          picker.git_branches()
+        end,
+        "Git Branches",
+      },
+      -- lsp integration
+      {
+        "n",
+        "<leader>fd",
+        function()
+          picker.diagnostics({ bufnr = 0 })
+        end,
+        "Doc Diagnostics",
+      },
+      {
+        "n",
+        "<leader>fD",
+        function()
+          picker.diagnostics()
+        end,
+        "Workspace Diagnostics",
+      },
+      {
+        "n",
+        "<leader>fs",
+        function()
+          picker.lsp_symbols()
+        end,
+        "Doc Symbols",
+      },
+      {
+        "n",
+        "<leader>fS",
+        function()
+          picker.lsp_workspace_symbols()
+        end,
+        "Workspace Symbols",
+      },
+    }
+    for _, m in ipairs(snack_maps) do
+      map(m[1], m[2], m[3], vim.tbl_extend("force", opts, { desc = m[4] }))
     end
   end
-end, { desc = "Open Dashboard" })
 
--- You can also add keymaps for stack switching via dashboard shortcuts
-vim.keymap.set("n", "<leader>usg", function()
-  vim.cmd("StackFocus goth")
-  if package.loaded["snacks.dashboard"] then
-    require("snacks.dashboard").open()
+  -- 3) Snacks explorer (wrapped as function to satisfy keymap API)
+  local ok_snacks, snacks = pcall(require, "snacks")
+  if ok_snacks then
+    map("n", "<leader>e", function()
+      snacks.explorer()
+    end, vim.tbl_extend("force", opts, { desc = "Snacks Explorer" }))
   end
-end, { desc = "Focus GOTH Stack + Dashboard" })
 
-vim.keymap.set("n", "<leader>usn", function()
-  vim.cmd("StackFocus nextjs")
-  if package.loaded["snacks.dashboard"] then
-    require("snacks.dashboard").open()
+  -- 4) Stack switching + dashboard
+  map("n", "<leader>usg", function()
+    vim.cmd("StackFocus goth")
+    if package.loaded["snacks.dashboard"] then
+      require("snacks.dashboard").open()
+    end
+  end, vim.tbl_extend("force", opts, { desc = "Focus GOTH Stack + Dashboard" }))
+  map("n", "<leader>usn", function()
+    vim.cmd("StackFocus nextjs")
+    if package.loaded["snacks.dashboard"] then
+      require("snacks.dashboard").open()
+    end
+  end, vim.tbl_extend("force", opts, { desc = "Focus Next.js Stack + Dashboard" }))
+
+  -- 5) Oil filetype navigation
+  local ok_oil, oil = pcall(require, "oil")
+  if ok_oil then
+    -- Oil file explorer navigation (FileType = oil)
+    local group = vim.api.nvim_create_augroup("OilExplorerKeymaps", { clear = true })
+    vim.api.nvim_create_autocmd("FileType", {
+      group = group,
+      pattern = "oil",
+      desc = "Oil-specific navigation keymaps",
+      callback = function()
+        local buf_opts = { buffer = 0, noremap = true, silent = true }
+        vim.keymap.set("n", "R", function()
+          oil.refresh()
+        end, buf_opts)
+        vim.keymap.set("n", "~", function()
+          oil.open(vim.loop.cwd())
+        end, buf_opts)
+      end,
+    })
   end
-end, { desc = "Focus Next.js Stack + Dashboard" })
+end
+
+return M

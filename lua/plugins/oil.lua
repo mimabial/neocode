@@ -1,8 +1,9 @@
--- Plugin spec for Oil.nvim explorer
+-- lua/plugins/oil.lua
+-- Plugin specification for Oil.nvim file explorer with stack-specific integration
 return {
   "stevearc/oil.nvim",
-  lazy = false, -- Ensure it's loaded immediately
-  priority = 900, -- Very high priority
+  lazy = false,
+  priority = 900,
   dependencies = { "nvim-tree/nvim-web-devicons" },
 
   opts = {
@@ -12,22 +13,10 @@ return {
     skip_confirm_for_simple_edits = true,
     prompt_save_on_select_new_entry = true,
     cleanup_delay_ms = 2000,
-    lsp_file_methods = {
-      autosave_changes = true,
-    },
+    lsp_file_methods = { autosave_changes = true },
 
-    columns = {
-      "size",
-      "permissions",
-      -- "mtime",
-      -- "icon",
-    },
-
-    buf_options = {
-      buflisted = false,
-      bufhidden = "hide",
-    },
-
+    columns = { "size", "permissions" },
+    buf_options = { buflisted = false, bufhidden = "hide" },
     win_options = {
       wrap = false,
       signcolumn = "no",
@@ -39,7 +28,16 @@ return {
       concealcursor = "nvic",
     },
 
-    -- Add your keymaps with oil-specific actions
+    view_options = {
+      show_hidden = false,
+      is_hidden_file = function(name)
+        return vim.startswith(name, ".")
+      end,
+      is_always_hidden = function()
+        return false
+      end,
+    },
+
     keymaps = {
       ["g?"] = "actions.show_help",
       ["<CR>"] = "actions.select",
@@ -59,121 +57,67 @@ return {
       ["g\\"] = "actions.toggle_trash",
     },
 
-    view_options = {
-      show_hidden = false,
-      is_hidden_file = function(name, bufnr)
-        return vim.startswith(name, ".")
-      end,
-      is_always_hidden = function(name, bufnr)
-        return false
-      end,
-    },
-
-    float = {
-      padding = 2,
-      max_width = 0,
-      max_height = 0,
-      border = "rounded",
-      win_options = {
-        winblend = 0,
-      },
-    },
-
-    preview = {
-      max_width = 0.9,
-      min_width = { 40, 0.4 },
-      width = nil,
-      max_height = 0.9,
-      min_height = { 5, 0.1 },
-      height = nil,
-      border = "rounded",
-      win_options = {
-        winblend = 0,
-      },
-    },
-
-    progress = {
-      max_width = 0.9,
-      min_width = { 40, 0.4 },
-      width = nil,
-      max_height = { 10, 0.9 },
-      min_height = { 5, 0.1 },
-      height = nil,
-      border = "rounded",
-      minimized_border = "none",
-      win_options = {
-        winblend = 0,
-      },
-    },
+    float = { padding = 2, border = "rounded", max_width = 0, max_height = 0, win_options = { winblend = 0 } },
+    preview = { border = "rounded", win_options = { winblend = 0 } },
+    progress = { border = "rounded", win_options = { winblend = 0 } },
   },
 
   config = function(_, opts)
-    require("oil").setup(opts)
+    local oil = require("oil")
+    oil.setup(opts)
 
-    -- Set up commands for stack-specific Oil views
-    vim.api.nvim_create_user_command("OilGOTH", function()
-      vim.g.current_stack = "goth"
-      require("oil").open()
-      vim.notify("Oil focused on GOTH stack", vim.log.levels.INFO)
-    end, { desc = "Oil explorer: GOTH stack" })
+    -- Stack-specific Oil commands
+    local function make_cmd(name)
+      vim.api.nvim_create_user_command(name, function()
+        local stack = name:sub(4):lower()
+        vim.g.current_stack = stack
+        oil.open()
+        vim.notify("Oil focused on " .. stack:upper() .. " stack", vim.log.levels.INFO)
+      end, { desc = "Oil explorer: " .. name:sub(4) .. " stack" })
+    end
+    make_cmd("OilGOTH")
+    make_cmd("OilNEXTJS")
 
-    vim.api.nvim_create_user_command("OilNextJS", function()
-      vim.g.current_stack = "nextjs"
-      require("oil").open()
-      vim.notify("Oil focused on Next.js stack", vim.log.levels.INFO)
-    end, { desc = "Oil explorer: Next.js stack" })
-
-    -- Stack-specific filters for Oil's view_options
+    -- Adjust view and highlights when opening Oil buffer
     vim.api.nvim_create_autocmd("FileType", {
       pattern = "oil",
+      desc = "Oil buffer customizations",
       callback = function()
-        -- Get the current stack
-        local stack = vim.g.current_stack
+        local stack = vim.g.current_stack or ""
+        -- update view_options per stack
+        local view_opts = {
+          show_hidden = true,
+          is_hidden_file = function(name)
+            if stack == "goth" then
+              return vim.startswith(name, ".") or name == "vendor" or name == "node_modules" or name == "go.sum"
+            elseif stack == "nextjs" then
+              return vim.startswith(name, ".")
+                or vim.tbl_contains({ "node_modules", ".next", ".turbo", "out", ".vercel" }, name)
+            end
+            return false
+          end,
+        }
+        oil.setup({ view_options = view_opts })
 
-        if stack == "goth" then
-          -- Apply GOTH stack specific filters
-          require("oil").setup({
-            view_options = {
-              show_hidden = true,
-              is_hidden_file = function(name, bufnr)
-                return vim.startswith(name, ".") or name == "vendor" or name == "node_modules" or name == "go.sum"
-              end,
-            },
-          })
-        elseif stack == "nextjs" then
-          -- Apply Next.js stack specific filters
-          require("oil").setup({
-            view_options = {
-              show_hidden = true,
-              is_hidden_file = function(name, bufnr)
-                return vim.startswith(name, ".")
-                  or name == "node_modules"
-                  or name == ".next"
-                  or name == ".turbo"
-                  or name == "out"
-                  or name == ".vercel"
-              end,
-            },
-          })
-        end
-        -- Disable numbers in Oil
+        -- window settings
         vim.wo.number = false
         vim.wo.relativenumber = true
-
-        -- Enable cursorline for better visibility
         vim.wo.cursorline = true
 
+        -- Close mapping
         vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = true, silent = true, desc = "Close Oil" })
 
+        -- Theme-specific highlights
         if vim.g.colors_name == "gruvbox-material" then
-          vim.api.nvim_set_hl(0, "OilDir", { fg = "#7daea3", bold = true })
-          vim.api.nvim_set_hl(0, "OilDirIcon", { fg = "#7daea3", bold = true })
-          vim.api.nvim_set_hl(0, "OilLink", { fg = "#89b482", underline = true })
-          vim.api.nvim_set_hl(0, "OilFile", { fg = "#d4be98" })
-          vim.api.nvim_set_hl(0, "OilTypeDir", { link = "OilDir" })
-          vim.api.nvim_set_hl(0, "OilTypeFile", { link = "OilFile" })
-          vim.api.nvim_set_hl(0, "OilTypeSymlink", { link = "OilLink" })
-          vim.api.nvim_set_hl(0, "OilColumn", { link = "Comment" })
+          local hl = vim.api.nvim_set_hl
+          hl(0, "OilDir", { fg = "#7daea3", bold = true })
+          hl(0, "OilDirIcon", { fg = "#7daea3", bold = true })
+          hl(0, "OilLink", { fg = "#89b482", underline = true })
+          hl(0, "OilFile", { fg = "#d4be98" })
+          hl(0, "OilTypeDir", { link = "OilDir" })
+          hl(0, "OilTypeFile", { link = "OilFile" })
+          hl(0, "OilTypeSymlink", { link = "OilLink" })
+          hl(0, "OilColumn", { link = "Comment" })
         end
       end,
     })

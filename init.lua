@@ -1,120 +1,90 @@
--- Set leader key before anything else
+-- init.lua – Neovim entrypoint with robust module loading and correct load order
+
+-- 0) Leader & feature flags
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
-
--- Set Oil as the default explorer and snacks as the default picker
 vim.g.default_explorer = "oil"
 vim.g.default_picker = "snacks"
-
--- Disable some unused plugins early
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
--- Load configurations
-require("config.diagnostics").setup()
-require("config.options") -- Load options
-require("config.autocmds") -- Load autocommands
-require("config.stack").setup() -- Set up stack detection before plugins
-require("config.lazy") -- Load lazy.nvim configuration
-require("config.keymaps") -- Load keymaps
+-- 1) Version check
+if vim.fn.has("nvim-0.8") == 0 then
+  vim.api.nvim_err_writeln("Error: Neovim 0.8 or higher is required for this config.")
+  return
+end
 
--- Print a startup message
-vim.api.nvim_create_autocmd("User", {
-  pattern = "LazyVimStarted",
-  callback = function()
-    local stats = require("lazy").stats()
-    local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
-    local v = vim.version()
-    vim.notify(
-      string.format(
-        "Neovim v%d.%d.%d loaded %d/%d plugins in %sms",
-        v.major,
-        v.minor,
-        v.patch,
-        stats.loaded,
-        stats.count,
-        ms
-      ),
-      vim.log.levels.INFO,
-      { title = "Neovim Loaded" }
-    )
-  end,
-})
-
--- ReloadConfig command
-vim.api.nvim_create_user_command("ReloadConfig", function()
-  for name, _ in pairs(package.loaded) do
-    if name:match("^config") or name:match("^plugins") then
-      package.loaded[name] = nil
-    end
-  end
-  dofile(vim.fn.stdpath("config") .. "/init.lua")
-  vim.notify("Nvim configuration reloaded!", vim.log.levels.INFO, { title = "Config" })
-end, { desc = "Reload Neovim configuration" })
-
--- ExplorerToggle command
-vim.api.nvim_create_user_command("ExplorerToggle", function(opts)
-  local ex = opts.args
-  if ex == "snacks" then
-    vim.g.default_explorer = "snacks"
-    -- open snacks explorer
-    require("snacks.explorer").open()
-    vim.notify("Default explorer set to: Snacks", vim.log.levels.INFO)
-  else
-    -- default to oil
-    vim.g.default_explorer = "oil"
-    if package.loaded["oil"] then
-      require("oil").open()
-    else
-      require("lazy").load({ plugins = { "oil.nvim" } })
-      vim.defer_fn(function()
-        if package.loaded["oil"] then
-          require("oil").open()
-        end
-      end, 100)
-    end
-    vim.notify("Default explorer set to: Oil", vim.log.levels.INFO)
-  end
-end, {
-  nargs = "?",
-  complete = function()
-    return { "oil", "snacks" }
-  end,
-  desc = "Set and open default explorer (oil or snacks)",
-})
-
--- Disable formatoptions that automatically continue comments NO_OP
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "*",
-  callback = function()
-    -- remove c, r and o flags in one call
-    vim.opt_local.formatoptions:remove("cro")
-  end,
-  desc = "Disable auto comment continuation",
-})
-
--- Integrate hlslens for better search highlighting
-vim.api.nvim_create_user_command("HlsLensToggle", function()
-  if vim.g.hlslens_disabled then
-    vim.g.hlslens_disabled = false
-    vim.notify("HlsLens enabled", vim.log.levels.INFO)
-
-    -- Re-enable search highlighting if there's a current search
-    if vim.fn.getreg("/") ~= "" then
-      vim.cmd("set hlsearch")
-      require("hlslens").start()
-    end
-  else
-    vim.g.hlslens_disabled = true
-    vim.notify("HlsLens disabled", vim.log.levels.INFO)
-  end
-end, { desc = "Toggle HlsLens search highlighting" })
-
--- Add hlslens to which-key group
-if package.loaded["which-key"] then
-  require("which-key").add({
-    ["<leader>u"] = {
-      h = { "<cmd>HlsLensToggle<cr>", "Toggle HlsLens" },
-    },
+-- 2) Bootstrap lazy.nvim
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    lazypath,
   })
 end
+vim.opt.rtp:prepend(lazypath)
+
+-- 3) Helper for safe loads
+local function safe_require(mod)
+  local ok, m = pcall(require, mod)
+  if not ok then
+    vim.notify(string.format("[Warning] Could not load '%s': %s", mod, m), vim.log.levels.WARN)
+    return nil
+  end
+  return m
+end
+
+-- 4) Load core settings
+local opts = safe_require("config.options")
+if opts and type(opts.setup) == "function" then
+  opts.setup()
+end
+
+-- 5) Initialize Lazy and load plugins
+local lazy = safe_require("lazy")
+if lazy then
+  lazy.setup("plugins", {
+    lockfile = vim.fn.stdpath("config") .. "/lazy-lock.json",
+    defaults = { lazy = true, version = false },
+  })
+end
+
+-- 6) Load key mappings
+local keys = safe_require("config.keymaps")
+if keys and type(keys.setup) == "function" then
+  keys.setup()
+end
+
+-- 7) Load autocommands
+local autocmds = safe_require("config.autocmds")
+if autocmds and type(autocmds.setup) == "function" then
+  autocmds.setup()
+end
+
+-- 8) Load custom commands
+local cmds = safe_require("config.commands")
+if cmds and type(cmds.setup) == "function" then
+  cmds.setup()
+end
+
+-- 9) Load diagnostics
+local diag = safe_require("config.diagnostics")
+if diag and type(diag.setup) == "function" then
+  diag.setup()
+end
+
+-- 10) Load LSP
+local lsp = safe_require("config.lsp")
+if lsp and type(lsp.setup) == "function" then
+  lsp.setup()
+end
+
+require("utils.extras")
+require("utils.format")
+require("utils.goth")
+require("utils.utils")
+
+-- End of init.lua
