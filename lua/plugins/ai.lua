@@ -115,10 +115,10 @@ return {
       -- Use all of the built-in defaults
       require("codeium").setup()
 
-      -- Ensure Codeium is enabled by default
-      if vim.g.codeium_enabled == nil then
-        vim.g.codeium_enabled = true
-      end
+      -- -- Ensure Codeium is enabled by default
+      -- if vim.g.codeium_enabled == nil then
+      --   vim.g.codeium_enabled = true
+      -- end
 
       -- Highlight groups for suggestions
       vim.api.nvim_create_autocmd("ColorScheme", {
@@ -131,8 +131,8 @@ return {
 
       -- Toggle Codeium on/off
       vim.keymap.set("n", "<leader>ui", function()
-        -- the colon here passes the module table in as `self`
-        local enabled = require("codeium.api"):toggle()
+        local api = require("codeium.api")
+        local enabled = api.toggle(api)
         vim.notify(
           ("󰧑 Codeium %s"):format(enabled and "enabled" or "disabled"),
           vim.log.levels.INFO,
