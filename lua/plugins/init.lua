@@ -91,6 +91,4 @@ return {
       require("nvim-autopairs").setup()
     end,
   },
-
-  -- Conditional stack-specific plugins can live in separate files (plugins/goth.lua, plugins/nextjs.lua)
 }

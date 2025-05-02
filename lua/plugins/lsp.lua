@@ -15,7 +15,7 @@ return {
       -- Set up Mason first for server management
       require("mason").setup({
         ui = {
-          border = "rounded",
+          border = "single",
           icons = {
             package_installed = "✓",
             package_pending = "➜",
@@ -33,7 +33,7 @@ return {
           "templ",
           "htmx",
           -- Next.js stack
-          "tsserver",
+          "ts_ls",
           "tailwindcss",
           "cssls",
           "eslint",
@@ -77,7 +77,7 @@ return {
               checkThirdParty = false,
             },
             telemetry = { enable = false },
-            hint = inlay_hints,
+            inlayHints = inlay_hints,
           },
         },
       })
@@ -132,7 +132,7 @@ return {
       end
 
       -- TypeScript/JavaScript configuration
-      lspconfig.tsserver.setup({
+      lspconfig.ts_ls.setup({
         on_attach = function(client, bufnr)
           -- Disable formatting if using prettier through null-ls/conform
           client.server_capabilities.documentFormattingProvider = false

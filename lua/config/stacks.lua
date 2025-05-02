@@ -222,8 +222,8 @@ function M.configure_stack(stack_name)
     local lspconfig_ok, lspconfig = pcall(require, "lspconfig")
     if lspconfig_ok then
       -- TypeScript configuration
-      if lspconfig.tsserver then
-        lspconfig.tsserver.setup({
+      if lspconfig.ts_ls then
+        lspconfig.ts_ls.setup({
           settings = {
             typescript = {
               inlayHints = {

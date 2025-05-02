@@ -112,7 +112,8 @@ return {
   -- Copilot CMP integration
   {
     "zbirenbaum/copilot-cmp",
-    dependencies = "copilot.lua",
+    dependencies = { "zbirenbaum/copilot.lua" },
+    event = "InsertEnter",
     opts = {
       method = "getCompletionsCycling",
       formatters = {

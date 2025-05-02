@@ -1,19 +1,20 @@
--- lua/config/lazy.lua
--- Refactored Lazy.nvim configuration with custom commands for Git, updates, transparency, and theme toggling
+-- lua/config/lazy.lua – Lazy.nvim configuration and custom commands
 
--- Utility loader
-local safe_require = function(mod)
+-- 1) Helper for safe loads (avoid dependency on config.utils.safe_require)
+local function safe_require(mod)
   local ok, m = pcall(require, mod)
   if not ok then
-    vim.notify(string.format("[Lazy] Could not load '%s': %s", mod, m), vim.log.levels.WARN)
+    vim.notify(string.format("[Warning] Could not load '%s': %s", mod, m), vim.log.levels.WARN)
     return nil
   end
   return m
 end
 
--- Bootstrap lazy.nvim if missing
+
+-- 2) Bootstrap Lazy.nvim if missing
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+-- use isdirectory to avoid undefined fs_stat
+if vim.fn.isdirectory(lazypath) == 0 then
   vim.fn.system({
     "git",
     "clone",
@@ -25,19 +26,16 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- Load lazy
+-- 3) Load Lazy
 local lazy = safe_require("lazy")
 if not lazy then
   return
 end
 
--- Global flags
+-- 4) Global flags
 vim.g.use_snacks_ui = true
 
--- Import utilities
-_G.Util = safe_require("config.utils") or {}
-
--- Plugin specification
+-- 5) Plugin specification
 lazy.setup({
   spec = {
     { import = "plugins" },
@@ -47,26 +45,20 @@ lazy.setup({
     { "stevearc/oil.nvim", lazy = false, priority = 850 },
     { "folke/which-key.nvim", event = "VeryLazy", priority = 820 },
     { "folke/snacks.nvim", event = "VeryLazy", priority = 800 },
-    {
-      import = "plugins.goth",
-      cond = function()
+    { import = "plugins.goth", cond = function()
         return vim.g.current_stack ~= "nextjs"
-      end,
-    },
-    {
-      import = "plugins.nextjs",
-      cond = function()
+      end },
+    { import = "plugins.nextjs", cond = function()
         return vim.g.current_stack ~= "goth"
-      end,
-    },
+      end },
   },
   defaults = { lazy = true, version = false },
   install = { colorscheme = { "gruvbox-material", "tokyonight" }, missing = true },
-  ui = {
-    border = "rounded",
-    size = { width = 0.8, height = 0.8 },
-    icons = { loaded = "●", not_loaded = "○", lazy = "󰒲 " },
-  },
+  ui = { border = "rounded", size = { width = 0.8, height = 0.8 }, icons = {
+    loaded = "●",
+    not_loaded = "○",
+    lazy = "󰒲 "
+  } },
   checker = { enabled = true, notify = false, frequency = 3600 },
   change_detection = { enabled = true, notify = false },
   performance = {
@@ -77,10 +69,10 @@ lazy.setup({
   },
 })
 
--- Custom commands
+-- 6) Custom user commands
 local api = vim.api
 
--- Open Lazygit in toggleterm or fallback
+-- Lazygit toggle
 api.nvim_create_user_command("LazyGit", function()
   local ok, term = pcall(require, "toggleterm.terminal")
   if ok then
@@ -88,8 +80,7 @@ api.nvim_create_user_command("LazyGit", function()
       _G.toggle_lazygit()
     else
       local Terminal = term.Terminal or error("Toggleterm missing Terminal class")
-      _G.toggle_lazygit =
-        Terminal:new({ cmd = "lazygit", direction = "float", float_opts = { border = "rounded" } }).toggle
+      _G.toggle_lazygit = Terminal:new({ cmd = "lazygit", direction = "float", float_opts = { border = "rounded" } }).toggle
       _G.toggle_lazygit()
     end
   else
@@ -97,7 +88,7 @@ api.nvim_create_user_command("LazyGit", function()
   end
 end, { desc = "Open Lazygit" })
 
--- Update plugins and Mason packages
+-- Update all plugins and Mason packages
 api.nvim_create_user_command("UpdateAll", function()
   vim.cmd("Lazy update")
   if package.loaded["mason"] then
@@ -106,7 +97,7 @@ api.nvim_create_user_command("UpdateAll", function()
   vim.notify("Updated plugins and Mason packages", vim.log.levels.INFO)
 end, { desc = "Update all plugins and Mason packages" })
 
--- Toggle transparency for gruvbox-material
+-- Toggle background transparency
 api.nvim_create_user_command("ToggleTransparency", function()
   local flag = vim.g.gruvbox_material_transparent_background == 1 and 0 or 1
   vim.g.gruvbox_material_transparent_background = flag
@@ -116,7 +107,7 @@ api.nvim_create_user_command("ToggleTransparency", function()
   end
 end, { desc = "Toggle background transparency" })
 
--- Toggle between gruvbox-material and tokyonight
+-- Color scheme toggle
 api.nvim_create_user_command("ColorSchemeToggle", function()
   local current = vim.g.colors_name
   if current == "gruvbox-material" then
@@ -128,9 +119,8 @@ api.nvim_create_user_command("ColorSchemeToggle", function()
   end
 end, { desc = "Toggle between color schemes" })
 
--- Command for switching between stacks with auto-detection
-vim.api.nvim_create_user_command("StackFocus", function(opts)
-  -- Call the stack module's configure function
+-- Stack switching command
+api.nvim_create_user_command("StackFocus", function(opts)
   require("config.stack").configure_stack(opts.args)
 end, {
   nargs = "?",
