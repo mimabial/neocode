@@ -75,12 +75,6 @@ if lsp and type(lsp.setup) == "function" then
   lsp.setup()
 end
 
--- 11) Load options
-local opts = safe_require("config.options")
-if opts and type(opts.setup) == "function" then
-  opts.setup()
-end
-
 safe_require("utils.extras")
 safe_require("utils.format")
 safe_require("utils.goth")
