@@ -50,8 +50,8 @@ lazy.setup({
     { "stevearc/oil.nvim", lazy = false, priority = 880 },
     { "folke/which-key.nvim", event = "VeryLazy", priority = 870 },
     { "folke/snacks.nvim", event = "VeryLazy", priority = 860 },
-
-    -- Required plugins for rainbow delimiters
+    { "akinsho/bufferline.nvim", event = "VeryLazy", priority = 855 },
+    { "echasnovski/mini.bufremove", event = "VeryLazy", priority = 850 },
     { "HiPhish/rainbow-delimiters.nvim", lazy = true, priority = 850 },
 
     -- AI integration
