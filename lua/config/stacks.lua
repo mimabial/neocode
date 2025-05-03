@@ -222,6 +222,46 @@ function M.configure_stack(stack_name)
         })
       end
     end)
+
+    -- Add specific commands for GOTH
+    vim.api.nvim_create_user_command("GoRun", function()
+      -- Check if we're in a Go project
+      if vim.fn.filereadable("go.mod") ~= 1 then
+        vim.notify("Not in a Go project (no go.mod found)", vim.log.levels.WARN)
+        return
+      end
+
+      local term = safe_require("toggleterm.terminal")
+      if term and term.Terminal then
+        local Terminal = term.Terminal
+        local t = Terminal:new({
+          cmd = "go run .",
+          direction = "float",
+          close_on_exit = false,
+          on_open = function()
+            vim.cmd("startinsert!")
+          end,
+        })
+        t:toggle()
+      else
+        vim.cmd("!go run .")
+      end
+    end, { desc = "Run Go project" })
+
+    -- Add Templ generation command
+    vim.api.nvim_create_user_command("TemplGenerate", function()
+      if vim.fn.executable("templ") ~= 1 then
+        vim.notify("templ command not found", vim.log.levels.ERROR)
+        return
+      end
+
+      local result = vim.fn.system("templ generate")
+      if vim.v.shell_error ~= 0 then
+        vim.notify("Error generating templ files: " .. result, vim.log.levels.ERROR)
+      else
+        vim.notify("Successfully generated templ files", vim.log.levels.INFO)
+      end
+    end, { desc = "Generate Templ files" })
   end
 
   -- Configure for Next.js stack
@@ -332,6 +372,31 @@ function M.configure_stack(stack_name)
       end
     end)
   end
+
+  -- Add specific commands for Next.js
+  vim.api.nvim_create_user_command("NextDev", function()
+    -- Check if we're in a Next.js project
+    if vim.fn.filereadable("package.json") ~= 1 then
+      vim.notify("Not in a Next.js project (no package.json found)", vim.log.levels.WARN)
+      return
+    end
+
+    local term = safe_require("toggleterm.terminal")
+    if term and term.Terminal then
+      local Terminal = term.Terminal
+      local t = Terminal:new({
+        cmd = "npm run dev",
+        direction = "float",
+        close_on_exit = false,
+        on_open = function()
+          vim.cmd("startinsert!")
+        end,
+      })
+      t:toggle()
+    else
+      vim.cmd("!npm run dev")
+    end
+  end, { desc = "Run Next.js development server" })
 
   -- Return the configured stack
   return stack

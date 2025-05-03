@@ -122,40 +122,6 @@ return {
         end
       end
 
-      -- Safe diagnostic count retrieval with error handling
-      local function get_diagnostics_count(buf, severity)
-        local ok, count = pcall(function()
-          return #vim.diagnostic.get(buf, { severity = severity })
-        end)
-        return ok and count or 0
-      end
-
-      -- Check if a buffer is a real file
-      local function is_file(bufnr)
-        local ft = vim.bo[bufnr].filetype
-        local excluded = {
-          "oil",
-          "neo-tree",
-          "dashboard",
-          "alpha",
-          "starter",
-          "dapui_scopes",
-          "dapui_breakpoints",
-          "dapui_watches",
-          "dapui_stacks",
-          "TelescopePrompt",
-          "lazy",
-          "mason",
-          "qf",
-          "terminal",
-          "help",
-        }
-        if vim.tbl_contains(excluded, ft) then
-          return false
-        end
-        return true
-      end
-
       return {
         options = {
           close_command = function(n)

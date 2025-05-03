@@ -362,6 +362,46 @@ function M.setup()
     end,
     desc = "Disable auto comment continuation",
   })
+
+  -- 20) Throttle certain events during undo operations
+  local throttle_group = vim.api.nvim_create_augroup("ThrottleEvents", { clear = true })
+  vim.api.nvim_create_autocmd("OptionSet", {
+    group = throttle_group,
+    pattern = "undolevels",
+    callback = function()
+      -- Disable certain autocmds when undoing
+      if vim.opt.undolevels:get() < 0 then
+        -- Temporarily disable diagnostics
+        vim.diagnostic.disable()
+        -- Disable linting
+        if package.loaded["lint"] then
+          vim.g.lint_disabled_during_undo = true
+        end
+        -- Disable git signs updates
+        if package.loaded["gitsigns"] then
+          vim.g.gitsigns_disabled_during_undo = require("gitsigns").toggle_signs(false)
+        end
+      else
+        -- Re-enable diagnostics
+        vim.diagnostic.enable()
+        -- Re-enable linting
+        if vim.g.lint_disabled_during_undo then
+          vim.g.lint_disabled_during_undo = nil
+          if package.loaded["lint"] then
+            require("lint").try_lint()
+          end
+        end
+        -- Re-enable git signs
+        if vim.g.gitsigns_disabled_during_undo then
+          vim.g.gitsigns_disabled_during_undo = nil
+          if package.loaded["gitsigns"] then
+            require("gitsigns").toggle_signs(true)
+          end
+        end
+      end
+    end,
+    desc = "Throttle events during undo operations",
+  })
 end
 
 return M

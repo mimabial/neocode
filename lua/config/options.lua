@@ -7,6 +7,7 @@ local M = {}
 function M.setup()
   local opt = vim.opt
   local g = vim.g
+  local fn = vim.fn
 
   -- Leader keys
   g.mapleader = " "
@@ -49,12 +50,45 @@ function M.setup()
   opt.hlsearch = true -- Highlight search results
   opt.incsearch = true -- Incremental search
 
-  -- File handling
-  opt.swapfile = false -- Disable swapfile
-  opt.backup = false -- Disable backups
-  opt.undofile = true -- Persistent undo
-  opt.confirm = true -- Confirm before exiting unsaved
-  opt.autowrite = true -- Auto-save before commands
+  -- Performance tweaks
+  opt.lazyredraw = true -- Don't redraw when executing macros
+  opt.updatetime = 300 -- Faster completion
+
+  -- Backup & Swap: keep crash recovery, but avoid slow disk writes
+  --
+  -- enable traditional backups (e.g. file.txt~), but write them to a cache dir
+  opt.backup = true
+  opt.writebackup = true
+  opt.backupdir = fn.stdpath("data") .. "/backup//"
+  -- keep a swapfile for crash recovery, but in RAM (tmpfs) if available
+  opt.swapfile = true
+  -- e.g. /dev/shm on Linux; adjust to a tmpfs path on your system
+  opt.directory = "/dev/shm/nvim/swap//"
+  -- Skip fsync() after write (speed) but keep the above safety nets
+  opt.fsync = false
+
+  -- Persistent undo
+  --
+  -- keep undo history across sessions
+  opt.undofile = true
+  opt.undodir = fn.stdpath("data") .. "/undo//"
+  opt.undolevels = 1000 -- plenty of undo steps
+
+  -- ShaDa (shared data) for registers, marks, etc.
+  --
+  -- store everything—registers, marks, command history—in one file
+  opt.shada = [[!,'100,<50,s10,h]]
+  --   !   = save and load command-line history
+  --   '100 = save up to 100 marks per file
+  --   <50  = save up to 50 lines of registers
+  --   s10  = max item size 10 KB
+  --   h    = disable ‘hlsearch’ persistence
+
+  -- Misc safety / UX
+  --
+  opt.backupskip = { "/tmp/*", "/private/*" } -- skip noisy tmp files
+  opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize" }
+  opt.confirm = true -- prompt rather than error on unsaved changes
 
   -- Window splits
   opt.splitright = true -- Splits open to the right

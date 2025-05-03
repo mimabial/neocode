@@ -288,7 +288,7 @@ return {
                 buffer = "[Buf]",
                 path = "[Path]",
               }
-              vim_item.menu = source_names[entry.source.name] or "[" .. entry.source.name .. "]"
+              vim_item.menu = source_names[entry.source.name] or ("[" .. entry.source.name .. "]")
             end
 
             -- Special handling for AI sources
