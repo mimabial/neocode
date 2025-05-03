@@ -179,26 +179,7 @@ function M.setup()
   -- AI Assistant Keymaps
   -- ========================================
 
-  -- Copilot
-  if pcall(require, "copilot") then
-    map("n", "<leader>uc", function()
-      local copilot_client = vim.lsp.get_clients({ name = "copilot" })[1]
-      if copilot_client then
-        copilot_client.stop()
-        vim.notify("Copilot disabled", vim.log.levels.INFO)
-      else
-        vim.cmd("Copilot enable")
-        vim.notify("Copilot enabled", vim.log.levels.INFO)
-      end
-    end, { desc = "Toggle Copilot" })
-  end
-
-  -- Toggle Codeium on/off
-  if vim.fn.exists("g:codeium_enabled") == 1 then
-    map("n", "<leader>ui", function()
-      vim.cmd("Codeium Toggle")
-    end, { desc = "Toggle Codeium" })
-  end
+  -- Defined in the plugins file
 
   -- ========================================
   -- Stack-specific keymaps

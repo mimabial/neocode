@@ -43,7 +43,21 @@ return {
       },
     },
     config = function(_, opts)
-      require("copilot").setup(opts)
+      -- Safely load copilot with error handling
+      local ok, copilot = pcall(require, "copilot")
+      if not ok then
+        vim.notify("Failed to load Copilot: " .. tostring(copilot), vim.log.levels.WARN)
+        return
+      end
+
+      -- Try to setup copilot with error handling
+      local setup_ok, err = pcall(function()
+        copilot.setup(opts)
+      end)
+
+      if not setup_ok then
+        vim.notify("Copilot setup failed: " .. tostring(err), vim.log.levels.WARN)
+      end
 
       -- Highlight groups for copilot
       vim.api.nvim_create_autocmd("ColorScheme", {
@@ -60,17 +74,27 @@ return {
         end,
       })
 
-      -- -- Toggle keymap with fancy notification
-      -- vim.keymap.set("n", "<leader>uc", function()
-      --   local status = require("copilot.client").is_started()
-      --   if status then
-      --     vim.cmd("Copilot disable")
-      --     vim.notify(" Copilot disabled", vim.log.levels.INFO, { title = "Copilot" })
-      --   else
-      --     vim.cmd("Copilot enable")
-      --     vim.notify(" Copilot enabled", vim.log.levels.INFO, { title = "Copilot" })
-      --   end
-      -- end, { desc = "Toggle Copilot" })
+      -- Toggle keymap with fancy notification and status check
+      vim.keymap.set("n", "<leader>uc", function()
+        local status_ok, status = pcall(function()
+          return require("copilot.client").is_started()
+        end)
+
+        if not status_ok then
+          vim.notify("Could not check Copilot status", vim.log.levels.WARN)
+          return
+        end
+
+        if status then
+          -- Try to disable with error handling
+          pcall(vim.cmd, "Copilot disable")
+          vim.notify(" Copilot disabled", vim.log.levels.INFO, { title = "Copilot" })
+        else
+          -- Try to enable with error handling
+          pcall(vim.cmd, "Copilot enable")
+          vim.notify(" Copilot enabled", vim.log.levels.INFO, { title = "Copilot" })
+        end
+      end, { desc = "Toggle Copilot" })
     end,
   },
 
@@ -97,7 +121,21 @@ return {
       },
     },
     config = function(_, opts)
-      require("copilot_cmp").setup(opts)
+      -- Safe loading
+      local ok, copilot_cmp = pcall(require, "copilot_cmp")
+      if not ok then
+        vim.notify("Failed to load copilot-cmp", vim.log.levels.WARN)
+        return
+      end
+
+      -- Setup with error handling
+      local setup_ok, err = pcall(function()
+        copilot_cmp.setup(opts)
+      end)
+
+      if not setup_ok then
+        vim.notify("copilot-cmp setup failed: " .. tostring(err), vim.log.levels.WARN)
+      end
     end,
   },
 
@@ -112,8 +150,21 @@ return {
     },
     enabled = true, -- Always enable so it can act as a fallback
     config = function()
-      -- Use all of the built-in defaults
-      require("codeium").setup()
+      -- Safe loading
+      local ok, codeium = pcall(require, "codeium")
+      if not ok then
+        vim.notify("Failed to load Codeium", vim.log.levels.WARN)
+        return
+      end
+
+      -- Setup with error handling
+      local setup_ok, err = pcall(function()
+        codeium.setup({})
+      end)
+
+      if not setup_ok then
+        vim.notify("Codeium setup failed: " .. tostring(err), vim.log.levels.WARN)
+      end
 
       -- Ensure Codeium is enabled by default
       if vim.g.codeium_enabled == nil then
@@ -128,10 +179,14 @@ return {
           vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2", bold = true })
         end,
       })
-      -- -- Toggle Codeium on/off
-      -- vim.keymap.set("n", "<leader>ui", function()
-      --   vim.cmd("Codeium Toggle")
-      -- end, { desc = "Toggle Codeium" })
+
+      -- Toggle Codeium on/off with error handling
+      vim.keymap.set("n", "<leader>ui", function()
+        local toggle_ok = pcall(vim.cmd, "Codeium Toggle")
+        if not toggle_ok then
+          vim.notify("Failed to toggle Codeium", vim.log.levels.WARN)
+        end
+      end, { desc = "Toggle Codeium" })
 
       -- Insert-mode keymaps
       local keymaps = {
@@ -172,10 +227,36 @@ return {
       { "Exafunction/codeium.nvim", optional = true },
     },
     config = function()
-      local cmp = require("cmp")
-      local luasnip = require("luasnip")
+      -- Safe loading
+      local cmp_ok, cmp = pcall(require, "cmp")
+      if not cmp_ok then
+        vim.notify("Failed to load nvim-cmp", vim.log.levels.ERROR)
+        return
+      end
 
-      -- Ensure AI completion sources have proper priorities
+      local luasnip_ok, luasnip = pcall(require, "luasnip")
+      if not luasnip_ok then
+        vim.notify("Failed to load LuaSnip", vim.log.levels.WARN)
+        -- Continue anyway, we'll handle the missing dependency
+      end
+
+      -- AI suggestion priority comparator (fail-safe implementation)
+      local function ai_priority(entry1, entry2)
+        local name1 = entry1.source.name or ""
+        local name2 = entry2.source.name or ""
+
+        -- Priority ratings: copilot > codeium > lsp > others
+        local p1 = name1 == "copilot" and 100 or (name1 == "codeium" and 95 or (name1 == "nvim_lsp" and 90 or 0))
+        local p2 = name2 == "copilot" and 100 or (name2 == "codeium" and 95 or (name2 == "nvim_lsp" and 90 or 0))
+
+        if p1 ~= p2 then
+          return p1 > p2
+        end
+        -- If priorities are equal, fall through to other comparators
+        return nil
+      end
+
+      -- Build sources list dynamically and safely
       local sources = {
         { name = "copilot", group_index = 1, priority = 100 }, -- Highest priority
         { name = "codeium", group_index = 1, priority = 95 }, -- Fallback AI
@@ -185,16 +266,20 @@ return {
         { name = "path", group_index = 2, priority = 60 },
       }
 
-      -- AI suggestion priority comparator
-      local function ai_priority(entry1, entry2)
-        local name1, name2 = entry1.source.name, entry2.source.name
+      -- Check if sources exist before using them
+      local final_sources = {}
+      for _, source in ipairs(sources) do
+        local available = true
+        if source.name == "copilot" and not package.loaded["copilot_cmp"] then
+          available = pcall(require, "copilot_cmp")
+        elseif source.name == "codeium" and not package.loaded["codeium"] then
+          available = pcall(require, "codeium")
+        elseif source.name == "luasnip" and not luasnip_ok then
+          available = false
+        end
 
-        -- Set explicit priorities for AI sources vs others
-        local p1 = name1 == "copilot" and 100 or (name1 == "codeium" and 95 or (name1 == "nvim_lsp" and 90 or 0))
-        local p2 = name2 == "copilot" and 100 or (name2 == "codeium" and 95 or (name2 == "nvim_lsp" and 90 or 0))
-
-        if p1 ~= p2 then
-          return p1 > p2
+        if available then
+          table.insert(final_sources, source)
         end
       end
 
@@ -202,14 +287,16 @@ return {
       local winhl = "Normal:NormalFloat,FloatBorder:FloatBorder,CursorLine:PmenuSel,Search:None"
 
       -- Configure with AI-friendly settings
-      cmp.setup({
+      local config = {
         completion = {
           completeopt = "menu,menuone,noinsert",
           autocomplete = { require("cmp.types").cmp.TriggerEvent.TextChanged },
         },
         snippet = {
           expand = function(args)
-            luasnip.lsp_expand(args.body)
+            if luasnip_ok then
+              luasnip.lsp_expand(args.body)
+            end
           end,
         },
         window = {
@@ -227,7 +314,7 @@ return {
           ["<Tab>"] = cmp.mapping(function(fallback)
             if cmp.visible() then
               cmp.select_next_item()
-            elseif luasnip.expand_or_jumpable() then
+            elseif luasnip_ok and luasnip.expand_or_jumpable() then
               luasnip.expand_or_jump()
             else
               fallback()
@@ -236,14 +323,14 @@ return {
           ["<S-Tab>"] = cmp.mapping(function(fallback)
             if cmp.visible() then
               cmp.select_prev_item()
-            elseif luasnip.jumpable(-1) then
+            elseif luasnip_ok and luasnip.jumpable(-1) then
               luasnip.jump(-1)
             else
               fallback()
             end
           end, { "i", "s" }),
         }),
-        sources = cmp.config.sources(sources),
+        sources = cmp.config.sources(final_sources),
         sorting = {
           priority_weight = 2,
           comparators = {
@@ -304,18 +391,30 @@ return {
           end,
         },
         experimental = { ghost_text = { hl_group = "LspCodeLens" } },
-      })
+      }
+
+      -- Setup with error handling
+      local setup_ok, err = pcall(function()
+        cmp.setup(config)
+      end)
+
+      if not setup_ok then
+        vim.notify("nvim-cmp setup failed: " .. tostring(err), vim.log.levels.ERROR)
+        return
+      end
 
       -- Cmdline completions
-      cmp.setup.cmdline(":", {
-        mapping = cmp.mapping.preset.cmdline(),
-        sources = cmp.config.sources({ { name = "path" } }, { { name = "cmdline" } }),
-      })
+      pcall(function()
+        cmp.setup.cmdline(":", {
+          mapping = cmp.mapping.preset.cmdline(),
+          sources = cmp.config.sources({ { name = "path" } }, { { name = "cmdline" } }),
+        })
 
-      cmp.setup.cmdline("/", {
-        mapping = cmp.mapping.preset.cmdline(),
-        sources = { { name = "buffer" } },
-      })
+        cmp.setup.cmdline("/", {
+          mapping = cmp.mapping.preset.cmdline(),
+          sources = { { name = "buffer" } },
+        })
+      end)
 
       -- Ensure AI highlight groups are set
       vim.api.nvim_create_autocmd("ColorScheme", {
@@ -327,10 +426,12 @@ return {
       })
 
       -- Provide additional visual feedback with ghost text
-      cmp.setup({
-        experimental = { ghost_text = { hl_group = "Comment" } },
-        view = { entries = { name = "custom", selection_order = "near_cursor" } },
-      })
+      pcall(function()
+        cmp.setup({
+          experimental = { ghost_text = { hl_group = "Comment" } },
+          view = { entries = { name = "custom", selection_order = "near_cursor" } },
+        })
+      end)
     end,
   },
 }

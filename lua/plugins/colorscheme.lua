@@ -1,5 +1,5 @@
 -- lua/plugins/colorscheme.lua
--- Enhanced colorscheme configuration with Gruvbox Material, Everforest and Kanagawa
+-- Enhanced and fail-safe colorscheme configuration for Gruvbox Material, Everforest and Kanagawa
 
 return {
   -- Gruvbox Material (Primary)
@@ -161,6 +161,10 @@ return {
           ["@tag.tsx"] = { fg = colors.peachRed },
           ["@tag.delimiter.tsx"] = { fg = colors.surimiOrange },
           ["@constructor.tsx"] = { fg = colors.oniViolet },
+          -- Add explicit jsx support
+          ["@tag.jsx"] = { fg = colors.peachRed },
+          ["@tag.delimiter.jsx"] = { fg = colors.surimiOrange },
+          ["@constructor.jsx"] = { fg = colors.oniViolet },
 
           -- AI completions
           CmpItemKindCopilot = { fg = "#6CC644", bold = true },
@@ -170,11 +174,12 @@ return {
     },
   },
 
-  -- Commands and keymaps
+  -- Enhanced theme toggling with better error handling
   config = function()
-    -- Theme toggle commands
+    -- Theme toggle commands with improved failure handling
     vim.api.nvim_create_user_command("ColorSchemeToggle", function()
       local themes = { "gruvbox-material", "everforest", "kanagawa" }
+
       -- Enhanced current theme detection with fallback
       local current = vim.g.colors_name
       if not current then
@@ -182,7 +187,7 @@ return {
         vim.notify("Current theme not detected, defaulting to gruvbox-material", vim.log.levels.WARN)
       end
 
-      -- Find current theme index
+      -- Find current theme index with error handling
       local current_idx = 1
       local ok, err = pcall(function()
         for i, theme in ipairs(themes) do
@@ -202,12 +207,32 @@ return {
       -- Check if the chosen theme module is available
       local next_theme_avail = {}
       for _, theme in ipairs(themes) do
-        next_theme_avail[theme] = (theme == "gruvbox-material") or pcall(require, theme:gsub("-", "."))
+        if theme == "gruvbox-material" then
+          next_theme_avail[theme] = true -- Assume gruvbox is always available since it's loaded first
+        elseif theme == "everforest" then
+          next_theme_avail[theme] = pcall(require, "everforest")
+        elseif theme == "kanagawa" then
+          next_theme_avail[theme] = pcall(require, "kanagawa")
+        else
+          next_theme_avail[theme] = false
+        end
       end
 
       -- Get next theme with fallback to a theme we know exists
       local next_idx = current_idx % #themes + 1
       local next_theme = themes[next_idx]
+
+      -- If the next theme isn't available, find one that is
+      if not next_theme_avail[next_theme] then
+        vim.notify(next_theme .. " theme is not available, trying alternatives", vim.log.levels.WARN)
+        for i = 1, #themes do
+          local idx = (next_idx + i - 1) % #themes + 1
+          if next_theme_avail[themes[idx]] then
+            next_theme = themes[idx]
+            break
+          end
+        end
+      end
 
       -- Add icons for themes
       local theme_icons = {
@@ -220,20 +245,63 @@ return {
       local theme_icon = theme_icons[next_theme] or "󰏘 "
 
       -- Apply theme with safety checks
-      local applied_ok = pcall(vim.cmd, "colorscheme " .. next_theme)
+      local applied_ok, err = pcall(vim.cmd, "colorscheme " .. next_theme)
 
       if not applied_ok then
-        vim.notify("Failed to apply " .. next_theme .. " theme, falling back to gruvbox-material", vim.log.levels.WARN)
+        vim.notify("Failed to apply " .. next_theme .. " theme: " .. tostring(err), vim.log.levels.WARN)
 
         -- Try to fall back to gruvbox-material
         if next_theme ~= "gruvbox-material" then
-          pcall(vim.cmd, "colorscheme gruvbox-material")
-          vim.notify("Fell back to gruvbox-material theme", vim.log.levels.INFO)
-          theme_icon = theme_icons["gruvbox-material"]
-          next_theme = "gruvbox-material"
+          local fallback_ok = pcall(vim.cmd, "colorscheme gruvbox-material")
+          if fallback_ok then
+            vim.notify("Fell back to gruvbox-material theme", vim.log.levels.INFO)
+            theme_icon = theme_icons["gruvbox-material"]
+            next_theme = "gruvbox-material"
+          else
+            vim.notify("Could not apply any theme!", vim.log.levels.ERROR)
+            return
+          end
         end
       end
 
+      -- Apply stack-specific highlighting
+      if vim.g.current_stack then
+        local stack = vim.g.current_stack
+        local colors = nil
+
+        -- Get color palette based on active theme
+        if next_theme == "gruvbox-material" and _G.get_gruvbox_colors then
+          colors = _G.get_gruvbox_colors()
+        elseif next_theme == "everforest" and _G.get_everforest_colors then
+          colors = _G.get_everforest_colors()
+        elseif next_theme == "kanagawa" and _G.get_kanagawa_colors then
+          colors = _G.get_kanagawa_colors()
+        end
+
+        -- Apply stack-specific highlighting if colors are available
+        if colors then
+          if stack == "goth" or stack == "goth+nextjs" then
+            -- GOTH stack highlights
+            vim.api.nvim_set_hl(0, "@type.go", { fg = colors.yellow, bold = true })
+            vim.api.nvim_set_hl(0, "@function.go", { fg = colors.blue })
+            vim.api.nvim_set_hl(0, "@attribute.htmx", { fg = colors.green, italic = true, bold = true })
+            vim.api.nvim_set_hl(0, "@tag.attribute.htmx", { fg = colors.green, italic = true, bold = true })
+          end
+
+          if stack == "nextjs" or stack == "goth+nextjs" then
+            -- Next.js stack highlights
+            vim.api.nvim_set_hl(0, "@tag.tsx", { fg = colors.red })
+            vim.api.nvim_set_hl(0, "@tag.jsx", { fg = colors.red })
+            vim.api.nvim_set_hl(0, "@tag.delimiter.tsx", { fg = colors.orange })
+            vim.api.nvim_set_hl(0, "@tag.delimiter.jsx", { fg = colors.orange })
+            vim.api.nvim_set_hl(0, "@constructor.tsx", { fg = colors.purple })
+            vim.api.nvim_set_hl(0, "@constructor.jsx", { fg = colors.purple })
+            vim.api.nvim_set_hl(0, "@type.typescript", { fg = colors.yellow, bold = true })
+          end
+        end
+      end
+
+      -- Final notification with success message
       vim.notify(theme_icon .. "Switched to " .. next_theme .. " theme", vim.log.levels.INFO)
     end, { desc = "Toggle between color schemes (fail-safe)" })
 
@@ -241,103 +309,115 @@ return {
     vim.api.nvim_create_user_command("ToggleTransparency", function()
       -- Determine current theme and toggle its transparency
       local current = vim.g.colors_name or "gruvbox-material"
+      local success = false
+      local is_transparent = false
 
       if current == "gruvbox-material" then
         vim.g.gruvbox_material_transparent_background = vim.g.gruvbox_material_transparent_background == 1 and 0 or 1
-        pcall(vim.cmd, "colorscheme gruvbox-material") -- Reapply with pcall for safety
+        is_transparent = vim.g.gruvbox_material_transparent_background == 1
+        success = pcall(vim.cmd, "colorscheme gruvbox-material") -- Reapply with pcall for safety
       elseif current == "everforest" then
         vim.g.everforest_transparent_background = vim.g.everforest_transparent_background == 1 and 0 or 1
-        pcall(vim.cmd, "colorscheme everforest")
+        is_transparent = vim.g.everforest_transparent_background == 1
+        success = pcall(vim.cmd, "colorscheme everforest")
       elseif current == "kanagawa" then
         local ok, kanagawa = pcall(require, "kanagawa")
         if ok then
           local config = kanagawa.config
           config.transparent = not config.transparent
-          kanagawa.setup(config)
-          pcall(vim.cmd, "colorscheme kanagawa")
+          is_transparent = config.transparent
+          pcall(function()
+            kanagawa.setup(config)
+          end)
+          success = pcall(vim.cmd, "colorscheme kanagawa")
         end
       end
 
       -- Notify of transparency change
-      local is_transparent = false
-      if current == "gruvbox-material" then
-        is_transparent = vim.g.gruvbox_material_transparent_background == 1
-      elseif current == "everforest" then
-        is_transparent = vim.g.everforest_transparent_background == 1
-      elseif current == "kanagawa" then
-        local ok, kanagawa = pcall(require, "kanagawa")
-        if ok then
-          is_transparent = kanagawa.config and kanagawa.config.transparent
-        end
+      if success then
+        vim.notify(
+          "󱙱 Transparency " .. (is_transparent and "enabled" or "disabled"),
+          vim.log.levels.INFO,
+          { title = "Theme Changed" }
+        )
+      else
+        vim.notify("Failed to toggle transparency for " .. current .. " theme", vim.log.levels.WARN)
       end
-
-      vim.notify(
-        "󱙱 Transparency " .. (is_transparent and "enabled" or "disabled"),
-        vim.log.levels.INFO,
-        { title = "Theme Changed" }
-      )
     end, { desc = "Toggle background transparency" })
 
-    -- Set default colorscheme if not already set
+    -- Set default colorscheme if not already set with error handling
     if not vim.g.colors_name then
-      vim.cmd("colorscheme gruvbox-material")
+      local set_ok, err = pcall(vim.cmd, "colorscheme gruvbox-material")
+      if not set_ok then
+        vim.notify("Failed to set default colorscheme: " .. tostring(err), vim.log.levels.ERROR)
+      end
     end
 
-    -- Apply stack-specific highlighting enhancements
+    -- Apply stack-specific highlighting enhancements with error handling
     vim.api.nvim_create_autocmd("ColorScheme", {
       callback = function()
-        -- Get the current colorscheme and stack
-        local colorscheme = vim.g.colors_name or "gruvbox-material"
-        local stack = vim.g.current_stack or ""
+        pcall(function()
+          -- Get the current colorscheme and stack
+          local colorscheme = vim.g.colors_name or "gruvbox-material"
+          local stack = vim.g.current_stack or ""
 
-        -- Get color palette based on current theme
-        local colors
-        if colorscheme == "gruvbox-material" and _G.get_gruvbox_colors then
-          colors = _G.get_gruvbox_colors()
-        elseif colorscheme == "everforest" and _G.get_everforest_colors then
-          colors = _G.get_everforest_colors()
-        elseif colorscheme == "kanagawa" and _G.get_kanagawa_colors then
-          colors = _G.get_kanagawa_colors()
-        else
-          -- Default fallback palette
-          colors = {
-            red = "#f7768e",
-            green = "#9ece6a",
-            blue = "#7aa2f7",
-            yellow = "#e0af68",
-            purple = "#bb9af7",
-            aqua = "#2ac3de",
-            orange = "#ff9e64",
-          }
-        end
+          -- Get color palette based on current theme
+          local colors
+          if colorscheme == "gruvbox-material" and _G.get_gruvbox_colors then
+            colors = _G.get_gruvbox_colors()
+          elseif colorscheme == "everforest" and _G.get_everforest_colors then
+            colors = _G.get_everforest_colors()
+          elseif colorscheme == "kanagawa" and _G.get_kanagawa_colors then
+            colors = _G.get_kanagawa_colors()
+          else
+            -- Default fallback palette
+            colors = {
+              red = "#f7768e",
+              green = "#9ece6a",
+              blue = "#7aa2f7",
+              yellow = "#e0af68",
+              purple = "#bb9af7",
+              aqua = "#2ac3de",
+              orange = "#ff9e64",
+            }
+          end
 
-        -- Apply stack-specific highlighting
-        if stack == "goth" or stack == "goth+nextjs" then
-          -- GOTH stack highlighting
-          vim.api.nvim_set_hl(0, "@type.go", { fg = colors.yellow, bold = true })
-          vim.api.nvim_set_hl(0, "@function.go", { fg = colors.blue })
-          vim.api.nvim_set_hl(0, "@attribute.htmx", { fg = colors.green, italic = true, bold = true })
-          vim.api.nvim_set_hl(0, "@tag.attribute.htmx", { fg = colors.green, italic = true, bold = true })
-        end
+          -- Apply stack-specific highlighting
+          if stack == "goth" or stack == "goth+nextjs" then
+            -- GOTH stack highlighting
+            vim.api.nvim_set_hl(0, "@type.go", { fg = colors.yellow, bold = true })
+            vim.api.nvim_set_hl(0, "@function.go", { fg = colors.blue })
+            vim.api.nvim_set_hl(0, "@attribute.htmx", { fg = colors.green, italic = true, bold = true })
+            vim.api.nvim_set_hl(0, "@tag.attribute.htmx", { fg = colors.green, italic = true, bold = true })
+          end
 
-        if stack == "nextjs" or stack == "goth+nextjs" then
-          -- Next.js stack highlighting
-          vim.api.nvim_set_hl(0, "@tag.tsx", { fg = colors.red })
-          vim.api.nvim_set_hl(0, "@tag.delimiter.tsx", { fg = colors.orange })
-          vim.api.nvim_set_hl(0, "@constructor.tsx", { fg = colors.purple })
-          vim.api.nvim_set_hl(0, "@type.typescript", { fg = colors.yellow, bold = true })
-        end
+          if stack == "nextjs" or stack == "goth+nextjs" then
+            -- Next.js stack highlighting
+            vim.api.nvim_set_hl(0, "@tag.tsx", { fg = colors.red })
+            vim.api.nvim_set_hl(0, "@tag.delimiter.tsx", { fg = colors.orange })
+            vim.api.nvim_set_hl(0, "@constructor.tsx", { fg = colors.purple })
+            vim.api.nvim_set_hl(0, "@type.typescript", { fg = colors.yellow, bold = true })
+            -- Add explicit jsx support
+            vim.api.nvim_set_hl(0, "@tag.jsx", { fg = colors.red })
+            vim.api.nvim_set_hl(0, "@tag.delimiter.jsx", { fg = colors.orange })
+            vim.api.nvim_set_hl(0, "@constructor.jsx", { fg = colors.purple })
+          end
 
-        -- AI integration highlighting
-        vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = "#6CC644", bold = true })
-        vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2", bold = true })
-        vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = colors.grey or "#928374", italic = true })
-        vim.api.nvim_set_hl(0, "CodeiumSuggestion", { fg = colors.grey or "#928374", italic = true })
+          -- AI integration highlighting
+          vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = "#6CC644", bold = true })
+          vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2", bold = true })
+          vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = colors.grey or "#928374", italic = true })
+          vim.api.nvim_set_hl(0, "CodeiumSuggestion", { fg = colors.grey or "#928374", italic = true })
+        end)
       end,
     })
 
-    -- Keymaps
-    vim.keymap.set("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle Colorscheme" })
-    vim.keymap.set("n", "<leader>uT", "<cmd>ToggleTransparency<cr>", { desc = "Toggle Transparency" })
+    -- Keymaps with error handling
+    local function safe_keymap(mode, lhs, rhs, opts)
+      pcall(vim.keymap.set, mode, lhs, rhs, opts or {})
+    end
+
+    safe_keymap("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle Colorscheme" })
+    safe_keymap("n", "<leader>uT", "<cmd>ToggleTransparency<cr>", { desc = "Toggle Transparency" })
   end,
 }

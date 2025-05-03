@@ -1,5 +1,5 @@
 -- lua/config/stacks.lua
--- Enhanced and fail-safe stack detection for GOTH and Next.js
+-- Enhanced, fail-safe stack detection and configuration for GOTH and Next.js
 
 local M = {}
 
@@ -106,9 +106,24 @@ function M.detect_stack()
       nextjs_score = nextjs_score + 3
     end
 
-    -- Add logging for stack detection (helps with debugging)
+    -- Pages directory for older Next.js projects
+    if exists("pages") and (exists("pages/*.tsx") or exists("pages/*.jsx")) then
+      nextjs_score = nextjs_score + 2
+    end
+
+    -- Package.json with next dependency
+    if exists("package.json") then
+      if file_contains("package.json", '"next":', 30) then
+        nextjs_score = nextjs_score + 3
+      end
+    end
+
+    -- Add debug logging for stack detection
     vim.defer_fn(function()
-      vim.notify(string.format("GOTH score: %d, Next.js score: %d", goth_score, nextjs_score), vim.log.levels.DEBUG)
+      vim.notify(
+        string.format("Stack detection: GOTH score: %d, Next.js score: %d", goth_score, nextjs_score),
+        vim.log.levels.DEBUG
+      )
     end, 1000)
 
     -- Determine the result based on scores
@@ -262,6 +277,77 @@ function M.configure_stack(stack_name)
         vim.notify("Successfully generated templ files", vim.log.levels.INFO)
       end
     end, { desc = "Generate Templ files" })
+
+    -- Add GOTH server command for running with hot reload
+    vim.api.nvim_create_user_command("GOTHServer", function()
+      -- Check if we have air for hot reload
+      local air_exists = vim.fn.filereadable(".air.toml") == 1
+      local cmd = air_exists and "air" or "templ generate && go run ."
+
+      local term = safe_require("toggleterm.terminal")
+      if term and term.Terminal then
+        local Terminal = term.Terminal
+        local t = Terminal:new({
+          cmd = cmd,
+          direction = "float",
+          close_on_exit = false,
+          on_open = function()
+            vim.cmd("startinsert!")
+            vim.notify("Starting GOTH server" .. (air_exists and " with air hot-reload" or ""), vim.log.levels.INFO)
+          end,
+        })
+        t:toggle()
+      else
+        vim.cmd("!" .. cmd)
+      end
+    end, { desc = "Run GOTH server" })
+
+    -- Add Templ Component creation command
+    vim.api.nvim_create_user_command("TemplNew", function()
+      -- Get the component name from user input
+      local component_name = vim.fn.input("Component Name: ")
+      if component_name == "" then
+        vim.notify("Component name cannot be empty", vim.log.levels.ERROR)
+        return
+      end
+
+      -- Create a new buffer
+      local bufnr = vim.api.nvim_create_buf(true, false)
+
+      -- Set buffer name
+      vim.api.nvim_buf_set_name(bufnr, component_name .. ".templ")
+
+      -- Set filetype
+      vim.api.nvim_buf_set_option(bufnr, "filetype", "templ")
+
+      -- Generate component content
+      local content = {
+        "package components",
+        "",
+        "type " .. component_name .. "Props struct {",
+        "  // Add props here",
+        "}",
+        "",
+        "templ " .. component_name .. "(props " .. component_name .. "Props) {",
+        "  <div>",
+        "    <h1>" .. component_name .. " Component</h1>",
+        "    <p>Content goes here</p>",
+        "  </div>",
+        "}",
+      }
+
+      -- Set buffer content
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
+
+      -- Open the buffer in the current window
+      vim.api.nvim_win_set_buf(0, bufnr)
+
+      -- Position cursor at the props section
+      vim.api.nvim_win_set_cursor(0, { 4, 0 })
+
+      -- Enter insert mode
+      vim.cmd("startinsert!")
+    end, { desc = "Create new Templ component" })
   end
 
   -- Configure for Next.js stack
@@ -371,32 +457,204 @@ function M.configure_stack(stack_name)
         })
       end
     end)
+
+    -- Add specific Next.js commands
+
+    -- Next.js dev server
+    vim.api.nvim_create_user_command("NextDev", function()
+      -- Check if we're in a Next.js project
+      if vim.fn.filereadable("package.json") ~= 1 then
+        vim.notify("Not in a Next.js project (no package.json found)", vim.log.levels.WARN)
+        return
+      end
+
+      local term = safe_require("toggleterm.terminal")
+      if term and term.Terminal then
+        local Terminal = term.Terminal
+        local t = Terminal:new({
+          cmd = "npm run dev",
+          direction = "float",
+          close_on_exit = false,
+          on_open = function()
+            vim.cmd("startinsert!")
+            vim.notify(" Starting Next.js development server...", vim.log.levels.INFO, { title = "Next.js" })
+          end,
+        })
+        t:toggle()
+      else
+        vim.cmd("!npm run dev")
+      end
+    end, { desc = "Run Next.js development server" })
+
+    -- Next.js build command
+    vim.api.nvim_create_user_command("NextBuild", function()
+      if vim.fn.filereadable("package.json") ~= 1 then
+        vim.notify("Not in a Next.js project (no package.json found)", vim.log.levels.WARN)
+        return
+      end
+
+      local term = safe_require("toggleterm.terminal")
+      if term and term.Terminal then
+        local Terminal = term.Terminal
+        local t = Terminal:new({
+          cmd = "npm run build",
+          direction = "float",
+          close_on_exit = false,
+          on_open = function()
+            vim.cmd("startinsert!")
+            vim.notify(" Building Next.js application...", vim.log.levels.INFO, { title = "Next.js" })
+          end,
+        })
+        t:toggle()
+      else
+        vim.cmd("!npm run build")
+      end
+    end, { desc = "Build Next.js application" })
+
+    -- Next.js component creation
+    vim.api.nvim_create_user_command("NextNewComponent", function()
+      -- Get component information
+      local component_name = vim.fn.input("Component Name: ")
+      if component_name == "" then
+        vim.notify("Component name cannot be empty", vim.log.levels.ERROR)
+        return
+      end
+
+      local is_client = vim.fn.confirm("Is this a client component?", "&Yes\n&No", 1) == 1
+
+      -- Create components directory if it doesn't exist
+      vim.fn.mkdir("components", "p")
+
+      -- File path and content
+      local file_path = "components/" .. component_name .. ".tsx"
+      local content = {}
+
+      if is_client then
+        table.insert(content, "'use client'")
+        table.insert(content, "")
+        table.insert(content, "import { useState } from 'react'")
+        table.insert(content, "")
+      end
+
+      table.insert(content, "interface " .. component_name .. "Props {")
+      table.insert(content, "  // Define props here")
+      table.insert(content, "  children?: React.ReactNode")
+      table.insert(content, "}")
+      table.insert(content, "")
+      table.insert(
+        content,
+        "export default function " .. component_name .. "({ children }: " .. component_name .. "Props) {"
+      )
+
+      if is_client then
+        table.insert(content, "  const [state, setState] = useState(false)")
+        table.insert(content, "")
+      end
+
+      table.insert(content, "  return (")
+      table.insert(content, '    <div className="p-4 border rounded shadow">')
+      table.insert(content, '      <h2 className="text-xl font-bold">' .. component_name .. "</h2>")
+      table.insert(content, "      {children}")
+      table.insert(content, "    </div>")
+      table.insert(content, "  )")
+      table.insert(content, "}")
+
+      -- Create the file
+      local bufnr = vim.api.nvim_create_buf(true, false)
+      vim.api.nvim_buf_set_name(bufnr, file_path)
+      vim.api.nvim_buf_set_option(bufnr, "filetype", "typescriptreact")
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
+      vim.api.nvim_win_set_buf(0, bufnr)
+
+      -- Position cursor at props interface
+      vim.api.nvim_win_set_cursor(0, { 4, 0 })
+
+      -- Save the file
+      vim.cmd("write")
+      vim.notify(" Created new component: " .. file_path, vim.log.levels.INFO, { title = "Next.js" })
+    end, { desc = "Create a new Next.js component" })
+
+    -- Next.js page creation
+    vim.api.nvim_create_user_command("NextNewPage", function()
+      -- Get the page name from user input
+      local page_name = vim.fn.input("Page Name (e.g. about): ")
+      if page_name == "" then
+        vim.notify("Page name cannot be empty", vim.log.levels.ERROR)
+        return
+      end
+
+      -- Determine if this is a new App Router or Pages Router project
+      local is_app_router = vim.fn.isdirectory("app") == 1
+
+      local file_path
+      local content
+
+      if is_app_router then
+        -- App Router structure
+        file_path = "app/" .. page_name .. "/page.tsx"
+        content = {
+          "export default function " .. page_name:gsub("^%l", string.upper) .. "Page() {",
+          "  return (",
+          '    <div className="container mx-auto py-8">',
+          '      <h1 className="text-3xl font-bold">' .. page_name:gsub("^%l", string.upper) .. " Page</h1>",
+          "      <p>This is the " .. page_name .. " page content.</p>",
+          "    </div>",
+          "  )",
+          "}",
+        }
+
+        -- Create directory if it doesn't exist
+        vim.fn.mkdir("app/" .. page_name, "p")
+      else
+        -- Pages Router structure
+        file_path = "pages/" .. page_name .. ".tsx"
+        content = {
+          "import Head from 'next/head'",
+          "import type { NextPage } from 'next'",
+          "",
+          "const " .. page_name:gsub("^%l", string.upper) .. ": NextPage = () => {",
+          "  return (",
+          "    <>",
+          "      <Head>",
+          "        <title>" .. page_name:gsub("^%l", string.upper) .. " Page</title>",
+          '        <meta name="description" content="' .. page_name .. ' page" />',
+          "      </Head>",
+          '      <div className="container mx-auto py-8">',
+          '        <h1 className="text-3xl font-bold">' .. page_name:gsub("^%l", string.upper) .. " Page</h1>",
+          "        <p>This is the " .. page_name .. " page content.</p>",
+          "      </div>",
+          "    </>",
+          "  )",
+          "}",
+          "",
+          "export default " .. page_name:gsub("^%l", string.upper),
+        }
+
+        -- Create pages directory if needed
+        vim.fn.mkdir("pages", "p")
+      end
+
+      -- Create the file
+      local bufnr = vim.api.nvim_create_buf(true, false)
+      vim.api.nvim_buf_set_name(bufnr, file_path)
+      vim.api.nvim_buf_set_option(bufnr, "filetype", "typescriptreact")
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
+      vim.api.nvim_win_set_buf(0, bufnr)
+
+      -- Save the file
+      vim.cmd("write")
+      vim.notify(" Created new page: " .. file_path, vim.log.levels.INFO, { title = "Next.js" })
+    end, { desc = "Create a new Next.js page" })
   end
 
-  -- Add specific commands for Next.js
-  vim.api.nvim_create_user_command("NextDev", function()
-    -- Check if we're in a Next.js project
-    if vim.fn.filereadable("package.json") ~= 1 then
-      vim.notify("Not in a Next.js project (no package.json found)", vim.log.levels.WARN)
-      return
+  -- Apply colorscheme highlights based on stack
+  pcall(function()
+    local colors_name = vim.g.colors_name
+    if colors_name then
+      -- Re-trigger colorscheme to apply stack-specific highlights
+      vim.cmd("colorscheme " .. colors_name)
     end
-
-    local term = safe_require("toggleterm.terminal")
-    if term and term.Terminal then
-      local Terminal = term.Terminal
-      local t = Terminal:new({
-        cmd = "npm run dev",
-        direction = "float",
-        close_on_exit = false,
-        on_open = function()
-          vim.cmd("startinsert!")
-        end,
-      })
-      t:toggle()
-    else
-      vim.cmd("!npm run dev")
-    end
-  end, { desc = "Run Next.js development server" })
+  end)
 
   -- Return the configured stack
   return stack

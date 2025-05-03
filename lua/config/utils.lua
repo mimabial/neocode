@@ -4,11 +4,11 @@
 local M = {}
 
 -- Get utils from the correct location
-local utils_ok, utils = pcall(require, "utils.utils")
+local utils_ok, utils = pcall(require, "utils.init")
 if not utils_ok then
-  vim.notify("Failed to load utils.utils module. Some features may not work.", vim.log.levels.WARN)
+  vim.notify("Failed to load utils.init module. Some features may not work.", vim.log.levels.WARN)
   -- Fallback implementations for critical functions
-  
+
   -- Fallback for get_hl_color (used by lualine)
   M.get_hl_color = function(group, attr, fallback)
     local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group })
@@ -21,7 +21,7 @@ if not utils_ok then
     end
     return tostring(val)
   end
-  
+
   -- Other fallback utility functions
   M.cwd = function()
     local cwd = vim.fn.getcwd()
@@ -31,7 +31,7 @@ if not utils_ok then
     end
     return vim.fn.pathshorten(cwd)
   end
-  
+
   M.search_count = function()
     local sc = vim.fn.searchcount({ maxcount = 999, timeout = 500 })
     if vim.v.hlsearch == 1 and sc.total > 0 then
@@ -39,11 +39,11 @@ if not utils_ok then
     end
     return ""
   end
-  
+
   return M
 end
 
--- Re-export all functions from utils.utils
+-- Re-export all functions from utils.init
 for k, v in pairs(utils) do
   M[k] = v
 end

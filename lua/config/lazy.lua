@@ -38,6 +38,11 @@ vim.g.use_snacks_ui = true
 lazy.setup({
   spec = {
     { import = "plugins" },
+    {
+      "kevinhwang91/promise-async",
+      lazy = true,
+      priority = 1001, -- Higher than others to ensure it loads first when needed
+    },
     -- Core theme plugins with high priority
     { "sainnhe/gruvbox-material", lazy = false, priority = 1000 },
     { "sainnhe/everforest", lazy = true, priority = 950 },
@@ -213,3 +218,29 @@ api.nvim_create_user_command("PluginCheck", function()
     end
   end
 end, { desc = "Check for plugin errors" })
+
+-- Treesitter parser installation command
+api.nvim_create_user_command("InstallTSParsers", function()
+  -- List of parsers to install for both stacks
+  local parsers = {
+    "javascript",
+    "typescript",
+    "tsx",
+    "jsx",
+    "go",
+    "gomod",
+    "templ",
+    "html",
+    "css",
+    "json",
+  }
+
+  local install_cmd = "TSInstall " .. table.concat(parsers, " ")
+  local ok, err = pcall(vim.cmd, install_cmd)
+
+  if ok then
+    vim.notify("Successfully installed TreeSitter parsers", vim.log.levels.INFO)
+  else
+    vim.notify("Error installing TreeSitter parsers: " .. tostring(err), vim.log.levels.ERROR)
+  end
+end, { desc = "Install TreeSitter parsers for both stacks" })

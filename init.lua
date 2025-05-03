@@ -3,8 +3,10 @@
 -- 0) Leader & feature flags
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
+
 vim.g.default_explorer = "oil"
 vim.g.default_picker = "snacks"
+
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 

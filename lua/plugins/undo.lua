@@ -1,8 +1,18 @@
 -- lua/plugins/undo.lua
 return {
+  -- Promise dependency - Added to fix nvim-ufo error
+  {
+    "kevinhwang91/promise-async",
+    lazy = true,
+  },
+
   -- Folding
   {
-    "kevinhwang91/nvim-ufo", -- This already exists but needs tweaking
+    "kevinhwang91/nvim-ufo",
+    dependencies = {
+      "kevinhwang91/promise-async",
+    },
+    event = "BufReadPost",
     opts = {
       provider_selector = function()
         return { "treesitter", "indent" }
@@ -38,6 +48,22 @@ return {
         return newVirtText
       end,
     },
+    init = function()
+      -- Add failsafe initialization to prevent startup errors
+      vim.o.foldcolumn = "0"
+      vim.o.foldlevel = 99
+      vim.o.foldlevelstart = 99
+      vim.o.foldenable = true
+    end,
+    config = function(_, opts)
+      -- Safer configuration with error handling
+      local status_ok, ufo = pcall(require, "ufo")
+      if not status_ok then
+        vim.notify("UFO plugin not loaded properly", vim.log.levels.WARN)
+        return
+      end
+      ufo.setup(opts)
+    end,
     keys = {
       {
         "zR",
@@ -77,12 +103,12 @@ return {
     },
   },
 
-  -- Add proper undo configuration
+  -- Proper undo configuration
   {
     "mbbill/undotree",
     cmd = "UndotreeToggle",
     keys = {
-      { "<leader>u", "<cmd>UndotreeToggle<cr>", desc = "Toggle Undotree" },
+      { "<leader>U", "<cmd>UndotreeToggle<cr>", desc = "Toggle Undotree" },
     },
     config = function()
       -- Create undo directory if it doesn't exist

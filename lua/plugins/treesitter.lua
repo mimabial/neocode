@@ -31,6 +31,7 @@ return {
         "vim",
         "vimdoc",
         "query",
+
         -- Web languages
         "html",
         "javascript",
@@ -41,6 +42,8 @@ return {
         "graphql",
         "tsx",
         "typescript",
+        "jsx", -- Explicit JSX parser
+
         -- GOTH stack
         "go",
         "gomod",
@@ -51,11 +54,12 @@ return {
         "tsx",
         "typescript",
         "javascript",
-        "jsx",
+        "jsx", -- Duplicate entry, will be deduplicated
         "prisma",
         "regex",
         "markdown",
         "markdown_inline",
+
         -- Additional useful parsers
         "sql",
         "svelte",
@@ -151,18 +155,51 @@ return {
       },
     },
     config = function(_, opts)
-      -- Remove duplicates in ensure_installed
-      local seen = {}
-      opts.ensure_installed = vim.tbl_filter(function(lang)
-        if seen[lang] then
-          return false
-        end
-        seen[lang] = true
-        return true
-      end, opts.ensure_installed)
+      -- Enhanced failsafe installation handling
+      local function setup_treesitter()
+        -- Remove duplicates in ensure_installed
+        local seen = {}
+        opts.ensure_installed = vim.tbl_filter(function(lang)
+          if seen[lang] then
+            return false
+          end
+          seen[lang] = true
+          return true
+        end, opts.ensure_installed)
 
-      -- Setup TS
-      require("nvim-treesitter.configs").setup(opts)
+        -- Attempt to install missing parsers first
+        local missing = {}
+        for _, lang in ipairs(opts.ensure_installed) do
+          local ok = pcall(function()
+            if not require("nvim-treesitter.parsers").has_parser(lang) then
+              table.insert(missing, lang)
+            end
+          end)
+          if not ok then
+            vim.notify("Error checking parser for " .. lang, vim.log.levels.WARN)
+          end
+        end
+
+        if #missing > 0 then
+          vim.notify("Installing missing TreeSitter parsers: " .. table.concat(missing, ", "), vim.log.levels.INFO)
+          vim.cmd("TSInstall " .. table.concat(missing, " "))
+        end
+
+        -- Setup TS with error handling
+        local setup_ok, err = pcall(function()
+          require("nvim-treesitter.configs").setup(opts)
+        end)
+
+        if not setup_ok then
+          vim.notify("TreeSitter setup error: " .. tostring(err), vim.log.levels.ERROR)
+        end
+      end
+
+      -- Run setup with error handling
+      local ok, _ = pcall(setup_treesitter)
+      if not ok then
+        vim.notify("TreeSitter initialization failed", vim.log.levels.ERROR)
+      end
 
       -- Rainbow delimiters setup - fail-safe with pcall
       local has_rainbow, rainbow_delimiters = pcall(require, "rainbow-delimiters")
@@ -177,6 +214,7 @@ return {
             lua = "rainbow-blocks",
             html = "rainbow-tags",
             tsx = "rainbow-tags",
+            jsx = "rainbow-tags", -- Added explicit jsx support
             templ = "rainbow-tags",
           },
           highlight = {
@@ -191,51 +229,80 @@ return {
         }
       end
 
-      -- templ parser support
-      local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
-      if not parser_config.templ then
-        parser_config.templ = {
-          install_info = {
-            url = "https://github.com/vrischmann/tree-sitter-templ.git",
-            files = { "src/parser.c", "src/scanner.c" },
-            branch = "main",
-          },
-          filetype = "templ",
-        }
-      end
+      -- Safe parser configurations with error handling
+      pcall(function()
+        -- templ parser support
+        local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
+        if not parser_config.templ then
+          parser_config.templ = {
+            install_info = {
+              url = "https://github.com/vrischmann/tree-sitter-templ.git",
+              files = { "src/parser.c", "src/scanner.c" },
+              branch = "main",
+            },
+            filetype = "templ",
+          }
+        end
 
-      -- Add HTMX attribute highlighting - FIX: use direct references to the parse module instead of local variables
-      local parsers = require("nvim-treesitter.parsers")
-      if parsers and parsers.filetype_to_parsername then
-        parsers.filetype_to_parsername.templ = "templ"
-        parsers.filetype_to_parsername.html = "html"
-      end
+        -- Ensure JSX parser is available
+        if not parser_config.jsx then
+          -- JSX shares the same grammar as TSX in tree-sitter
+          parser_config.jsx = {
+            install_info = parser_config.tsx.install_info,
+            filetype = "javascriptreact",
+          }
+        end
 
-      -- Create HTMX injection for HTML files
-      vim.treesitter.query.set(
-        "html",
-        "injections",
-        [[
-        ((attribute
-          (attribute_name) @_attr_name
-          (attribute_value) @injection.content)
-         (#match? @_attr_name "^hx-.*$")
-         (#set! injection.language "javascript"))
-      ]]
-      )
+        -- Register parsers for filetypes
+        local parsers = require("nvim-treesitter.parsers")
+        if parsers and parsers.filetype_to_parsername then
+          parsers.filetype_to_parsername.templ = "templ"
+          parsers.filetype_to_parsername.html = "html"
+          parsers.filetype_to_parsername.javascriptreact = "jsx"
+        end
+      end)
 
-      -- Create similar injection for templ files
-      vim.treesitter.query.set(
-        "templ",
-        "injections",
-        [[
-        ((attribute
-          (attribute_name) @_attr_name
-          (attribute_value) @injection.content)
-         (#match? @_attr_name "^hx-.*$")
-         (#set! injection.language "javascript"))
-      ]]
-      )
+      -- HTMX attribute injection queries with error handling
+      pcall(function()
+        -- Create HTMX injection for HTML files
+        vim.treesitter.query.set(
+          "html",
+          "injections",
+          [[
+          ((attribute
+            (attribute_name) @_attr_name
+            (attribute_value) @injection.content)
+           (#match? @_attr_name "^hx-.*$")
+           (#set! injection.language "javascript"))
+        ]]
+        )
+
+        -- Create similar injection for templ files
+        vim.treesitter.query.set(
+          "templ",
+          "injections",
+          [[
+          ((attribute
+            (attribute_name) @_attr_name
+            (attribute_value) @injection.content)
+           (#match? @_attr_name "^hx-.*$")
+           (#set! injection.language "javascript"))
+        ]]
+        )
+
+        -- Also add for JSX/TSX
+        vim.treesitter.query.set(
+          "jsx",
+          "injections",
+          [[
+          ((attribute
+            (attribute_name) @_attr_name
+            (attribute_value) @injection.content)
+           (#match? @_attr_name "^hx-.*$")
+           (#set! injection.language "javascript"))
+        ]]
+        )
+      end)
 
       -- Setup custom highlights
       vim.api.nvim_create_autocmd("ColorScheme", {
@@ -271,13 +338,18 @@ return {
 
             -- React/JSX highlights
             vim.api.nvim_set_hl(0, "@tag.tsx", { fg = colors.red })
+            vim.api.nvim_set_hl(0, "@tag.jsx", { fg = colors.red }) -- Added JSX highlighting
             vim.api.nvim_set_hl(0, "@tag.delimiter.tsx", { fg = colors.orange })
+            vim.api.nvim_set_hl(0, "@tag.delimiter.jsx", { fg = colors.orange }) -- Added JSX delimiter
             vim.api.nvim_set_hl(0, "@constructor.tsx", { fg = colors.purple })
+            vim.api.nvim_set_hl(0, "@constructor.jsx", { fg = colors.purple }) -- Added JSX constructor
           end
         end,
       })
     end,
   },
+
+  -- Autopairs with JSX support
   {
     "windwp/nvim-autopairs",
     event = "InsertEnter",
@@ -287,7 +359,9 @@ return {
       ts_config = {
         lua = { "string" },
         javascript = { "template_string" },
+        javascriptreact = { "template_string", "jsx_element" }, -- Add jsx_element
         typescript = { "template_string" },
+        typescriptreact = { "template_string", "jsx_element" }, -- Add jsx_element
         go = { "string" },
         templ = { "string" },
       },
@@ -302,6 +376,8 @@ return {
       end
     end,
   },
+
+  -- Autotag with enhanced JSX support
   {
     "windwp/nvim-ts-autotag",
     event = "InsertEnter",
@@ -313,10 +389,10 @@ return {
           "xml",
           "javascriptreact",
           "typescriptreact",
+          "jsx", -- Added explicit jsx support
+          "tsx",
           "svelte",
           "vue",
-          "jsx",
-          "tsx",
           "templ",
           "erb",
         },

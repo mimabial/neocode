@@ -169,10 +169,18 @@ return {
 
   -- Setup and custom autocmds
   config = function(_, opts)
+    -- stash the current lazyredraw setting
+    local was_lazy = vim.opt.lazyredraw:get()
+
+    -- turn off lazyredraw so Noice can render correctly
+    vim.opt.lazyredraw = false
+
     -- Safe loading of noice
     local ok, noice = pcall(require, "noice")
     if not ok then
       vim.notify("[ERROR] Failed to load noice.nvim: " .. tostring(noice), vim.log.levels.ERROR)
+      -- restore lazyredraw before bailing
+      vim.opt.lazyredraw = was_lazy
       return
     end
 
@@ -180,11 +188,14 @@ return {
     local setup_ok, err = pcall(function()
       noice.setup(opts)
     end)
-
     if not setup_ok then
       vim.notify("[ERROR] Failed to setup noice.nvim: " .. tostring(err), vim.log.levels.ERROR)
+      vim.opt.lazyredraw = was_lazy
       return
     end
+
+    -- restore the original lazyredraw value
+    vim.opt.lazyredraw = was_lazy
 
     -- Hide Noice for certain filetypes
     vim.api.nvim_create_autocmd("FileType", {
