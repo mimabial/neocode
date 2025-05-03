@@ -1,4 +1,4 @@
--- lua/plugins/indent-rainbow.lua
+-- lua/plugins/indentation.lua
 -- Enhanced integration of rainbow delimiters with indent blankline
 
 return {
@@ -9,7 +9,48 @@ return {
     config = function()
       local rainbow_delimiters = require("rainbow-delimiters")
 
-      -- Define default global strategy
+      -- Define highlight groups immediately
+      local colors = {
+        ["gruvbox-material"] = {
+          "#ea6962", -- Red
+          "#d8a657", -- Yellow
+          "#7daea3", -- Blue
+          "#e78a4e", -- Orange
+          "#89b482", -- Green
+          "#d3869b", -- Purple
+          "#a9b665", -- Light green
+        },
+        ["everforest"] = {
+          "#e67e80", -- Red
+          "#dbbc7f", -- Yellow
+          "#7fbbb3", -- Blue
+          "#e69875", -- Orange
+          "#a7c080", -- Green
+          "#d699b6", -- Purple
+          "#83c092", -- Aqua
+        },
+        ["kanagawa"] = {
+          "#c34043", -- Red
+          "#dca561", -- Yellow
+          "#7e9cd8", -- Blue
+          "#ffa066", -- Orange
+          "#76946a", -- Green
+          "#957fb8", -- Purple
+          "#6a9589", -- Teal
+        },
+      }
+
+      -- Select color palette based on current theme
+      local colorscheme = vim.g.colors_name or "gruvbox-material"
+      local palette = colors[colorscheme] or colors["gruvbox-material"]
+
+      -- Directly set highlight groups - not just returning them
+      for i, color in ipairs(palette) do
+        local hl_group = "RainbowDelimiter" .. i
+        vim.api.nvim_set_hl(0, hl_group, { fg = color })
+      end
+
+      -- Now setup rainbow delimiters with the highlights
       vim.g.rainbow_delimiters = {
         strategy = {
           [""] = rainbow_delimiters.strategy.global,
@@ -19,7 +60,6 @@ return {
           jsx = rainbow_delimiters.strategy.global,
           templ = rainbow_delimiters.strategy.global,
         },
-        -- Set query sources by filetype
         query = {
           [""] = "rainbow-delimiters",
           lua = "rainbow-blocks",
@@ -30,63 +70,32 @@ return {
           javascript = "rainbow-delimiters-react",
           typescript = "rainbow-delimiters-react",
         },
-        -- Set highlight priority
         priority = {
           [""] = 110,
           lua = 210,
         },
-        -- Highlight groups ordered by rainbow level
-        highlight = function()
-          local colors = {
-            ["gruvbox-material"] = {
-              "#ea6962", -- Red
-              "#d8a657", -- Yellow
-              "#7daea3", -- Blue
-              "#e78a4e", -- Orange
-              "#89b482", -- Green
-              "#d3869b", -- Purple
-              "#a9b665", -- Light green
-            },
-            ["everforest"] = {
-              "#e67e80", -- Red
-              "#dbbc7f", -- Yellow
-              "#7fbbb3", -- Blue
-              "#e69875", -- Orange
-              "#a7c080", -- Green
-              "#d699b6", -- Purple
-              "#83c092", -- Aqua
-            },
-            ["kanagawa"] = {
-              "#c34043", -- Red
-              "#dca561", -- Yellow
-              "#7e9cd8", -- Blue
-              "#ffa066", -- Orange
-              "#76946a", -- Green
-              "#957fb8", -- Purple
-              "#6a9589", -- Teal
-            },
-          }
-
-          -- Select color palette based on current theme
-          local colorscheme = vim.g.colors_name or "gruvbox-material"
-          local palette = colors[colorscheme] or colors["gruvbox-material"]
-
-          -- Assign the highlight groups based on current palette
-          local result = {}
-          for i, color in ipairs(palette) do
-            table.insert(result, "RainbowDelimiter" .. i)
-            vim.api.nvim_set_hl(0, "RainbowDelimiter" .. i, { fg = color })
-          end
-          return result
-        end,
+        highlight = {
+          "RainbowDelimiter1",
+          "RainbowDelimiter2",
+          "RainbowDelimiter3",
+          "RainbowDelimiter4",
+          "RainbowDelimiter5",
+          "RainbowDelimiter6",
+          "RainbowDelimiter7",
+        },
       }
 
       -- Update highlights on colorscheme change
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
-          -- Refresh highlights based on new scheme
-          if vim.g.rainbow_delimiters and vim.g.rainbow_delimiters.highlight then
-            vim.g.rainbow_delimiters.highlight = vim.g.rainbow_delimiters.highlight()
+          -- Select color palette based on new theme
+          local colorscheme = vim.g.colors_name or "gruvbox-material"
+          local palette = colors[colorscheme] or colors["gruvbox-material"]
+
+          -- Update highlight groups
+          for i, color in ipairs(palette) do
+            local hl_group = "RainbowDelimiter" .. i
+            vim.api.nvim_set_hl(0, hl_group, { fg = color })
           end
         end,
       })
@@ -172,6 +181,50 @@ return {
         return
       end
 
+      -- Make sure rainbow delimiters highlights exist before configuring ibl
+      local function ensure_rainbow_highlights()
+        local colorscheme = vim.g.colors_name or "gruvbox-material"
+        local colors = {
+          ["gruvbox-material"] = {
+            "#ea6962", -- Red
+            "#d8a657", -- Yellow
+            "#7daea3", -- Blue
+            "#e78a4e", -- Orange
+            "#89b482", -- Green
+            "#d3869b", -- Purple
+            "#a9b665", -- Light green
+          },
+          ["everforest"] = {
+            "#e67e80", -- Red
+            "#dbbc7f", -- Yellow
+            "#7fbbb3", -- Blue
+            "#e69875", -- Orange
+            "#a7c080", -- Green
+            "#d699b6", -- Purple
+            "#83c092", -- Aqua
+          },
+          ["kanagawa"] = {
+            "#c34043", -- Red
+            "#dca561", -- Yellow
+            "#7e9cd8", -- Blue
+            "#ffa066", -- Orange
+            "#76946a", -- Green
+            "#957fb8", -- Purple
+            "#6a9589", -- Teal
+          },
+        }
+        local palette = colors[colorscheme] or colors["gruvbox-material"]
+
+        -- Directly set highlight groups before ibl uses them
+        for i, color in ipairs(palette) do
+          local hl_group = "RainbowDelimiter" .. i
+          vim.api.nvim_set_hl(0, hl_group, { fg = color })
+        end
+      end
+
+      -- Call this before setting up ibl
+      ensure_rainbow_highlights()
+
       -- Setup with options
       ibl.setup(opts)
 
@@ -184,6 +237,9 @@ return {
             vim.api.nvim_set_hl(0, "IblScope", { fg = scope_hl, bold = true })
           end
 
+          -- Ensure rainbow highlights still exist
+          ensure_rainbow_highlights()
+
           -- Reload ibl to apply highlight changes
           ibl.setup(opts)
         end,
@@ -193,12 +249,19 @@ return {
       vim.api.nvim_create_autocmd("FileType", {
         pattern = { "go", "templ" },
         callback = function()
-          -- Load current config
-          local config = require("ibl.config").get_config(0)
-          -- Adjust settings for Go/Templ files
-          config.indent.tab_char = "┊"
-          -- Apply updated config
-          ibl.setup_buffer(0, config)
+          -- Load current config safely
+          local config_ok, config = pcall(require, "ibl.config")
+          if not config_ok then
+            return
+          end
+
+          local buf_config = config.get_config(0)
+          if buf_config then
+            -- Adjust settings for Go/Templ files
+            buf_config.indent.tab_char = "┊"
+            -- Apply updated config safely
+            pcall(ibl.setup_buffer, 0, buf_config)
+          end
         end,
       })
     end,
