@@ -64,7 +64,6 @@ end
 --- Detect current project stack with more accurate heuristics
 -- @return string "goth", "nextjs", "both" or nil
 function M.detect_stack()
-  local stacks = {}
   -- Add safety wrapper around the entire function
   local ok, result = pcall(function()
     -- GOTH stack indicators with try/catch safety

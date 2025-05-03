@@ -43,6 +43,26 @@ return {
       "nvim-tree/nvim-web-devicons",
       "echasnovski/mini.bufremove",
     },
+    keys = {
+      { "<leader>bp", "<cmd>BufferLinePick<cr>", desc = "Pick buffer" },
+      { "<leader>bc", "<cmd>BufferLinePickClose<cr>", desc = "Pick buffer to close" },
+      { "<leader>bP", "<cmd>BufferLineTogglePin<cr>", desc = "Toggle pin" },
+      { "<leader>bC", "<cmd>BufferLineGroupClose ungrouped<cr>", desc = "Close non-pinned buffers" },
+      { "<leader>bo", "<cmd>BufferLineCloseOthers<cr>", desc = "Close other buffers" },
+      { "<leader>br", "<cmd>BufferLineCloseRight<cr>", desc = "Close buffers to the right" },
+      { "<leader>bl", "<cmd>BufferLineCloseLeft<cr>", desc = "Close buffers to the left" },
+      { "<S-h>", "<cmd>BufferLineCyclePrev<cr>", desc = "Prev buffer" },
+      { "<S-l>", "<cmd>BufferLineNext<cr>", desc = "Next buffer" },
+      { "<A-1>", "<cmd>BufferLineGoToBuffer 1<cr>", desc = "Go to buffer 1" },
+      { "<A-2>", "<cmd>BufferLineGoToBuffer 2<cr>", desc = "Go to buffer 2" },
+      { "<A-3>", "<cmd>BufferLineGoToBuffer 3<cr>", desc = "Go to buffer 3" },
+      { "<A-4>", "<cmd>BufferLineGoToBuffer 4<cr>", desc = "Go to buffer 4" },
+      { "<A-5>", "<cmd>BufferLineGoToBuffer 5<cr>", desc = "Go to buffer 5" },
+      { "<A-6>", "<cmd>BufferLineGoToBuffer 6<cr>", desc = "Go to buffer 6" },
+      { "<A-7>", "<cmd>BufferLineGoToBuffer 7<cr>", desc = "Go to buffer 7" },
+      { "<A-8>", "<cmd>BufferLineGoToBuffer 8<cr>", desc = "Go to buffer 8" },
+      { "<A-9>", "<cmd>BufferLineGoToBuffer 9<cr>", desc = "Go to buffer 9" },
+    },
     opts = function()
       -- Define icons for bufferline elements
       local icons = {
@@ -51,10 +71,14 @@ return {
         info = " ",
         hint = " ",
         diagnostic = "󰅲 ",
-        terminal = " ",
+        terminal = "",
         modified = "●",
         directory = "󰉋 ",
         close = "󰅖",
+        left_trunc_marker = "",
+        right_trunc_marker = "",
+        group_close = "",
+        pinned = "車",
       }
 
       -- Get color palette based on current theme
@@ -135,7 +159,19 @@ return {
       return {
         options = {
           close_command = function(n)
-            require("mini.bufremove").delete(n, false)
+            local bd = require("mini.bufremove").delete
+            if vim.bo[n].modified then
+              local choice = vim.fn.confirm(("Save changes to %q?"):format(vim.fn.bufname(n)), "&Yes\n&No\n&Cancel")
+              if choice == 1 then -- Yes
+                vim.cmd("buffer " .. n)
+                vim.cmd.write()
+                bd(n)
+              elseif choice == 2 then -- No
+                bd(n, true) -- Force delete
+              end
+            else
+              bd(n)
+            end
           end,
           right_mouse_command = function(n)
             require("mini.bufremove").delete(n, false)
@@ -199,94 +235,71 @@ return {
             delay = 150,
             reveal = { "close" },
           },
-          highlights = function()
-            local colors = get_theme_colors()
-            local hl = require("bufferline.highlights")
-            local fill_bg = colors.bg
-            local bg = colors.bg1
-            local modified_bg = colors.bg1
-            local selected_bg = colors.blue
-            local visible_bg = colors.bg1
-            local diagnostic_bg = colors.bg1
-            local error_fg = colors.red
-            local warning_fg = colors.yellow
-            local info_fg = colors.blue
-            local hint_fg = colors.green
+        },
+        highlights = (function()
+          local colors = get_theme_colors()
+          local hl = require("bufferline.highlights")
+          local fill_bg = colors.bg
+          local bg = colors.bg1
+          local modified_bg = colors.bg1
+          local selected_bg = colors.blue
+          local visible_bg = colors.bg1
+          local diagnostic_bg = colors.bg1
+          local error_fg = colors.red
+          local warning_fg = colors.yellow
+          local info_fg = colors.blue
+          local hint_fg = colors.green
 
-            return {
-              fill = { bg = fill_bg },
-              background = { bg = bg },
-              buffer_visible = { bg = visible_bg },
-              buffer_selected = { bg = selected_bg, fg = colors.bg, bold = true },
-              close_button = { bg = bg },
-              close_button_visible = { bg = visible_bg },
-              close_button_selected = { bg = selected_bg },
-              diagnostic = { bg = diagnostic_bg },
-              diagnostic_visible = { bg = visible_bg },
-              diagnostic_selected = { bg = selected_bg },
-              error = { bg = bg, fg = error_fg },
-              error_visible = { bg = visible_bg, fg = error_fg },
-              error_selected = { bg = selected_bg, fg = error_fg },
-              error_diagnostic = { bg = diagnostic_bg, fg = error_fg },
-              error_diagnostic_visible = { bg = visible_bg, fg = error_fg },
-              error_diagnostic_selected = { bg = selected_bg, fg = error_fg },
-              warning = { bg = bg, fg = warning_fg },
-              warning_visible = { bg = visible_bg, fg = warning_fg },
-              warning_selected = { bg = selected_bg, fg = warning_fg },
-              warning_diagnostic = { bg = diagnostic_bg, fg = warning_fg },
-              warning_diagnostic_visible = { bg = visible_bg, fg = warning_fg },
-              warning_diagnostic_selected = { bg = selected_bg, fg = warning_fg },
-              info = { bg = bg, fg = info_fg },
-              info_visible = { bg = visible_bg, fg = info_fg },
-              info_selected = { bg = selected_bg, fg = info_fg },
-              info_diagnostic = { bg = diagnostic_bg, fg = info_fg },
-              info_diagnostic_visible = { bg = visible_bg, fg = info_fg },
-              info_diagnostic_selected = { bg = selected_bg, fg = info_fg },
-              hint = { bg = bg, fg = hint_fg },
-              hint_visible = { bg = visible_bg, fg = hint_fg },
-              hint_selected = { bg = selected_bg, fg = hint_fg },
-              hint_diagnostic = { bg = diagnostic_bg, fg = hint_fg },
-              hint_diagnostic_visible = { bg = visible_bg, fg = hint_fg },
-              hint_diagnostic_selected = { bg = selected_bg, fg = hint_fg },
-              modified = { bg = modified_bg, fg = colors.orange },
-              modified_visible = { bg = visible_bg, fg = colors.orange },
-              modified_selected = { bg = selected_bg, fg = colors.yellow },
-              duplicate = { bg = bg, fg = colors.grey, italic = true },
-              duplicate_visible = { bg = visible_bg, fg = colors.grey, italic = true },
-              duplicate_selected = { bg = selected_bg, fg = colors.fg, italic = true },
-              separator = { bg = fill_bg, fg = fill_bg },
-              separator_visible = { bg = visible_bg, fg = visible_bg },
-              separator_selected = { bg = selected_bg, fg = selected_bg },
-              indicator_selected = { bg = selected_bg, fg = selected_bg },
-              pick = { bg = bg, fg = colors.green, bold = true },
-              pick_visible = { bg = visible_bg, fg = colors.green, bold = true },
-              pick_selected = { bg = selected_bg, fg = colors.green, bold = true },
-            }
-          end,
-        },
-        -- Setup proper key mappings for bufferline
-        keys = {
-          { "<leader>bp", "<cmd>BufferLinePick<cr>", desc = "Pick buffer" },
-          { "<leader>bc", "<cmd>BufferLinePickClose<cr>", desc = "Pick buffer to close" },
-          { "<leader>bP", "<cmd>BufferLineTogglePin<cr>", desc = "Toggle pin" },
-          { "<leader>bC", "<cmd>BufferLineGroupClose ungrouped<cr>", desc = "Close non-pinned buffers" },
-          { "<leader>bo", "<cmd>BufferLineCloseOthers<cr>", desc = "Close other buffers" },
-          { "<leader>br", "<cmd>BufferLineCloseRight<cr>", desc = "Close buffers to the right" },
-          { "<leader>bl", "<cmd>BufferLineCloseLeft<cr>", desc = "Close buffers to the left" },
-          -- Quick movement between buffers with Shift+h and Shift+l
-          { "<S-h>", "<cmd>BufferLineCyclePrev<cr>", desc = "Prev buffer" },
-          { "<S-l>", "<cmd>BufferLineNext<cr>", desc = "Next buffer" },
-          -- Tab switching with Alt+1-9
-          { "<A-1>", "<cmd>BufferLineGoToBuffer 1<cr>", desc = "Go to buffer 1" },
-          { "<A-2>", "<cmd>BufferLineGoToBuffer 2<cr>", desc = "Go to buffer 2" },
-          { "<A-3>", "<cmd>BufferLineGoToBuffer 3<cr>", desc = "Go to buffer 3" },
-          { "<A-4>", "<cmd>BufferLineGoToBuffer 4<cr>", desc = "Go to buffer 4" },
-          { "<A-5>", "<cmd>BufferLineGoToBuffer 5<cr>", desc = "Go to buffer 5" },
-          { "<A-6>", "<cmd>BufferLineGoToBuffer 6<cr>", desc = "Go to buffer 6" },
-          { "<A-7>", "<cmd>BufferLineGoToBuffer 7<cr>", desc = "Go to buffer 7" },
-          { "<A-8>", "<cmd>BufferLineGoToBuffer 8<cr>", desc = "Go to buffer 8" },
-          { "<A-9>", "<cmd>BufferLineGoToBuffer 9<cr>", desc = "Go to buffer 9" },
-        },
+          return {
+            fill = { bg = fill_bg },
+            background = { bg = bg },
+            buffer_visible = { bg = visible_bg },
+            buffer_selected = { bg = selected_bg, fg = colors.bg, bold = true },
+            close_button = { bg = bg },
+            close_button_visible = { bg = visible_bg },
+            close_button_selected = { bg = selected_bg },
+            diagnostic = { bg = diagnostic_bg },
+            diagnostic_visible = { bg = visible_bg },
+            diagnostic_selected = { bg = selected_bg },
+            error = { bg = bg, fg = error_fg },
+            error_visible = { bg = visible_bg, fg = error_fg },
+            error_selected = { bg = selected_bg, fg = error_fg },
+            error_diagnostic = { bg = diagnostic_bg, fg = error_fg },
+            error_diagnostic_visible = { bg = visible_bg, fg = error_fg },
+            error_diagnostic_selected = { bg = selected_bg, fg = error_fg },
+            warning = { bg = bg, fg = warning_fg },
+            warning_visible = { bg = visible_bg, fg = warning_fg },
+            warning_selected = { bg = selected_bg, fg = warning_fg },
+            warning_diagnostic = { bg = diagnostic_bg, fg = warning_fg },
+            warning_diagnostic_visible = { bg = visible_bg, fg = warning_fg },
+            warning_diagnostic_selected = { bg = selected_bg, fg = warning_fg },
+            info = { bg = bg, fg = info_fg },
+            info_visible = { bg = visible_bg, fg = info_fg },
+            info_selected = { bg = selected_bg, fg = info_fg },
+            info_diagnostic = { bg = diagnostic_bg, fg = info_fg },
+            info_diagnostic_visible = { bg = visible_bg, fg = info_fg },
+            info_diagnostic_selected = { bg = selected_bg, fg = info_fg },
+            hint = { bg = bg, fg = hint_fg },
+            hint_visible = { bg = visible_bg, fg = hint_fg },
+            hint_selected = { bg = selected_bg, fg = hint_fg },
+            hint_diagnostic = { bg = diagnostic_bg, fg = hint_fg },
+            hint_diagnostic_visible = { bg = visible_bg, fg = hint_fg },
+            hint_diagnostic_selected = { bg = selected_bg, fg = hint_fg },
+            modified = { bg = modified_bg, fg = colors.orange },
+            modified_visible = { bg = visible_bg, fg = colors.orange },
+            modified_selected = { bg = selected_bg, fg = colors.yellow },
+            duplicate = { bg = bg, fg = colors.grey, italic = true },
+            duplicate_visible = { bg = visible_bg, fg = colors.grey, italic = true },
+            duplicate_selected = { bg = selected_bg, fg = colors.fg, italic = true },
+            separator = { bg = fill_bg, fg = fill_bg },
+            separator_visible = { bg = visible_bg, fg = visible_bg },
+            separator_selected = { bg = selected_bg, fg = selected_bg },
+            indicator_selected = { bg = selected_bg, fg = selected_bg },
+            pick = { bg = bg, fg = colors.green, bold = true },
+            pick_visible = { bg = visible_bg, fg = colors.green, bold = true },
+            pick_selected = { bg = selected_bg, fg = colors.green, bold = true },
+          }
+        end)(),
       }
     end,
     config = function(_, opts)
