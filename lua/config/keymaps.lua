@@ -194,15 +194,11 @@ function M.setup()
   end
 
   -- Toggle Codeium on/off
-  vim.keymap.set("n", "<leader>ui", function()
-    local api = require("codeium.api")
-    local enabled = api.toggle(api)
-    vim.notify(
-      ("󰧑 Codeium %s"):format(enabled and "enabled" or "disabled"),
-      vim.log.levels.INFO,
-      { title = "Codeium" }
-    )
-  end, { desc = "Toggle Codeium" })
+  if vim.fn.exists("g:codeium_enabled") == 1 then
+    map("n", "<leader>ui", function()
+      vim.cmd("Codeium Toggle")
+    end, { desc = "Toggle Codeium" })
+  end
 
   -- ========================================
   -- Stack-specific keymaps

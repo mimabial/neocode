@@ -60,17 +60,17 @@ return {
         end,
       })
 
-      -- Toggle keymap with fancy notification
-      vim.keymap.set("n", "<leader>uc", function()
-        local status = require("copilot.client").is_started()
-        if status then
-          vim.cmd("Copilot disable")
-          vim.notify(" Copilot disabled", vim.log.levels.INFO, { title = "Copilot" })
-        else
-          vim.cmd("Copilot enable")
-          vim.notify(" Copilot enabled", vim.log.levels.INFO, { title = "Copilot" })
-        end
-      end, { desc = "Toggle Copilot" })
+      -- -- Toggle keymap with fancy notification
+      -- vim.keymap.set("n", "<leader>uc", function()
+      --   local status = require("copilot.client").is_started()
+      --   if status then
+      --     vim.cmd("Copilot disable")
+      --     vim.notify(" Copilot disabled", vim.log.levels.INFO, { title = "Copilot" })
+      --   else
+      --     vim.cmd("Copilot enable")
+      --     vim.notify(" Copilot enabled", vim.log.levels.INFO, { title = "Copilot" })
+      --   end
+      -- end, { desc = "Toggle Copilot" })
     end,
   },
 
@@ -115,10 +115,10 @@ return {
       -- Use all of the built-in defaults
       require("codeium").setup()
 
-      -- -- Ensure Codeium is enabled by default
-      -- if vim.g.codeium_enabled == nil then
-      --   vim.g.codeium_enabled = true
-      -- end
+      -- Ensure Codeium is enabled by default
+      if vim.g.codeium_enabled == nil then
+        vim.g.codeium_enabled = true
+      end
 
       -- Highlight groups for suggestions
       vim.api.nvim_create_autocmd("ColorScheme", {
@@ -128,17 +128,10 @@ return {
           vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2", bold = true })
         end,
       })
-
-      -- Toggle Codeium on/off
-      vim.keymap.set("n", "<leader>ui", function()
-        local api = require("codeium.api")
-        local enabled = api.toggle(api)
-        vim.notify(
-          ("󰧑 Codeium %s"):format(enabled and "enabled" or "disabled"),
-          vim.log.levels.INFO,
-          { title = "Codeium" }
-        )
-      end, { desc = "Toggle Codeium" })
+      -- -- Toggle Codeium on/off
+      -- vim.keymap.set("n", "<leader>ui", function()
+      --   vim.cmd("Codeium Toggle")
+      -- end, { desc = "Toggle Codeium" })
 
       -- Insert-mode keymaps
       local keymaps = {
