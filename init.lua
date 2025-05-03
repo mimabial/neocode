@@ -176,8 +176,9 @@ load_module("config.diagnostics", "setup")
 load_module("config.lsp", "setup")
 
 -- 12) Set default colorscheme if not already set
+
 if not vim.g.colors_name then
-  pcall(vim.cmd, "colorscheme gruvbox-material")
+  pcall(vim.api.nvim_command, "colorscheme gruvbox-material")
 end
 
 -- 13) Print startup success message

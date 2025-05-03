@@ -16,8 +16,6 @@ return {
     lsp_file_methods = { autosave_changes = true },
 
     columns = {
-      { "mtime", format = "%Y-%m-%d %H:%M" },
-      "permissions",
       "size",
       "icon",
     },

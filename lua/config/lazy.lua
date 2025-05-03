@@ -236,7 +236,7 @@ api.nvim_create_user_command("InstallTSParsers", function()
   }
 
   local install_cmd = "TSInstall " .. table.concat(parsers, " ")
-  local ok, err = pcall(vim.cmd, install_cmd)
+  local ok, err = pcall(vim.api.nvim_command, install_cmd)
 
   if ok then
     vim.notify("Successfully installed TreeSitter parsers", vim.log.levels.INFO)
