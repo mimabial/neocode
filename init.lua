@@ -10,13 +10,13 @@ vim.g.default_picker = "snacks"
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
--- 1) Version check
+-- Version check
 if vim.fn.has("nvim-0.8") == 0 then
   vim.notify("⚠️ Neovim 0.8 or higher is required for this configuration.", vim.log.levels.ERROR)
   return
 end
 
--- 2) Helper for safe module loading with error handling
+-- Helper for safe module loading with error handling
 local function safe_require(mod)
   local ok, m = pcall(require, mod)
   if not ok then
@@ -26,15 +26,22 @@ local function safe_require(mod)
   return m
 end
 
--- 3) Load core settings with error handling
+-- Load core settings with error handling
 local function load_module(name, setup_fn)
   local mod = safe_require(name)
-  if mod and type(mod[setup_fn]) == "function" then
-    local ok, err = pcall(mod[setup_fn])
-    if not ok then
-      vim.notify(string.format("❌ Failed to run %s.%s: %s", name, setup_fn, err), vim.log.levels.ERROR)
+  if mod then
+    -- Check if mod is a table and has the specified function
+    if type(mod) == "table" and type(mod[setup_fn]) == "function" then
+      local ok, err = pcall(mod[setup_fn])
+      if not ok then
+        vim.notify(string.format("❌ Failed to run %s.%s: %s", name, setup_fn, err), vim.log.levels.ERROR)
+      end
+      return mod
+    elseif type(mod) ~= "table" then
+      vim.notify(string.format("⚠️ Module '%s' is not a table (got %s)", name, type(mod)), vim.log.levels.WARN)
+    elseif type(mod[setup_fn]) ~= "function" then
+      vim.notify(string.format("⚠️ Function '%s.%s' not found", name, setup_fn), vim.log.levels.WARN)
     end
-    return mod
   end
   return nil
 end
@@ -42,7 +49,7 @@ end
 -- Apply core options
 load_module("config.options", "setup")
 
--- 4) Initialize plugin manager (Lazy.nvim)
+-- Initialize plugin manager (Lazy.nvim)
 -- Bootstrap Lazy.nvim if missing
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if vim.fn.isdirectory(lazypath) == 0 then
@@ -60,11 +67,7 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 -- Load lazy
-local lazy_ok, lazy = pcall(require, "lazy")
-if not lazy_ok then
-  vim.notify("❌ Failed to load lazy.nvim", vim.log.levels.ERROR)
-  return
-end
+require("config.lazy")
 
 -- Load plugins through config.lazy
 load_module("config.lazy", "setup")
