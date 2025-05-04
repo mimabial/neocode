@@ -330,28 +330,6 @@ function M.setup()
     pcall(dofile, proj)
   end
 
-  -- 18) Lazy startup stats
-  vim.api.nvim_create_augroup("LazyStartMsg", { clear = true })
-  vim.api.nvim_create_autocmd("User", {
-    group = "LazyStartMsg",
-    pattern = "LazyVimStarted",
-    callback = function()
-      local lazy = safe_require("lazy")
-      if not lazy then
-        return
-      end
-      local s = lazy.stats()
-      local ms = math.floor(s.startuptime * 100 + 0.5) / 100
-      local v = vim.version()
-      vim.notify(
-        string.format("Neovim v%d.%d.%d loaded %d/%d plugins in %sms", v.major, v.minor, v.patch, s.loaded, s.count, ms),
-        vim.log.levels.INFO,
-        { title = "Neovim Loaded" }
-      )
-    end,
-    desc = "Show plugin load stats",
-  })
-
   -- 19) Disable auto comment continuation
   vim.api.nvim_create_augroup("NoCommentCont", { clear = true })
   vim.api.nvim_create_autocmd("FileType", {
@@ -413,6 +391,52 @@ function M.setup()
     end,
     desc = "Throttle events during undo operations",
   })
+
+  -- 13) Print startup success message
+  vim.api.nvim_create_autocmd("User", {
+    pattern = "LazyVimStarted",
+    callback = function()
+      local lazy_stats = require("lazy").stats()
+      local ms = math.floor(lazy_stats.startuptime * 100 + 0.5) / 100
+      local v = vim.version()
+
+      local stack_icon = ""
+      if vim.g.current_stack == "goth" then
+        stack_icon = "󰟓 "
+      elseif vim.g.current_stack == "nextjs" then
+        stack_icon = " "
+      elseif vim.g.current_stack == "goth+nextjs" then
+        stack_icon = "󰡄 "
+      end
+
+      local msg = string.format(
+        "⚡ Neovim v%d.%d.%d loaded %d/%d plugins in %.2fms %s",
+        v.major,
+        v.minor,
+        v.patch,
+        lazy_stats.loaded,
+        lazy_stats.count,
+        ms,
+        stack_icon
+      )
+      vim.notify(msg, vim.log.levels.INFO, { title = "Neovim Started" })
+
+      -- Open dashboard if enabled
+      if package.loaded["snacks.dashboard"] and vim.fn.argc() == 0 then
+        vim.cmd("Dashboard")
+      end
+    end,
+  })
+
+  -- 14) Try to load project-specific configuration if it exists
+  local project_init = vim.fn.getcwd() .. "/.nvim/init.lua"
+  if vim.fn.filereadable(project_init) == 1 then
+    vim.notify("📝 Loading project-specific configuration", vim.log.levels.INFO)
+    local ok, err = pcall(dofile, project_init)
+    if not ok then
+      vim.notify("❌ Error in project config: " .. err, vim.log.levels.ERROR)
+    end
+  end
 end
 
 return M

@@ -1,5 +1,5 @@
--- lua/plugins/ui.lua
--- Centralized UI settings for consistent menu appearance across all interfaces
+-- lua/config/ui.lua
+-- Enhanced UI configuration with better theme integration
 
 local M = {}
 
@@ -8,10 +8,75 @@ M.get_colors = function()
   -- Try to get colors from global theme functions first
   if vim.g.colors_name == "gruvbox-material" and _G.get_gruvbox_colors then
     return _G.get_gruvbox_colors()
+  elseif vim.g.colors_name == "tokyonight" and package.loaded["tokyonight.colors"] then
+    local colors = require("tokyonight.colors").setup()
+    return {
+      bg = colors.bg,
+      bg1 = colors.bg_dark,
+      fg = colors.fg,
+      red = colors.red,
+      green = colors.green,
+      yellow = colors.yellow,
+      blue = colors.blue,
+      purple = colors.purple,
+      aqua = colors.teal,
+      orange = colors.orange,
+      gray = colors.comment,
+      border = colors.border,
+    }
   elseif vim.g.colors_name == "everforest" and _G.get_everforest_colors then
     return _G.get_everforest_colors()
   elseif vim.g.colors_name == "kanagawa" and _G.get_kanagawa_colors then
     return _G.get_kanagawa_colors()
+  elseif vim.g.colors_name == "catppuccin" and package.loaded["catppuccin.palettes"] then
+    local flavour = require("catppuccin").options and require("catppuccin").options.flavour or "mocha"
+    local colors = require("catppuccin.palettes").get_palette(flavour)
+    return {
+      bg = colors.base,
+      bg1 = colors.mantle,
+      fg = colors.text,
+      red = colors.red,
+      green = colors.green,
+      yellow = colors.yellow,
+      blue = colors.blue,
+      purple = colors.mauve,
+      aqua = colors.teal,
+      orange = colors.peach,
+      gray = colors.overlay0,
+      border = colors.surface0,
+    }
+  elseif vim.g.colors_name == "nord" and package.loaded["nord.colors"] then
+    local colors = require("nord.colors")
+    return {
+      bg = colors.nord0,
+      bg1 = colors.nord1,
+      fg = colors.nord4,
+      red = colors.nord11,
+      green = colors.nord14,
+      yellow = colors.nord13,
+      blue = colors.nord9,
+      purple = colors.nord15,
+      aqua = colors.nord8,
+      orange = colors.nord12,
+      gray = colors.nord3,
+      border = colors.nord3,
+    }
+  elseif vim.g.colors_name == "rose-pine" and package.loaded["rose-pine.palette"] then
+    local palette = require("rose-pine.palette")
+    return {
+      bg = palette.base,
+      bg1 = palette.surface,
+      fg = palette.text,
+      red = palette.love,
+      green = palette.pine,
+      yellow = palette.gold,
+      blue = palette.foam,
+      purple = palette.iris,
+      aqua = palette.foam,
+      orange = palette.rose,
+      gray = palette.muted,
+      border = palette.highlight_low,
+    }
   end
 
   -- Fallback to extracting from highlight groups
@@ -27,7 +92,7 @@ M.get_colors = function()
     return tostring(val)
   end
 
-  -- Base gruvbox-compatible palette
+  -- Base gruvbox-compatible palette as fallback
   return {
     bg = get_hl_color("Normal", "bg", "#282828"),
     bg1 = get_hl_color("CursorLine", "bg", "#32302f"),
@@ -41,10 +106,10 @@ M.get_colors = function()
     orange = get_hl_color("Number", "fg", "#e78a4e"),
     gray = get_hl_color("Comment", "fg", "#928374"),
     border = get_hl_color("FloatBorder", "fg", "#45403d"),
+    -- Special UI colors
     popup_bg = get_hl_color("Pmenu", "bg", "#282828"),
     selection_bg = get_hl_color("PmenuSel", "bg", "#45403d"),
     selection_fg = get_hl_color("PmenuSel", "fg", "#d4be98"),
-
     -- Special AI colors
     copilot = "#6CC644",
     codeium = "#09B6A2",
@@ -55,7 +120,7 @@ end
 M.config = {
   -- Standard float window configuration - base for all UI elements
   float = {
-    border = "single", -- Consistent border style
+    border = "rounded", -- Consistent border style
     padding = { 0, 1 }, -- Consistent padding
     max_width = 80, -- Reasonable max width
     max_height = 20, -- Reasonable max height
@@ -65,25 +130,18 @@ M.config = {
       signcolumn = "no", -- No sign column in floats
       wrap = false, -- No wrapping by default
     },
-    -- These highlight groups will be applied in setup_highlights()
-    highlights = {
-      border = "FloatBorder",
-      background = "NormalFloat",
-      cursor = "CursorLine",
-      selected = "PmenuSel",
-    },
   },
 
   -- Menu-specific configurations
   menu = {
-    border = "single",
+    border = "rounded",
     selected_item_icon = "●", -- Consistent selection indicator
     unselected_item_icon = "○",
   },
 
   -- Notification configuration
   notification = {
-    border = "single",
+    border = "rounded",
     timeout = 3000,
     max_width = 60,
     max_height = 20,
@@ -93,15 +151,15 @@ M.config = {
   -- Consistent icons across UI
   icons = {
     diagnostics = {
-      Error = " ", -- nf-fa-ban
-      Warn = " ", -- nf-fa-exclamation_triangle
-      Info = " ", -- nf-fa-info_circle
-      Hint = " ", -- nf-fa-question_circle
+      Error = " ",
+      Warn = " ",
+      Info = " ",
+      Hint = " ",
     },
     git = {
-      added = "", -- nf-fa-check_square
-      modified = "", -- nf-oct-diff_modified
-      removed = "", -- nf-fa-trash_o
+      added = "",
+      modified = "",
+      removed = "",
     },
     kinds = {
       -- LSP kinds
@@ -184,9 +242,22 @@ M.setup_highlights = function()
   vim.api.nvim_set_hl(0, "NotifyDEBUG", { fg = colors.gray })
   vim.api.nvim_set_hl(0, "NotifyTRACE", { fg = colors.purple })
 
-  -- Winbar highlights
-  vim.api.nvim_set_hl(0, "WinBar", { bg = colors.bg, bold = true })
-  vim.api.nvim_set_hl(0, "WinBarNC", { fg = colors.gray })
+  -- Stack-specific syntax highlights
+  if vim.g.current_stack == "goth" or vim.g.current_stack == "goth+nextjs" then
+    vim.api.nvim_set_hl(0, "@type.go", { fg = colors.yellow, bold = true })
+    vim.api.nvim_set_hl(0, "@function.go", { fg = colors.blue })
+    vim.api.nvim_set_hl(0, "@attribute.htmx", { fg = colors.green, italic = true, bold = true })
+    vim.api.nvim_set_hl(0, "@tag.attribute.htmx", { fg = colors.green, italic = true, bold = true })
+  end
+
+  if vim.g.current_stack == "nextjs" or vim.g.current_stack == "goth+nextjs" then
+    vim.api.nvim_set_hl(0, "@tag.tsx", { fg = colors.red })
+    vim.api.nvim_set_hl(0, "@tag.jsx", { fg = colors.red }) -- Added JSX support
+    vim.api.nvim_set_hl(0, "@tag.delimiter.tsx", { fg = colors.orange })
+    vim.api.nvim_set_hl(0, "@tag.delimiter.jsx", { fg = colors.orange }) -- Added JSX support
+    vim.api.nvim_set_hl(0, "@constructor.tsx", { fg = colors.purple })
+    vim.api.nvim_set_hl(0, "@constructor.jsx", { fg = colors.purple }) -- Added JSX support
+  end
 end
 
 -- Initialize module
@@ -199,6 +270,17 @@ M.setup = function()
     pattern = "*",
     callback = function()
       M.setup_highlights()
+
+      -- Refresh UI components that need to update with theme
+      pcall(function()
+        if package.loaded["lualine"] then
+          require("lualine").refresh()
+        end
+
+        if package.loaded["bufferline"] then
+          require("bufferline").setup()
+        end
+      end)
     end,
   })
 
