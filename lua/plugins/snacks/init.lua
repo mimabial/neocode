@@ -1,6 +1,6 @@
--- lua/plugins/snacks.lua
+-- lua/plugins/snacks/init.lua (UPDATED)
 
--- Main snacks.nvim configuration
+-- Main snacks.nvim configuration with added safeguards
 local dashboard_cfg = require("plugins.snacks.dashboard")
 local dim_cfg = require("plugins.snacks.dim")
 local input_cfg = require("plugins.snacks.input")
@@ -8,7 +8,8 @@ local picker_cfg = require("plugins.snacks.picker")
 
 return {
   "folke/snacks.nvim",
-  lazy = false,
+  lazy = true, -- Change from false to true to make it properly lazy-loaded
+  event = "VeryLazy", -- Load after initial UI setup, not on BufWinEnter
   priority = 800,
   dependencies = {
     { "nvim-tree/nvim-web-devicons", lazy = false, priority = 950 },
@@ -24,20 +25,42 @@ return {
     {
       "<leader>ud",
       function()
-        require("snacks.dashboard").open()
+        -- Add pcall for safety
+        pcall(function()
+          require("snacks.dashboard").open()
+        end)
       end,
       desc = "Open Dashboard",
     },
   },
   config = function(_, opts)
-    require("snacks").setup(opts)
-
-    if opts.input.enabled then
-      vim.ui.input = require("snacks.input").input
+    -- Safe initialization with error handling
+    local ok, snacks = pcall(require, "snacks")
+    if not ok then
+      vim.notify("Failed to load snacks.nvim: " .. tostring(snacks), vim.log.levels.ERROR)
+      return
     end
 
+    -- Setup with error handling
+    local setup_ok, setup_err = pcall(function()
+      snacks.setup(opts)
+    end)
+
+    if not setup_ok then
+      vim.notify("Error setting up snacks.nvim: " .. tostring(setup_err), vim.log.levels.ERROR)
+      return
+    end
+
+    -- Only set ui.input if snacks.input is available
+    if opts.input.enabled and snacks.input then
+      vim.ui.input = snacks.input
+    end
+
+    -- Create dashboard command with error handling
     vim.api.nvim_create_user_command("Dashboard", function()
-      require("snacks.dashboard").open()
+      pcall(function()
+        require("snacks.dashboard").open()
+      end)
     end, { desc = "Open Snacks Dashboard" })
   end,
 }

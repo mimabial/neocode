@@ -92,8 +92,14 @@ function M.setup()
   -- Open file explorer
   map("n", "<leader>e", function()
     local explorer = vim.g.default_explorer or "oil"
-    if explorer == "snacks" and pcall(require, "snacks") then
-      require("snacks").explorer()
+    if explorer == "snacks" then
+      local ok, snacks = pcall(require, "snacks")
+      if ok and snacks.explorer then
+        pcall(snacks.explorer)
+      else
+        -- Fallback to oil if snacks isn't available
+        vim.cmd("Oil")
+      end
     else
       vim.cmd("Oil")
     end
@@ -110,7 +116,15 @@ function M.setup()
   if ok_picker then
     -- Non-conflicting search keymaps
     map("n", "<leader>ff", function()
-      require("snacks.picker").files()
+      local ok, picker = pcall(require, "snacks.picker")
+      if ok and picker.files then
+        pcall(picker.files)
+      else
+        -- Fallback to another file finder if available
+        if pcall(require, "telescope.builtin") then
+          require("telescope.builtin").find_files()
+        end
+      end
     end, { desc = "Find files" })
     map("n", "<leader>fg", function()
       require("snacks.picker").grep()
