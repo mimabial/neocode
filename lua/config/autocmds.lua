@@ -349,8 +349,15 @@ function M.setup()
     callback = function()
       -- Disable certain autocmds when undoing
       if vim.opt.undolevels:get() < 0 then
-        -- Temporarily disable diagnostics
-        vim.diagnostic.disable()
+        -- Temporarily disable diagnostics (saving current config)
+        vim.g.saved_diagnostic_config = vim.diagnostic.config()
+        vim.diagnostic.config({
+          underline = false,
+          virtual_text = false,
+          signs = false,
+          update_in_insert = false,
+        })
+
         -- Disable linting
         if package.loaded["lint"] then
           vim.g.lint_disabled_during_undo = true
@@ -360,8 +367,12 @@ function M.setup()
           vim.g.gitsigns_disabled_during_undo = require("gitsigns").toggle_signs(false)
         end
       else
-        -- Re-enable diagnostics
-        vim.diagnostic.enable()
+        -- Re-enable diagnostics (restore saved config)
+        if vim.g.saved_diagnostic_config then
+          vim.diagnostic.config(vim.g.saved_diagnostic_config)
+          vim.g.saved_diagnostic_config = nil
+        end
+
         -- Re-enable linting
         if vim.g.lint_disabled_during_undo then
           vim.g.lint_disabled_during_undo = nil
