@@ -39,43 +39,21 @@ return {
 
     local icons = {
       diagnostics = {
-        Error = " ",
-        Warn = " ",
-        Info = " ",
-        Hint = "",
+        Error = " ", -- nf-fa-ban
+        Warn = " ", -- nf-fa-exclamation_triangle
+        Info = " ", -- nf-fa-info_circle
+        Hint = " ", -- nf-fa-question_circle
       },
       git = {
-        added = " ",
-        modified = " ",
-        removed = " ",
+        added = "", -- nf-fa-check_square
+        modified = "", -- nf-oct-diff_modified
+        removed = "", -- nf-fa-trash_o
       },
       stack = {
-        goth = "󰟓 GO·TEMPL·HTMX",
-        nextjs = " NEXT·TS·REACT",
-        ["goth+nextjs"] = "󰡄 FULLSTACK",
-        [""] = "󱍛  Stack",
-      },
-      mode = {
-        ["n"] = "󰋜 ",
-        ["no"] = "󰋜 ",
-        ["v"] = "󰈈 ",
-        ["V"] = " ",
-        [""] = " ",
-        ["s"] = " ",
-        ["S"] = " ",
-        [""] = " ",
-        ["i"] = " ",
-        ["ic"] = " ",
-        ["R"] = "󰛔 ",
-        ["Rv"] = "󰛔 ",
-        ["c"] = " ",
-        ["cv"] = " ",
-        ["ce"] = " ",
-        ["r"] = "󰛔 ",
-        ["rm"] = "󰛔 ",
-        ["r?"] = "󰛔 ",
-        ["!"] = " ",
-        ["t"] = " ",
+        goth = "goth",
+        nextjs = "nextjs",
+        ["goth+nextjs"] = "goth+nextjs",
+        [""] = "",
       },
       file = {
         modified = "●",
@@ -96,7 +74,6 @@ return {
       no = colors.red,
       s = colors.yellow,
       S = colors.yellow,
-      [""] = colors.yellow,
       ic = colors.blue,
       R = colors.red,
       Rv = colors.red,
@@ -108,12 +85,6 @@ return {
       ["!"] = colors.red,
       t = colors.green,
     }
-
-    -- Get current mode
-    local function mode()
-      local mode_text = vim.api.nvim_get_mode().mode
-      return icons.mode[mode_text] or icons.mode["n"]
-    end
 
     -- Root directory function
     local function root_dir()
@@ -210,26 +181,6 @@ return {
       }
     end
 
-    -- Active LSP servers
-    local function lsp_servers()
-      return {
-        function()
-          local names = {}
-          for _, c in ipairs(vim.lsp.get_clients({ bufnr = 0 })) do
-            if c.name ~= "copilot" and c.name ~= "conform" and c.name ~= "null-ls" then
-              table.insert(names, c.name)
-            end
-          end
-          return names[1] and table.concat(names, ", ") or ""
-        end,
-        icon = " ",
-        color = { fg = colors.green },
-        cond = function()
-          return #vim.lsp.get_clients({ bufnr = 0 }) > 0
-        end,
-      }
-    end
-
     -- AI assistant indicators
     local function ai_indicators()
       return {
@@ -237,10 +188,10 @@ return {
           local indicators = {}
           -- Check both Copilot and Codeium status
           if vim.g.copilot_enabled ~= 0 then
-            table.insert(indicators, " Copilot")
+            table.insert(indicators, "copilot")
           end
           if vim.g.codeium_enabled then
-            table.insert(indicators, "󰧑 Codeium")
+            table.insert(indicators, "codeium")
           end
 
           return #indicators > 0 and table.concat(indicators, " ") or ""
@@ -301,15 +252,6 @@ return {
       end
     end
 
-    -- Git branch
-    local function git_branch()
-      return {
-        "branch",
-        icon = "",
-        color = { fg = colors.orange, gui = "bold" },
-      }
-    end
-
     -- File encoding
     local function file_encoding()
       return {
@@ -354,20 +296,6 @@ return {
       }
     end
 
-    -- Mode text
-    local function mode_text()
-      return {
-        function()
-          return ""
-        end,
-        color = function()
-          local m = vim.api.nvim_get_mode().mode
-          return { bg = mode_color[m], fg = colors.bg, gui = "bold" }
-        end,
-        padding = { left = 0, right = 0 },
-      }
-    end
-
     -- Return the lualine configuration
     return {
       options = {
@@ -383,21 +311,20 @@ return {
       sections = {
         lualine_a = {
           {
-            mode,
+            "mode",
             color = function()
               local m = vim.api.nvim_get_mode().mode
               return { bg = mode_color[m] or colors.blue, fg = colors.bg, gui = "bold" }
             end,
             padding = { left = 1, right = 1 },
           },
-          stack_badge(),
         },
         lualine_b = {
-          git_branch(),
           {
-            "diff",
-            symbols = icons.git,
-            colored = true,
+            "branch",
+            icon = "",
+            color = { fg = colors.orange, gui = "bold" },
+            padding = { right = 1 },
           },
         },
         lualine_c = {

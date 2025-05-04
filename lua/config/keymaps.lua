@@ -324,20 +324,6 @@ function M.setup()
     end, vim.tbl_extend("force", opts, { desc = "Snacks Explorer" }))
   end
 
-  -- Stack switching + dashboard
-  map("n", "<leader>usg", function()
-    vim.cmd("StackFocus goth")
-    if package.loaded["snacks.dashboard"] then
-      require("snacks.dashboard").open()
-    end
-  end, vim.tbl_extend("force", opts, { desc = "Focus GOTH Stack + Dashboard" }))
-  map("n", "<leader>usn", function()
-    vim.cmd("StackFocus nextjs")
-    if package.loaded["snacks.dashboard"] then
-      require("snacks.dashboard").open()
-    end
-  end, vim.tbl_extend("force", opts, { desc = "Focus Next.js Stack + Dashboard" }))
-
   -- Oil filetype navigation
   local ok_oil, oil = pcall(require, "oil")
   if ok_oil then

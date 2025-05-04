@@ -190,20 +190,30 @@ return {
 
       -- Insert-mode keymaps
       local keymaps = {
-        ["<C-g>"] = { vim.fn["codeium#Accept"], "Accept" },
+        ["<C-g>"] = {
+          function()
+            return require("codeium").accept()
+          end,
+          "Accept",
+        },
         ["<C-;>"] = {
           function()
-            return vim.fn["codeium#CycleCompletions"](1)
+            return require("codeium").cycle_completions(1)
           end,
           "Next completion",
         },
         ["<C-,>"] = {
           function()
-            return vim.fn["codeium#CycleCompletions"](-1)
+            return require("codeium").cycle_completions(-1)
           end,
           "Prev completion",
         },
-        ["<C-x>"] = { vim.fn["codeium#Clear"], "Clear suggestions" },
+        ["<C-x>"] = {
+          function()
+            return require("codeium").clear()
+          end,
+          "Clear suggestions",
+        },
       }
 
       for key, mapping in pairs(keymaps) do

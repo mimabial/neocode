@@ -59,19 +59,12 @@ return {
       local cmp = require("cmp")
       local luasnip = require("luasnip")
 
-      -- -- Check for non-space before cursor
-      -- local function has_words_before()
-      --   local row, col = unpack(vim.api.nvim_win_get_cursor(0))
-      --   return col ~= 0 and vim.api.nvim_buf_get_lines(0, row - 1, row, true)[1]:sub(col, col):match("%s") == nil
-      -- end
-
       -- AI suggestion priority comparator
       local function ai_priority(entry1, entry2)
         local name1, name2 = entry1.source.name, entry2.source.name
 
         -- Priority ratings: copilot > codeium > lsp > others
         local p1 = name1 == "copilot" and 100 or (name1 == "codeium" and 95 or (name1 == "nvim_lsp" and 90 or 0))
-
         local p2 = name2 == "copilot" and 100 or (name2 == "codeium" and 95 or (name2 == "nvim_lsp" and 90 or 0))
 
         if p1 ~= p2 then
@@ -215,14 +208,6 @@ return {
           vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2", bold = true })
         end,
       })
-
-      -- Special handling for AI provider-specific keys
-      vim.keymap.set("i", "<C-]>", function()
-        local copilot_keys = vim.fn["copilot#Accept"]()
-        if copilot_keys ~= "" then
-          vim.api.nvim_feedkeys(copilot_keys, "i", true)
-        end
-      end, { desc = "Copilot Accept", silent = true, expr = true })
     end,
   },
 }
