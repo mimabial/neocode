@@ -564,5 +564,28 @@ return {
         vim.cmd("colorscheme gruvbox-material")
       end
     end, 10)
+
+    -- helper alias
+    local map = vim.keymap.set
+
+    -- toggle between light/dark variants
+    map("n", "<leader>tt", "<cmd>ColorSchemeToggle<cr>", {
+      desc = "Toggle theme",
+    })
+
+    -- pick a colorscheme
+    map("n", "<leader>ts", "<cmd>ColorScheme<cr>", {
+      desc = "Select theme",
+    })
+
+    -- pick a variant of the current theme (if supported)
+    map("n", "<leader>tv", "<cmd>ColorSchemeVariant<cr>", {
+      desc = "Select theme variant",
+    })
+
+    -- toggle background transparency
+    map("n", "<leader>tb", "<cmd>ToggleTransparency<cr>", {
+      desc = "Toggle transparency",
+    })
   end,
 }

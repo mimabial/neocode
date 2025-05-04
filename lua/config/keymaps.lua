@@ -119,15 +119,6 @@ function M.setup()
   end
 
   -- ========================================
-  -- Theme switching - FIXED SECTION
-  -- ========================================
-  -- Theme toggling without conflicts
-  map("n", "<leader>tt", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle theme" })
-  map("n", "<leader>ts", "<cmd>ColorScheme<cr>", { desc = "Select theme" })
-  map("n", "<leader>tv", "<cmd>ColorSchemeVariant<cr>", { desc = "Select theme variant" })
-  map("n", "<leader>tb", "<cmd>ToggleTransparency<cr>", { desc = "Toggle transparency" })
-
-  -- ========================================
   -- Stack switching - FIXED SECTION
   -- ========================================
   map("n", "<leader>sg", "<cmd>StackFocus goth<cr>", { desc = "Focus GOTH stack" })
@@ -205,6 +196,8 @@ function M.setup()
       map("n", "<leader>nb", "<cmd>NextBuild<CR>", vim.tbl_extend("force", buf_opts, { desc = "Next.js build" }))
       map("n", "<leader>nt", "<cmd>NextTest<CR>", vim.tbl_extend("force", buf_opts, { desc = "Next.js tests" }))
       map("n", "<leader>nl", "<cmd>NextLint<CR>", vim.tbl_extend("force", buf_opts, { desc = "Next.js lint" }))
+      map("n", "<leader>nc", "<cmd>NextNewComponent<CR>", vim.tbl_extend("force", buf_opts, { desc = "New component" }))
+      map("n", "<leader>np", "<cmd>NextNewPage<CR>", vim.tbl_extend("force", buf_opts, { desc = "New page" }))
 
       -- TypeScript LSP actions
       if pcall(require, "typescript") then
