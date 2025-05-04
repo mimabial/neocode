@@ -141,7 +141,7 @@ M.config = {
 
   -- Notification configuration
   notification = {
-    border = "rounded",
+    border = "sis",
     timeout = 3000,
     max_width = 60,
     max_height = 20,
