@@ -182,7 +182,7 @@ return {
 
       -- Toggle Codeium on/off with error handling
       vim.keymap.set("n", "<leader>ui", function()
-        local toggle_ok = pcall(vim.api.nvim_command, "Codeium Toggle")
+        local toggle_ok = pcall(vim.api.nvim_command, "CodeiumToggle")
         if not toggle_ok then
           vim.notify("Failed to toggle Codeium", vim.log.levels.WARN)
         end
@@ -192,25 +192,42 @@ return {
       local keymaps = {
         ["<C-g>"] = {
           function()
-            return require("codeium").accept()
+            -- Updated to use the correct API function with additional safety checks
+            local codeium = require("codeium")
+            if codeium and codeium.complete then
+              return codeium.complete()
+            end
+            return ""
           end,
-          "Accept",
+          "Accept suggestion",
         },
         ["<C-;>"] = {
           function()
-            return require("codeium").cycle_completions(1)
+            local codeium = require("codeium")
+            if codeium and codeium.cycle_completions then
+              return codeium.cycle_completions(1)
+            end
+            return ""
           end,
           "Next completion",
         },
         ["<C-,>"] = {
           function()
-            return require("codeium").cycle_completions(-1)
+            local codeium = require("codeium")
+            if codeium and codeium.cycle_completions then
+              return codeium.cycle_completions(-1)
+            end
+            return ""
           end,
           "Prev completion",
         },
         ["<C-x>"] = {
           function()
-            return require("codeium").clear()
+            local codeium = require("codeium")
+            if codeium and codeium.clear then
+              return codeium.clear()
+            end
+            return ""
           end,
           "Clear suggestions",
         },
