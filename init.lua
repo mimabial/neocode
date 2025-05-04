@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 -- init.lua - Improved error handling and diagnostics
 
 -- Basic setup
+=======
+-- init.lua – Neovim entrypoint with robust module loading, error handling, and stack detection
+require("config.fix_encoding")
+-- 0) Leader & feature flags
+>>>>>>> third
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
