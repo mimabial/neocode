@@ -1,5 +1,5 @@
 -- lua/plugins/treesitter.lua
--- Treesitter, rainbow delimiters, autotag, and autopairs integrations
+-- Modified version with improved JSX parser configuration
 return {
   {
     "nvim-treesitter/nvim-treesitter",
@@ -42,7 +42,7 @@ return {
         "graphql",
         "tsx",
         "typescript",
-        "jsx", -- Explicit JSX parser
+        "jsx", -- Explicitly included
 
         -- GOTH stack
         "go",
@@ -50,11 +50,12 @@ return {
         "gosum",
         "gowork",
         "templ",
+
         -- Next.js stack
         "tsx",
         "typescript",
         "javascript",
-        "jsx", -- Duplicate entry, will be deduplicated
+        "jsx", -- Will be deduplicated
         "prisma",
         "regex",
         "markdown",
@@ -229,12 +230,14 @@ return {
         }
       end
 
-      -- Safe parser configurations with error handling
+      -- Improved parser configurations with better error handling
       pcall(function()
-        -- templ parser support
-        local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
-        if not parser_config.templ then
-          parser_config.templ = {
+        local parsers = require("nvim-treesitter.parsers")
+        local config = parsers.get_parser_configs()
+
+        -- Set up templ parser
+        if not config.templ then
+          config.templ = {
             install_info = {
               url = "https://github.com/vrischmann/tree-sitter-templ.git",
               files = { "src/parser.c", "src/scanner.c" },
@@ -244,18 +247,21 @@ return {
           }
         end
 
-        -- Ensure JSX parser is available
-        if not parser_config.jsx then
-          -- JSX shares the same grammar as TSX in tree-sitter
-          parser_config.jsx = {
-            install_info = parser_config.tsx.install_info,
+        -- Set up jsx parser properly
+        if not config.jsx then
+          -- Don't rely on tsx being there; define jsx directly
+          config.jsx = {
+            install_info = {
+              url = "https://github.com/tree-sitter/tree-sitter-javascript.git",
+              files = { "src/parser.c", "src/scanner.c" },
+              branch = "master",
+            },
             filetype = "javascriptreact",
           }
         end
 
         -- Register parsers for filetypes
-        local parsers = require("nvim-treesitter.parsers")
-        if parsers and parsers.filetype_to_parsername then
+        if parsers.filetype_to_parsername then
           parsers.filetype_to_parsername.templ = "templ"
           parsers.filetype_to_parsername.html = "html"
           parsers.filetype_to_parsername.javascriptreact = "jsx"
@@ -291,17 +297,16 @@ return {
         )
 
         -- Also add for JSX/TSX
-        vim.treesitter.query.set(
-          "jsx",
-          "injections",
-          [[
+        local jsx_injection = [[
           ((attribute
             (attribute_name) @_attr_name
             (attribute_value) @injection.content)
            (#match? @_attr_name "^hx-.*$")
            (#set! injection.language "javascript"))
         ]]
-        )
+
+        vim.treesitter.query.set("jsx", "injections", jsx_injection)
+        vim.treesitter.query.set("tsx", "injections", jsx_injection)
       end)
 
       -- Setup custom highlights

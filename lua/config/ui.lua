@@ -131,12 +131,12 @@ M.config = {
       Value = "󰎠",
       Variable = "󰀫",
       -- AI completion
-      Copilot = "",
+      Copilot = "",
       Codeium = "󰚩",
     },
     stack = {
       goth = "󰟓 ",
-      nextjs = " ",
+      nextjs = " ",
       ["goth+nextjs"] = "󰡄 ",
     },
   },
