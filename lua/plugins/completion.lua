@@ -8,10 +8,11 @@ return {
     lazy = true,
     priority = 75,
     opts = function()
-      return {
-        preset = "codicons",
-        mode = "symbol_text",
-        symbol_map = {
+      -- Get icons from UI config if available
+      local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
+      local icons = ui_config.icons and ui_config.icons.kinds
+        or {
+          -- Default icons if UI config not available
           Text = "󰉿",
           Method = "󰆧",
           Function = "󰊕",
@@ -40,7 +41,12 @@ return {
           -- AI completion sources with distinctive icons
           Copilot = "",
           Codeium = "󰚩",
-        },
+        }
+
+      return {
+        preset = "codicons",
+        mode = "symbol_text",
+        symbol_map = icons,
       }
     end,
   },
@@ -60,8 +66,8 @@ return {
       { "saadparwaiz1/cmp_luasnip" },
       { "onsails/lspkind.nvim" },
       { "L3MON4D3/LuaSnip" },
-      { "zbirenbaum/copilot-cmp" },
-      { "Exafunction/codeium.nvim" },
+      { "zbirenbaum/copilot-cmp", optional = true },
+      { "Exafunction/codeium.nvim", optional = true },
     },
 
     config = function()
@@ -69,65 +75,49 @@ return {
       local luasnip = require("luasnip")
       local lspkind = require("lspkind")
 
-      -- Function to get theme-aware colors
-      local function get_colors()
-        -- Try to get colors from the current colorscheme
+      -- Get theme colors from central UI config if available
+      local colors
+      if _G.get_ui_colors then
+        colors = _G.get_ui_colors()
+      else
+        -- Fallback to standalone function
         local function get_hl_by_name(name)
-          local hl = vim.api.nvim_get_hl(0, { name = name })
+          local hl = vim.api.nvim_get_hl(0, { name = name }) or {}
           return hl
         end
 
-        -- Try to get gruvbox colors, falling back to defaults
-        local function get_gruvbox_colors()
-          if _G.get_gruvbox_colors then
-            return _G.get_gruvbox_colors()
-          end
-          return {
-            bg = "#282828",
-            bg1 = "#32302f",
-            bg2 = "#32302f",
-            bg3 = "#45403d",
-            bg4 = "#45403d",
-            fg = "#d4be98",
-            red = "#ea6962",
-            orange = "#e78a4e",
-            yellow = "#d8a657",
-            green = "#89b482",
-            aqua = "#7daea3",
-            blue = "#7daea3",
-            purple = "#d3869b",
-            grey = "#928374",
-          }
-        end
-
-        local colors = get_gruvbox_colors()
-
-        -- Get panel colors - adaptive to current theme
+        -- Get theme colors or use fallbacks
         local normal = get_hl_by_name("Normal")
         local pmenu = get_hl_by_name("Pmenu")
         local pmenusel = get_hl_by_name("PmenuSel")
         local border = get_hl_by_name("FloatBorder")
 
-        return {
-          fg = normal.fg or colors.fg,
-          bg = pmenu.bg or colors.bg1,
-          select_bg = pmenusel.bg or colors.blue,
-          select_fg = pmenusel.fg or colors.bg,
-          border = border.fg or colors.bg3,
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-          lsp = colors.blue,
-          snippet = colors.green,
-          buffer = colors.grey,
-          path = colors.orange,
-          emoji = colors.yellow,
+        colors = {
+          fg = normal.fg or 0xd4be98,
+          bg = pmenu.bg or 0x32302f,
+          select_bg = pmenusel.bg or 0x45403d,
+          select_fg = pmenusel.fg or 0xd4be98,
+          border = border.fg or 0x665c54,
+          copilot = 0x6CC644,
+          codeium = 0x09B6A2,
+          blue = 0x7daea3,
+          green = 0x89b482,
+          orange = 0xe78a4e,
+          yellow = 0xd8a657,
+          purple = 0xd3869b,
+          red = 0xea6962,
+          gray = 0x928374,
         }
+
+        -- Convert number colors to hex strings
+        for k, v in pairs(colors) do
+          if type(v) == "number" then
+            colors[k] = string.format("#%06x", v)
+          end
+        end
       end
 
-      -- Get colors for current theme
-      local colors = get_colors()
-
-      -- AI suggestion priority comparator (fail-safe implementation)
+      -- AI suggestion priority comparator
       local function ai_priority(entry1, entry2)
         local name1 = entry1.source.name or ""
         local name2 = entry2.source.name or ""
@@ -155,17 +145,40 @@ return {
         { name = "emoji", group_index = 3, priority = 30 },
       }
 
+      -- Get UI config if available
+      local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
+      local float_config = ui_config.float or {
+        border = "single",
+        padding = { 0, 1 },
+      }
+
       -- Enhanced window styling with better borders and highlights
       local win_opts = {
         winhighlight = "Normal:CmpNormal,FloatBorder:CmpBorder,CursorLine:CmpSel",
         scrollbar = true,
-        border = "single",
+        border = float_config.border,
         col_offset = 0,
-        side_padding = 1,
+        side_padding = float_config.padding and float_config.padding[1] or 1,
       }
 
       -- Configure with enhanced visual appearance
       cmp.setup({
+        enabled = function()
+          -- Disable completion in Oil buffers
+          local buftype = vim.api.nvim_get_option_value("buftype", { buf = 0 })
+          local filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 })
+
+          if filetype == "oil" then
+            return false
+          end
+
+          -- Also disable for other file explorer/special buffers
+          if buftype == "prompt" or filetype == "TelescopePrompt" then
+            return false
+          end
+
+          return true
+        end,
         completion = { completeopt = "menu,menuone,noinsert" },
         snippet = {
           expand = function(args)
@@ -175,8 +188,8 @@ return {
         window = {
           completion = cmp.config.window.bordered(win_opts),
           documentation = cmp.config.window.bordered(vim.tbl_extend("force", win_opts, {
-            max_height = 15,
-            max_width = 60,
+            max_height = float_config.max_height or 15,
+            max_width = float_config.max_width or 60,
           })),
         },
         mapping = cmp.mapping.preset.insert({
@@ -225,21 +238,25 @@ return {
         formatting = {
           -- Enhanced formatting with better visual distinction
           format = function(entry, vim_item)
+            -- Get menu icons for different sources
+            local selected_icon = ui_config.menu and ui_config.menu.selected_item_icon or "●"
+            local menu_icons = {
+              buffer = " Buffer",
+              nvim_lsp = " LSP",
+              luasnip = " Snippet",
+              nvim_lua = " Lua",
+              path = " Path",
+              emoji = " Emoji",
+              copilot = " Copilot",
+              codeium = " Codeium",
+            }
+
             -- Format using lspkind with improved styling
             vim_item = lspkind.cmp_format({
               mode = "symbol_text",
               maxwidth = 50,
               ellipsis_char = "...",
-              menu = {
-                buffer = " Buffer",
-                nvim_lsp = " LSP",
-                luasnip = " Snippet",
-                nvim_lua = " Lua",
-                path = " Path",
-                emoji = " Emoji",
-                copilot = " Copilot",
-                codeium = " Codeium",
-              },
+              menu = menu_icons,
               before = function(entry, vim_item)
                 -- Add additional styling for AI sources
                 if entry.source.name == "copilot" then
@@ -252,12 +269,12 @@ return {
 
                 -- Set kind highlights based on source
                 if entry.source.name == "nvim_lsp" then
-                  vim_item.kind_hl_group = "CmpItemKindLSP" .. vim_item.kind
+                  vim_item.kind_hl_group = "CmpItemKind" .. vim_item.kind
                 end
 
-                -- Add highlighting to the item abbr
-                if entry.completion_item.data and entry.completion_item.data.detail then
-                  vim_item.abbr = string.format("%s  %s", vim_item.abbr, entry.completion_item.data.detail)
+                -- Add highlighting to the item abbr for selected items
+                if cmp.get_selected_entry() and cmp.get_selected_entry().id == entry.id then
+                  vim_item.abbr = selected_icon .. " " .. vim_item.abbr
                 end
 
                 return vim_item
@@ -280,6 +297,9 @@ return {
             return vim_item
           end,
         },
+        window = {
+          completion = cmp.config.window.bordered(win_opts),
+        },
       })
 
       cmp.setup.cmdline("/", {
@@ -291,39 +311,45 @@ return {
             return vim_item
           end,
         },
+        window = {
+          completion = cmp.config.window.bordered(win_opts),
+        },
       })
 
       -- Enhanced highlight groups for completion menu that adapt to theme
       vim.api.nvim_create_autocmd("ColorScheme", {
         pattern = "*",
         callback = function()
-          local colors = get_colors()
+          -- Update colors
+          if _G.get_ui_colors then
+            colors = _G.get_ui_colors()
+          end
 
           -- Create better highlighting
           -- Basic UI elements
           vim.api.nvim_set_hl(0, "CmpNormal", { bg = colors.bg })
           vim.api.nvim_set_hl(0, "CmpBorder", { fg = colors.border })
           vim.api.nvim_set_hl(0, "CmpSel", { bg = colors.select_bg, fg = colors.select_fg, bold = true })
-          vim.api.nvim_set_hl(0, "CmpGhostText", { fg = colors.grey, italic = true })
+          vim.api.nvim_set_hl(0, "CmpGhostText", { fg = colors.gray, italic = true })
 
           -- AI source highlighting
           vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = colors.copilot, bold = true })
           vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = colors.codeium, bold = true })
 
           -- LSP kinds with subtle color variations
-          vim.api.nvim_set_hl(0, "CmpItemKindLSPFunction", { fg = colors.blue, bold = true })
-          vim.api.nvim_set_hl(0, "CmpItemKindLSPMethod", { fg = colors.blue })
-          vim.api.nvim_set_hl(0, "CmpItemKindLSPVariable", { fg = colors.orange })
-          vim.api.nvim_set_hl(0, "CmpItemKindLSPField", { fg = colors.green })
-          vim.api.nvim_set_hl(0, "CmpItemKindLSPClass", { fg = colors.yellow, bold = true })
-          vim.api.nvim_set_hl(0, "CmpItemKindLSPInterface", { fg = colors.yellow })
-          vim.api.nvim_set_hl(0, "CmpItemKindLSPStruct", { fg = colors.purple })
-          vim.api.nvim_set_hl(0, "CmpItemKindLSPConstant", { fg = colors.orange, bold = true })
+          vim.api.nvim_set_hl(0, "CmpItemKindFunction", { fg = colors.blue, bold = true })
+          vim.api.nvim_set_hl(0, "CmpItemKindMethod", { fg = colors.blue })
+          vim.api.nvim_set_hl(0, "CmpItemKindVariable", { fg = colors.orange })
+          vim.api.nvim_set_hl(0, "CmpItemKindField", { fg = colors.green })
+          vim.api.nvim_set_hl(0, "CmpItemKindClass", { fg = colors.yellow, bold = true })
+          vim.api.nvim_set_hl(0, "CmpItemKindInterface", { fg = colors.yellow })
+          vim.api.nvim_set_hl(0, "CmpItemKindStruct", { fg = colors.purple })
+          vim.api.nvim_set_hl(0, "CmpItemKindConstant", { fg = colors.orange, bold = true })
 
           -- Other sources with distinctive colors
-          vim.api.nvim_set_hl(0, "CmpItemKindSnippet", { fg = colors.snippet, italic = true })
-          vim.api.nvim_set_hl(0, "CmpItemKindBuffer", { fg = colors.buffer })
-          vim.api.nvim_set_hl(0, "CmpItemKindPath", { fg = colors.path })
+          vim.api.nvim_set_hl(0, "CmpItemKindSnippet", { fg = colors.green, italic = true })
+          vim.api.nvim_set_hl(0, "CmpItemKindBuffer", { fg = colors.gray })
+          vim.api.nvim_set_hl(0, "CmpItemKindPath", { fg = colors.orange })
         end,
       })
     end,

@@ -154,28 +154,31 @@ lazy.setup({
   debug = false,
 })
 
--- 5) Detect and configure tech stack (Must run before any other modules that depend on stack)
+-- Load ui configuration
+load_module("config.ui", "setup")
+
+-- Detect and configure tech stack (Must run before any other modules that depend on stack)
 load_module("config.stacks", "setup")
 
--- 6) Load stack-specific commands
+-- Load stack-specific commands
 load_module("config.stack_commands", "setup")
 
--- 7) Load key mappings
+-- Load key mappings
 load_module("config.keymaps", "setup")
 
--- 8) Load autocommands
+-- Load autocommands
 load_module("config.autocmds", "setup")
 
--- 9) Load custom commands
+-- Load custom commands
 load_module("config.commands", "setup")
 
--- 10) Load diagnostics
+-- Load diagnostics
 load_module("config.diagnostics", "setup")
 
--- 11) Load LSP configuration
+-- Load LSP configuration
 load_module("config.lsp", "setup")
 
--- 12) Set default colorscheme if not already set
+-- Set default colorscheme if not already set
 
 if not vim.g.colors_name then
   pcall(vim.api.nvim_command, "colorscheme gruvbox-material")

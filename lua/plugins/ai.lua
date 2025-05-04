@@ -1,5 +1,5 @@
 -- lua/plugins/ai.lua
--- Enhanced AI integration with both Copilot and Codeium working together
+-- Enhanced AI integration with consistent UI styling for both Copilot and Codeium
 
 return {
   -- GitHub Copilot integration
@@ -10,38 +10,47 @@ return {
     dependencies = {
       "zbirenbaum/copilot-cmp", -- For completion menu integration
     },
-    opts = {
-      suggestion = {
-        enabled = true,
-        auto_trigger = true,
-        debounce = 75,
-        keymap = {
-          accept = "<C-]>",
-          accept_word = "<M-]>",
-          accept_line = "<C-l>",
-          next = "<M-]>",
-          prev = "<M-[>",
-          dismiss = "<C-[>",
+    opts = function()
+      -- Get UI config if available
+      local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
+
+      return {
+        suggestion = {
+          enabled = true,
+          auto_trigger = true,
+          debounce = 75,
+          keymap = {
+            accept = "<C-]>",
+            accept_word = "<M-]>",
+            accept_line = "<C-l>",
+            next = "<M-]>",
+            prev = "<M-[>",
+            dismiss = "<C-[>",
+          },
         },
-      },
-      panel = {
-        enabled = true,
-        auto_refresh = true,
-      },
-      filetypes = {
-        -- Enable for all filetypes including templ
-        ["*"] = true,
-        -- Except these
-        TelescopePrompt = false,
-        DressingInput = false,
-        ["neo-tree-popup"] = false,
-        ["oil"] = false,
-        help = false,
-        git = false,
-        gitcommit = false,
-        gitrebase = false,
-      },
-    },
+        panel = {
+          enabled = true,
+          auto_refresh = true,
+          layout = {
+            position = "bottom", -- | top | left | right
+            ratio = 0.4,
+          },
+        },
+        filetypes = {
+          -- Enable for all filetypes including templ
+          ["*"] = true,
+          -- Except these
+          TelescopePrompt = false,
+          DressingInput = false,
+          ["neo-tree-popup"] = false,
+          ["oil"] = false,
+          help = false,
+          git = false,
+          gitcommit = false,
+          gitrebase = false,
+        },
+      }
+    end,
     config = function(_, opts)
       -- Safely load copilot with error handling
       local ok, copilot = pcall(require, "copilot")
@@ -59,17 +68,31 @@ return {
         vim.notify("Copilot setup failed: " .. tostring(err), vim.log.levels.WARN)
       end
 
+      -- Get colors from central UI config if available
+      local get_colors = _G.get_ui_colors
+        or function()
+          -- Default gruvbox-compatible colors
+          return {
+            bg = "#282828",
+            bg1 = "#32302f",
+            gray = "#928374",
+            selection_bg = "#45403d",
+          }
+        end
+
       -- Highlight groups for copilot
       vim.api.nvim_create_autocmd("ColorScheme", {
         pattern = "*",
         callback = function()
-          -- Set highlight groups compatible with gruvbox-material
-          vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = "#928374", italic = true })
-          vim.api.nvim_set_hl(0, "CopilotAnnotation", { fg = "#928374", italic = true })
+          local colors = get_colors()
+
+          -- Set highlight groups compatible with the current theme
+          vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = colors.gray, italic = true })
+          vim.api.nvim_set_hl(0, "CopilotAnnotation", { fg = colors.gray, italic = true })
           vim.api.nvim_set_hl(
             0,
             "CopilotSuggestionActive",
-            { bg = "#32302f", fg = "#a89984", italic = true, bold = true }
+            { bg = colors.bg1, fg = colors.gray, italic = true, bold = true }
           )
         end,
       })
@@ -157,9 +180,28 @@ return {
         return
       end
 
-      -- Setup with error handling
+      -- Get UI config if available
+      local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
+      local float_config = ui_config.float or { border = "single" }
+
+      -- Setup with error handling and UI enhancements
       local setup_ok, err = pcall(function()
-        codeium.setup({})
+        codeium.setup({
+          config = {
+            enable_chat = true,
+            tools = {
+              -- Apply UI styling from central config
+              language_server = {
+                enabled = true,
+              },
+              selector = {
+                enabled = true,
+                border = float_config.border,
+                max_width = ui_config.float and ui_config.float.max_width or 80,
+              },
+            },
+          },
+        })
       end)
 
       if not setup_ok then
@@ -171,11 +213,19 @@ return {
         vim.g.codeium_enabled = true
       end
 
+      -- Get colors function from UI module or fallback
+      local get_colors = _G.get_ui_colors or function()
+        return {
+          gray = "#928374",
+        }
+      end
+
       -- Highlight groups for suggestions
       vim.api.nvim_create_autocmd("ColorScheme", {
         pattern = "*",
         callback = function()
-          vim.api.nvim_set_hl(0, "CodeiumSuggestion", { fg = "#928374", italic = true })
+          local colors = get_colors()
+          vim.api.nvim_set_hl(0, "CodeiumSuggestion", { fg = colors.gray, italic = true })
           vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2", bold = true })
         end,
       })
@@ -236,213 +286,6 @@ return {
       for key, mapping in pairs(keymaps) do
         vim.keymap.set("i", key, mapping[1], { expr = true, desc = "Codeium: " .. mapping[2] })
       end
-    end,
-  },
-
-  -- Enhanced completion integration for both AI tools
-  {
-    "hrsh7th/nvim-cmp",
-    event = { "InsertEnter", "CmdlineEnter" },
-    dependencies = {
-      { "hrsh7th/cmp-nvim-lsp" },
-      { "hrsh7th/cmp-buffer" },
-      { "hrsh7th/cmp-path" },
-      { "hrsh7th/cmp-cmdline" },
-      { "saadparwaiz1/cmp_luasnip" },
-      { "L3MON4D3/LuaSnip" },
-      { "zbirenbaum/copilot-cmp", optional = true },
-      { "Exafunction/codeium.nvim", optional = true },
-    },
-    config = function()
-      -- Safe loading
-      local cmp_ok, cmp = pcall(require, "cmp")
-      if not cmp_ok then
-        vim.notify("Failed to load nvim-cmp", vim.log.levels.ERROR)
-        return
-      end
-
-      local luasnip_ok, luasnip = pcall(require, "luasnip")
-      if not luasnip_ok then
-        vim.notify("Failed to load LuaSnip", vim.log.levels.WARN)
-        -- Continue anyway, we'll handle the missing dependency
-      end
-
-      -- Build sources list dynamically and safely
-      local sources = {
-        { name = "copilot", group_index = 1, priority = 100 }, -- Highest priority
-        { name = "codeium", group_index = 1, priority = 95 }, -- Fallback AI
-        { name = "nvim_lsp", group_index = 1, priority = 90 }, -- LSP comes after AI
-        { name = "luasnip", group_index = 1, priority = 80 },
-        { name = "buffer", group_index = 2, priority = 70, keyword_length = 3 },
-        { name = "path", group_index = 2, priority = 60 },
-      }
-
-      -- Check if sources exist before using them
-      local final_sources = {}
-      for _, source in ipairs(sources) do
-        local available = true
-        if source.name == "copilot" and not package.loaded["copilot_cmp"] then
-          available = pcall(require, "copilot_cmp")
-        elseif source.name == "codeium" and not package.loaded["codeium"] then
-          available = pcall(require, "codeium")
-        elseif source.name == "luasnip" and not luasnip_ok then
-          available = false
-        end
-
-        if available then
-          table.insert(final_sources, source)
-        end
-      end
-
-      -- Special window with highlights for completion
-      local winhl = "Normal:NormalFloat,FloatBorder:FloatBorder,CursorLine:PmenuSel,Search:None"
-
-      -- Configure with AI-friendly settings
-      local config = {
-        completion = {
-          completeopt = "menu,menuone,noinsert",
-          autocomplete = { require("cmp.types").cmp.TriggerEvent.TextChanged },
-        },
-        snippet = {
-          expand = function(args)
-            if luasnip_ok then
-              luasnip.lsp_expand(args.body)
-            end
-          end,
-        },
-        window = {
-          completion = cmp.config.window.bordered({ winhighlight = winhl }),
-          documentation = cmp.config.window.bordered({ winhighlight = winhl }),
-        },
-        mapping = cmp.mapping.preset.insert({
-          ["<C-n>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
-          ["<C-p>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
-          ["<C-b>"] = cmp.mapping.scroll_docs(-4),
-          ["<C-f>"] = cmp.mapping.scroll_docs(4),
-          ["<C-Space>"] = cmp.mapping.complete(),
-          ["<C-e>"] = cmp.mapping.abort(),
-          ["<CR>"] = cmp.mapping.confirm({ select = true }),
-          ["<Tab>"] = cmp.mapping(function(fallback)
-            if cmp.visible() then
-              cmp.select_next_item()
-            elseif luasnip_ok and luasnip.expand_or_jumpable() then
-              luasnip.expand_or_jump()
-            else
-              fallback()
-            end
-          end, { "i", "s" }),
-          ["<S-Tab>"] = cmp.mapping(function(fallback)
-            if cmp.visible() then
-              cmp.select_prev_item()
-            elseif luasnip_ok and luasnip.jumpable(-1) then
-              luasnip.jump(-1)
-            else
-              fallback()
-            end
-          end, { "i", "s" }),
-        }),
-        sources = cmp.config.sources(final_sources),
-        sorting = {
-          priority_weight = 2,
-          comparators = {
-            ai_priority, -- Our custom AI comparator first
-            cmp.config.compare.offset,
-            cmp.config.compare.exact,
-            cmp.config.compare.score,
-            cmp.config.compare.recently_used,
-            cmp.config.compare.locality,
-            cmp.config.compare.kind,
-            cmp.config.compare.sort_text,
-            cmp.config.compare.length,
-            cmp.config.compare.order,
-          },
-        },
-        formatting = {
-          format = function(entry, vim_item)
-            -- Try to use lspkind if available
-            local has_lspkind, lspkind = pcall(require, "lspkind")
-            if has_lspkind then
-              vim_item = lspkind.cmp_format({
-                mode = "symbol_text",
-                maxwidth = 50,
-                ellipsis_char = "...",
-                menu = {
-                  buffer = "[Buf]",
-                  nvim_lsp = "[LSP]",
-                  luasnip = "[Snip]",
-                  nvim_lua = "[Lua]",
-                  path = "[Path]",
-                  copilot = "[CP]",
-                  codeium = "[CI]",
-                },
-              })(entry, vim_item)
-            else
-              -- Basic formatting without lspkind
-              local source_names = {
-                copilot = "[CP]",
-                codeium = "[CI]",
-                nvim_lsp = "[LSP]",
-                luasnip = "[Snip]",
-                buffer = "[Buf]",
-                path = "[Path]",
-              }
-              vim_item.menu = source_names[entry.source.name] or ("[" .. entry.source.name .. "]")
-            end
-
-            -- Special handling for AI sources
-            if entry.source.name == "copilot" then
-              vim_item.kind = "Copilot"
-              vim_item.kind_hl_group = "CmpItemKindCopilot"
-            elseif entry.source.name == "codeium" then
-              vim_item.kind = "Codeium"
-              vim_item.kind_hl_group = "CmpItemKindCodeium"
-            end
-
-            return vim_item
-          end,
-        },
-        experimental = { ghost_text = { hl_group = "LspCodeLens" } },
-      }
-
-      -- Setup with error handling
-      local setup_ok, err = pcall(function()
-        cmp.setup(config)
-      end)
-
-      if not setup_ok then
-        vim.notify("nvim-cmp setup failed: " .. tostring(err), vim.log.levels.ERROR)
-        return
-      end
-
-      -- Cmdline completions
-      pcall(function()
-        cmp.setup.cmdline(":", {
-          mapping = cmp.mapping.preset.cmdline(),
-          sources = cmp.config.sources({ { name = "path" } }, { { name = "cmdline" } }),
-        })
-
-        cmp.setup.cmdline("/", {
-          mapping = cmp.mapping.preset.cmdline(),
-          sources = { { name = "buffer" } },
-        })
-      end)
-
-      -- Ensure AI highlight groups are set
-      vim.api.nvim_create_autocmd("ColorScheme", {
-        pattern = "*",
-        callback = function()
-          vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = "#6CC644", bold = true })
-          vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2", bold = true })
-        end,
-      })
-
-      -- Provide additional visual feedback with ghost text
-      pcall(function()
-        cmp.setup({
-          experimental = { ghost_text = { hl_group = "Comment" } },
-          view = { entries = { name = "custom", selection_order = "near_cursor" } },
-        })
-      end)
     end,
   },
 }
