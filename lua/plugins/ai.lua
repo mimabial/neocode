@@ -87,11 +87,11 @@ return {
 
         if status then
           -- Try to disable with error handling
-          pcall(vim.cmd, "Copilot disable")
+          pcall(vim.api.nvim_command, "Copilot disable")
           vim.notify(" Copilot disabled", vim.log.levels.INFO, { title = "Copilot" })
         else
           -- Try to enable with error handling
-          pcall(vim.cmd, "Copilot enable")
+          pcall(vim.api.nvim_command, "Copilot enable")
           vim.notify(" Copilot enabled", vim.log.levels.INFO, { title = "Copilot" })
         end
       end, { desc = "Toggle Copilot" })
@@ -182,7 +182,7 @@ return {
 
       -- Toggle Codeium on/off with error handling
       vim.keymap.set("n", "<leader>ui", function()
-        local toggle_ok = pcall(vim.cmd, "Codeium Toggle")
+        local toggle_ok = pcall(vim.api.nvim_command, "Codeium Toggle")
         if not toggle_ok then
           vim.notify("Failed to toggle Codeium", vim.log.levels.WARN)
         end
