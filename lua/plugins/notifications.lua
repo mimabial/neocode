@@ -76,14 +76,25 @@ return {
     cmdline = {
       enabled = true,
       view = "cmdline_popup",
-      opts = {},
+      opts = {
+        position = { row = "30%", col = "50%" },
+        size = { width = 60, height = "auto" },
+        border = {
+          style = "rounded",
+          padding = { 0, 1 },
+        },
+      },
       format = {
-        cmdline = { pattern = "^:", icon = ":", lang = "vim" },
-        search_down = { kind = "search", pattern = "^/", icon = "/", lang = "regex" },
-        search_up = { kind = "search", pattern = "^%?", icon = "?", lang = "regex" },
+        cmdline = { pattern = "^:", icon = ": ", lang = "vim", title = "  C Line  " },
+        search_down = { kind = "search", pattern = "^/", icon = "/ ", lang = "regex" },
+        search_up = { kind = "search", pattern = "^%?", icon = "? ", lang = "regex" },
         filter = { pattern = "^:%s*!", icon = "!", lang = "bash" },
         lua = { pattern = { "^:%s*lua" }, icon = "λ", lang = "lua" },
         help = { pattern = "^:%s*he?l?p?", icon = "?" },
+      },
+      routes = {
+        { filter = { event = "msg_show", kind = "", find = "written" }, opts = { skip = true } },
+        { filter = { event = "msg_show", kind = "search_count" }, opts = { view = "virtualtext" } },
       },
     },
     messages = {

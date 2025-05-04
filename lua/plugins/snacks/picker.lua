@@ -25,7 +25,7 @@ return {
       backdrop = false,
       row = -1,
       width = 0,
-      height = 0.5,
+      height = 0.6,
       border = "top",
       title = " {title} {live} {flags}",
       title_pos = "left",

@@ -267,22 +267,6 @@ return {
         -- Continue anyway, we'll handle the missing dependency
       end
 
-      -- AI suggestion priority comparator (fail-safe implementation)
-      local function ai_priority(entry1, entry2)
-        local name1 = entry1.source.name or ""
-        local name2 = entry2.source.name or ""
-
-        -- Priority ratings: copilot > codeium > lsp > others
-        local p1 = name1 == "copilot" and 100 or (name1 == "codeium" and 95 or (name1 == "nvim_lsp" and 90 or 0))
-        local p2 = name2 == "copilot" and 100 or (name2 == "codeium" and 95 or (name2 == "nvim_lsp" and 90 or 0))
-
-        if p1 ~= p2 then
-          return p1 > p2
-        end
-        -- If priorities are equal, fall through to other comparators
-        return nil
-      end
-
       -- Build sources list dynamically and safely
       local sources = {
         { name = "copilot", group_index = 1, priority = 100 }, -- Highest priority
