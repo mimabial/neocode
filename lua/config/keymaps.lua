@@ -1,5 +1,5 @@
 -- lua/config/keymaps.lua
--- Refined keymapping structure with better organization and no conflicts
+-- Refined keymapping structure with better organization and which-key integration
 
 local M = {}
 
@@ -45,6 +45,27 @@ function M.setup()
   map("n", "n", "nzzzv", { desc = "Next search result centered" })
   map("n", "N", "Nzzzv", { desc = "Previous search result centered" })
 
+  -- Ensure which-key is loaded
+  local ok_wk, wk = pcall(require, "which-key")
+  if ok_wk then
+    -- Register top-level group names for better organization
+    wk.register({
+      ["<leader>"] = { name = "Leader" },
+      ["<leader>b"] = { name = "Buffers" },
+      ["<leader>c"] = { name = "Code/LSP" },
+      ["<leader>d"] = { name = "Debug" },
+      ["<leader>f"] = { name = "Find/Search" },
+      ["<leader>g"] = { name = "Git" },
+      ["<leader>l"] = { name = "Lazy/Plugins" },
+      ["<leader>L"] = { name = "Layouts" },
+      ["<leader>n"] = { name = "Next.js" },
+      ["<leader>s"] = { name = "Stack" },
+      ["<leader>t"] = { name = "Terminal/Toggle" },
+      ["<leader>u"] = { name = "UI/Settings" },
+      ["<leader>x"] = { name = "Diagnostics/Trouble" },
+    })
+  end
+
   -- ========================================
   -- Plugin Manager
   -- ========================================
@@ -57,6 +78,9 @@ function M.setup()
   map("n", "<leader>bd", "<cmd>Bdelete<cr>", { desc = "Delete buffer" })
   map("n", "<leader>bn", "<cmd>bnext<cr>", { desc = "Next buffer" })
   map("n", "<leader>bp", "<cmd>bprevious<cr>", { desc = "Previous buffer" })
+  map("n", "<leader>br", "<cmd>BufferLineCloseRight<cr>", { desc = "Close buffers to right" })
+  map("n", "<leader>bl", "<cmd>BufferLineCloseLeft<cr>", { desc = "Close buffers to left" })
+  map("n", "<leader>bo", "<cmd>BufferLineCloseOthers<cr>", { desc = "Close other buffers" })
 
   -- Use shift keys for quicker buffer navigation
   map("n", "<S-h>", "<cmd>bprevious<cr>", { desc = "Previous buffer" })
@@ -119,13 +143,19 @@ function M.setup()
   end
 
   -- ========================================
-  -- Stack switching - FIXED SECTION
+  -- Stack switching
   -- ========================================
   map("n", "<leader>sg", "<cmd>StackFocus goth<cr>", { desc = "Focus GOTH stack" })
   map("n", "<leader>sn", "<cmd>StackFocus nextjs<cr>", { desc = "Focus Next.js stack" })
   map("n", "<leader>sb", "<cmd>StackFocus both<cr>", { desc = "Focus both stacks" })
 
   -- Add dashboard integration
+  map("n", "<leader>sd", function()
+    if package.loaded["snacks.dashboard"] then
+      require("snacks.dashboard").open()
+    end
+  end, { desc = "Open Dashboard" })
+
   map("n", "<leader>sdg", function()
     vim.cmd("StackFocus goth")
     if package.loaded["snacks.dashboard"] then
@@ -143,18 +173,27 @@ function M.setup()
   -- ========================================
   -- Terminal integration
   -- ========================================
-  if pcall(require, "toggleterm") then
-    map("n", "<leader>tf", "<cmd>ToggleTerm direction=float<cr>", { desc = "Terminal (float)" })
-    map("n", "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", { desc = "Terminal (horizontal)" })
-    map("n", "<leader>tv", "<cmd>ToggleTerm direction=vertical<cr>", { desc = "Terminal (vertical)" })
-    map("n", "<C-\\>", "<cmd>ToggleTerm<cr>", { desc = "Toggle terminal" })
-  end
+  map("n", "<leader>tf", "<cmd>ToggleTerm direction=float<cr>", { desc = "Terminal (float)" })
+  map("n", "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", { desc = "Terminal (horizontal)" })
+  map("n", "<leader>tv", "<cmd>ToggleTerm direction=vertical<cr>", { desc = "Terminal (vertical)" })
+  map("n", "<C-\\>", "<cmd>ToggleTerm<cr>", { desc = "Toggle terminal" })
 
   -- ========================================
   -- Git integration
   -- ========================================
   map("n", "<leader>gg", "<cmd>LazyGit<cr>", { desc = "LazyGit" })
   map("n", "<leader>gd", "<cmd>DiffviewOpen<cr>", { desc = "DiffView Open" })
+  map("n", "<leader>gs", "<cmd>Git<cr>", { desc = "Git status" })
+  map("n", "<leader>gp", "<cmd>Git pull<cr>", { desc = "Git pull" })
+  map("n", "<leader>gP", "<cmd>Git push<cr>", { desc = "Git push" })
+
+  -- ========================================
+  -- Theme and UI
+  -- ========================================
+  map("n", "<leader>tt", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle theme" })
+  map("n", "<leader>ts", "<cmd>ColorScheme<cr>", { desc = "Select theme" })
+  map("n", "<leader>tv", "<cmd>ColorSchemeVariant<cr>", { desc = "Select theme variant" })
+  map("n", "<leader>tb", "<cmd>ToggleTransparency<cr>", { desc = "Toggle transparency" })
 
   -- ========================================
   -- Layout presets
@@ -163,6 +202,19 @@ function M.setup()
   map("n", "<leader>L2", "<cmd>Layout terminal<cr>", { desc = "Terminal Layout" })
   map("n", "<leader>L3", "<cmd>Layout writing<cr>", { desc = "Writing Layout" })
   map("n", "<leader>L4", "<cmd>Layout debug<cr>", { desc = "Debug Layout" })
+
+  -- Register these keymaps with which-key for visibility
+  if ok_wk then
+    wk.register({
+      ["<leader>L"] = {
+        name = "Layouts",
+        ["1"] = { "<cmd>Layout coding<cr>", "Coding Layout" },
+        ["2"] = { "<cmd>Layout terminal<cr>", "Terminal Layout" },
+        ["3"] = { "<cmd>Layout writing<cr>", "Writing Layout" },
+        ["4"] = { "<cmd>Layout debug<cr>", "Debug Layout" },
+      },
+    })
+  end
 
   -- ========================================
   -- Stack-specific keymaps
@@ -183,6 +235,19 @@ function M.setup()
         vim.tbl_extend("force", buf_opts, { desc = "Generate Templ files" })
       )
       map("n", "<leader>gn", "<cmd>TemplNew<CR>", vim.tbl_extend("force", buf_opts, { desc = "New Templ component" }))
+
+      -- Register these keymaps with which-key for the current buffer
+      if ok_wk then
+        wk.register({
+          ["<leader>g"] = {
+            name = "GOTH",
+            ["r"] = { "<cmd>GoRun<CR>", "Run Go project" },
+            ["s"] = { "<cmd>GOTHServer<CR>", "Start GOTH server" },
+            ["t"] = { "<cmd>TemplGenerate<CR>", "Generate Templ files" },
+            ["n"] = { "<cmd>TemplNew<CR>", "New Templ component" },
+          },
+        }, { buffer = true })
+      end
     end,
   })
 
@@ -199,6 +264,21 @@ function M.setup()
       map("n", "<leader>nc", "<cmd>NextNewComponent<CR>", vim.tbl_extend("force", buf_opts, { desc = "New component" }))
       map("n", "<leader>np", "<cmd>NextNewPage<CR>", vim.tbl_extend("force", buf_opts, { desc = "New page" }))
 
+      -- Register these keymaps with which-key for the current buffer
+      if ok_wk then
+        wk.register({
+          ["<leader>n"] = {
+            name = "Next.js",
+            ["d"] = { "<cmd>NextDev<CR>", "Next.js dev server" },
+            ["b"] = { "<cmd>NextBuild<CR>", "Next.js build" },
+            ["t"] = { "<cmd>NextTest<CR>", "Next.js tests" },
+            ["l"] = { "<cmd>NextLint<CR>", "Next.js lint" },
+            ["c"] = { "<cmd>NextNewComponent<CR>", "New component" },
+            ["p"] = { "<cmd>NextNewPage<CR>", "New page" },
+          },
+        }, { buffer = true })
+      end
+
       -- TypeScript LSP actions
       if pcall(require, "typescript") then
         local ts = require("typescript")
@@ -209,12 +289,22 @@ function M.setup()
           vim.tbl_extend("force", buf_opts, { desc = "Organize Imports" })
         )
         map("n", "<leader>nr", ts.actions.rename_file, vim.tbl_extend("force", buf_opts, { desc = "Rename File" }))
+
+        -- Register these keymaps with which-key if available
+        if ok_wk then
+          wk.register({
+            ["<leader>n"] = {
+              ["o"] = { ts.actions.organizeImports, "Organize Imports" },
+              ["r"] = { ts.actions.rename_file, "Rename File" },
+            },
+          }, { buffer = true })
+        end
       end
     end,
   })
 
   -- ========================================
-  -- LSP keymaps (defined in LspAttach event)
+  -- LSP keymaps setup in LspAttach event
   -- ========================================
   vim.api.nvim_create_autocmd("LspAttach", {
     callback = function(args)
@@ -250,6 +340,59 @@ function M.setup()
       bufmap("<leader>cq", vim.diagnostic.setqflist, "Diagnostics to Quickfix")
       bufmap("[d", vim.diagnostic.goto_prev, "Previous Diagnostic")
       bufmap("]d", vim.diagnostic.goto_next, "Next Diagnostic")
+
+      -- Register with which-key if available
+      if ok_wk then
+        wk.register({
+          ["g"] = {
+            ["d"] = { vim.lsp.buf.definition, "Go to Definition" },
+            ["D"] = { vim.lsp.buf.declaration, "Go to Declaration" },
+            ["i"] = { vim.lsp.buf.implementation, "Go to Implementation" },
+            ["r"] = { vim.lsp.buf.references, "Find References" },
+          },
+          ["<leader>c"] = {
+            name = "Code/LSP",
+            ["r"] = { vim.lsp.buf.rename, "Rename Symbol" },
+            ["a"] = { vim.lsp.buf.code_action, "Code Action" },
+            ["f"] = {
+              function()
+                vim.lsp.buf.format({ async = true })
+              end,
+              "Format",
+            },
+            ["d"] = { vim.diagnostic.open_float, "Show Diagnostics" },
+            ["q"] = { vim.diagnostic.setqflist, "Diagnostics to Quickfix" },
+          },
+          ["[d"] = { vim.diagnostic.goto_prev, "Previous Diagnostic" },
+          ["]d"] = { vim.diagnostic.goto_next, "Next Diagnostic" },
+        }, { buffer = bufnr })
+      end
+
+      -- Add additional client-specific keymaps if needed
+      if client.name == "gopls" then
+        -- Go-specific keymaps (for GOTH stack)
+        bufmap("<leader>goi", "<cmd>GoImports<CR>", "Organize imports")
+        bufmap("<leader>gie", "<cmd>GoIfErr<CR>", "Add if err")
+        bufmap("<leader>gfs", "<cmd>GoFillStruct<CR>", "Fill struct")
+
+        -- Register with which-key if available
+        if ok_wk then
+          wk.register({
+            ["<leader>go"] = {
+              name = "Go Organize",
+              ["i"] = { "<cmd>GoImports<CR>", "Organize imports" },
+            },
+            ["<leader>gi"] = {
+              name = "Go Insert",
+              ["e"] = { "<cmd>GoIfErr<CR>", "Add if err" },
+            },
+            ["<leader>gf"] = {
+              name = "Go Fill",
+              ["s"] = { "<cmd>GoFillStruct<CR>", "Fill struct" },
+            },
+          }, { buffer = bufnr })
+        end
+      end
     end,
   })
 end
