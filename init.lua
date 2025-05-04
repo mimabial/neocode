@@ -90,6 +90,7 @@ load_module("config.keymaps", "setup")
 load_module("config.autocmds", "setup")
 load_module("config.commands", "setup")
 load_module("config.lsp", "setup")
+load_module("config.fix_encoding", "setup")
 
 -- Set default colorscheme with error handling
 if not vim.g.colors_name then
