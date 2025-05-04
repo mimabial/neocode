@@ -279,9 +279,32 @@ function M.setup()
   -- UI & Theme keymaps
   -- ========================================
 
-  -- Theme toggling
-  map("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle Colorscheme" })
-  map("n", "<leader>uT", "<cmd>ToggleTransparency<cr>", { desc = "Toggle Transparency" })
+  -- Theme & UI keybindings section
+  local theme_maps = {
+    { "n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", "Toggle Colorscheme" },
+    { "n", "<leader>uT", "<cmd>ToggleTransparency<cr>", "Toggle Transparency" },
+    { "n", "<leader>uc", "<cmd>Telescope colorscheme<cr>", "Select Colorscheme" },
+    { "n", "<leader>uv", "<cmd>ColorSchemeVariant<cr>", "Cycle Theme Variant" },
+  }
+
+  for _, m in ipairs(theme_maps) do
+    map(m[1], m[2], m[3], vim.tbl_extend("force", opts, { desc = m[4] }))
+  end
+
+  -- Theme-specific commands for quick access
+  local themes = {
+    { "n", "<leader>utg", "<cmd>ColorScheme gruvbox-material<cr>", "Theme: Gruvbox Material" },
+    { "n", "<leader>utt", "<cmd>ColorScheme tokyonight<cr>", "Theme: Tokyo Night" },
+    { "n", "<leader>ute", "<cmd>ColorScheme everforest<cr>", "Theme: Everforest" },
+    { "n", "<leader>utk", "<cmd>ColorScheme kanagawa<cr>", "Theme: Kanagawa" },
+    { "n", "<leader>utn", "<cmd>ColorScheme nord<cr>", "Theme: Nord" },
+    { "n", "<leader>utr", "<cmd>ColorScheme rose-pine<cr>", "Theme: Rose Pine" },
+    { "n", "<leader>utc", "<cmd>ColorScheme catppuccin<cr>", "Theme: Catppuccin" },
+  }
+
+  for _, m in ipairs(themes) do
+    map(m[1], m[2], m[3], vim.tbl_extend("force", opts, { desc = m[4] }))
+  end
 
   -- Layouts
   map("n", "<leader>L1", "<cmd>Layout coding<cr>", { desc = "Coding Layout" })
