@@ -109,7 +109,7 @@ return {
     event = "BufReadPre",
     dependencies = { "HiPhish/rainbow-delimiters.nvim" },
     opts = function()
-      -- Try to detect theme colors for better integration
+      -- Local function to get highlight colors - this fixes the error
       local function get_highlight_value(name)
         local hl = vim.api.nvim_get_hl(0, { name = name })
         local fg = hl.fg or hl.foreground
@@ -232,6 +232,13 @@ return {
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
           -- Update scope highlights
+          -- Define the get_highlight_value function within this callback too
+          local function get_highlight_value(name)
+            local hl = vim.api.nvim_get_hl(0, { name = name })
+            local fg = hl.fg or hl.foreground
+            return fg and string.format("#%06x", fg) or nil
+          end
+
           local scope_hl = get_highlight_value("Function") or get_highlight_value("Label")
           if scope_hl then
             vim.api.nvim_set_hl(0, "IblScope", { fg = scope_hl, bold = true })
