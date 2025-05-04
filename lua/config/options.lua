@@ -113,11 +113,8 @@ function M.setup()
   opt.foldenable = true
   opt.fillchars = { eob = " " } -- Hide end-of-buffer tildes
 
-  -- Statusline:
-  -- Append search count
+  -- Statusline: append search count
   opt.statusline:append(" %=%{v:lua.require'config.utils'.search_count()}")
-  -- Fix encoding issues
-  vim.opt.fileencoding = "utf-8"
 end
 
 return M

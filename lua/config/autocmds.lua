@@ -330,6 +330,28 @@ function M.setup()
     pcall(dofile, proj)
   end
 
+  -- 18) Lazy startup stats
+  vim.api.nvim_create_augroup("LazyStartMsg", { clear = true })
+  vim.api.nvim_create_autocmd("User", {
+    group = "LazyStartMsg",
+    pattern = "LazyVimStarted",
+    callback = function()
+      local lazy = safe_require("lazy")
+      if not lazy then
+        return
+      end
+      local s = lazy.stats()
+      local ms = math.floor(s.startuptime * 100 + 0.5) / 100
+      local v = vim.version()
+      vim.notify(
+        string.format("Neovim v%d.%d.%d loaded %d/%d plugins in %sms", v.major, v.minor, v.patch, s.loaded, s.count, ms),
+        vim.log.levels.INFO,
+        { title = "Neovim Loaded" }
+      )
+    end,
+    desc = "Show plugin load stats",
+  })
+
   -- 19) Disable auto comment continuation
   vim.api.nvim_create_augroup("NoCommentCont", { clear = true })
   vim.api.nvim_create_autocmd("FileType", {
