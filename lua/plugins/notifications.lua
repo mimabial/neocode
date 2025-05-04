@@ -80,13 +80,13 @@ return {
         position = { row = "30%", col = "50%" },
         size = { width = 60, height = "auto" },
         border = {
-          style = "rounded",
+          style = "single",
           padding = { 0, 1 },
         },
       },
       format = {
-        cmdline = { pattern = "^:", icon = ": ", lang = "vim", title = "  C Line  " },
-        search_down = { kind = "search", pattern = "^/", icon = "/ ", lang = "regex" },
+        cmdline = { pattern = "^:", icon = " ", lang = "vim", title = "" },
+        search_down = { kind = "search", pattern = "^/", icon = "󱎸 ", lang = "regex", title = "" },
         search_up = { kind = "search", pattern = "^%?", icon = "? ", lang = "regex" },
         filter = { pattern = "^:%s*!", icon = "!", lang = "bash" },
         lua = { pattern = { "^:%s*lua" }, icon = "λ", lang = "lua" },

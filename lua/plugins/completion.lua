@@ -157,9 +157,9 @@ return {
 
       -- Enhanced window styling with better borders and highlights
       local win_opts = {
-        winhighlight = "Normal:CmpNormal,FloatBorder:CmpBorder,CursorLine:CmpSel,Search:None",
+        winhighlight = "Normal:CmpNormal,FloatBorder:CmpBorder,CursorLine:CmpSel",
         scrollbar = true,
-        border = "rounded",
+        border = "single",
         col_offset = 0,
         side_padding = 1,
       }
@@ -326,9 +326,6 @@ return {
           vim.api.nvim_set_hl(0, "CmpItemKindPath", { fg = colors.path })
         end,
       })
-
-      -- Trigger the colorscheme autocmd to apply highlights
-      vim.cmd("doautocmd ColorScheme")
     end,
   },
 }
