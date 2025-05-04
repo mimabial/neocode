@@ -1,5 +1,5 @@
 -- lua/plugins/colorscheme.lua
--- Enhanced theme switching with additional themes and improved UI integration
+-- Enhanced theme switching with consistent UI integration
 
 return {
   -- Primary theme - Gruvbox Material
@@ -26,59 +26,101 @@ return {
           aqua = "#7daea3",
           blue = "#7daea3",
           purple = "#d3869b",
-          grey = "#928374",
+          gray = "#928374",
+          border = "#665c54",
         }
       end
     end,
   },
 
   -- Additional themes with consistent configuration
-  { "folke/tokyonight.nvim", lazy = true, priority = 950 },
+  {
+    "folke/tokyonight.nvim",
+    lazy = true,
+    priority = 950,
+    opts = {
+      style = "storm",
+      transparent = false,
+      styles = {
+        sidebars = "dark",
+        floats = "dark",
+      },
+    },
+  },
   { "sainnhe/everforest", lazy = true, priority = 950 },
-  { "rebelot/kanagawa.nvim", lazy = true, priority = 950 },
+  {
+    "rebelot/kanagawa.nvim",
+    lazy = true,
+    priority = 950,
+    opts = {
+      compile = true,
+      theme = "wave",
+    },
+  },
   { "shaunsingh/nord.nvim", lazy = true, priority = 950 },
-  { "rose-pine/neovim", name = "rose-pine", lazy = true, priority = 950 },
-  { "catppuccin/nvim", name = "catppuccin", lazy = true, priority = 950 },
+  {
+    "rose-pine/neovim",
+    name = "rose-pine",
+    lazy = true,
+    priority = 950,
+    opts = {
+      variant = "main",
+    },
+  },
+  {
+    "catppuccin/nvim",
+    name = "catppuccin",
+    lazy = true,
+    priority = 950,
+    opts = {
+      flavour = "mocha",
+    },
+  },
 
   -- Theme setup and switching functionality
   config = function()
-    -- Define all supported themes
+    -- Define all supported themes with their metadata
     local themes = {
       ["gruvbox-material"] = {
         icon = "󰈰 ",
-        color_fn = _G.get_gruvbox_colors,
+        variants = { "soft", "medium", "hard" },
+        current_variant = "medium",
+        setup = function(variant)
+          if variant then
+            vim.g.gruvbox_material_background = variant
+          end
+        end,
       },
       ["tokyonight"] = {
         icon = "󱣱 ",
         variants = { "storm", "moon", "night", "day" },
         current_variant = "storm",
-        color_fn = function()
-          local colors = require("tokyonight.colors").setup()
-          return {
-            bg = colors.bg,
-            bg1 = colors.bg_dark,
-            red = colors.red,
-            orange = colors.orange,
-            yellow = colors.yellow,
-            green = colors.green,
-            aqua = colors.teal,
-            blue = colors.blue,
-            purple = colors.purple,
-            grey = colors.comment,
-          }
+        setup = function(variant)
+          if variant then
+            -- Use the new API format
+            require("tokyonight").setup({ style = variant })
+          end
         end,
       },
       ["everforest"] = {
         icon = "󰪶 ",
-        config = function()
-          vim.g.everforest_background = "medium"
-          vim.g.everforest_enable_italic = 1
+        variants = { "soft", "medium", "hard" },
+        current_variant = "medium",
+        setup = function(variant)
+          if variant then
+            vim.g.everforest_background = variant
+          end
         end,
       },
       ["kanagawa"] = {
         icon = "󰖭 ",
         variants = { "wave", "dragon", "lotus" },
         current_variant = "wave",
+        setup = function(variant)
+          if variant then
+            require("kanagawa").setup({ theme = variant })
+          end
+        end,
       },
       ["nord"] = {
         icon = "󰔿 ",
@@ -87,15 +129,25 @@ return {
         icon = "󰔎 ",
         variants = { "main", "moon", "dawn" },
         current_variant = "main",
+        setup = function(variant)
+          if variant then
+            require("rose-pine").setup({ variant = variant })
+          end
+        end,
       },
       ["catppuccin"] = {
         icon = "󰄛 ",
         variants = { "mocha", "macchiato", "frappe", "latte" },
         current_variant = "mocha",
+        setup = function(variant)
+          if variant then
+            require("catppuccin").setup({ flavour = variant })
+          end
+        end,
       },
     }
 
-    -- Apply theme with error handling
+    -- Apply theme with error handling and UI refresh
     local function apply_theme(theme_name, variant)
       local theme = themes[theme_name]
       if not theme then
@@ -103,49 +155,45 @@ return {
         return false
       end
 
-      -- Pre-theme setup if available
-      if theme.config and type(theme.config) == "function" then
-        pcall(theme.config)
-      end
-
-      -- Set variant if applicable
-      if variant and theme.variants and vim.tbl_contains(theme.variants, variant) then
-        -- Store the current variant
-        theme.current_variant = variant
-
-        -- Apply variant-specific settings per theme
-        if theme_name == "tokyonight" then
-          vim.g.tokyonight_style = variant
-        elseif theme_name == "catppuccin" then
-          require("catppuccin").setup({ flavour = variant })
-        elseif theme_name == "rose-pine" then
-          require("rose-pine").setup({ variant = variant })
-        elseif theme_name == "kanagawa" then
-          vim.g.kanagawa_style = variant
+      -- Run theme-specific setup if available
+      if theme.setup and variant then
+        local ok, err = pcall(theme.setup, variant)
+        if not ok then
+          vim.notify(string.format("Failed to set variant for '%s': %s", theme_name, err), vim.log.levels.WARN)
+        else
+          -- Update current variant if successful
+          if theme.variants and vim.tbl_contains(theme.variants, variant) then
+            theme.current_variant = variant
+          end
         end
       end
 
       -- Apply the theme
-      local ok = pcall(vim.cmd, "colorscheme " .. theme_name)
+      local ok, err = pcall(vim.cmd, "colorscheme " .. theme_name)
       if not ok then
-        vim.notify(string.format("Failed to apply theme '%s'", theme_name), vim.log.levels.ERROR)
+        vim.notify(string.format("Failed to apply theme '%s': %s", theme_name, err), vim.log.levels.ERROR)
         -- Fallback to gruvbox-material
         pcall(vim.cmd, "colorscheme gruvbox-material")
         return false
       end
 
-      -- Update UI elements
-      pcall(function()
-        -- Refresh statusline if lualine is available
-        if package.loaded["lualine"] then
-          require("lualine").refresh()
-        end
-
-        -- Refresh bufferline if available
-        if package.loaded["bufferline"] then
-          require("bufferline").setup()
-        end
-      end)
+      -- Force refresh of UI elements
+      vim.defer_fn(function()
+        -- Update UI component colors
+        pcall(function()
+          -- Refresh UI components that need updating with theme
+          if package.loaded["lualine"] then
+            require("lualine").refresh()
+          end
+          if package.loaded["bufferline"] then
+            require("bufferline").setup()
+          end
+          -- Update additional components
+          if _G.refresh_ui_colors and type(_G.refresh_ui_colors) == "function" then
+            _G.refresh_ui_colors()
+          end
+        end)
+      end, 10)
 
       local icon = theme.icon or "󱥸 " -- Default icon
       vim.notify(icon .. "Switched to " .. theme_name .. (variant and (" - " .. variant) or ""), vim.log.levels.INFO)
@@ -153,7 +201,7 @@ return {
       return true
     end
 
-    -- Next theme cycling function
+    -- Cycle to next theme
     local function cycle_theme()
       local current = vim.g.colors_name or "gruvbox-material"
       local theme_names = vim.tbl_keys(themes)
@@ -175,7 +223,7 @@ return {
       apply_theme(next_theme)
     end
 
-    -- Create commands for theme switching
+    -- Create commands for theme switching with better error handling
     vim.api.nvim_create_user_command("ColorSchemeToggle", function()
       cycle_theme()
     end, { desc = "Toggle between color schemes" })
@@ -183,7 +231,14 @@ return {
     vim.api.nvim_create_user_command("ColorScheme", function(opts)
       local args = opts.args
       if args == "" then
-        vim.notify("Available themes: " .. table.concat(vim.tbl_keys(themes), ", "), vim.log.levels.INFO)
+        local available = {}
+        for name, theme in pairs(themes) do
+          table.insert(
+            available,
+            theme.icon .. " " .. name .. (theme.variants and (" (" .. table.concat(theme.variants, ", ") .. ")") or "")
+          )
+        end
+        vim.notify("Available themes:\n" .. table.concat(available, "\n"), vim.log.levels.INFO)
         return
       end
 
@@ -202,7 +257,7 @@ return {
       end,
     })
 
-    -- Add variant switching command
+    -- Set up theme variant switching command
     vim.api.nvim_create_user_command("ColorSchemeVariant", function(opts)
       local current = vim.g.colors_name or "gruvbox-material"
       local theme = themes[current]
@@ -232,30 +287,51 @@ return {
       end,
     })
 
-    -- Theme transparency toggle
+    -- Improved transparency toggle with better error handling
     vim.api.nvim_create_user_command("ToggleTransparency", function()
       local current = vim.g.colors_name or "gruvbox-material"
+      local success = true
 
+      -- Handle transparency for each theme
       if current == "gruvbox-material" then
         vim.g.gruvbox_material_transparent_background = vim.g.gruvbox_material_transparent_background == 1 and 0 or 1
       elseif current == "tokyonight" then
-        vim.g.tokyonight_transparent = not vim.g.tokyonight_transparent
+        pcall(function()
+          local config = require("tokyonight").setup()
+          config.transparent = not config.transparent
+          require("tokyonight").setup(config)
+        end)
       elseif current == "everforest" then
         vim.g.everforest_transparent_background = vim.g.everforest_transparent_background == 1 and 0 or 1
+      elseif current == "kanagawa" then
+        pcall(function()
+          local config = require("kanagawa").config
+          config.transparent = not config.transparent
+          require("kanagawa").setup(config)
+        end)
       elseif current == "catppuccin" then
-        -- Toggle for Catppuccin
-        local current_transparent = require("catppuccin").options
-          and require("catppuccin").options.transparent_background
-        require("catppuccin").setup({ transparent_background = not current_transparent })
+        pcall(function()
+          local catppuccin = require("catppuccin")
+          local config = catppuccin.options or {}
+          config.transparent_background = not (config.transparent_background or false)
+          catppuccin.setup(config)
+        end)
+      elseif current == "rose-pine" then
+        pcall(function()
+          local config = require("rose-pine").config
+          config.transparent = not config.transparent
+          require("rose-pine").setup(config)
+        end)
+      else
+        vim.notify("Transparency not supported for " .. current, vim.log.levels.WARN)
+        success = false
       end
 
       -- Reapply colorscheme to take effect
-      pcall(vim.cmd, "colorscheme " .. current)
-
-      vim.notify(
-        "Transparency " .. (vim.g.gruvbox_material_transparent_background == 1 and "enabled" or "disabled"),
-        vim.log.levels.INFO
-      )
+      if success then
+        pcall(vim.cmd, "colorscheme " .. current)
+        vim.notify("Transparency toggled for " .. current, vim.log.levels.INFO)
+      end
     end, { desc = "Toggle background transparency" })
 
     -- Set initial theme if not already set

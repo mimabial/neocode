@@ -1,5 +1,5 @@
 -- lua/config/keymaps.lua
--- Centralized keymap definitions: buffer management, Snacks picker, explorer, and stack commands
+-- Refined keymapping structure with better organization and no conflicts
 
 local M = {}
 
@@ -8,244 +8,229 @@ function M.setup()
   local opts = { noremap = true, silent = true }
 
   -- ========================================
-  -- General keymaps
-  -- ========================================
-
   -- Leader key
+  -- ========================================
   vim.g.mapleader = " "
   vim.g.maplocalleader = " "
 
-  -- keep selection when indenting in visual mode
-  map("v", ">", ">gv", vim.tbl_extend("force", opts, { desc = "Indent and keep selection" }))
-  map("v", "<", "<gv", vim.tbl_extend("force", opts, { desc = "Outdent and keep selection" }))
+  -- ========================================
+  -- Editing keymaps
+  -- ========================================
+  map("v", ">", ">gv", { desc = "Indent and keep selection" })
+  map("v", "<", "<gv", { desc = "Outdent and keep selection" })
+  map("v", "J", ":m '>+1<CR>gv=gv", { desc = "Move selection down" })
+  map("v", "K", ":m '<-2<CR>gv=gv", { desc = "Move selection up" })
+  map("n", "J", "mzJ`z", { desc = "Join lines and keep cursor" })
 
+  -- ========================================
+  -- Navigation keymaps
+  -- ========================================
   -- Better window navigation
-  map("n", "<C-h>", "<C-w>h", opts)
-  map("n", "<C-j>", "<C-w>j", opts)
-  map("n", "<C-k>", "<C-w>k", opts)
-  map("n", "<C-l>", "<C-w>l", opts)
+  map("n", "<C-h>", "<C-w>h", { desc = "Navigate left" })
+  map("n", "<C-j>", "<C-w>j", { desc = "Navigate down" })
+  map("n", "<C-k>", "<C-w>k", { desc = "Navigate up" })
+  map("n", "<C-l>", "<C-w>l", { desc = "Navigate right" })
 
   -- Resize windows with arrows
-  map("n", "<C-Up>", ":resize -2<CR>", opts)
-  map("n", "<C-Down>", ":resize +2<CR>", opts)
-  map("n", "<C-Left>", ":vertical resize -2<CR>", opts)
-  map("n", "<C-Right>", ":vertical resize +2<CR>", opts)
+  map("n", "<C-Up>", ":resize -2<CR>", { desc = "Decrease window height" })
+  map("n", "<C-Down>", ":resize +2<CR>", { desc = "Increase window height" })
+  map("n", "<C-Left>", ":vertical resize -2<CR>", { desc = "Decrease window width" })
+  map("n", "<C-Right>", ":vertical resize +2<CR>", { desc = "Increase window width" })
 
   -- Better line movement
-  map("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
-  map("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
+  map("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, desc = "Better down navigation" })
+  map("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, desc = "Better up navigation" })
 
-  -- Lazy package manager
-  map("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy" })
+  -- Keep cursor centered when navigating search results
+  map("n", "n", "nzzzv", { desc = "Next search result centered" })
+  map("n", "N", "Nzzzv", { desc = "Previous search result centered" })
 
-  -- Move lines up and down
-  map("v", "J", ":m '>+1<CR>gv=gv", opts)
-  map("v", "K", ":m '<-2<CR>gv=gv", opts)
-
-  -- Keep cursor centered when searching
-  map("n", "n", "nzzzv", opts)
-  map("n", "N", "Nzzzv", opts)
-
-  -- Keep cursor centered when joining lines
-  map("n", "J", "mzJ`z", opts)
+  -- ========================================
+  -- Plugin Manager
+  -- ========================================
+  map("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Open Lazy package manager" })
 
   -- ========================================
   -- Buffer management
   -- ========================================
+  map("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to other buffer" })
+  map("n", "<leader>bd", "<cmd>Bdelete<cr>", { desc = "Delete buffer" })
+  map("n", "<leader>bn", "<cmd>bnext<cr>", { desc = "Next buffer" })
+  map("n", "<leader>bp", "<cmd>bprevious<cr>", { desc = "Previous buffer" })
 
-  local buffer_maps = {
-    { "n", "<leader>bb", "<cmd>e #<cr>", "Switch to Other Buffer" },
-    { "n", "<leader>bd", "<cmd>bdelete<cr>", "Delete Buffer" },
-    { "n", "<leader>bf", "<cmd>bfirst<cr>", "First Buffer" },
-    { "n", "<leader>bl", "<cmd>blast<cr>", "Last Buffer" },
-    { "n", "<leader>bn", "<cmd>bnext<cr>", "Next Buffer" },
-    { "n", "<leader>bp", "<cmd>bprevious<cr>", "Previous Buffer" },
-    { "n", "<leader>be", "<cmd>Oil<cr>", "Buffer Explorer (Oil)" },
-    { "n", "-", "<cmd>Oil<cr>", "Buffer Explorer Parent Dir" },
-    { "n", "_", "<cmd>Oil .<cr>", "Buffer Explorer Root Dir" },
-    -- buffer navigation with Shift
-    { "n", "<S-h>", "<cmd>bprevious<cr>", "Previous Buffer" },
-    { "n", "<S-l>", "<cmd>bnext<cr>", "Next Buffer" },
-  }
-
-  for _, m in ipairs(buffer_maps) do
-    map(m[1], m[2], m[3], vim.tbl_extend("force", opts, { desc = m[4] }))
-  end
-
-  -- ========================================
-  -- Search & Find
-  -- ========================================
-
-  local ok_picker, picker = pcall(require, "snacks.picker")
-  if ok_picker then
-    local snack_maps = {
-      {
-        "n",
-        "<leader>ff",
-        function()
-          picker.files()
-        end,
-        "Find Files",
-      },
-      {
-        "n",
-        "<leader>fg",
-        function()
-          picker.grep()
-        end,
-        "Find Text (Grep)",
-      },
-      {
-        "n",
-        "<leader>fb",
-        function()
-          picker.buffers()
-        end,
-        "Find Buffers",
-      },
-      {
-        "n",
-        "<leader>fh",
-        function()
-          picker.help()
-        end,
-        "Find Help",
-      },
-      {
-        "n",
-        "<leader>fr",
-        function()
-          picker.recent()
-        end,
-        "Recent Files",
-      },
-      -- git integration
-      {
-        "n",
-        "<leader>gc",
-        function()
-          picker.git_log()
-        end,
-        "Git Commits",
-      },
-      {
-        "n",
-        "<leader>gb",
-        function()
-          picker.git_branches()
-        end,
-        "Git Branches",
-      },
-      -- lsp integration
-      {
-        "n",
-        "<leader>fd",
-        function()
-          picker.diagnostics({ bufnr = 0 })
-        end,
-        "Doc Diagnostics",
-      },
-      {
-        "n",
-        "<leader>fD",
-        function()
-          picker.diagnostics()
-        end,
-        "Workspace Diagnostics",
-      },
-    }
-
-    for _, m in ipairs(snack_maps) do
-      map(m[1], m[2], m[3], vim.tbl_extend("force", opts, { desc = m[4] }))
-    end
-  end
+  -- Use shift keys for quicker buffer navigation
+  map("n", "<S-h>", "<cmd>bprevious<cr>", { desc = "Previous buffer" })
+  map("n", "<S-l>", "<cmd>bnext<cr>", { desc = "Next buffer" })
 
   -- ========================================
   -- File Explorer
   -- ========================================
+  -- Open file explorer
+  map("n", "<leader>e", function()
+    local explorer = vim.g.default_explorer or "oil"
+    if explorer == "snacks" and pcall(require, "snacks") then
+      require("snacks").explorer()
+    else
+      vim.cmd("Oil")
+    end
+  end, { desc = "File Explorer" })
 
-  -- Snacks explorer
-  local ok_snacks, snacks = pcall(require, "snacks")
-  if ok_snacks then
-    map("n", "<leader>e", function()
-      snacks.explorer()
-    end, vim.tbl_extend("force", opts, { desc = "Snacks Explorer" }))
-  else
-    -- Oil fallback
-    map("n", "<leader>e", "<cmd>Oil<cr>", { desc = "Oil Explorer" })
+  -- Shorthand for directory navigation
+  map("n", "-", "<cmd>Oil<cr>", { desc = "Open parent directory" })
+  map("n", "_", "<cmd>Oil .<cr>", { desc = "Open project root" })
+
+  -- ========================================
+  -- Search functionality (Snacks/Telescope)
+  -- ========================================
+  local ok_picker = pcall(require, "snacks.picker")
+  if ok_picker then
+    -- Non-conflicting search keymaps
+    map("n", "<leader>ff", function()
+      require("snacks.picker").files()
+    end, { desc = "Find files" })
+    map("n", "<leader>fg", function()
+      require("snacks.picker").grep()
+    end, { desc = "Find text" })
+    map("n", "<leader>fb", function()
+      require("snacks.picker").buffers()
+    end, { desc = "Find buffers" })
+    map("n", "<leader>fr", function()
+      require("snacks.picker").recent()
+    end, { desc = "Recent files" })
+    map("n", "<leader>fh", function()
+      require("snacks.picker").help()
+    end, { desc = "Find help" })
+
+    -- Git integration
+    map("n", "<leader>gc", function()
+      require("snacks.picker").git_commits()
+    end, { desc = "Git commits" })
+    map("n", "<leader>gb", function()
+      require("snacks.picker").git_branches()
+    end, { desc = "Git branches" })
+
+    -- LSP integration
+    map("n", "<leader>fd", function()
+      require("snacks.picker").diagnostics({ bufnr = 0 })
+    end, { desc = "Document diagnostics" })
+    map("n", "<leader>fD", function()
+      require("snacks.picker").diagnostics()
+    end, { desc = "Workspace diagnostics" })
   end
 
   -- ========================================
-  -- AI Assistant Keymaps
+  -- Theme switching - FIXED SECTION
   -- ========================================
+  -- Theme toggling without conflicts
+  map("n", "<leader>tt", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle theme" })
+  map("n", "<leader>ts", "<cmd>ColorScheme<cr>", { desc = "Select theme" })
+  map("n", "<leader>tv", "<cmd>ColorSchemeVariant<cr>", { desc = "Select theme variant" })
+  map("n", "<leader>tb", "<cmd>ToggleTransparency<cr>", { desc = "Toggle transparency" })
 
-  -- Defined in the plugins file
+  -- ========================================
+  -- Stack switching - FIXED SECTION
+  -- ========================================
+  map("n", "<leader>sg", "<cmd>StackFocus goth<cr>", { desc = "Focus GOTH stack" })
+  map("n", "<leader>sn", "<cmd>StackFocus nextjs<cr>", { desc = "Focus Next.js stack" })
+  map("n", "<leader>sb", "<cmd>StackFocus both<cr>", { desc = "Focus both stacks" })
+
+  -- Add dashboard integration
+  map("n", "<leader>sdg", function()
+    vim.cmd("StackFocus goth")
+    if package.loaded["snacks.dashboard"] then
+      require("snacks.dashboard").open()
+    end
+  end, { desc = "GOTH stack + Dashboard" })
+
+  map("n", "<leader>sdn", function()
+    vim.cmd("StackFocus nextjs")
+    if package.loaded["snacks.dashboard"] then
+      require("snacks.dashboard").open()
+    end
+  end, { desc = "Next.js stack + Dashboard" })
+
+  -- ========================================
+  -- Terminal integration
+  -- ========================================
+  if pcall(require, "toggleterm") then
+    map("n", "<leader>tf", "<cmd>ToggleTerm direction=float<cr>", { desc = "Terminal (float)" })
+    map("n", "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", { desc = "Terminal (horizontal)" })
+    map("n", "<leader>tv", "<cmd>ToggleTerm direction=vertical<cr>", { desc = "Terminal (vertical)" })
+    map("n", "<C-\\>", "<cmd>ToggleTerm<cr>", { desc = "Toggle terminal" })
+  end
+
+  -- ========================================
+  -- Git integration
+  -- ========================================
+  map("n", "<leader>gg", "<cmd>LazyGit<cr>", { desc = "LazyGit" })
+  map("n", "<leader>gd", "<cmd>DiffviewOpen<cr>", { desc = "DiffView Open" })
+
+  -- ========================================
+  -- Layout presets
+  -- ========================================
+  map("n", "<leader>L1", "<cmd>Layout coding<cr>", { desc = "Coding Layout" })
+  map("n", "<leader>L2", "<cmd>Layout terminal<cr>", { desc = "Terminal Layout" })
+  map("n", "<leader>L3", "<cmd>Layout writing<cr>", { desc = "Writing Layout" })
+  map("n", "<leader>L4", "<cmd>Layout debug<cr>", { desc = "Debug Layout" })
 
   -- ========================================
   -- Stack-specific keymaps
   -- ========================================
-
-  -- Create stack-specific keymaps based on filetype
+  -- Create filetype-specific keymaps that don't conflict
   vim.api.nvim_create_autocmd("FileType", {
     pattern = { "go", "templ" },
     callback = function()
-      -- GOTH stack keymaps
-      local buf_opts = { buffer = true, noremap = true, silent = true }
-      map("n", "<leader>sgr", "<cmd>GoRun<CR>", vim.tbl_extend("force", buf_opts, { desc = "Run Go project" }))
+      local buf_opts = { buffer = true }
+
+      -- GOTH stack commands with g prefix to avoid conflicts
+      map("n", "<leader>gr", "<cmd>GoRun<CR>", vim.tbl_extend("force", buf_opts, { desc = "Run Go project" }))
+      map("n", "<leader>gs", "<cmd>GOTHServer<CR>", vim.tbl_extend("force", buf_opts, { desc = "Start GOTH server" }))
       map(
         "n",
-        "<leader>sgs",
+        "<leader>gt",
         "<cmd>TemplGenerate<CR>",
         vim.tbl_extend("force", buf_opts, { desc = "Generate Templ files" })
       )
-      map("n", "<leader>sgt", "<cmd>TemplNew<CR>", vim.tbl_extend("force", buf_opts, { desc = "New Templ component" }))
-      map("n", "<leader>sgd", "<cmd>GoDeclsDir<CR>", vim.tbl_extend("force", buf_opts, { desc = "Go Declarations" }))
+      map("n", "<leader>gn", "<cmd>TemplNew<CR>", vim.tbl_extend("force", buf_opts, { desc = "New Templ component" }))
     end,
   })
 
   vim.api.nvim_create_autocmd("FileType", {
     pattern = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
     callback = function()
-      -- Next.js stack keymaps
-      local buf_opts = { buffer = true, noremap = true, silent = true }
-      map(
-        "n",
-        "<leader>snd",
-        "<cmd>npm run dev<CR>",
-        vim.tbl_extend("force", buf_opts, { desc = "Next.js dev server" })
-      )
-      map("n", "<leader>snb", "<cmd>npm run build<CR>", vim.tbl_extend("force", buf_opts, { desc = "Next.js build" }))
-      map("n", "<leader>snt", "<cmd>npm run test<CR>", vim.tbl_extend("force", buf_opts, { desc = "Next.js tests" }))
-      map("n", "<leader>snl", "<cmd>npm run lint<CR>", vim.tbl_extend("force", buf_opts, { desc = "Next.js lint" }))
+      local buf_opts = { buffer = true }
+
+      -- Next.js commands with n prefix to avoid conflicts
+      map("n", "<leader>nd", "<cmd>NextDev<CR>", vim.tbl_extend("force", buf_opts, { desc = "Next.js dev server" }))
+      map("n", "<leader>nb", "<cmd>NextBuild<CR>", vim.tbl_extend("force", buf_opts, { desc = "Next.js build" }))
+      map("n", "<leader>nt", "<cmd>NextTest<CR>", vim.tbl_extend("force", buf_opts, { desc = "Next.js tests" }))
+      map("n", "<leader>nl", "<cmd>NextLint<CR>", vim.tbl_extend("force", buf_opts, { desc = "Next.js lint" }))
 
       -- TypeScript LSP actions
       if pcall(require, "typescript") then
         local ts = require("typescript")
         map(
           "n",
-          "<leader>sno",
+          "<leader>no",
           ts.actions.organizeImports,
           vim.tbl_extend("force", buf_opts, { desc = "Organize Imports" })
         )
-        map("n", "<leader>snr", ts.actions.rename_file, vim.tbl_extend("force", buf_opts, { desc = "Rename File" }))
+        map("n", "<leader>nr", ts.actions.rename_file, vim.tbl_extend("force", buf_opts, { desc = "Rename File" }))
       end
     end,
   })
 
   -- ========================================
-  -- LSP general keymaps
+  -- LSP keymaps (defined in LspAttach event)
   -- ========================================
-
   vim.api.nvim_create_autocmd("LspAttach", {
     callback = function(args)
       local client = vim.lsp.get_client_by_id(args.data.client_id)
-      local bufnr = args.buf
-
-      -- Skip certain LSP clients for keymappings
-      if not client or client.name == "copilot" or client.name == "null-ls" then
+      if not client or client.name == "copilot" then
         return
       end
 
+      local bufnr = args.buf
       local function bufmap(lhs, rhs, desc)
         vim.keymap.set("n", lhs, rhs, { buffer = bufnr, desc = desc })
       end
@@ -274,99 +259,6 @@ function M.setup()
       bufmap("]d", vim.diagnostic.goto_next, "Next Diagnostic")
     end,
   })
-
-  -- ========================================
-  -- UI & Theme keymaps
-  -- ========================================
-
-  -- Theme & UI keybindings section
-  local theme_maps = {
-    { "n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", "Toggle Colorscheme" },
-    { "n", "<leader>uT", "<cmd>ToggleTransparency<cr>", "Toggle Transparency" },
-    { "n", "<leader>uc", "<cmd>Telescope colorscheme<cr>", "Select Colorscheme" },
-    { "n", "<leader>uv", "<cmd>ColorSchemeVariant<cr>", "Cycle Theme Variant" },
-  }
-
-  for _, m in ipairs(theme_maps) do
-    map(m[1], m[2], m[3], vim.tbl_extend("force", opts, { desc = m[4] }))
-  end
-
-  -- Theme-specific commands for quick access
-  local themes = {
-    { "n", "<leader>utg", "<cmd>ColorScheme gruvbox-material<cr>", "Theme: Gruvbox Material" },
-    { "n", "<leader>utt", "<cmd>ColorScheme tokyonight<cr>", "Theme: Tokyo Night" },
-    { "n", "<leader>ute", "<cmd>ColorScheme everforest<cr>", "Theme: Everforest" },
-    { "n", "<leader>utk", "<cmd>ColorScheme kanagawa<cr>", "Theme: Kanagawa" },
-    { "n", "<leader>utn", "<cmd>ColorScheme nord<cr>", "Theme: Nord" },
-    { "n", "<leader>utr", "<cmd>ColorScheme rose-pine<cr>", "Theme: Rose Pine" },
-    { "n", "<leader>utc", "<cmd>ColorScheme catppuccin<cr>", "Theme: Catppuccin" },
-  }
-
-  for _, m in ipairs(themes) do
-    map(m[1], m[2], m[3], vim.tbl_extend("force", opts, { desc = m[4] }))
-  end
-
-  -- Layouts
-  map("n", "<leader>L1", "<cmd>Layout coding<cr>", { desc = "Coding Layout" })
-  map("n", "<leader>L2", "<cmd>Layout terminal<cr>", { desc = "Terminal Layout" })
-  map("n", "<leader>L3", "<cmd>Layout writing<cr>", { desc = "Writing Layout" })
-  map("n", "<leader>L4", "<cmd>Layout debug<cr>", { desc = "Debug Layout" })
-
-  -- Stack switching
-  map("n", "<leader>usg", function()
-    vim.cmd("StackFocus goth")
-    if package.loaded["snacks.dashboard"] then
-      require("snacks.dashboard").open()
-    end
-  end, vim.tbl_extend("force", opts, { desc = "Focus GOTH Stack + Dashboard" }))
-
-  map("n", "<leader>usn", function()
-    vim.cmd("StackFocus nextjs")
-    if package.loaded["snacks.dashboard"] then
-      require("snacks.dashboard").open()
-    end
-  end, vim.tbl_extend("force", opts, { desc = "Focus Next.js Stack + Dashboard" }))
-
-  -- Terminal integration
-  if pcall(require, "toggleterm") then
-    map("n", "<leader>tf", "<cmd>ToggleTerm direction=float<cr>", { desc = "Terminal (float)" })
-    map("n", "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", { desc = "Terminal (horizontal)" })
-    map("n", "<leader>tv", "<cmd>ToggleTerm direction=vertical<cr>", { desc = "Terminal (vertical)" })
-    map("n", "<C-\\>", "<cmd>ToggleTerm<cr>", { desc = "Toggle terminal" })
-  end
-
-  -- Git
-  map("n", "<leader>gg", "<cmd>LazyGit<cr>", { desc = "LazyGit" })
-  map("n", "<leader>gd", "<cmd>DiffviewOpen<cr>", { desc = "DiffView Open" })
-
-  -- Snacks explorer (wrapped as function to satisfy keymap API)
-  local ok_snacks, snacks = pcall(require, "snacks")
-  if ok_snacks then
-    map("n", "<leader>e", function()
-      snacks.explorer()
-    end, vim.tbl_extend("force", opts, { desc = "Snacks Explorer" }))
-  end
-
-  -- Oil filetype navigation
-  local ok_oil, oil = pcall(require, "oil")
-  if ok_oil then
-    -- Oil file explorer navigation (FileType = oil)
-    local group = vim.api.nvim_create_augroup("OilExplorerKeymaps", { clear = true })
-    vim.api.nvim_create_autocmd("FileType", {
-      group = group,
-      pattern = "oil",
-      desc = "Oil-specific navigation keymaps",
-      callback = function()
-        local buf_opts = { buffer = 0, noremap = true, silent = true }
-        vim.keymap.set("n", "R", function()
-          oil.refresh()
-        end, buf_opts)
-        vim.keymap.set("n", "~", function()
-          oil.open(vim.loop.cwd())
-        end, buf_opts)
-      end,
-    })
-  end
 end
 
 return M

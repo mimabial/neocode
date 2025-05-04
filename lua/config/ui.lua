@@ -116,90 +116,6 @@ M.get_colors = function()
   }
 end
 
--- Global UI configuration
-M.config = {
-  -- Standard float window configuration - base for all UI elements
-  float = {
-    border = "rounded", -- Consistent border style
-    padding = { 0, 1 }, -- Consistent padding
-    max_width = 80, -- Reasonable max width
-    max_height = 20, -- Reasonable max height
-    win_options = {
-      winblend = 0, -- No transparency
-      cursorline = true, -- Highlight current line
-      signcolumn = "no", -- No sign column in floats
-      wrap = false, -- No wrapping by default
-    },
-  },
-
-  -- Menu-specific configurations
-  menu = {
-    border = "rounded",
-    selected_item_icon = "●", -- Consistent selection indicator
-    unselected_item_icon = "○",
-  },
-
-  -- Notification configuration
-  notification = {
-    border = "sis",
-    timeout = 3000,
-    max_width = 60,
-    max_height = 20,
-    stages = "fade", -- Consistent animation
-  },
-
-  -- Consistent icons across UI
-  icons = {
-    diagnostics = {
-      Error = " ",
-      Warn = " ",
-      Info = " ",
-      Hint = " ",
-    },
-    git = {
-      added = "",
-      modified = "",
-      removed = "",
-    },
-    kinds = {
-      -- LSP kinds
-      Class = "󰠱",
-      Color = "󰏘",
-      Constant = "󰏿",
-      Constructor = "󰆧",
-      Enum = "󰒻",
-      EnumMember = "󰒻",
-      Event = "󰉁",
-      Field = "󰜢",
-      File = "󰈙",
-      Folder = "󰉋",
-      Function = "󰊕",
-      Interface = "󰕘",
-      Keyword = "󰌋",
-      Method = "󰆧",
-      Module = "󰏗",
-      Operator = "󰆕",
-      Property = "󰜢",
-      Reference = "󰈇",
-      Snippet = "󰅪",
-      Struct = "󰙅",
-      Text = "󰉿",
-      TypeParameter = "󰅲",
-      Unit = "󰑭",
-      Value = "󰎠",
-      Variable = "󰀫",
-      -- AI completion
-      Copilot = "",
-      Codeium = "󰚩",
-    },
-    stack = {
-      goth = "󰟓 ",
-      nextjs = " ",
-      ["goth+nextjs"] = "󰡄 ",
-    },
-  },
-}
-
 -- Setup consistent highlights across all menus
 M.setup_highlights = function()
   local colors = M.get_colors()
@@ -291,6 +207,95 @@ M.setup = function()
 
   -- Expose get_colors function globally for other plugins
   _G.get_ui_colors = M.get_colors
+
+  -- Add global UI refresh function
+  _G.refresh_ui_colors = function()
+    M.setup_highlights()
+  end
 end
+
+-- Global UI configuration
+M.config = {
+  -- Standard float window configuration - base for all UI elements
+  float = {
+    border = "rounded", -- Consistent border style
+    padding = { 0, 1 }, -- Consistent padding
+    max_width = 80, -- Reasonable max width
+    max_height = 20, -- Reasonable max height
+    win_options = {
+      winblend = 0, -- No transparency
+      cursorline = true, -- Highlight current line
+      signcolumn = "no", -- No sign column in floats
+      wrap = false, -- No wrapping by default
+    },
+  },
+
+  -- Menu-specific configurations
+  menu = {
+    border = "rounded",
+    selected_item_icon = "●", -- Consistent selection indicator
+    unselected_item_icon = "○",
+  },
+
+  -- Notification configuration
+  notification = {
+    border = "rounded",
+    timeout = 3000,
+    max_width = 60,
+    max_height = 20,
+    stages = "fade", -- Consistent animation
+  },
+
+  -- Consistent icons across UI
+  icons = {
+    diagnostics = {
+      Error = " ",
+      Warn = " ",
+      Info = " ",
+      Hint = " ",
+    },
+    git = {
+      added = "",
+      modified = "",
+      removed = "",
+    },
+    kinds = {
+      -- LSP kinds
+      Class = "󰠱",
+      Color = "󰏘",
+      Constant = "󰏿",
+      Constructor = "󰆧",
+      Enum = "󰒻",
+      EnumMember = "󰒻",
+      Event = "󰉁",
+      Field = "󰜢",
+      File = "󰈙",
+      Folder = "󰉋",
+      Function = "󰊕",
+      Interface = "󰕘",
+      Keyword = "󰌋",
+      Method = "󰆧",
+      Module = "󰏗",
+      Operator = "󰆕",
+      Property = "󰜢",
+      Reference = "󰈇",
+      Snippet = "󰅪",
+      Struct = "󰙅",
+      Text = "󰉿",
+      TypeParameter = "󰅲",
+      Unit = "󰑭",
+      Value = "󰎠",
+      Variable = "󰀫",
+      -- AI completion
+      Copilot = "",
+      Codeium = "󰚩",
+    },
+    stack = {
+      goth = "󰟓 ",
+      nextjs = " ",
+      ["goth+nextjs"] = "󰡄 ",
+    },
+  },
+}
 
 return M
