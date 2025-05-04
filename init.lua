@@ -66,11 +66,8 @@ if vim.fn.isdirectory(lazypath) == 0 then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- Load lazy
-require("config.lazy")
-
 -- Load plugins through config.lazy
-load_module("config.lazy", "setup")
+require("config.lazy")
 
 -- Load ui configuration
 load_module("config.ui", "setup")
