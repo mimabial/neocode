@@ -186,7 +186,9 @@ return {
           end,
         },
         window = {
-          completion = cmp.config.window.bordered(win_opts),
+          completion = cmp.config.window.bordered(vim.tbl_extend("force", win_opts, {
+            winhighlight = "Normal:CmpNormal,FloatBorder:CmpBorder,CursorLine:CmpSel,Search:None",
+          })),
           documentation = cmp.config.window.bordered(vim.tbl_extend("force", win_opts, {
             max_height = float_config.max_height or 15,
             max_width = float_config.max_width or 60,
@@ -239,7 +241,6 @@ return {
           -- Enhanced formatting with better visual distinction
           format = function(entry, vim_item)
             -- Get menu icons for different sources
-            local selected_icon = ui_config.menu and ui_config.menu.selected_item_icon or "●"
             local menu_icons = {
               buffer = " Buffer",
               nvim_lsp = " LSP",
@@ -272,11 +273,6 @@ return {
                   vim_item.kind_hl_group = "CmpItemKind" .. vim_item.kind
                 end
 
-                -- Add highlighting to the item abbr for selected items
-                if cmp.get_selected_entry() and cmp.get_selected_entry().id == entry.id then
-                  vim_item.abbr = selected_icon .. " " .. vim_item.abbr
-                end
-
                 return vim_item
               end,
             })(entry, vim_item)
@@ -284,7 +280,6 @@ return {
             return vim_item
           end,
         },
-        experimental = { ghost_text = { hl_group = "CmpGhostText" } },
       })
 
       -- Cmdline completions with enhanced styling
@@ -350,6 +345,32 @@ return {
           vim.api.nvim_set_hl(0, "CmpItemKindSnippet", { fg = colors.green, italic = true })
           vim.api.nvim_set_hl(0, "CmpItemKindBuffer", { fg = colors.gray })
           vim.api.nvim_set_hl(0, "CmpItemKindPath", { fg = colors.orange })
+
+          -- Enhanced highlight groups for selected items
+          vim.api.nvim_set_hl(0, "CmpItemAbbrMatch", { fg = colors.green, bold = true })
+          vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzy", { fg = colors.green, bold = true })
+
+          -- Create distinct highlighting for selected items
+          vim.api.nvim_set_hl(0, "CmpSel", { bg = colors.select_bg, fg = colors.select_fg, bold = true })
+          vim.api.nvim_set_hl(0, "CmpItemAbbrDeprecated", { fg = colors.gray, strikethrough = true })
+
+          -- Create special highlights for selected items
+          vim.api.nvim_set_hl(0, "CmpItemAbbrMatch", { fg = colors.green, bold = true })
+          vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzy", { fg = colors.green, bold = true })
+          vim.api.nvim_set_hl(0, "CmpItemAbbrMatchSelected", { fg = colors.yellow, bg = colors.select_bg, bold = true })
+          vim.api.nvim_set_hl(
+            0,
+            "CmpItemAbbrMatchFuzzySelected",
+            { fg = colors.yellow, bg = colors.select_bg, bold = true }
+          )
+
+          -- Menu appearance for selected vs non-selected items
+          vim.api.nvim_set_hl(0, "CmpItemMenu", { fg = colors.gray, italic = true })
+          vim.api.nvim_set_hl(
+            0,
+            "CmpItemMenuSelected",
+            { fg = colors.fg, bg = colors.select_bg, italic = true, bold = true }
+          )
         end,
       })
     end,

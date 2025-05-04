@@ -1,5 +1,5 @@
 -- lua/plugins/treesitter.lua
--- Modified version with improved JSX parser configuration
+-- Treesitter configuration with full parser, textobject, and injection setups
 return {
   {
     "nvim-treesitter/nvim-treesitter",
@@ -9,7 +9,7 @@ return {
     dependencies = {
       "nvim-treesitter/nvim-treesitter-textobjects",
       "nvim-treesitter/nvim-treesitter-context",
-      "HiPhish/rainbow-delimiters.nvim", -- Added as explicit dependency
+      "HiPhish/rainbow-delimiters.nvim",
     },
     cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
     keys = {
@@ -19,58 +19,28 @@ return {
     opts = {
       ensure_installed = {
         -- Core languages
-        "bash",
-        "c",
-        "cpp",
-        "css",
-        "diff",
-        "dockerfile",
-        "lua",
-        "luadoc",
-        "luap",
-        "vim",
-        "vimdoc",
-        "query",
+        "bash", "c", "cpp", "css", "diff", "dockerfile",
+        "lua", "luadoc", "luap", "vim", "vimdoc", "query",
 
         -- Web languages
-        "html",
-        "javascript",
-        "jsdoc",
-        "json",
-        "jsonc",
-        "scss",
-        "graphql",
-        "tsx",
-        "typescript",
-        "jsx", -- Explicitly included
+        "html", "javascript", "jsdoc", "json", "jsonc",
+        "scss", "graphql", "tsx", "typescript",
 
         -- GOTH stack
-        "go",
-        "gomod",
-        "gosum",
-        "gowork",
-        "templ",
+        "go", "gomod", "gosum", "gowork", "templ",
 
-        -- Next.js stack
-        "tsx",
-        "typescript",
-        "javascript",
-        "jsx", -- Will be deduplicated
-        "prisma",
-        "regex",
-        "markdown",
-        "markdown_inline",
+        -- Next.js / Prisma
+        "prisma", "regex", "markdown", "markdown_inline",
 
         -- Additional useful parsers
-        "sql",
-        "svelte",
-        "terraform",
-        "toml",
-        "yaml",
+        "sql", "svelte", "terraform", "toml", "yaml",
       },
+      sync_install = false,
+      auto_install = true,
       highlight = {
         enable = true,
-        additional_vim_regex_highlighting = { "templ" }, -- Enable additional highlighting for templ
+        -- for 'templ' files, still use regex highlighting
+        additional_vim_regex_highlighting = { "templ" },
       },
       indent = { enable = true },
       incremental_selection = {
@@ -87,7 +57,6 @@ return {
           enable = true,
           lookahead = true,
           keymaps = {
-            -- capture group-based selections
             ["af"] = "@function.outer",
             ["if"] = "@function.inner",
             ["ac"] = "@class.outer",
@@ -156,111 +125,49 @@ return {
       },
     },
     config = function(_, opts)
-      -- Enhanced failsafe installation handling
-      local function setup_treesitter()
-        -- Remove duplicates in ensure_installed
-        local seen = {}
-        opts.ensure_installed = vim.tbl_filter(function(lang)
-          if seen[lang] then
-            return false
-          end
-          seen[lang] = true
-          return true
-        end, opts.ensure_installed)
-
-        -- Attempt to install missing parsers first
-        local missing = {}
-        for _, lang in ipairs(opts.ensure_installed) do
-          local ok = pcall(function()
-            if not require("nvim-treesitter.parsers").has_parser(lang) then
-              table.insert(missing, lang)
-            end
-          end)
-          if not ok then
-            vim.notify("Error checking parser for " .. lang, vim.log.levels.WARN)
-          end
-        end
-
-        if #missing > 0 then
-          vim.notify("Installing missing TreeSitter parsers: " .. table.concat(missing, ", "), vim.log.levels.INFO)
-          vim.cmd("TSInstall " .. table.concat(missing, " "))
-        end
-
-        -- Setup TS with error handling
-        local setup_ok, err = pcall(function()
-          require("nvim-treesitter.configs").setup(opts)
-        end)
-
-        if not setup_ok then
-          vim.notify("TreeSitter setup error: " .. tostring(err), vim.log.levels.ERROR)
-        end
+      -- Remove duplicates and install missing
+      local parsers = require("nvim-treesitter.parsers")
+      local has_parser = parsers.has_parser
+      -- dedupe
+      local seen = {}
+      opts.ensure_installed = vim.tbl_filter(function(lang)
+        if seen[lang] then return false end
+        seen[lang] = true; return true
+      end, opts.ensure_installed)
+      -- install
+      local missing = {}
+      for _, lang in ipairs(opts.ensure_installed) do
+        if not has_parser(lang) then table.insert(missing, lang) end
+      end
+      if #missing > 0 then
+        vim.notify("Installing missing TreeSitter parsers: " .. table.concat(missing, ", "), vim.log.levels.INFO)
+        vim.cmd("TSInstall " .. table.concat(missing, " "))
       end
 
-      -- Run setup with error handling
-      local ok, _ = pcall(setup_treesitter)
-      if not ok then
-        vim.notify("TreeSitter initialization failed", vim.log.levels.ERROR)
-      end
-
-      -- Rainbow delimiters setup - fail-safe with pcall
-      local has_rainbow, rainbow_delimiters = pcall(require, "rainbow-delimiters")
-      if has_rainbow then
-        vim.g.rainbow_delimiters = {
-          strategy = {
-            [""] = rainbow_delimiters.strategy.global,
-            vim = rainbow_delimiters.strategy["local"],
-          },
-          query = {
-            [""] = "rainbow-delimiters",
-            lua = "rainbow-blocks",
-            html = "rainbow-tags",
-            tsx = "rainbow-tags",
-            jsx = "rainbow-tags", -- Added explicit jsx support
-            templ = "rainbow-tags",
-          },
-          highlight = {
-            "RainbowDelimiterRed",
-            "RainbowDelimiterYellow",
-            "RainbowDelimiterBlue",
-            "RainbowDelimiterOrange",
-            "RainbowDelimiterGreen",
-            "RainbowDelimiterViolet",
-            "RainbowDelimiterCyan",
-          },
-        }
-      end
-
-      -- Improved parser configurations with better error handling
+      -- Custom parser configs and filetype mappings
       pcall(function()
-        local parsers = require("nvim-treesitter.parsers")
-        local config = parsers.get_parser_configs()
-
-        -- Set up templ parser
-        if not config.templ then
-          config.templ = {
+        local cfg = parsers.get_parser_configs()
+        -- templ
+        if not cfg.templ then
+          cfg.templ = {
             install_info = {
               url = "https://github.com/vrischmann/tree-sitter-templ.git",
               files = { "src/parser.c", "src/scanner.c" },
               branch = "main",
-            },
-            filetype = "templ",
+            }, filetype = "templ",
           }
         end
-
-        -- Set up jsx parser properly
-        if not config.jsx then
-          -- Don't rely on tsx being there; define jsx directly
-          config.jsx = {
+        -- jsx via javascript grammar
+        if not cfg.jsx then
+          cfg.jsx = {
             install_info = {
               url = "https://github.com/tree-sitter/tree-sitter-javascript.git",
               files = { "src/parser.c", "src/scanner.c" },
               branch = "master",
-            },
-            filetype = "javascriptreact",
+            }, filetype = "javascriptreact",
           }
         end
-
-        -- Register parsers for filetypes
+        -- mappings
         if parsers.filetype_to_parsername then
           parsers.filetype_to_parsername.templ = "templ"
           parsers.filetype_to_parsername.html = "html"
@@ -268,93 +175,65 @@ return {
         end
       end)
 
-      -- HTMX attribute injection queries with error handling
+      -- Register TSX for JSX filetypes
       pcall(function()
-        -- Create HTMX injection for HTML files
-        vim.treesitter.query.set(
-          "html",
-          "injections",
-          [[
-          ((attribute
-            (attribute_name) @_attr_name
-            (attribute_value) @injection.content)
-           (#match? @_attr_name "^hx-.*$")
-           (#set! injection.language "javascript"))
-        ]]
-        )
-
-        -- Create similar injection for templ files
-        vim.treesitter.query.set(
-          "templ",
-          "injections",
-          [[
-          ((attribute
-            (attribute_name) @_attr_name
-            (attribute_value) @injection.content)
-           (#match? @_attr_name "^hx-.*$")
-           (#set! injection.language "javascript"))
-        ]]
-        )
-
-        -- Also add for JSX/TSX
-        local jsx_injection = [[
-          ((attribute
-            (attribute_name) @_attr_name
-            (attribute_value) @injection.content)
-           (#match? @_attr_name "^hx-.*$")
-           (#set! injection.language "javascript"))
-        ]]
-
-        vim.treesitter.query.set("jsx", "injections", jsx_injection)
-        vim.treesitter.query.set("tsx", "injections", jsx_injection)
+        vim.treesitter.language.register("tsx", "javascriptreact")
+        vim.treesitter.language.register("tsx", "jsx")
+        local cfg = parsers.get_parser_configs()
+        cfg.tsx.used_by = { "javascriptreact", "typescript.tsx", "jsx" }
       end)
 
-      -- Setup custom highlights
+      -- HTMX injections
+      pcall(function()
+        local set_query = vim.treesitter.query.set
+        local inj = [[
+          ((attribute (attribute_name) @_attr_name (attribute_value) @injection.content)
+           (#match? @_attr_name "^hx-.*$") (#set! injection.language "javascript"))
+        ]]
+        for _, lang in ipairs({"html","templ","jsx","tsx"}) do
+          set_query(lang, "injections", inj)
+        end
+      end)
+
+      -- Setup Treesitter
+      local ok, err = pcall(function()
+        require("nvim-treesitter.configs").setup(opts)
+      end)
+      if not ok then
+        vim.notify("TreeSitter setup error: " .. tostring(err), vim.log.levels.ERROR)
+      end
+
+      -- Rainbow & highlights
+      local has_rainbow, rainbow = pcall(require, "rainbow-delimiters")
+      if has_rainbow then
+        vim.g.rainbow_delimiters = {
+          strategy = { [""] = rainbow.strategy.global, vim = rainbow.strategy.local },
+          query = { [""] = "rainbow-delimiters", lua = "rainbow-blocks", html = "rainbow-tags", tsx = "rainbow-tags" },
+        }
+      end
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
-          -- Gruvbox-material compatibility
           if vim.g.colors_name == "gruvbox-material" then
-            local colors = _G.get_gruvbox_colors and _G.get_gruvbox_colors()
-              or {
-                red = "#ea6962",
-                orange = "#e78a4e",
-                yellow = "#d8a657",
-                green = "#89b482",
-                blue = "#7daea3",
-                purple = "#d3869b",
-                cyan = "#89b482",
-              }
-
-            vim.api.nvim_set_hl(0, "RainbowDelimiterRed", { fg = colors.red })
-            vim.api.nvim_set_hl(0, "RainbowDelimiterYellow", { fg = colors.yellow })
-            vim.api.nvim_set_hl(0, "RainbowDelimiterBlue", { fg = colors.blue })
-            vim.api.nvim_set_hl(0, "RainbowDelimiterOrange", { fg = colors.orange })
-            vim.api.nvim_set_hl(0, "RainbowDelimiterGreen", { fg = colors.green })
-            vim.api.nvim_set_hl(0, "RainbowDelimiterViolet", { fg = colors.purple })
-            vim.api.nvim_set_hl(0, "RainbowDelimiterCyan", { fg = colors.cyan })
-
-            -- HTMX attribute highlighting
-            vim.api.nvim_set_hl(0, "@attribute.htmx", { fg = colors.green, italic = true, bold = true })
-            vim.api.nvim_set_hl(0, "@tag.attribute.htmx", { fg = colors.green, italic = true, bold = true })
-
-            -- Go highlights
-            vim.api.nvim_set_hl(0, "@type.go", { fg = colors.yellow })
-            vim.api.nvim_set_hl(0, "@function.go", { fg = colors.blue })
-
-            -- React/JSX highlights
-            vim.api.nvim_set_hl(0, "@tag.tsx", { fg = colors.red })
-            vim.api.nvim_set_hl(0, "@tag.jsx", { fg = colors.red }) -- Added JSX highlighting
-            vim.api.nvim_set_hl(0, "@tag.delimiter.tsx", { fg = colors.orange })
-            vim.api.nvim_set_hl(0, "@tag.delimiter.jsx", { fg = colors.orange }) -- Added JSX delimiter
-            vim.api.nvim_set_hl(0, "@constructor.tsx", { fg = colors.purple })
-            vim.api.nvim_set_hl(0, "@constructor.jsx", { fg = colors.purple }) -- Added JSX constructor
+            local cols = (_G.get_gruvbox_colors and _G.get_gruvbox_colors()) or { red="#ea6962", orange="#e78a4e", yellow="#d8a657", green="#89b482", blue="#7daea3", purple="#d3869b", cyan="#89b482" }
+            for _, name in ipairs({"Red","Yellow","Blue","Orange","Green","Violet","Cyan"}) do
+              vim.api.nvim_set_hl(0, "RainbowDelimiter"..name, { fg = cols[string.lower(name)] })
+            end
+            vim.api.nvim_set_hl(0, "@attribute.htmx", { fg = cols.green, italic = true, bold = true })
+            vim.api.nvim_set_hl(0, "@tag.attribute.htmx", { fg = cols.green, italic = true, bold = true })
+            vim.api.nvim_set_hl(0, "@type.go", { fg = cols.yellow })
+            vim.api.nvim_set_hl(0, "@function.go", { fg = cols.blue })
+            for _, ft in ipairs({"tsx","jsx"}) do
+              vim.api.nvim_set_hl(0, "@tag."..ft, { fg = cols.red })
+              vim.api.nvim_set_hl(0, "@tag.delimiter."..ft, { fg = cols.orange })
+              vim.api.nvim_set_hl(0, "@constructor."..ft, { fg = cols.purple })
+            end
           end
         end,
       })
     end,
   },
 
-  -- Autopairs with JSX support
+  -- Autopairs with Treesitter support
   {
     "windwp/nvim-autopairs",
     event = "InsertEnter",
@@ -362,63 +241,30 @@ return {
     opts = {
       check_ts = true,
       ts_config = {
-        lua = { "string" },
-        javascript = { "template_string" },
-        javascriptreact = { "template_string", "jsx_element" }, -- Add jsx_element
-        typescript = { "template_string" },
-        typescriptreact = { "template_string", "jsx_element" }, -- Add jsx_element
-        go = { "string" },
-        templ = { "string" },
+        lua = { "string" }, javascript = { "template_string" }, javascriptreact = { "template_string", "jsx_element" },
+        typescript = { "template_string" }, typescriptreact = { "template_string", "jsx_element" },
+        go = { "string" }, templ = { "string" },
       },
       disable_filetype = { "TelescopePrompt" },
     },
     config = function(_, opts)
       require("nvim-autopairs").setup(opts)
-      local has_cmp, cmp = pcall(require, "cmp")
-      if has_cmp then
-        local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-        cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+      local ok, cmp = pcall(require, "cmp")
+      if ok then
+        require("nvim-autopairs.completion.cmp").event:on("confirm_done", require("nvim-autopairs.completion.cmp").on_confirm_done())
       end
     end,
   },
 
-  -- Autotag with enhanced JSX support
+  -- Autotag for JSX/TSX and others
   {
     "windwp/nvim-ts-autotag",
     event = "InsertEnter",
     dependencies = { "nvim-treesitter/nvim-treesitter" },
     config = function()
       require("nvim-ts-autotag").setup({
-        filetypes = {
-          "html",
-          "xml",
-          "javascriptreact",
-          "typescriptreact",
-          "jsx", -- Added explicit jsx support
-          "tsx",
-          "svelte",
-          "vue",
-          "templ",
-          "erb",
-        },
-        skip_tags = {
-          "area",
-          "base",
-          "br",
-          "col",
-          "command",
-          "embed",
-          "hr",
-          "img",
-          "input",
-          "keygen",
-          "link",
-          "meta",
-          "param",
-          "source",
-          "track",
-          "wbr",
-        },
+        filetypes = { "html","xml","javascriptreact","typescriptreact","jsx","tsx","svelte","vue","templ","erb" },
+        skip_tags = { "area","base","br","col","command","embed","hr","img","input","keygen","link","meta","param","source","track","wbr" },
       })
     end,
   },
