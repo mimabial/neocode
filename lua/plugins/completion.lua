@@ -1,5 +1,5 @@
 -- lua/plugins/completion.lua
--- Enhanced completion menu with improved visual appearance
+-- Enhanced completion menu with improved theme integration and consistent border styling
 
 return {
   -- Enhanced LSP symbols with distinctive icons
@@ -39,7 +39,7 @@ return {
           Operator = "󰆕",
           TypeParameter = "󰅲",
           -- AI completion sources with distinctive icons
-          Copilot = "",
+          Copilot = "",
           Codeium = "󰚩",
         }
 
@@ -147,16 +147,25 @@ return {
 
       -- Get UI config if available
       local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
-      local float_config = ui_config.float or {
-        border = "single",
+
+      -- Always use single border style
+      local border = "single"
+
+      local float_config = vim.tbl_deep_extend("force", {
+        border = border,
         padding = { 0, 1 },
-      }
+        max_width = 80,
+        max_height = 20,
+      }, ui_config.float or {})
+
+      -- Force single border
+      float_config.border = border
 
       -- Enhanced window styling with better borders and highlights
       local win_opts = {
         winhighlight = "Normal:CmpNormal,FloatBorder:CmpBorder,CursorLine:CmpSel",
         scrollbar = true,
-        border = float_config.border,
+        border = border,
         col_offset = 0,
         side_padding = float_config.padding and float_config.padding[1] or 1,
       }
@@ -351,12 +360,9 @@ return {
           vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzy", { fg = colors.green, bold = true })
 
           -- Create distinct highlighting for selected items
-          vim.api.nvim_set_hl(0, "CmpSel", { bg = colors.select_bg, fg = colors.select_fg, bold = true })
           vim.api.nvim_set_hl(0, "CmpItemAbbrDeprecated", { fg = colors.gray, strikethrough = true })
 
           -- Create special highlights for selected items
-          vim.api.nvim_set_hl(0, "CmpItemAbbrMatch", { fg = colors.green, bold = true })
-          vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzy", { fg = colors.green, bold = true })
           vim.api.nvim_set_hl(0, "CmpItemAbbrMatchSelected", { fg = colors.yellow, bg = colors.select_bg, bold = true })
           vim.api.nvim_set_hl(
             0,

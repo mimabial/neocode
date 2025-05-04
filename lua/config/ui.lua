@@ -1,5 +1,5 @@
 -- lua/config/ui.lua
--- Enhanced UI configuration with better theme integration
+-- Enhanced UI configuration with better theme integration and consistent single border style
 
 local M = {}
 
@@ -22,7 +22,7 @@ M.get_colors = function()
       aqua = colors.teal,
       orange = colors.orange,
       gray = colors.comment,
-      border = colors.border,
+      border = colors.border or colors.blue,
     }
   elseif vim.g.colors_name == "everforest" and _G.get_everforest_colors then
     return _G.get_everforest_colors()
@@ -120,6 +120,7 @@ end
 M.setup_highlights = function()
   local colors = M.get_colors()
 
+  -- Ensure border style is consistent for all UI elements
   -- Float window highlights
   vim.api.nvim_set_hl(0, "FloatBorder", { fg = colors.border })
   vim.api.nvim_set_hl(0, "NormalFloat", { bg = colors.popup_bg })
@@ -157,6 +158,7 @@ M.setup_highlights = function()
   vim.api.nvim_set_hl(0, "NotifyINFO", { fg = colors.blue })
   vim.api.nvim_set_hl(0, "NotifyDEBUG", { fg = colors.gray })
   vim.api.nvim_set_hl(0, "NotifyTRACE", { fg = colors.purple })
+  vim.api.nvim_set_hl(0, "NotifyBorder", { fg = colors.border })
 
   -- Stack-specific syntax highlights
   if vim.g.current_stack == "goth" or vim.g.current_stack == "goth+nextjs" then
@@ -168,11 +170,11 @@ M.setup_highlights = function()
 
   if vim.g.current_stack == "nextjs" or vim.g.current_stack == "goth+nextjs" then
     vim.api.nvim_set_hl(0, "@tag.tsx", { fg = colors.red })
-    vim.api.nvim_set_hl(0, "@tag.jsx", { fg = colors.red }) -- Added JSX support
+    vim.api.nvim_set_hl(0, "@tag.jsx", { fg = colors.red })
     vim.api.nvim_set_hl(0, "@tag.delimiter.tsx", { fg = colors.orange })
-    vim.api.nvim_set_hl(0, "@tag.delimiter.jsx", { fg = colors.orange }) -- Added JSX support
+    vim.api.nvim_set_hl(0, "@tag.delimiter.jsx", { fg = colors.orange })
     vim.api.nvim_set_hl(0, "@constructor.tsx", { fg = colors.purple })
-    vim.api.nvim_set_hl(0, "@constructor.jsx", { fg = colors.purple }) -- Added JSX support
+    vim.api.nvim_set_hl(0, "@constructor.jsx", { fg = colors.purple })
   end
 end
 
@@ -214,11 +216,11 @@ M.setup = function()
   end
 end
 
--- Global UI configuration
+-- Global UI configuration with consistent single border style
 M.config = {
   -- Standard float window configuration - base for all UI elements
   float = {
-    border = "rounded", -- Consistent border style
+    border = "single", -- Consistent single border style
     padding = { 0, 1 }, -- Consistent padding
     max_width = 80, -- Reasonable max width
     max_height = 20, -- Reasonable max height
@@ -232,14 +234,14 @@ M.config = {
 
   -- Menu-specific configurations
   menu = {
-    border = "rounded",
+    border = "single", -- Single border for all menus
     selected_item_icon = "●", -- Consistent selection indicator
     unselected_item_icon = "○",
   },
 
   -- Notification configuration
   notification = {
-    border = "rounded",
+    border = "single", -- Single border for notifications
     timeout = 3000,
     max_width = 60,
     max_height = 20,

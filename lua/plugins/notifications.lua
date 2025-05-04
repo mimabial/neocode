@@ -1,5 +1,5 @@
 -- lua/plugins/notifications.lua
--- Enhanced notifications with consistent styling for both nvim-notify and noice
+-- Enhanced notifications with consistent styling across all themes
 
 return {
   -- Base notification system
@@ -13,8 +13,15 @@ return {
       local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
       local notification_config = ui_config.notification or {}
 
+      -- Get colors from UI module
+      local colors = _G.get_ui_colors and _G.get_ui_colors()
+        or {
+          bg = "#000000",
+          border = "#665c54",
+        }
+
       return {
-        background_colour = "#000000", -- Set to black and use transparency
+        background_colour = colors.bg, -- Use theme background color
         fps = 60,
         level = vim.log.levels.INFO,
         minimum_width = 30,
@@ -24,6 +31,18 @@ return {
         stages = notification_config.stages or "fade",
         render = "wrapped-compact",
         top_down = true,
+        -- Use single border style
+        on_open = function(win)
+          -- Set border highlight and border style if possible
+          local success, _ = pcall(function()
+            vim.api.nvim_win_set_config(win, {
+              border = "single",
+            })
+            -- Set border highlight to match the theme
+            local buf = vim.api.nvim_win_get_buf(win)
+            pcall(vim.api.nvim_buf_set_option, buf, "winhl", "FloatBorder:NotifyBorder")
+          end)
+        end,
         icons = {
           DEBUG = (ui_config.icons and ui_config.icons.diagnostics and ui_config.icons.diagnostics.Hint) or "",
           ERROR = (ui_config.icons and ui_config.icons.diagnostics and ui_config.icons.diagnostics.Error) or "",
@@ -37,6 +56,39 @@ return {
       local notify = require("notify")
       notify.setup(opts)
       vim.notify = notify
+
+      -- Set up colorscheme-dependent highlighting
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = function()
+          -- Get current theme colors
+          local colors = _G.get_ui_colors and _G.get_ui_colors()
+            or {
+              red = "#ea6962",
+              yellow = "#d8a657",
+              blue = "#7daea3",
+              green = "#89b482",
+              purple = "#d3869b",
+              border = "#665c54",
+            }
+
+          -- Set notification highlights to match theme
+          vim.api.nvim_set_hl(0, "NotifyERROR", { fg = colors.red })
+          vim.api.nvim_set_hl(0, "NotifyWARN", { fg = colors.yellow })
+          vim.api.nvim_set_hl(0, "NotifyINFO", { fg = colors.blue })
+          vim.api.nvim_set_hl(0, "NotifyDEBUG", { fg = colors.gray or "#928374" })
+          vim.api.nvim_set_hl(0, "NotifyTRACE", { fg = colors.purple })
+          vim.api.nvim_set_hl(0, "NotifyBorder", { fg = colors.border })
+
+          -- Ensure notification border is consistent with theme
+          for _, win in ipairs(vim.api.nvim_list_wins()) do
+            local buf = vim.api.nvim_win_get_buf(win)
+            if vim.bo[buf].filetype == "notify" then
+              pcall(vim.api.nvim_win_set_config, win, { border = "single" })
+              pcall(vim.api.nvim_buf_set_option, buf, "winhl", "FloatBorder:NotifyBorder")
+            end
+          end
+        end,
+      })
     end,
   },
 
@@ -116,13 +168,18 @@ return {
     opts = function()
       -- Get UI config if available
       local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
-      local float_config = ui_config.float
-        or {
-          border = "single",
-          padding = { 0, 1 },
-          max_width = 80,
-          max_height = 20,
-        }
+
+      -- Ensure consistent single border
+      local border = "single"
+      local float_config = vim.tbl_deep_extend("force", {
+        border = border,
+        padding = { 0, 1 },
+        max_width = 80,
+        max_height = 20,
+      }, ui_config.float or {})
+
+      -- Make sure border is always single
+      float_config.border = border
 
       return {
         cmdline = {
@@ -132,12 +189,12 @@ return {
             position = { row = "30%", col = "50%" },
             size = { width = math.min(60, float_config.max_width or 60), height = "auto" },
             border = {
-              style = float_config.border,
+              style = border,
               padding = float_config.padding or { 0, 1 },
             },
           },
           format = {
-            cmdline = { pattern = "^:", icon = " ", lang = "vim", title = "" },
+            cmdline = { pattern = "^:", icon = " ", lang = "vim", title = "" },
             search_down = { kind = "search", pattern = "^/", icon = "󱎸 ", lang = "regex", title = "" },
             search_up = { kind = "search", pattern = "^%?", icon = "? ", lang = "regex" },
             filter = { pattern = "^:%s*!", icon = "!", lang = "bash" },
@@ -200,17 +257,17 @@ return {
             enabled = true,
             silent = false,
             view = nil, -- Use the default options
-            opts = { border = float_config.border },
+            opts = { border = border },
           },
           signature = {
             enabled = true,
             auto_open = { enabled = true, trigger = true, luasnip = true, throttle = 50 },
-            opts = { border = float_config.border },
+            opts = { border = border },
           },
           message = {
             enabled = true,
             view = "notify",
-            opts = { border = float_config.border },
+            opts = { border = border },
           },
           documentation = {
             view = "hover",
@@ -218,7 +275,7 @@ return {
               lang = "markdown",
               replace = true,
               render = "plain",
-              border = float_config.border,
+              border = border,
               position = { row = 2, col = 0 },
             },
           },
@@ -263,16 +320,16 @@ return {
           cmdline_popup = {
             position = { row = 5, col = "50%" },
             size = { width = math.min(60, float_config.max_width or 60), height = "auto" },
-            border = { style = float_config.border },
+            border = { style = border },
           },
           popupmenu = {
             relative = "editor",
             position = { row = 8, col = "50%" },
             size = { width = math.min(60, float_config.max_width or 60), height = 10 },
-            border = { style = float_config.border, padding = float_config.padding or { 0, 1 } },
+            border = { style = border, padding = float_config.padding or { 0, 1 } },
           },
           hover = {
-            border = { style = float_config.border },
+            border = { style = border },
             position = { row = 2, col = 0 },
             size = { width = "auto", height = "auto" },
           },
