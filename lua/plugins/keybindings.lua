@@ -75,118 +75,139 @@ return {
 
     -- Define top-level groups with consistent naming
     wk.register({
-      { "<leader>", group = "Leader" },
-      { "<leader>L", group = "Layouts" },
-      { "<leader>b", group = "Buffers" },
-      { "<leader>c", group = "Code/LSP" },
-      { "<leader>d", group = "Debug" },
-      { "<leader>f", group = "Find/Search" },
-      { "<leader>g", group = "Git" },
-      { "<leader>l", group = "Lazy/Plugins" },
-      { "<leader>n", group = "Notifications" },
-      { "<leader>s", group = "Stack" },
-      { "<leader>t", group = "Terminal/Toggle" },
-      { "<leader>u", group = "UI/Settings" },
-      { "<leader>x", group = "Diagnostics/Trouble" },
+      ["<leader>"] = { name = "Leader" },
+      ["<leader>L"] = { name = "Layouts" },
+      ["<leader>b"] = { name = "Buffers" },
+      ["<leader>c"] = { name = "Code/LSP" },
+      ["<leader>d"] = { name = "Debug" },
+      ["<leader>f"] = { name = "Find/Search" },
+      ["<leader>g"] = { name = "Git" },
+      ["<leader>l"] = { name = "Lazy/Plugins" },
+      ["<leader>n"] = { name = "Notifications" },
+      ["<leader>s"] = { name = "Stack" },
+      ["<leader>t"] = { name = "Terminal/Toggle" },
+      ["<leader>u"] = { name = "UI/Settings" },
+      ["<leader>x"] = { name = "Diagnostics/Trouble" },
     })
 
     -- Define buffer management keys
     wk.register({
-      { "<leader>b", group = "Buffers" },
-      { "<leader>bb", "<cmd>e #<cr>", desc = "Other Buffer" },
-      { "<leader>bd", "<cmd>Bdelete<cr>", desc = "Delete Buffer" },
-      { "<leader>bl", "<cmd>BufferLineCloseLeft<cr>", desc = "Close Left Buffers" },
-      { "<leader>bn", "<cmd>bnext<cr>", desc = "Next Buffer" },
-      { "<leader>bo", "<cmd>BufferLineCloseOthers<cr>", desc = "Close Other Buffers" },
-      { "<leader>bp", "<cmd>bprevious<cr>", desc = "Prev Buffer" },
-      { "<leader>br", "<cmd>BufferLineCloseRight<cr>", desc = "Close Right Buffers" },
+      ["<leader>b"] = {
+        name = "Buffers",
+        b = { "<cmd>e #<cr>", "Other Buffer" },
+        d = { "<cmd>Bdelete<cr>", "Delete Buffer" },
+        l = { "<cmd>BufferLineCloseLeft<cr>", "Close Left Buffers" },
+        n = { "<cmd>bnext<cr>", "Next Buffer" },
+        o = { "<cmd>BufferLineCloseOthers<cr>", "Close Other Buffers" },
+        p = { "<cmd>bprevious<cr>", "Prev Buffer" },
+        r = { "<cmd>BufferLineCloseRight<cr>", "Close Right Buffers" },
+      },
     })
 
     -- Define finder keys
     wk.register({
-      { "<leader>f", group = "Find" },
-      { "<leader>fD", desc = "Workspace Diagnostics" },
-      { "<leader>fb", desc = "Find Buffers" },
-      { "<leader>fd", desc = "Document Diagnostics" },
-      { "<leader>ff", desc = "Find Files" },
-      { "<leader>fg", desc = "Find Text" },
-      { "<leader>fh", desc = "Find Help" },
-      { "<leader>fr", desc = "Recent Files" },
+      ["<leader>f"] = {
+        name = "Find",
+        D = { desc = "Workspace Diagnostics" },
+        b = { desc = "Find Buffers" },
+        d = { desc = "Document Diagnostics" },
+        f = { desc = "Find Files" },
+        g = { desc = "Find Text" },
+        h = { desc = "Find Help" },
+        r = { desc = "Recent Files" },
+      },
     })
 
     -- Git commands
     wk.register({
-      { "<leader>g", group = "Git" },
-      { "<leader>gP", "<cmd>Git push<cr>", desc = "Git Push" },
-      { "<leader>gb", desc = "Git Branches" },
-      { "<leader>gc", desc = "Git Commits" },
-      { "<leader>gd", "<cmd>DiffviewOpen<cr>", desc = "DiffView Open" },
-      { "<leader>gg", "<cmd>LazyGit<cr>", desc = "LazyGit" },
-      { "<leader>gp", "<cmd>Git pull<cr>", desc = "Git Pull" },
-      { "<leader>gs", "<cmd>Git<cr>", desc = "Git Status" },
+      ["<leader>g"] = {
+        name = "Git",
+        P = { "<cmd>Git push<cr>", "Git Push" },
+        b = { desc = "Git Branches" },
+        c = { desc = "Git Commits" },
+        d = { "<cmd>DiffviewOpen<cr>", "DiffView Open" },
+        g = { "<cmd>LazyGit<cr>", "LazyGit" },
+        p = { "<cmd>Git pull<cr>", "Git Pull" },
+        s = { "<cmd>Git<cr>", "Git Status" },
+      },
     })
 
     -- Stack commands
     wk.register({
-      { "<leader>s", group = "Stack" },
-      { "<leader>sb", "<cmd>StackFocus both<cr>", desc = "Focus Both" },
-      { "<leader>sd", group = "Dashboard" },
-      { "<leader>sdg", desc = "GOTH Dashboard" },
-      { "<leader>sdn", desc = "Next.js Dashboard" },
-      { "<leader>sg", "<cmd>StackFocus goth<cr>", desc = "Focus GOTH" },
-      { "<leader>sn", "<cmd>StackFocus nextjs<cr>", desc = "Focus Next.js" },
+      ["<leader>s"] = {
+        name = "Stack",
+        b = { "<cmd>StackFocus both<cr>", "Focus Both" },
+        d = { name = "Dashboard" },
+        g = { "<cmd>StackFocus goth<cr>", "Focus GOTH" },
+        n = { "<cmd>StackFocus nextjs<cr>", "Focus Next.js" },
+      },
+      ["<leader>sd"] = {
+        name = "Dashboard",
+        g = { desc = "GOTH Dashboard" },
+        n = { desc = "Next.js Dashboard" },
+      },
     })
 
     -- Terminal commands
     wk.register({
-      { "<leader>t", group = "Terminal/Toggle" },
-      { "<leader>tf", "<cmd>ToggleTerm direction=float<cr>", desc = "Terminal (float)" },
-      { "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", desc = "Terminal (horizontal)" },
-      { "<leader>tt", "<cmd>ToggleTerm<cr>", desc = "Toggle Terminal" },
-      { "<leader>tv", "<cmd>ToggleTerm direction=vertical<cr>", desc = "Terminal (vertical)" },
+      ["<leader>t"] = {
+        name = "Terminal/Toggle",
+        f = { "<cmd>ToggleTerm direction=float<cr>", "Terminal (float)" },
+        h = { "<cmd>ToggleTerm direction=horizontal<cr>", "Terminal (horizontal)" },
+        t = { "<cmd>ToggleTerm<cr>", "Toggle Terminal" },
+        v = { "<cmd>ToggleTerm direction=vertical<cr>", "Terminal (vertical)" },
+      },
     })
 
     -- UI settings
     wk.register({
-      { "<leader>u", group = "UI/Themes" },
-      { "<leader>uS", desc = "Select theme" },
-      { "<leader>uV", desc = "Select theme variant" },
-      { "<leader>ub", desc = "Toggle background transparency" },
-      { "<leader>us", desc = "Change theme" },
-      { "<leader>uv", desc = "Change theme variant" },
+      ["<leader>u"] = {
+        name = "UI/Themes",
+        S = { desc = "Select theme" },
+        V = { desc = "Select theme variant" },
+        b = { desc = "Toggle background transparency" },
+        s = { desc = "Change theme" },
+        v = { desc = "Change theme variant" },
+      },
     })
 
     -- Debug commands
     wk.register({
-      { "<leader>d", group = "Debug" },
-      { "<leader>dO", desc = "Step Out" },
-      { "<leader>db", desc = "Toggle Breakpoint" },
-      { "<leader>dc", desc = "Continue" },
-      { "<leader>di", desc = "Step Into" },
-      { "<leader>do", desc = "Step Over" },
-      { "<leader>dr", desc = "REPL" },
-      { "<leader>dt", desc = "Terminate" },
-      { "<leader>du", desc = "Toggle UI" },
+      ["<leader>d"] = {
+        name = "Debug",
+        O = { desc = "Step Out" },
+        b = { desc = "Toggle Breakpoint" },
+        c = { desc = "Continue" },
+        i = { desc = "Step Into" },
+        o = { desc = "Step Over" },
+        r = { desc = "REPL" },
+        t = { desc = "Terminate" },
+        u = { desc = "Toggle UI" },
+      },
     })
 
     -- LSP commands
     wk.register({
-      { "<leader>c", group = "Code/LSP" },
-      { "<leader>ca", desc = "Code Action" },
-      { "<leader>cd", desc = "Show Diagnostics" },
-      { "<leader>cf", desc = "Format" },
-      { "<leader>cl", desc = "Lint" },
-      { "<leader>cq", desc = "Diagnostics to Quickfix" },
-      { "<leader>cr", desc = "Rename" },
+      ["<leader>c"] = {
+        name = "Code/LSP",
+        a = { desc = "Code Action" },
+        d = { desc = "Show Diagnostics" },
+        f = { desc = "Format" },
+        l = { desc = "Lint" },
+        q = { desc = "Diagnostics to Quickfix" },
+        r = { desc = "Rename" },
+      },
     })
 
     -- Layout commands
     wk.register({
-      { "<leader>L", group = "Layouts" },
-      { "<leader>L1", "<cmd>Layout coding<cr>", desc = "Coding Layout" },
-      { "<leader>L2", "<cmd>Layout terminal<cr>", desc = "Terminal Layout" },
-      { "<leader>L3", "<cmd>Layout writing<cr>", desc = "Writing Layout" },
-      { "<leader>L4", "<cmd>Layout debug<cr>", desc = "Debug Layout" },
+      ["<leader>L"] = {
+        name = "Layouts",
+        ["1"] = { "<cmd>Layout coding<cr>", "Coding Layout" },
+        ["2"] = { "<cmd>Layout terminal<cr>", "Terminal Layout" },
+        ["3"] = { "<cmd>Layout writing<cr>", "Writing Layout" },
+        ["4"] = { "<cmd>Layout debug<cr>", "Debug Layout" },
+      },
     })
 
     -- Set up autocommand to register plugin-defined keymaps
