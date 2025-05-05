@@ -60,7 +60,7 @@ return {
       -- Set up colorscheme-dependent highlighting
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
-          -- Get current theme colors
+          -- Get current theme colors using direct color retrieval instead of going through setup
           local colors = _G.get_ui_colors and _G.get_ui_colors()
             or {
               red = "#ea6962",
@@ -69,9 +69,10 @@ return {
               green = "#89b482",
               purple = "#d3869b",
               border = "#665c54",
+              gray = "#928374",
             }
 
-          -- Set notification highlights to match theme
+          -- Set notification highlights to match theme directly without triggering additional events
           vim.api.nvim_set_hl(0, "NotifyERROR", { fg = colors.red })
           vim.api.nvim_set_hl(0, "NotifyWARN", { fg = colors.yellow })
           vim.api.nvim_set_hl(0, "NotifyINFO", { fg = colors.blue })
@@ -79,14 +80,16 @@ return {
           vim.api.nvim_set_hl(0, "NotifyTRACE", { fg = colors.purple })
           vim.api.nvim_set_hl(0, "NotifyBorder", { fg = colors.border })
 
-          -- Ensure notification border is consistent with theme
-          for _, win in ipairs(vim.api.nvim_list_wins()) do
-            local buf = vim.api.nvim_win_get_buf(win)
-            if vim.bo[buf].filetype == "notify" then
-              pcall(vim.api.nvim_win_set_config, win, { border = "single" })
-              pcall(vim.api.nvim_buf_set_option, buf, "winhl", "FloatBorder:NotifyBorder")
+          -- Update borders for existing notification windows without triggering additional events
+          pcall(function()
+            for _, win in ipairs(vim.api.nvim_list_wins()) do
+              local buf = vim.api.nvim_win_get_buf(win)
+              if vim.bo[buf].filetype == "notify" then
+                pcall(vim.api.nvim_win_set_config, win, { border = "single" })
+                pcall(vim.api.nvim_buf_set_option, buf, "winhl", "FloatBorder:NotifyBorder")
+              end
             end
-          end
+          end)
         end,
       })
     end,
@@ -400,13 +403,13 @@ return {
           }
         end
 
-      -- Apply consistent highlighting
+      -- Apply consistent highlighting - Direct approach without causing additional events
       vim.api.nvim_create_autocmd("ColorScheme", {
         pattern = "*",
         callback = function()
           local colors = get_colors()
 
-          -- Noice float border and text highlights
+          -- Set highlights directly without any additional setup calls that might trigger events
           vim.api.nvim_set_hl(0, "NoiceCmdlinePopupBorder", { fg = colors.border })
           vim.api.nvim_set_hl(0, "NoiceCmdlinePopupTitle", { fg = colors.blue, bold = true })
           vim.api.nvim_set_hl(0, "NoiceConfirmBorder", { fg = colors.border })

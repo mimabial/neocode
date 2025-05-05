@@ -8,15 +8,18 @@ return {
     lazy = false,
     priority = 1000,
     config = function()
-      vim.g.gruvbox_material_background = "medium"
-      vim.g.gruvbox_material_better_performance = 1
-      vim.g.gruvbox_material_enable_italic = 1
-      vim.g.gruvbox_material_enable_bold = 1
-      vim.g.gruvbox_material_sign_column_background = "none"
-      vim.g.gruvbox_material_ui_contrast = "high"
-      vim.g.gruvbox_material_float_style = "dim"
+      -- Set defaults with error handling
+      pcall(function()
+        vim.g.gruvbox_material_background = "medium"
+        vim.g.gruvbox_material_better_performance = 1
+        vim.g.gruvbox_material_enable_italic = 1
+        vim.g.gruvbox_material_enable_bold = 1
+        vim.g.gruvbox_material_sign_column_background = "none"
+        vim.g.gruvbox_material_ui_contrast = "high"
+        vim.g.gruvbox_material_float_style = "dim"
+      end)
 
-      -- Export colors for other plugins to use
+      -- Export colors for other plugins to use - wrapped with error handling
       _G.get_gruvbox_colors = function()
         return {
           bg = "#282828",
@@ -74,15 +77,18 @@ return {
     lazy = true,
     priority = 950,
     config = function()
-      vim.g.everforest_background = "medium"
-      vim.g.everforest_better_performance = 1
-      vim.g.everforest_enable_italic = 1
-      vim.g.everforest_ui_contrast = "high"
-      vim.g.everforest_diagnostic_text_highlight = 1
-      vim.g.everforest_diagnostic_line_highlight = 1
-      vim.g.everforest_diagnostic_virtual_text = "colored"
-      vim.g.everforest_sign_column_background = "none"
-      vim.g.everforest_float_style = "dim"
+      -- Safely set options with pcall
+      pcall(function()
+        vim.g.everforest_background = "medium"
+        vim.g.everforest_better_performance = 1
+        vim.g.everforest_enable_italic = 1
+        vim.g.everforest_ui_contrast = "high"
+        vim.g.everforest_diagnostic_text_highlight = 1
+        vim.g.everforest_diagnostic_line_highlight = 1
+        vim.g.everforest_diagnostic_virtual_text = "colored"
+        vim.g.everforest_sign_column_background = "none"
+        vim.g.everforest_float_style = "dim"
+      end)
 
       -- Export colors for other plugins to use
       _G.get_everforest_colors = function()
@@ -138,7 +144,13 @@ return {
       },
     },
     config = function(_, opts)
-      require("kanagawa").setup(opts)
+      -- Set up with pcall for safety
+      local ok, kanagawa = pcall(require, "kanagawa")
+      if not ok then
+        return
+      end
+
+      kanagawa.setup(opts)
 
       -- Export colors for other plugins to use
       _G.get_kanagawa_colors = function()
@@ -167,14 +179,35 @@ return {
     lazy = true,
     priority = 950,
     config = function()
-      vim.g.nord_contrast = true
-      vim.g.nord_borders = true
-      vim.g.nord_disable_background = false
-      vim.g.nord_cursorline_transparent = false
-      vim.g.nord_enable_sidebar_background = true
-      vim.g.nord_italic = true
-      vim.g.nord_uniform_diff_background = true
-      vim.g.nord_bold = true
+      -- Safely set options
+      pcall(function()
+        vim.g.nord_contrast = true
+        vim.g.nord_borders = true
+        vim.g.nord_disable_background = false
+        vim.g.nord_cursorline_transparent = false
+        vim.g.nord_enable_sidebar_background = true
+        vim.g.nord_italic = true
+        vim.g.nord_uniform_diff_background = true
+        vim.g.nord_bold = true
+      end)
+
+      -- Nord color export function
+      _G.get_nord_colors = function()
+        return {
+          bg = "#2e3440",
+          bg1 = "#3b4252",
+          red = "#bf616a",
+          orange = "#d08770",
+          yellow = "#ebcb8b",
+          green = "#a3be8c",
+          aqua = "#88c0d0",
+          blue = "#81a1c1",
+          purple = "#b48ead",
+          gray = "#4c566a",
+          border = "#434c5e",
+          fg = "#eceff4",
+        }
+      end
     end,
   },
   {
@@ -254,10 +287,10 @@ return {
 
   -- Theme setup and switching functionality
   config = function()
-    -- Persistence file for theme settings
+    -- Persistence file for theme settings with better path handling
     local theme_cache_file = vim.fn.stdpath("cache") .. "/theme_settings.json"
 
-    -- Safely require utils module
+    -- Safely require utils module with better fallback
     local function safe_require(name)
       local ok, mod = pcall(require, name)
       if not ok then
@@ -319,12 +352,41 @@ return {
         variants = { "storm", "moon", "night", "day" },
         current_variant = "storm",
         setup = function(variant)
-          if variant then
-            require("tokyonight").setup({ style = variant })
+          -- Safety wrapper for theme variant setup
+          local ok, _ = pcall(function()
+            if variant then
+              require("tokyonight").setup({ style = variant })
+            end
+          end)
+
+          if not ok then
+            vim.notify("Error setting Tokyonight variant: " .. variant, vim.log.levels.WARN)
           end
         end,
         get_colors = function()
-          local colors = require("tokyonight.colors").setup({ style = vim.g.tokyonight_style or "storm" })
+          -- Try to load colors safely
+          local ok, colors = pcall(function()
+            return require("tokyonight.colors").setup({ style = vim.g.tokyonight_style or "storm" })
+          end)
+
+          if not ok then
+            -- Fallback colors
+            return {
+              bg = "#1a1b26",
+              bg1 = "#24283b",
+              red = "#f7768e",
+              orange = "#ff9e64",
+              yellow = "#e0af68",
+              green = "#9ece6a",
+              aqua = "#73daca",
+              blue = "#7aa2f7",
+              purple = "#bb9af7",
+              gray = "#565f89",
+              border = "#3d59a1",
+              fg = "#c0caf5",
+            }
+          end
+
           return {
             bg = colors.bg,
             bg1 = colors.bg_highlight,
@@ -373,8 +435,15 @@ return {
         variants = { "wave", "dragon", "lotus" },
         current_variant = "wave",
         setup = function(variant)
-          if variant then
-            require("kanagawa").setup({ theme = variant })
+          -- Safety wrapper
+          local ok, _ = pcall(function()
+            if variant then
+              require("kanagawa").setup({ theme = variant })
+            end
+          end)
+
+          if not ok then
+            vim.notify("Error setting Kanagawa variant: " .. variant, vim.log.levels.WARN)
           end
         end,
         get_colors = function()
@@ -398,21 +467,21 @@ return {
       ["nord"] = {
         icon = "󰔿 ",
         get_colors = function()
-          -- Nord color palette
-          return {
-            bg = "#2e3440",
-            bg1 = "#3b4252",
-            red = "#bf616a",
-            orange = "#d08770",
-            yellow = "#ebcb8b",
-            green = "#a3be8c",
-            aqua = "#88c0d0",
-            blue = "#81a1c1",
-            purple = "#b48ead",
-            gray = "#4c566a",
-            border = "#434c5e",
-            fg = "#eceff4",
-          }
+          return _G.get_nord_colors and _G.get_nord_colors()
+            or {
+              bg = "#2e3440",
+              bg1 = "#3b4252",
+              red = "#bf616a",
+              orange = "#d08770",
+              yellow = "#ebcb8b",
+              green = "#a3be8c",
+              aqua = "#88c0d0",
+              blue = "#81a1c1",
+              purple = "#b48ead",
+              gray = "#4c566a",
+              border = "#434c5e",
+              fg = "#eceff4",
+            }
         end,
       },
       ["rose-pine"] = {
@@ -420,8 +489,14 @@ return {
         variants = { "main", "moon", "dawn" },
         current_variant = "main",
         setup = function(variant)
-          if variant then
-            require("rose-pine").setup({ variant = variant })
+          local ok, _ = pcall(function()
+            if variant then
+              require("rose-pine").setup({ variant = variant })
+            end
+          end)
+
+          if not ok then
+            vim.notify("Error setting Rose Pine variant: " .. variant, vim.log.levels.WARN)
           end
         end,
         get_colors = function()
@@ -447,12 +522,40 @@ return {
         variants = { "mocha", "macchiato", "frappe", "latte" },
         current_variant = "mocha",
         setup = function(variant)
-          if variant then
-            require("catppuccin").setup({ flavour = variant })
+          local ok, _ = pcall(function()
+            if variant then
+              require("catppuccin").setup({ flavour = variant })
+            end
+          end)
+
+          if not ok then
+            vim.notify("Error setting Catppuccin variant: " .. variant, vim.log.levels.WARN)
           end
         end,
         get_colors = function()
-          local cp = require("catppuccin.palettes").get_palette()
+          -- Try to get colors safely
+          local ok, cp = pcall(function()
+            return require("catppuccin.palettes").get_palette()
+          end)
+
+          if not ok then
+            -- Fallback colors for Catppuccin
+            return {
+              bg = "#1e1e2e",
+              bg1 = "#181825",
+              red = "#f38ba8",
+              orange = "#fab387",
+              yellow = "#f9e2af",
+              green = "#a6e3a1",
+              aqua = "#94e2d5",
+              blue = "#89b4fa",
+              purple = "#cba6f7",
+              gray = "#6c7086",
+              border = "#313244",
+              fg = "#cdd6f4",
+            }
+          end
+
           return {
             bg = cp.base,
             bg1 = cp.mantle,
@@ -471,19 +574,19 @@ return {
       },
     }
 
-    -- Load persisted theme settings
+    -- Load persisted theme settings with better error handling
     local function load_theme_settings()
       local settings = { theme = "gruvbox-material", variant = nil, transparency = false }
 
       -- Try to read from cache file
-      local file = io.open(theme_cache_file, "r")
-      if file then
+      local ok, file = pcall(io.open, theme_cache_file, "r")
+      if ok and file then
         local content = file:read("*all")
         file:close()
 
         -- Parse JSON safely
-        local ok, parsed = pcall(vim.fn.json_decode, content)
-        if ok and type(parsed) == "table" then
+        local parse_ok, parsed = pcall(vim.fn.json_decode, content)
+        if parse_ok and type(parsed) == "table" then
           settings = parsed
         end
       end
@@ -491,23 +594,35 @@ return {
       return settings
     end
 
-    -- Save theme settings to cache file
+    -- Save theme settings to cache file with improved error handling
     local function save_theme_settings(settings)
-      local file = io.open(theme_cache_file, "w")
-      if file then
-        local ok, json = pcall(vim.fn.json_encode, settings)
-        if ok then
-          file:write(json)
-          file:close()
-          return true
-        else
-          file:close()
-        end
+      local ok, file = pcall(io.open, theme_cache_file, "w")
+      if not ok or not file then
+        vim.notify("Could not save theme settings: failed to open cache file", vim.log.levels.WARN)
+        return false
       end
-      return false
+
+      local json_ok, json = pcall(vim.fn.json_encode, settings)
+      if not json_ok then
+        file:close()
+        vim.notify("Could not save theme settings: JSON encoding failed", vim.log.levels.WARN)
+        return false
+      end
+
+      local write_ok, write_err = pcall(function()
+        file:write(json)
+      end)
+      file:close()
+
+      if not write_ok then
+        vim.notify("Could not save theme settings: " .. tostring(write_err), vim.log.levels.WARN)
+        return false
+      end
+
+      return true
     end
 
-    -- Global function to update UI colors throughout the system
+    -- Enhanced UI colors refresh function
     _G.refresh_ui_colors = function()
       local current = vim.g.colors_name or "gruvbox-material"
       local theme = themes[current]
@@ -516,45 +631,59 @@ return {
         -- Update the global UI colors function
         _G.get_ui_colors = theme.get_colors
 
-        -- Refresh UI components that need updating
         vim.defer_fn(function()
+          -- Refresh components with better error handling
+
           -- Refresh lualine
-          if package.loaded["lualine"] then
-            pcall(require("lualine").refresh)
-          end
+          pcall(function()
+            if package.loaded["lualine"] then
+              require("lualine").refresh()
+            end
+          end)
 
           -- Refresh bufferline
-          if package.loaded["bufferline"] then
-            pcall(require("bufferline").setup)
-          end
-
-          -- Refresh statusline
-          if package.loaded["lualine"] then
-            pcall(require("lualine").refresh)
-          end
+          pcall(function()
+            if package.loaded["bufferline"] and package.loaded["bufferline"].setup then
+              require("bufferline").setup()
+            end
+          end)
 
           -- Refresh notifications
-          if package.loaded["notify"] and package.loaded["notify"].setup then
-            local opts = package.loaded["notify"].setup()
-            pcall(package.loaded["notify"].setup, opts)
-          end
+          pcall(function()
+            if package.loaded["notify"] and package.loaded["notify"].setup then
+              require("notify").setup(package.loaded["notify"]._config or {})
+            end
+          end)
+
+          -- Try to refresh other UI components
+          pcall(function()
+            -- Trigger colorscheme autocmd to refresh other components
+            vim.cmd("doautocmd ColorScheme " .. current)
+          end)
         end, 10)
       end
     end
 
-    -- Apply theme with error handling and UI refresh
+    -- Apply theme with enhanced error handling and UI refresh
     local function apply_theme(theme_name, variant, transparency)
       local theme = themes[theme_name]
       if not theme then
-        vim.notify(string.format("Theme '%s' not found", theme_name), vim.log.levels.ERROR)
-        return false
+        vim.notify(
+          string.format("Theme '%s' not found, falling back to gruvbox-material", theme_name),
+          vim.log.levels.WARN
+        )
+        theme_name = "gruvbox-material"
+        theme = themes[theme_name]
       end
 
-      -- Run theme-specific setup if available
+      -- Run theme-specific setup if available with error handling
       if theme.setup and variant then
         local ok, err = pcall(theme.setup, variant)
         if not ok then
-          vim.notify(string.format("Failed to set variant for '%s': %s", theme_name, err), vim.log.levels.WARN)
+          vim.notify(
+            string.format("Failed to set variant '%s' for '%s': %s", variant, theme_name, err),
+            vim.log.levels.WARN
+          )
         else
           -- Update current variant if successful
           if theme.variants and vim.tbl_contains(theme.variants, variant) then
@@ -563,39 +692,43 @@ return {
         end
       end
 
-      -- Set transparency if specified
+      -- Set transparency if specified with enhanced error handling
       if transparency ~= nil then
-        -- Handle transparency for each theme
-        if theme_name == "gruvbox-material" then
-          vim.g.gruvbox_material_transparent_background = transparency and 1 or 0
-        elseif theme_name == "tokyonight" then
-          pcall(function()
-            require("tokyonight").setup({ transparent = transparency })
-          end)
-        elseif theme_name == "everforest" then
-          vim.g.everforest_transparent_background = transparency and 1 or 0
-        elseif theme_name == "kanagawa" then
-          pcall(function()
-            require("kanagawa").setup({ transparent = transparency })
-          end)
-        elseif theme_name == "catppuccin" then
-          pcall(function()
-            require("catppuccin").setup({ transparent_background = transparency })
-          end)
-        elseif theme_name == "rose-pine" then
-          pcall(function()
-            require("rose-pine").setup({ disable_background = transparency })
-          end)
-        elseif theme_name == "nord" then
-          vim.g.nord_disable_background = transparency
-        end
+        pcall(function()
+          -- Handle transparency for each theme
+          if theme_name == "gruvbox-material" then
+            vim.g.gruvbox_material_transparent_background = transparency and 1 or 0
+          elseif theme_name == "tokyonight" then
+            if require("tokyonight") then
+              require("tokyonight").setup({ transparent = transparency })
+            end
+          elseif theme_name == "everforest" then
+            vim.g.everforest_transparent_background = transparency and 1 or 0
+          elseif theme_name == "kanagawa" then
+            if require("kanagawa") then
+              require("kanagawa").setup({ transparent = transparency })
+            end
+          elseif theme_name == "catppuccin" then
+            if require("catppuccin") then
+              require("catppuccin").setup({ transparent_background = transparency })
+            end
+          elseif theme_name == "rose-pine" then
+            if require("rose-pine") then
+              require("rose-pine").setup({ disable_background = transparency })
+            end
+          elseif theme_name == "nord" then
+            vim.g.nord_disable_background = transparency
+          end
+        end)
       end
 
-      -- Apply the theme
+      -- Apply the theme with better error handling
       local ok, err = pcall(vim.cmd, "colorscheme " .. theme_name)
       if not ok then
-        vim.notify(string.format("Failed to apply theme '%s': %s", theme_name, err), vim.log.levels.ERROR)
-        -- Fallback to gruvbox-material
+        vim.notify(
+          string.format("Failed to apply theme '%s': %s. Falling back to gruvbox-material.", theme_name, err),
+          vim.log.levels.ERROR
+        )
         pcall(vim.cmd, "colorscheme gruvbox-material")
         return false
       end
@@ -616,7 +749,7 @@ return {
       return true
     end
 
-    -- Cycle to next theme
+    -- Safer theme cycling
     local function cycle_theme()
       local current = vim.g.colors_name or "gruvbox-material"
       local theme_names = vim.tbl_keys(themes)
@@ -724,17 +857,17 @@ return {
       )
     end, { desc = "Toggle background transparency" })
 
-    -- Initial theme setup based on persisted settings
+    -- Initial theme setup based on persisted settings with defer
     vim.defer_fn(function()
       local settings = load_theme_settings()
       if settings.theme then
         apply_theme(settings.theme, settings.variant, settings.transparency)
       else
-        vim.cmd("colorscheme gruvbox-material")
+        pcall(vim.cmd, "colorscheme gruvbox-material")
       end
     end, 10)
 
-    -- helper alias
+    -- Keyboard mappings
     local map = vim.keymap.set
 
     -- Toggle between available themes
