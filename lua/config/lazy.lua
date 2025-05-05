@@ -89,7 +89,7 @@ lazy.setup({
   },
   defaults = { lazy = true, version = false },
   install = {
-    colorscheme = { "gruvbox-material", "everforest", "kanagawa" },
+    colorscheme = { "gruvbox-material", "everforest", "kanagawa", "tokyonight", "catppuccin", "nord", "rose-pine" },
     missing = true,
   },
   ui = {
