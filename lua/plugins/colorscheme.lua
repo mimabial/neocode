@@ -212,8 +212,9 @@ return {
 
   -- Theme management
   {
-    "nvim-lua/plenary.nvim", -- For JSON functions
-    lazy = true,
+    "nvim-lua/plenary.nvim",
+    lazy = false, -- Changed from true to false to load immediately
+    priority = 900, -- Increased priority
     config = function()
       -- Theme settings file
       local cache_dir = vim.fn.stdpath("cache")

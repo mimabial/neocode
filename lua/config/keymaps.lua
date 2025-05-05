@@ -89,21 +89,24 @@ function M.setup()
   -- ========================================
   -- File Explorer
   -- ========================================
-  -- Open file explorer
-  map("n", "<leader>e", function()
-    local explorer = vim.g.default_explorer or "oil"
-    if explorer == "snacks" then
-      local ok, snacks = pcall(require, "snacks")
-      if ok and snacks.explorer then
-        pcall(snacks.explorer)
-      else
-        -- Fallback to oil if snacks isn't available
+  -- Open Oil explorer specifically
+  map("n", "<leader>eo", function()
+    vim.cmd("Oil")
+  end, { desc = "Open Oil Explorer" })
+
+  -- Open Snacks explorer specifically
+  map("n", "<leader>es", function()
+    local ok, snacks = pcall(require, "snacks")
+    if ok and snacks.explorer then
+      pcall(snacks.explorer)
+    else
+      vim.notify("Snacks explorer not available", vim.log.levels.WARN)
+      -- Fallback to oil if requested
+      if vim.fn.confirm("Open Oil instead?", "&Yes\n&No", 1) == 1 then
         vim.cmd("Oil")
       end
-    else
-      vim.cmd("Oil")
     end
-  end, { desc = "File Explorer" })
+  end, { desc = "Open Snacks Explorer" })
 
   -- Shorthand for directory navigation
   map("n", "-", "<cmd>Oil<cr>", { desc = "Open parent directory" })

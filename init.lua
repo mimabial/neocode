@@ -1,5 +1,4 @@
 -- init.lua – Neovim entrypoint with robust module loading, error handling, and stack detection
-require("config.fix_encoding")
 -- 0) Leader & feature flags
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
@@ -39,8 +38,9 @@ local function load_module(name, setup_fn)
   return nil
 end
 
--- Apply core options
 load_module("config.options", "setup")
+load_module("config.autocmds", "setup")
+load_module("config.keymaps", "setup")
 
 -- 4) Initialize plugin manager (Lazy.nvim)
 -- Bootstrap Lazy.nvim if missing
@@ -60,111 +60,20 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 -- Load lazy
-local lazy_ok, lazy = pcall(require, "lazy")
+local lazy_ok, _ = pcall(require, "lazy")
 if not lazy_ok then
   vim.notify("❌ Failed to load lazy.nvim", vim.log.levels.ERROR)
   return
 end
 
--- Lazy.nvim setup
-lazy.setup({
-  spec = {
-    { import = "plugins" },
-    -- Core theme plugins with high priority
-    { "sainnhe/gruvbox-material", lazy = false, priority = 1000 },
-    { "sainnhe/everforest", lazy = true, priority = 950 },
-    { "rebelot/kanagawa.nvim", lazy = true, priority = 950 },
-
-    -- Core UI components
-    { "nvim-tree/nvim-web-devicons", lazy = false, priority = 900 },
-    { "rcarriga/nvim-notify", lazy = false, priority = 890 },
-    { "stevearc/oil.nvim", lazy = false, priority = 880 },
-    { "folke/which-key.nvim", event = "VeryLazy", priority = 870 },
-    { "folke/snacks.nvim", event = "VeryLazy", priority = 860 },
-
-    -- AI integration
-    {
-      "zbirenbaum/copilot.lua",
-      event = "InsertEnter",
-      dependencies = { "zbirenbaum/copilot-cmp" },
-      priority = 800,
-    },
-    {
-      "Exafunction/codeium.nvim",
-      event = "InsertEnter",
-      dependencies = { "nvim-lua/plenary.nvim" },
-      priority = 790,
-    },
-
-    -- Stack-specific plugins with conditional loading
-    {
-      import = "plugins.goth",
-      cond = function()
-        return vim.g.current_stack ~= "nextjs"
-      end,
-    },
-    {
-      import = "plugins.nextjs",
-      cond = function()
-        return vim.g.current_stack ~= "goth"
-      end,
-    },
-  },
-  defaults = { lazy = true, version = false },
-  install = {
-    colorscheme = { "gruvbox-material", "everforest", "kanagawa", "catppuccin", "tokyonight", "nord", "rose-pine" },
-    missing = true,
-  },
-  ui = {
-    border = "rounded",
-    size = { width = 0.8, height = 0.8 },
-    icons = {
-      loaded = "●",
-      not_loaded = "○",
-      lazy = "󰒲 ",
-      cmd = " ",
-      config = "",
-      event = "",
-      ft = " ",
-      init = " ",
-      keys = " ",
-      plugin = " ",
-      runtime = " ",
-      require = "󰢱 ",
-      source = " ",
-      start = "",
-      task = "✓",
-      list = {
-        "●",
-        "➜",
-        "★",
-        "‒",
-      },
-    },
-  },
-  checker = { enabled = true, notify = false, frequency = 3600 },
-  change_detection = { enabled = true, notify = false },
-  performance = {
-    rtp = { disabled_plugins = { "gzip", "tarPlugin", "tohtml", "tutor", "zipPlugin" } },
-    cache = { enabled = true },
-    reset_packpath = true,
-    reset_rtp = false,
-  },
-  -- Enhanced debugging for troubleshooting
-  debug = false,
-})
+-- Load plugin configuration
+load_module("config.lazy", "setup")
 
 -- Detect and configure tech stack (Must run before any other modules that depend on stack)
 load_module("config.stacks", "setup")
 
 -- Load stack-specific commands
 load_module("config.stack_commands", "setup")
-
--- Load key mappings
-load_module("config.keymaps", "setup")
-
--- Load autocommands
-load_module("config.autocmds", "setup")
 
 -- Load custom commands
 load_module("config.commands", "setup")
@@ -176,7 +85,6 @@ load_module("config.diagnostics", "setup")
 load_module("config.lsp", "setup")
 
 -- Set default colorscheme if not already set
-
 if not vim.g.colors_name then
   pcall(vim.api.nvim_command, "colorscheme gruvbox-material")
 end
