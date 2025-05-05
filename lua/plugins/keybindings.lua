@@ -144,23 +144,22 @@ return {
         ["h"] = { "<cmd>ToggleTerm direction=horizontal<cr>", "Terminal (horizontal)" },
         ["v"] = { "<cmd>ToggleTerm direction=vertical<cr>", "Terminal (vertical)" },
         ["t"] = { "<cmd>ToggleTerm<cr>", "Toggle Terminal" },
-        -- UI toggles
-        ["b"] = { "<cmd>ToggleTransparency<cr>", "Toggle Transparency" },
-        ["s"] = { "<cmd>ColorScheme<cr>", "Select Theme" },
-        ["v"] = { "<cmd>ColorSchemeVariant<cr>", "Select Variant" },
       },
     })
 
     -- UI settings
-    wk.register({
-      ["<leader>u"] = {
-        name = "UI/Settings",
-        ["t"] = { "<cmd>ColorSchemeToggle<cr>", "Toggle Theme" },
-        ["b"] = { "<cmd>ToggleTransparency<cr>", "Toggle Transparency" },
-        ["s"] = { "<cmd>ColorScheme<cr>", "Select Theme" },
-        ["v"] = { "<cmd>ColorSchemeVariant<cr>", "Select Variant" },
-      },
-    })
+    local ok_wk, wk = pcall(require, "which-key")
+    if ok_wk then
+      wk.register({
+        ["<leader>u"] = {
+          name = "UI/Themes",
+          ["t"] = { "<cmd>ColorSchemeToggle<cr>", "Toggle theme" },
+          ["s"] = { "<cmd>ColorScheme<cr>", "Select theme" },
+          ["v"] = { "<cmd>ColorSchemeVariant<cr>", "Select theme variant" },
+          ["b"] = { "<cmd>ToggleTransparency<cr>", "Toggle transparency" },
+        },
+      })
+    end
 
     -- Debug commands
     wk.register({

@@ -112,7 +112,7 @@ lazy.setup({
   },
   defaults = { lazy = true, version = false },
   install = {
-    colorscheme = { "gruvbox-material", "everforest", "kanagawa" },
+    colorscheme = { "gruvbox-material", "everforest", "kanagawa", "catppuccin", "tokyonight", "nord", "rose-pine" },
     missing = true,
   },
   ui = {
@@ -153,9 +153,6 @@ lazy.setup({
   -- Enhanced debugging for troubleshooting
   debug = false,
 })
-
--- Load ui configuration
-load_module("config.ui", "setup")
 
 -- Detect and configure tech stack (Must run before any other modules that depend on stack)
 load_module("config.stacks", "setup")

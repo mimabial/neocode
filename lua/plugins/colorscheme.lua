@@ -568,23 +568,23 @@ return {
     -- helper alias
     local map = vim.keymap.set
 
-    -- toggle between light/dark variants
-    map("n", "<leader>tt", "<cmd>ColorSchemeToggle<cr>", {
+    -- Toggle between available themes
+    map("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", {
       desc = "Toggle theme",
     })
 
-    -- pick a colorscheme
-    map("n", "<leader>ts", "<cmd>ColorScheme<cr>", {
+    -- Pick a colorscheme
+    map("n", "<leader>us", "<cmd>ColorScheme<cr>", {
       desc = "Select theme",
     })
 
-    -- pick a variant of the current theme (if supported)
-    map("n", "<leader>tv", "<cmd>ColorSchemeVariant<cr>", {
+    -- Pick a variant of the current theme (if supported)
+    map("n", "<leader>uv", "<cmd>ColorSchemeVariant<cr>", {
       desc = "Select theme variant",
     })
 
-    -- toggle background transparency
-    map("n", "<leader>tb", "<cmd>ToggleTransparency<cr>", {
+    -- Toggle background transparency
+    map("n", "<leader>ub", "<cmd>ToggleTransparency<cr>", {
       desc = "Toggle transparency",
     })
   end,
