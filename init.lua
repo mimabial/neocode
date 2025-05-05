@@ -42,6 +42,16 @@ load_module("config.options", "setup")
 load_module("config.autocmds", "setup")
 load_module("config.keymaps", "setup")
 
+load_module("config.stacks", "setup")
+load_module("config.stack_commands", "setup")
+load_module("config.commands", "setup")
+load_module("config.diagnostics", "setup")
+load_module("config.lsp", "setup")
+load_module("config.lsp", "setup")
+load_module("config.lsp", "setup")
+load_module("config.lsp", "setup")
+load_module("config.lsp", "setup")
+
 -- 4) Initialize plugin manager (Lazy.nvim)
 -- Bootstrap Lazy.nvim if missing
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -68,21 +78,6 @@ end
 
 -- Load plugin configuration
 load_module("config.lazy", "setup")
-
--- Detect and configure tech stack (Must run before any other modules that depend on stack)
-load_module("config.stacks", "setup")
-
--- Load stack-specific commands
-load_module("config.stack_commands", "setup")
-
--- Load custom commands
-load_module("config.commands", "setup")
-
--- Load diagnostics
-load_module("config.diagnostics", "setup")
-
--- Load LSP configuration
-load_module("config.lsp", "setup")
 
 -- Set default colorscheme if not already set
 if not vim.g.colors_name then

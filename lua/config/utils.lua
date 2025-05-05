@@ -4,9 +4,9 @@
 local M = {}
 
 -- Get utils from the correct location
-local utils_ok, utils = pcall(require, "utils.init")
+local utils_ok, utils = pcall(require, "utils.utils")
 if not utils_ok then
-  vim.notify("Failed to load utils.init module. Some features may not work.", vim.log.levels.WARN)
+  vim.notify("Failed to load utils.utils module. Some features may not work.", vim.log.levels.WARN)
   -- Fallback implementations for critical functions
 
   -- Fallback for get_hl_color (used by lualine)
@@ -43,7 +43,7 @@ if not utils_ok then
   return M
 end
 
--- Re-export all functions from utils.init
+-- Re-export all functions from utils.utils
 for k, v in pairs(utils) do
   M[k] = v
 end

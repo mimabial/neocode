@@ -148,18 +148,15 @@ return {
     })
 
     -- UI settings
-    local ok_wk, wk = pcall(require, "which-key")
-    if ok_wk then
-      wk.register({
-        ["<leader>u"] = {
-          name = "UI/Themes",
-          ["t"] = { "<cmd>ColorSchemeToggle<cr>", "Toggle theme" },
-          ["s"] = { "<cmd>ColorScheme<cr>", "Select theme" },
-          ["v"] = { "<cmd>ColorSchemeVariant<cr>", "Select theme variant" },
-          ["b"] = { "<cmd>ToggleTransparency<cr>", "Toggle transparency" },
-        },
-      })
-    end
+    wk.register({
+      ["<leader>u"] = {
+        name = "UI/Themes",
+        ["t"] = { "<cmd>ColorSchemeToggle<cr>", "Toggle theme" },
+        ["s"] = { "<cmd>ColorScheme<cr>", "Select theme" },
+        ["v"] = { "<cmd>ColorSchemeVariant<cr>", "Select theme variant" },
+        ["b"] = { "<cmd>ToggleTransparency<cr>", "Toggle transparency" },
+      },
+    })
 
     -- Debug commands
     wk.register({

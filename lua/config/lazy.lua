@@ -12,9 +12,6 @@ local function safe_require(mod)
 end
 
 function M.setup()
-  -- Global flags
-  vim.g.use_snacks_ui = true
-
   -- Plugin specification
   require("lazy").setup({
     spec = {
