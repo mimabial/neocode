@@ -38,42 +38,6 @@ return {
     end,
   },
 
-  {
-    "sainnhe/gruvbox-material",
-    lazy = false,
-    priority = 1000,
-    config = function()
-      vim.g.gruvbox_material_background = "medium"
-      vim.g.gruvbox_material_better_performance = 1
-      vim.g.gruvbox_material_enable_italic = 1
-      vim.g.gruvbox_material_enable_bold = 1
-      vim.g.gruvbox_material_sign_column_background = "none"
-      vim.g.gruvbox_material_ui_contrast = "high"
-      vim.g.gruvbox_material_float_style = "dim"
-
-      -- Export colors for other plugins
-      _G.get_gruvbox_colors = function()
-        return {
-          bg = "#282828",
-          bg1 = "#32302f",
-          red = "#ea6962",
-          orange = "#e78a4e",
-          yellow = "#d8a657",
-          green = "#89b482",
-          aqua = "#7daea3",
-          blue = "#7daea3",
-          purple = "#d3869b",
-          gray = "#928374",
-          border = "#665c54",
-          fg = "#d4be98",
-        }
-      end
-
-      -- Default UI colors function
-      _G.get_ui_colors = _G.get_gruvbox_colors
-    end,
-  },
-
   -- Additional themes
   {
     "folke/tokyonight.nvim",

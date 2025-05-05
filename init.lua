@@ -47,10 +47,6 @@ load_module("config.stack_commands", "setup")
 load_module("config.commands", "setup")
 load_module("config.diagnostics", "setup")
 load_module("config.lsp", "setup")
-load_module("config.lsp", "setup")
-load_module("config.lsp", "setup")
-load_module("config.lsp", "setup")
-load_module("config.lsp", "setup")
 
 -- 4) Initialize plugin manager (Lazy.nvim)
 -- Bootstrap Lazy.nvim if missing
