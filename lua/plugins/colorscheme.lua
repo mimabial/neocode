@@ -1,5 +1,130 @@
 -- lua/plugins/colorscheme.lua
 
+-- Theme settings file
+local cache_dir = vim.fn.stdpath("cache")
+local settings_file = cache_dir .. "/theme_settings.json"
+
+-- Theme definitions with proper metadata
+local themes = {
+  ["gruvbox-material"] = {
+    icon = "󰈰 ",
+    variants = { "soft", "medium", "hard" },
+    apply_variant = function(variant)
+      vim.g.gruvbox_material_background = variant
+      return true
+    end,
+    set_transparency = function(enable)
+      vim.g.gruvbox_material_transparent_background = enable and 1 or 0
+      return true
+    end,
+  },
+
+  ["tokyonight"] = {
+    icon = "󱣱 ",
+    variants = { "storm", "moon", "night", "day" },
+    apply_variant = function(variant)
+      -- Need to setup before setting colorscheme
+      pcall(require("tokyonight").setup, { style = variant })
+      return true
+    end,
+    set_transparency = function(enable)
+      pcall(require("tokyonight").setup, { transparent = enable })
+      return true
+    end,
+  },
+
+  ["everforest"] = {
+    icon = "󰪶 ",
+    variants = { "soft", "medium", "hard" },
+    apply_variant = function(variant)
+      vim.g.everforest_background = variant
+      return true
+    end,
+    set_transparency = function(enable)
+      vim.g.everforest_transparent_background = enable and 1 or 0
+      return true
+    end,
+  },
+
+  ["kanagawa"] = {
+    icon = "󰖭 ",
+    variants = { "wave", "dragon", "lotus" },
+    apply_variant = function(variant)
+      pcall(require("kanagawa").setup, { theme = variant })
+      return true
+    end,
+    set_transparency = function(enable)
+      pcall(require("kanagawa").setup, { transparent = enable })
+      return true
+    end,
+  },
+
+  ["nord"] = {
+    icon = "󰔿 ",
+    variants = {}, -- Nord doesn't have variants
+    apply_variant = function()
+      return false
+    end,
+    set_transparency = function(enable)
+      vim.g.nord_disable_background = enable
+      return true
+    end,
+  },
+
+  ["rose-pine"] = {
+    icon = "󰔎 ",
+    variants = { "main", "moon", "dawn" },
+    apply_variant = function(variant)
+      pcall(require("rose-pine").setup, { variant = variant })
+      return true
+    end,
+    set_transparency = function(enable)
+      pcall(require("rose-pine").setup, { disable_background = enable })
+      return true
+    end,
+  },
+
+  ["catppuccin"] = {
+    icon = "󰄛 ",
+    variants = { "mocha", "macchiato", "frappe", "latte" },
+    apply_variant = function(variant)
+      pcall(require("catppuccin").setup, { flavour = variant })
+      return true
+    end,
+    set_transparency = function(enable)
+      pcall(require("catppuccin").setup, { transparent_background = enable })
+      return true
+    end,
+  },
+}
+
+-- Create command directly at the module level
+vim.api.nvim_create_user_command("ColorSchemeToggle", function()
+  local current = vim.g.colors_name or "gruvbox-material"
+  local names = vim.tbl_keys(themes)
+  table.sort(names)
+
+  -- Find current index and get next theme
+  local idx = 1
+  for i, name in ipairs(names) do
+    if name == current then
+      idx = i
+      break
+    end
+  end
+
+  -- Get next theme and apply it
+  local next_idx = idx % #names + 1
+  local next_theme = names[next_idx]
+
+  -- Apply theme (simplified version)
+  vim.cmd("colorscheme " .. next_theme)
+
+  -- Show notification
+  local theme = themes[next_theme]
+  local icon = theme and theme.icon or ""
+  vim.notify(icon .. "Switched to " .. next_theme, vim.log.levels.INFO)
+end, { desc = "Toggle between color schemes" })
 return {
   -- Primary theme - Gruvbox Material
   {
@@ -180,104 +305,6 @@ return {
     lazy = false, -- Changed from true to false to load immediately
     priority = 900, -- Increased priority
     config = function()
-      -- Theme settings file
-      local cache_dir = vim.fn.stdpath("cache")
-      local settings_file = cache_dir .. "/theme_settings.json"
-
-      -- Theme definitions with proper metadata
-      local themes = {
-        ["gruvbox-material"] = {
-          icon = "󰈰 ",
-          variants = { "soft", "medium", "hard" },
-          apply_variant = function(variant)
-            vim.g.gruvbox_material_background = variant
-            return true
-          end,
-          set_transparency = function(enable)
-            vim.g.gruvbox_material_transparent_background = enable and 1 or 0
-            return true
-          end,
-        },
-
-        ["tokyonight"] = {
-          icon = "󱣱 ",
-          variants = { "storm", "moon", "night", "day" },
-          apply_variant = function(variant)
-            -- Need to setup before setting colorscheme
-            pcall(require("tokyonight").setup, { style = variant })
-            return true
-          end,
-          set_transparency = function(enable)
-            pcall(require("tokyonight").setup, { transparent = enable })
-            return true
-          end,
-        },
-
-        ["everforest"] = {
-          icon = "󰪶 ",
-          variants = { "soft", "medium", "hard" },
-          apply_variant = function(variant)
-            vim.g.everforest_background = variant
-            return true
-          end,
-          set_transparency = function(enable)
-            vim.g.everforest_transparent_background = enable and 1 or 0
-            return true
-          end,
-        },
-
-        ["kanagawa"] = {
-          icon = "󰖭 ",
-          variants = { "wave", "dragon", "lotus" },
-          apply_variant = function(variant)
-            pcall(require("kanagawa").setup, { theme = variant })
-            return true
-          end,
-          set_transparency = function(enable)
-            pcall(require("kanagawa").setup, { transparent = enable })
-            return true
-          end,
-        },
-
-        ["nord"] = {
-          icon = "󰔿 ",
-          variants = {}, -- Nord doesn't have variants
-          apply_variant = function()
-            return false
-          end,
-          set_transparency = function(enable)
-            vim.g.nord_disable_background = enable
-            return true
-          end,
-        },
-
-        ["rose-pine"] = {
-          icon = "󰔎 ",
-          variants = { "main", "moon", "dawn" },
-          apply_variant = function(variant)
-            pcall(require("rose-pine").setup, { variant = variant })
-            return true
-          end,
-          set_transparency = function(enable)
-            pcall(require("rose-pine").setup, { disable_background = enable })
-            return true
-          end,
-        },
-
-        ["catppuccin"] = {
-          icon = "󰄛 ",
-          variants = { "mocha", "macchiato", "frappe", "latte" },
-          apply_variant = function(variant)
-            pcall(require("catppuccin").setup, { flavour = variant })
-            return true
-          end,
-          set_transparency = function(enable)
-            pcall(require("catppuccin").setup, { transparent_background = enable })
-            return true
-          end,
-        },
-      }
-
       -- Load theme settings
       local function load_settings()
         local default = { theme = "gruvbox-material", variant = "medium", transparency = false }
@@ -412,9 +439,6 @@ return {
       end
 
       -- Create commands
-      vim.api.nvim_create_user_command("ColorSchemeToggle", function()
-        cycle_theme()
-      end, { desc = "Toggle between color schemes" })
 
       vim.api.nvim_create_user_command("ColorScheme", function(opts)
         local args = opts.args
