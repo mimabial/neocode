@@ -18,7 +18,7 @@ return {
     dashboard = dashboard_cfg,
     dim = dim_cfg,
     input = input_cfg,
-    picker = picker_cfg,
+    picker = {},
   },
   keys = {
     {
@@ -48,11 +48,6 @@ return {
     if not setup_ok then
       vim.notify("Error setting up snacks.nvim: " .. tostring(setup_err), vim.log.levels.ERROR)
       return
-    end
-
-    -- Only set ui.input if snacks.input is available
-    if opts.input.enabled and snacks.input then
-      vim.ui.input = snacks.input
     end
 
     -- Create dashboard command with error handling

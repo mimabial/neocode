@@ -620,6 +620,14 @@ function M.setup()
     vim.cmd("write")
     vim.notify(" Created new page: " .. file_path, vim.log.levels.INFO, { title = "Next.js" })
   end, { desc = "Create a new Next.js page" })
+
+  vim.api.nvim_create_user_command("CheckPlugins", function()
+    local plugins = { "snacks", "snacks.picker", "telescope", "oil" }
+    for _, plugin in ipairs(plugins) do
+      local ok, _ = pcall(require, plugin)
+      print(plugin .. ": " .. (ok and "Loaded" or "Not loaded"))
+    end
+  end, { desc = "Check if plugins are loaded properly" })
 end
 
 return M

@@ -18,6 +18,13 @@ return {
         },
       },
     },
+    files = {
+      cmd = "fd --type f --hidden --exclude .git",
+      cwd = vim.fn.getcwd, -- Use function to get current directory
+    },
+    live_grep = {
+      cmd = "rg --line-number --column --no-heading --color=never --smart-case",
+    },
   },
   layout = {
     layout = {
