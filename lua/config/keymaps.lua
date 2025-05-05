@@ -280,8 +280,12 @@ function M.setup()
   -- ========================================
 
   -- Theme toggling
-  map("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle Colorscheme" })
-  map("n", "<leader>uT", "<cmd>ToggleTransparency<cr>", { desc = "Toggle Transparency" })
+
+  map("n", "<leader>us", "<cmd>CycleColorScheme<cr>", { desc = "Toggle theme" })
+  map("n", "<leader>uS", "<cmd>ColorScheme<cr>", { desc = "Select theme" })
+  map("n", "<leader>uv", "<cmd>CycleColorVariant<cr>", { desc = "Select theme variant" })
+  map("n", "<leader>uV", "<cmd>ColorVariant<cr>", { desc = "Select theme variant" })
+  map("n", "<leader>ub", "<cmd>ToggleBackgroundTransparency<cr>", { desc = "Toggle transparency" })
 
   -- Layouts
   map("n", "<leader>L1", "<cmd>Layout coding<cr>", { desc = "Coding Layout" })
