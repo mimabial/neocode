@@ -1,5 +1,5 @@
--- lua/plugins/which-key.lua
--- Enhanced WhichKey configuration with better plugin integration
+-- lua/plugins/keybindings.lua
+-- Centralized WhichKey configuration for keymap descriptions
 
 return {
   "folke/which-key.nvim",
@@ -15,58 +15,58 @@ return {
     -- Setup
     wk.setup({
       plugins = {
-        marks = true, -- shows a list of your marks on ' and `
-        registers = true, -- shows your registers on " in NORMAL or <C-r> in INSERT mode
+        marks = true,
+        registers = true,
         spelling = { enabled = false, suggestions = 20 },
         presets = {
-          operators = false, -- adds help for operators like d, y, ...
-          motions = false, -- adds help for motions
-          text_objects = false, -- help for text objects triggered after entering an operator
-          windows = true, -- default bindings on <c-w>
-          nav = true, -- misc bindings to work with windows
-          z = true, -- bindings for folds, spelling, etc.
-          g = true, -- bindings for prefixed with g
+          operators = false,
+          motions = false,
+          text_objects = false,
+          windows = true,
+          nav = true,
+          z = true,
+          g = true,
         },
       },
       icons = {
-        breadcrumb = "»", -- symbol used in the command line area that shows your active key combo
-        separator = "➜", -- symbol used between a key and its label
-        group = "+", -- symbol prepended to a group
-      },
-      keys = {
-        scroll_down = "<c-d>", -- binding to scroll down inside the popup
-        scroll_up = "<c-u>", -- binding to scroll up inside the popup
+        breadcrumb = "»",
+        separator = "➜",
+        group = "+",
       },
       window = {
-        border = "single", -- none, single, double, shadow
-        position = "bottom", -- bottom, top
-        margin = { 1, 0, 1, 0 }, -- extra window margin [top, right, bottom, left]
-        padding = { 2, 2, 2, 2 }, -- extra window padding [top, right, bottom, left]
+        border = "single",
+        position = "bottom",
+        margin = { 1, 0, 1, 0 },
+        padding = { 2, 2, 2, 2 },
       },
       layout = {
-        height = { min = 4, max = 25 }, -- min and max height of the columns
-        width = { min = 20, max = 50 }, -- min and max width of the columns
-        spacing = 3, -- spacing between columns
-        align = "left", -- align columns left, center or right
+        height = { min = 4, max = 25 },
+        width = { min = 20, max = 50 },
+        spacing = 3,
+        align = "left",
       },
-      replace = {
-        desc = {
-          -- strip common boilerplate in all descriptions
-          { "^<silent>", "" }, -- remove leading `<silent>`
-          { "^<cmd>", "" }, -- remove leading `<cmd>`
-          { "^<Cmd>", "" }, -- remove leading `<Cmd>`
-          { "<CR>$", "" }, -- remove trailing `<CR>`
-          { "^call%s+", "" }, -- remove leading `call `
-          { "^lua%s+", "" }, -- remove leading `lua `
-          { "^:%s*", "" }, -- remove any leading `:` and spaces
-          { "^%s*", "" }, -- remove any other leading whitespace
-        },
+      ignore_missing = false,
+      hidden = { "<silent>", "<cmd>", "<Cmd>", "<CR>", "^:", "^ ", "^call ", "^lua " },
+      show_help = true,
+      show_keys = true,
+      triggers = "auto",
+      triggers_nowait = {
+        -- marks
+        "`",
+        "'",
+        "g`",
+        "g'",
+        -- registers
+        '"',
+        "<c-r>",
+        -- spelling
+        "z=",
       },
-      show_help = true, -- show help message on the command line when the popup is visible
-      triggers = {
-        { "<auto>", mode = "no" },
+      triggers_blacklist = {
+        i = { "j", "k" },
+        v = { "j", "k" },
       },
-      -- Disable the WhichKey popup for certain buf/win types: floating windows, non-modifiable buffers
+      -- Disable the WhichKey popup for certain buf/win types
       disable = {
         buftypes = { "terminal", "nofile" },
         filetypes = { "TelescopePrompt", "TelescopeResults", "oil", "neo-tree" },
@@ -80,31 +80,70 @@ return {
       ["<leader>b"] = { name = "Buffers" },
       ["<leader>c"] = { name = "Code/LSP" },
       ["<leader>d"] = { name = "Debug" },
+      ["<leader>e"] = { name = "Explorer" },
       ["<leader>f"] = { name = "Find/Search" },
       ["<leader>g"] = { name = "Git" },
-      ["<leader>l"] = { name = "Lazy/Plugins" },
-      ["<leader>n"] = { name = "Notifications" },
+      ["<leader>l"] = { desc = "Lazy/Plugins" },
+      ["<leader>n"] = { name = "Next.js" },
       ["<leader>s"] = { name = "Stack" },
       ["<leader>t"] = { name = "Terminal/Toggle" },
       ["<leader>u"] = { name = "UI/Settings" },
       ["<leader>x"] = { name = "Diagnostics/Trouble" },
     })
 
-    -- Define buffer management keys
+    -- Editing keymaps descriptions
+    wk.register({
+      [">"] = { desc = "Indent and keep selection" },
+      ["<"] = { desc = "Outdent and keep selection" },
+      ["J"] = { desc = "Move selection down" },
+      ["K"] = { desc = "Move selection up" },
+    }, { mode = "v" })
+
+    wk.register({
+      ["J"] = { desc = "Join lines and keep cursor" },
+    })
+
+    -- Navigation keymaps descriptions
+    wk.register({
+      ["<C-h>"] = { desc = "Navigate left" },
+      ["<C-j>"] = { desc = "Navigate down" },
+      ["<C-k>"] = { desc = "Navigate up" },
+      ["<C-l>"] = { desc = "Navigate right" },
+      ["<C-Up>"] = { desc = "Decrease window height" },
+      ["<C-Down>"] = { desc = "Increase window height" },
+      ["<C-Left>"] = { desc = "Decrease window width" },
+      ["<C-Right>"] = { desc = "Increase window width" },
+      ["j"] = { desc = "Better down navigation" },
+      ["k"] = { desc = "Better up navigation" },
+      ["n"] = { desc = "Next search result centered" },
+      ["N"] = { desc = "Previous search result centered" },
+    })
+
+    -- Explorer keymaps
+    wk.register({
+      ["<leader>eo"] = { desc = "Open Oil Explorer" },
+      ["<leader>es"] = { desc = "Open Snacks Explorer" },
+      ["-"] = { desc = "Open parent directory" },
+      ["_"] = { desc = "Open project root" },
+    })
+
+    -- Define buffer management descriptions
     wk.register({
       ["<leader>b"] = {
         name = "Buffers",
-        b = { "<cmd>e #<cr>", "Other Buffer" },
-        d = { "<cmd>Bdelete<cr>", "Delete Buffer" },
-        l = { "<cmd>BufferLineCloseLeft<cr>", "Close Left Buffers" },
-        n = { "<cmd>bnext<cr>", "Next Buffer" },
-        o = { "<cmd>BufferLineCloseOthers<cr>", "Close Other Buffers" },
-        p = { "<cmd>bprevious<cr>", "Prev Buffer" },
-        r = { "<cmd>BufferLineCloseRight<cr>", "Close Right Buffers" },
+        b = { desc = "Other Buffer" },
+        d = { desc = "Delete Buffer" },
+        l = { desc = "Close Left Buffers" },
+        n = { desc = "Next Buffer" },
+        o = { desc = "Close Other Buffers" },
+        p = { desc = "Prev Buffer" },
+        r = { desc = "Close Right Buffers" },
       },
+      ["<S-h>"] = { desc = "Previous buffer" },
+      ["<S-l>"] = { desc = "Next buffer" },
     })
 
-    -- Define finder keys
+    -- Define finder descriptions
     wk.register({
       ["<leader>f"] = {
         name = "Find",
@@ -118,28 +157,28 @@ return {
       },
     })
 
-    -- Git commands
+    -- Git commands descriptions
     wk.register({
       ["<leader>g"] = {
         name = "Git",
-        P = { "<cmd>Git push<cr>", "Git Push" },
+        P = { desc = "Git Push" },
         b = { desc = "Git Branches" },
         c = { desc = "Git Commits" },
-        d = { "<cmd>DiffviewOpen<cr>", "DiffView Open" },
-        g = { "<cmd>LazyGit<cr>", "LazyGit" },
-        p = { "<cmd>Git pull<cr>", "Git Pull" },
-        s = { "<cmd>Git<cr>", "Git Status" },
+        d = { desc = "DiffView Open" },
+        g = { desc = "LazyGit" },
+        p = { desc = "Git Pull" },
+        s = { desc = "Git Status" },
       },
     })
 
-    -- Stack commands
+    -- Stack commands descriptions
     wk.register({
       ["<leader>s"] = {
         name = "Stack",
-        b = { "<cmd>StackFocus both<cr>", "Focus Both" },
-        d = { name = "Dashboard" },
-        g = { "<cmd>StackFocus goth<cr>", "Focus GOTH" },
-        n = { "<cmd>StackFocus nextjs<cr>", "Focus Next.js" },
+        b = { desc = "Focus Both" },
+        d = { desc = "Open Dashboard" },
+        g = { desc = "Focus GOTH" },
+        n = { desc = "Focus Next.js" },
       },
       ["<leader>sd"] = {
         name = "Dashboard",
@@ -148,85 +187,166 @@ return {
       },
     })
 
-    -- Terminal commands
+    -- Terminal commands descriptions
     wk.register({
       ["<leader>t"] = {
         name = "Terminal/Toggle",
-        f = { "<cmd>ToggleTerm direction=float<cr>", "Terminal (float)" },
-        h = { "<cmd>ToggleTerm direction=horizontal<cr>", "Terminal (horizontal)" },
-        t = { "<cmd>ToggleTerm<cr>", "Toggle Terminal" },
-        v = { "<cmd>ToggleTerm direction=vertical<cr>", "Terminal (vertical)" },
+        f = { desc = "Terminal (float)" },
+        h = { desc = "Terminal (horizontal)" },
+        v = { desc = "Terminal (vertical)" },
       },
+      ["<C-\\>"] = { desc = "Toggle terminal" },
     })
 
-    -- UI settings
+    -- UI settings descriptions
     wk.register({
       ["<leader>u"] = {
         name = "UI/Themes",
         S = { desc = "Select theme" },
         V = { desc = "Select theme variant" },
         b = { desc = "Toggle background transparency" },
+        d = { desc = "Toggle Codeium" },
+        p = { desc = "Toggle Copilot" },
         s = { desc = "Change theme" },
         v = { desc = "Change theme variant" },
       },
     })
 
-    -- Debug commands
-    wk.register({
-      ["<leader>d"] = {
-        name = "Debug",
-        O = { desc = "Step Out" },
-        b = { desc = "Toggle Breakpoint" },
-        c = { desc = "Continue" },
-        i = { desc = "Step Into" },
-        o = { desc = "Step Over" },
-        r = { desc = "REPL" },
-        t = { desc = "Terminate" },
-        u = { desc = "Toggle UI" },
-      },
-    })
-
-    -- LSP commands
-    wk.register({
-      ["<leader>c"] = {
-        name = "Code/LSP",
-        a = { desc = "Code Action" },
-        d = { desc = "Show Diagnostics" },
-        f = { desc = "Format" },
-        l = { desc = "Lint" },
-        q = { desc = "Diagnostics to Quickfix" },
-        r = { desc = "Rename" },
-      },
-    })
-
-    -- Layout commands
+    -- Layout descriptions
     wk.register({
       ["<leader>L"] = {
         name = "Layouts",
-        ["1"] = { "<cmd>Layout coding<cr>", "Coding Layout" },
-        ["2"] = { "<cmd>Layout terminal<cr>", "Terminal Layout" },
-        ["3"] = { "<cmd>Layout writing<cr>", "Writing Layout" },
-        ["4"] = { "<cmd>Layout debug<cr>", "Debug Layout" },
+        ["1"] = { desc = "Coding Layout" },
+        ["2"] = { desc = "Terminal Layout" },
+        ["3"] = { desc = "Writing Layout" },
+        ["4"] = { desc = "Debug Layout" },
       },
     })
 
-    -- Set up autocommand to register plugin-defined keymaps
-    vim.api.nvim_create_autocmd("User", {
-      pattern = "LazyLoad",
-      callback = function(event)
-        -- Skip if which-key isn't available
+    -- GOTH stack commands descriptions
+    wk.register({
+      ["<leader>gr"] = { desc = "Run Go project" },
+      ["<leader>gs"] = { desc = "Start GOTH server" },
+      ["<leader>gt"] = { desc = "Generate Templ files" },
+      ["<leader>gn"] = { desc = "New Templ component" },
+      ["<leader>goi"] = { desc = "Organize imports" },
+      ["<leader>gie"] = { desc = "Add if err" },
+      ["<leader>gfs"] = { desc = "Fill struct" },
+    }, { mode = "n", buffer = vim.fn.bufnr(), ft = { "go", "templ" } })
+
+    -- Next.js commands descriptions
+    wk.register({
+      ["<leader>n"] = {
+        name = "Next.js",
+        d = { desc = "Next.js dev server" },
+        b = { desc = "Next.js build" },
+        t = { desc = "Next.js tests" },
+        l = { desc = "Next.js lint" },
+        c = { desc = "New component" },
+        p = { desc = "New page" },
+        o = { desc = "Organize Imports" },
+        r = { desc = "Rename File" },
+      },
+    }, { buffer = vim.fn.bufnr(), ft = { "javascript", "typescript", "javascriptreact", "typescriptreact" } })
+
+    -- LSP keymaps descriptions
+    wk.register({
+      ["g"] = {
+        name = "Goto",
+        ["d"] = { desc = "Go to Definition" },
+        ["D"] = { desc = "Go to Declaration" },
+        ["i"] = { desc = "Go to Implementation" },
+        ["r"] = { desc = "Find References" },
+      },
+      ["K"] = { desc = "Hover Documentation" },
+      ["<C-k>"] = { desc = "Signature Help" },
+      ["<leader>c"] = {
+        name = "Code/LSP",
+        ["r"] = { desc = "Rename Symbol" },
+        ["a"] = { desc = "Code Action" },
+        ["f"] = { desc = "Format" },
+        ["d"] = { desc = "Show Diagnostics" },
+        ["q"] = { desc = "Diagnostics to Quickfix" },
+      },
+      ["[d"] = { desc = "Previous Diagnostic" },
+      ["]d"] = { desc = "Next Diagnostic" },
+    })
+
+    -- Register LSP descriptions on attach
+    vim.api.nvim_create_autocmd("LspAttach", {
+      callback = function(args)
         if not ok or not wk then
           return
         end
 
-        -- After plugins load, try to find and register their keymaps
-        local plugin_name = event.data
+        local bufnr = args.buf
+        wk.register({
+          ["g"] = {
+            name = "Goto",
+            ["d"] = { desc = "Go to Definition" },
+            ["D"] = { desc = "Go to Declaration" },
+            ["i"] = { desc = "Go to Implementation" },
+            ["r"] = { desc = "Find References" },
+          },
+          ["K"] = { desc = "Hover Documentation" },
+          ["<C-k>"] = { desc = "Signature Help" },
+          ["<leader>c"] = {
+            name = "Code/LSP",
+            ["r"] = { desc = "Rename Symbol" },
+            ["a"] = { desc = "Code Action" },
+            ["f"] = { desc = "Format" },
+            ["d"] = { desc = "Show Diagnostics" },
+            ["q"] = { desc = "Diagnostics to Quickfix" },
+          },
+          ["[d"] = { desc = "Previous Diagnostic" },
+          ["]d"] = { desc = "Next Diagnostic" },
+        }, { buffer = bufnr })
+      end,
+    })
 
-        -- Try to get the plugin keymaps from its module
-        local plugin_ok, plugin = pcall(require, plugin_name)
-        if plugin_ok and plugin.keys then
-          wk.register(plugin.keys)
+    -- Register file-type specific descriptions
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = { "go", "templ" },
+      callback = function(args)
+        if not ok or not wk then
+          return
         end
+
+        wk.register({
+          ["<leader>g"] = {
+            name = "GOTH",
+            ["r"] = { desc = "Run Go project" },
+            ["s"] = { desc = "Start GOTH server" },
+            ["t"] = { desc = "Generate Templ files" },
+            ["n"] = { desc = "New Templ component" },
+            ["o"] = { name = "Organize", ["i"] = { desc = "Organize imports" } },
+            ["i"] = { name = "Insert", ["e"] = { desc = "Add if err" } },
+            ["f"] = { name = "Fill", ["s"] = { desc = "Fill struct" } },
+          },
+        }, { buffer = args.buf })
+      end,
+    })
+
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
+      callback = function(args)
+        if not ok or not wk then
+          return
+        end
+
+        wk.register({
+          ["<leader>n"] = {
+            name = "Next.js",
+            ["d"] = { desc = "Next.js dev server" },
+            ["b"] = { desc = "Next.js build" },
+            ["t"] = { desc = "Next.js tests" },
+            ["l"] = { desc = "Next.js lint" },
+            ["c"] = { desc = "New component" },
+            ["p"] = { desc = "New page" },
+            ["o"] = { desc = "Organize Imports" },
+            ["r"] = { desc = "Rename File" },
+          },
+        }, { buffer = args.buf })
       end,
     })
   end,
