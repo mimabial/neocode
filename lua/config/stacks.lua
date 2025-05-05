@@ -118,13 +118,13 @@ function M.detect_stack()
       end
     end
 
-    -- Add debug logging for stack detection
-    vim.defer_fn(function()
-      vim.notify(
-        string.format("Stack detection: GOTH score: %d, Next.js score: %d", goth_score, nextjs_score),
-        vim.log.levels.DEBUG
-      )
-    end, 1000)
+    -- -- Add debug logging for stack detection
+    -- vim.defer_fn(function()
+    --   vim.notify(
+    --     string.format("Stack detection: GOTH score: %d, Next.js score: %d", goth_score, nextjs_score),
+    --     vim.log.levels.DEBUG
+    --   )
+    -- end, 1000)
 
     -- Determine the result based on scores
     if goth_score >= 4 and nextjs_score >= 4 then
