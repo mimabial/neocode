@@ -45,27 +45,6 @@ function M.setup()
   map("n", "n", "nzzzv", { desc = "Next search result centered" })
   map("n", "N", "Nzzzv", { desc = "Previous search result centered" })
 
-  -- Ensure which-key is loaded
-  local ok_wk, wk = pcall(require, "which-key")
-  if ok_wk then
-    -- Register top-level group names for better organization
-    wk.register({
-      ["<leader>"] = { name = "Leader" },
-      ["<leader>b"] = { name = "Buffers" },
-      ["<leader>c"] = { name = "Code/LSP" },
-      ["<leader>d"] = { name = "Debug" },
-      ["<leader>f"] = { name = "Find/Search" },
-      ["<leader>g"] = { name = "Git" },
-      ["<leader>l"] = { name = "Lazy/Plugins" },
-      ["<leader>L"] = { name = "Layouts" },
-      ["<leader>n"] = { name = "Next.js" },
-      ["<leader>s"] = { name = "Stack" },
-      ["<leader>t"] = { name = "Terminal/Toggle" },
-      ["<leader>u"] = { name = "UI/Settings" },
-      ["<leader>x"] = { name = "Diagnostics/Trouble" },
-    })
-  end
-
   -- ========================================
   -- Plugin Manager
   -- ========================================
@@ -220,58 +199,6 @@ function M.setup()
   map("n", "<leader>L2", "<cmd>Layout terminal<cr>", { desc = "Terminal Layout" })
   map("n", "<leader>L3", "<cmd>Layout writing<cr>", { desc = "Writing Layout" })
   map("n", "<leader>L4", "<cmd>Layout debug<cr>", { desc = "Debug Layout" })
-
-  -- Register these keymaps with which-key for visibility
-  if ok_wk then
-    wk.register({
-      ["<leader>L"] = {
-        name = "Layouts",
-        ["1"] = { "<cmd>Layout coding<cr>", "Coding Layout" },
-        ["2"] = { "<cmd>Layout terminal<cr>", "Terminal Layout" },
-        ["3"] = { "<cmd>Layout writing<cr>", "Writing Layout" },
-        ["4"] = { "<cmd>Layout debug<cr>", "Debug Layout" },
-      },
-    })
-
-    -- Register stack-related keymaps
-    wk.register({
-      ["<leader>s"] = {
-        name = "Stack",
-        ["g"] = { "<cmd>StackFocus goth<cr>", "Focus GOTH" },
-        ["n"] = { "<cmd>StackFocus nextjs<cr>", "Focus Next.js" },
-        ["b"] = { "<cmd>StackFocus both<cr>", "Focus Both" },
-        ["d"] = {
-          name = "Dashboard",
-          [""] = {
-            function()
-              if package.loaded["snacks.dashboard"] then
-                require("snacks.dashboard").open()
-              end
-            end,
-            "Open Dashboard",
-          },
-          ["g"] = {
-            function()
-              vim.cmd("StackFocus goth")
-              if package.loaded["snacks.dashboard"] then
-                require("snacks.dashboard").open()
-              end
-            end,
-            "GOTH Dashboard",
-          },
-          ["n"] = {
-            function()
-              vim.cmd("StackFocus nextjs")
-              if package.loaded["snacks.dashboard"] then
-                require("snacks.dashboard").open()
-              end
-            end,
-            "Next.js Dashboard",
-          },
-        },
-      },
-    })
-  end
 
   -- ========================================
   -- Stack-specific keymaps

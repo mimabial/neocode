@@ -43,7 +43,6 @@ load_module("config.autocmds", "setup")
 load_module("config.keymaps", "setup")
 
 load_module("config.stacks", "setup")
-load_module("config.stack_commands", "setup")
 load_module("config.commands", "setup")
 load_module("config.diagnostics", "setup")
 load_module("config.lsp", "setup")
