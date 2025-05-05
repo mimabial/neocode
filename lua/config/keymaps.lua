@@ -157,7 +157,7 @@ function M.setup()
   end
 
   -- ========================================
-  -- Stack switching
+  -- Stack switching - CONSOLIDATED UNDER <leader>s
   -- ========================================
   map("n", "<leader>sg", "<cmd>StackFocus goth<cr>", { desc = "Focus GOTH stack" })
   map("n", "<leader>sn", "<cmd>StackFocus nextjs<cr>", { desc = "Focus Next.js stack" })
@@ -170,6 +170,7 @@ function M.setup()
     end
   end, { desc = "Open Dashboard" })
 
+  -- Stack + Dashboard combinations
   map("n", "<leader>sdg", function()
     vim.cmd("StackFocus goth")
     if package.loaded["snacks.dashboard"] then
@@ -202,12 +203,16 @@ function M.setup()
   map("n", "<leader>gP", "<cmd>Git push<cr>", { desc = "Git push" })
 
   -- ========================================
-  -- Theme and UI
+  -- Theme and UI - KEEP under <leader>u
   -- ========================================
-  map("n", "<leader>tt", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle theme" })
-  map("n", "<leader>ts", "<cmd>ColorScheme<cr>", { desc = "Select theme" })
-  map("n", "<leader>tv", "<cmd>ColorSchemeVariant<cr>", { desc = "Select theme variant" })
-  map("n", "<leader>tb", "<cmd>ToggleTransparency<cr>", { desc = "Toggle transparency" })
+  map("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle theme" })
+  map("n", "<leader>us", "<cmd>ColorScheme<cr>", { desc = "Select theme" })
+  map("n", "<leader>uv", "<cmd>ColorSchemeVariant<cr>", { desc = "Select theme variant" })
+  map("n", "<leader>ub", "<cmd>ToggleTransparency<cr>", { desc = "Toggle transparency" })
+
+  -- AI tools - still under <leader>u for UI-related toggles
+  map("n", "<leader>uc", "<cmd>lua require('copilot.command').toggle()<cr>", { desc = "Toggle Copilot" })
+  map("n", "<leader>ui", "<cmd>CodeiumToggle<cr>", { desc = "Toggle Codeium" })
 
   -- ========================================
   -- Layout presets
@@ -228,6 +233,58 @@ function M.setup()
         ["4"] = { "<cmd>Layout debug<cr>", "Debug Layout" },
       },
     })
+
+    -- Register stack-related keymaps
+    wk.register({
+      ["<leader>s"] = {
+        name = "Stack",
+        ["g"] = { "<cmd>StackFocus goth<cr>", "Focus GOTH" },
+        ["n"] = { "<cmd>StackFocus nextjs<cr>", "Focus Next.js" },
+        ["b"] = { "<cmd>StackFocus both<cr>", "Focus Both" },
+        ["d"] = {
+          name = "Dashboard",
+          [""] = {
+            function()
+              if package.loaded["snacks.dashboard"] then
+                require("snacks.dashboard").open()
+              end
+            end,
+            "Open Dashboard",
+          },
+          ["g"] = {
+            function()
+              vim.cmd("StackFocus goth")
+              if package.loaded["snacks.dashboard"] then
+                require("snacks.dashboard").open()
+              end
+            end,
+            "GOTH Dashboard",
+          },
+          ["n"] = {
+            function()
+              vim.cmd("StackFocus nextjs")
+              if package.loaded["snacks.dashboard"] then
+                require("snacks.dashboard").open()
+              end
+            end,
+            "Next.js Dashboard",
+          },
+        },
+      },
+    })
+
+    -- Register UI-related keymaps
+    wk.register({
+      ["<leader>u"] = {
+        name = "UI/Settings",
+        ["t"] = { "<cmd>ColorSchemeToggle<cr>", "Toggle theme" },
+        ["s"] = { "<cmd>ColorScheme<cr>", "Select theme" },
+        ["v"] = { "<cmd>ColorSchemeVariant<cr>", "Select theme variant" },
+        ["b"] = { "<cmd>ToggleTransparency<cr>", "Toggle transparency" },
+        ["c"] = { "<cmd>lua require('copilot.command').toggle()<cr>", "Toggle Copilot" },
+        ["i"] = { "<cmd>CodeiumToggle<cr>", "Toggle Codeium" },
+      },
+    })
   end
 
   -- ========================================
@@ -239,7 +296,7 @@ function M.setup()
     callback = function()
       local buf_opts = { buffer = true }
 
-      -- GOTH stack commands with g prefix to avoid conflicts
+      -- GOTH stack commands with <leader>g prefix (for go-related)
       map("n", "<leader>gr", "<cmd>GoRun<CR>", vim.tbl_extend("force", buf_opts, { desc = "Run Go project" }))
       map("n", "<leader>gs", "<cmd>GOTHServer<CR>", vim.tbl_extend("force", buf_opts, { desc = "Start GOTH server" }))
       map(
@@ -270,7 +327,7 @@ function M.setup()
     callback = function()
       local buf_opts = { buffer = true }
 
-      -- Next.js commands with n prefix to avoid conflicts
+      -- Next.js commands with <leader>n prefix
       map("n", "<leader>nd", "<cmd>NextDev<CR>", vim.tbl_extend("force", buf_opts, { desc = "Next.js dev server" }))
       map("n", "<leader>nb", "<cmd>NextBuild<CR>", vim.tbl_extend("force", buf_opts, { desc = "Next.js build" }))
       map("n", "<leader>nt", "<cmd>NextTest<CR>", vim.tbl_extend("force", buf_opts, { desc = "Next.js tests" }))

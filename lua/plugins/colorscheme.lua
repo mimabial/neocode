@@ -33,6 +33,9 @@ return {
           fg = "#d4be98",
         }
       end
+
+      -- Export UI colors for consistent styling throughout
+      _G.get_ui_colors = _G.get_gruvbox_colors
     end,
   },
 
@@ -253,7 +256,34 @@ return {
   config = function()
     -- Persistence file for theme settings
     local theme_cache_file = vim.fn.stdpath("cache") .. "/theme_settings.json"
-    local utils = require("config.utils")
+
+    -- Safely require utils module
+    local function safe_require(name)
+      local ok, mod = pcall(require, name)
+      if not ok then
+        return nil
+      end
+      return mod
+    end
+
+    local utils = safe_require("config.utils")
+      or {
+        -- Fallback implementations if utils module isn't available
+        extend_tbl = function(default, opts)
+          if type(opts) ~= "table" then
+            return default
+          end
+          local res = vim.deepcopy(default)
+          for k, v in pairs(opts) do
+            if type(v) == "table" and type(res[k]) == "table" then
+              res[k] = vim.tbl_deep_extend("force", res[k], v)
+            else
+              res[k] = v
+            end
+          end
+          return res
+        end,
+      }
 
     -- Define all supported themes with their metadata
     local themes = {
@@ -266,6 +296,23 @@ return {
             vim.g.gruvbox_material_background = variant
           end
         end,
+        get_colors = function()
+          return _G.get_gruvbox_colors and _G.get_gruvbox_colors()
+            or {
+              bg = "#282828",
+              bg1 = "#32302f",
+              red = "#ea6962",
+              orange = "#e78a4e",
+              yellow = "#d8a657",
+              green = "#89b482",
+              aqua = "#7daea3",
+              blue = "#7daea3",
+              purple = "#d3869b",
+              gray = "#928374",
+              border = "#665c54",
+              fg = "#d4be98",
+            }
+        end,
       },
       ["tokyonight"] = {
         icon = "󱣱 ",
@@ -275,6 +322,23 @@ return {
           if variant then
             require("tokyonight").setup({ style = variant })
           end
+        end,
+        get_colors = function()
+          local colors = require("tokyonight.colors").setup({ style = vim.g.tokyonight_style or "storm" })
+          return {
+            bg = colors.bg,
+            bg1 = colors.bg_highlight,
+            red = colors.red,
+            orange = colors.orange,
+            yellow = colors.yellow,
+            green = colors.green,
+            aqua = colors.teal,
+            blue = colors.blue,
+            purple = colors.purple,
+            gray = colors.comment,
+            border = colors.border,
+            fg = colors.fg,
+          }
         end,
       },
       ["everforest"] = {
@@ -286,6 +350,23 @@ return {
             vim.g.everforest_background = variant
           end
         end,
+        get_colors = function()
+          return _G.get_everforest_colors and _G.get_everforest_colors()
+            or {
+              bg = "#2d353b",
+              bg1 = "#343f44",
+              red = "#e67e80",
+              orange = "#e69875",
+              yellow = "#dbbc7f",
+              green = "#a7c080",
+              aqua = "#83c092",
+              blue = "#7fbbb3",
+              purple = "#d699b6",
+              gray = "#859289",
+              border = "#4f5b58",
+              fg = "#d3c6aa",
+            }
+        end,
       },
       ["kanagawa"] = {
         icon = "󰖭 ",
@@ -296,9 +377,43 @@ return {
             require("kanagawa").setup({ theme = variant })
           end
         end,
+        get_colors = function()
+          return _G.get_kanagawa_colors and _G.get_kanagawa_colors()
+            or {
+              bg = "#1f1f28",
+              bg1 = "#2a2a37",
+              red = "#c34043",
+              orange = "#ffa066",
+              yellow = "#dca561",
+              green = "#76946a",
+              aqua = "#6a9589",
+              blue = "#7e9cd8",
+              purple = "#957fb8",
+              gray = "#727169",
+              border = "#54546d",
+              fg = "#dcd7ba",
+            }
+        end,
       },
       ["nord"] = {
         icon = "󰔿 ",
+        get_colors = function()
+          -- Nord color palette
+          return {
+            bg = "#2e3440",
+            bg1 = "#3b4252",
+            red = "#bf616a",
+            orange = "#d08770",
+            yellow = "#ebcb8b",
+            green = "#a3be8c",
+            aqua = "#88c0d0",
+            blue = "#81a1c1",
+            purple = "#b48ead",
+            gray = "#4c566a",
+            border = "#434c5e",
+            fg = "#eceff4",
+          }
+        end,
       },
       ["rose-pine"] = {
         icon = "󰔎 ",
@@ -309,6 +424,23 @@ return {
             require("rose-pine").setup({ variant = variant })
           end
         end,
+        get_colors = function()
+          -- Rose Pine color palette
+          return {
+            bg = "#191724",
+            bg1 = "#1f1d2e",
+            red = "#eb6f92",
+            orange = "#f6c177",
+            yellow = "#f6c177",
+            green = "#9ccfd8",
+            aqua = "#31748f",
+            blue = "#9ccfd8",
+            purple = "#c4a7e7",
+            gray = "#6e6a86",
+            border = "#26233a",
+            fg = "#e0def4",
+          }
+        end,
       },
       ["catppuccin"] = {
         icon = "󰄛 ",
@@ -318,6 +450,23 @@ return {
           if variant then
             require("catppuccin").setup({ flavour = variant })
           end
+        end,
+        get_colors = function()
+          local cp = require("catppuccin.palettes").get_palette()
+          return {
+            bg = cp.base,
+            bg1 = cp.mantle,
+            red = cp.red,
+            orange = cp.peach,
+            yellow = cp.yellow,
+            green = cp.green,
+            aqua = cp.teal,
+            blue = cp.blue,
+            purple = cp.mauve,
+            gray = cp.overlay0,
+            border = cp.surface1,
+            fg = cp.text,
+          }
         end,
       },
     }
@@ -356,6 +505,41 @@ return {
         end
       end
       return false
+    end
+
+    -- Global function to update UI colors throughout the system
+    _G.refresh_ui_colors = function()
+      local current = vim.g.colors_name or "gruvbox-material"
+      local theme = themes[current]
+
+      if theme and theme.get_colors then
+        -- Update the global UI colors function
+        _G.get_ui_colors = theme.get_colors
+
+        -- Refresh UI components that need updating
+        vim.defer_fn(function()
+          -- Refresh lualine
+          if package.loaded["lualine"] then
+            pcall(require("lualine").refresh)
+          end
+
+          -- Refresh bufferline
+          if package.loaded["bufferline"] then
+            pcall(require("bufferline").setup)
+          end
+
+          -- Refresh statusline
+          if package.loaded["lualine"] then
+            pcall(require("lualine").refresh)
+          end
+
+          -- Refresh notifications
+          if package.loaded["notify"] and package.loaded["notify"].setup then
+            local opts = package.loaded["notify"].setup()
+            pcall(package.loaded["notify"].setup, opts)
+          end
+        end, 10)
+      end
     end
 
     -- Apply theme with error handling and UI refresh
@@ -423,23 +607,8 @@ return {
         transparency = transparency or false,
       })
 
-      -- Force refresh of UI elements
-      vim.defer_fn(function()
-        -- Update UI component colors
-        pcall(function()
-          -- Refresh UI components that need updating with theme
-          if package.loaded["lualine"] then
-            require("lualine").refresh()
-          end
-          if package.loaded["bufferline"] then
-            require("bufferline").setup()
-          end
-          -- Update additional components
-          if _G.refresh_ui_colors and type(_G.refresh_ui_colors) == "function" then
-            _G.refresh_ui_colors()
-          end
-        end)
-      end, 10)
+      -- Update UI colors
+      _G.refresh_ui_colors()
 
       local icon = theme.icon or "󱥸 " -- Default icon
       vim.notify(icon .. "Switched to " .. theme_name .. (variant and (" - " .. variant) or ""), vim.log.levels.INFO)

@@ -1,4 +1,4 @@
--- lua/plugins/lualine.lua
+-- lua/plugins/statusline.lua
 -- Refactored lualine.nvim setup with improved stack indicators and icons
 return {
   "nvim-lualine/lualine.nvim",
@@ -39,10 +39,10 @@ return {
 
     local icons = {
       diagnostics = {
-        Error = " ", -- nf-fa-ban
-        Warn = " ", -- nf-fa-exclamation_triangle
-        Info = " ", -- nf-fa-info_circle
-        Hint = " ", -- nf-fa-question_circle
+        Error = " ", -- nf-fa-ban
+        Warn = " ", -- nf-fa-exclamation_triangle
+        Info = " ", -- nf-fa-info_circle
+        Hint = " ", -- nf-fa-question_circle
       },
       git = {
         added = "", -- nf-fa-check_square
@@ -50,9 +50,9 @@ return {
         removed = "", -- nf-fa-trash_o
       },
       stack = {
-        goth = "goth",
-        nextjs = "nextjs",
-        ["goth+nextjs"] = "goth+nextjs",
+        goth = "󰟓 GOTH",
+        nextjs = " Next.js",
+        ["goth+nextjs"] = "󰡄 FullStack",
         [""] = "",
       },
       file = {
@@ -129,14 +129,16 @@ return {
     local function stack_badge()
       return {
         function()
-          return icons.stack[vim.g.current_stack] or ""
+          local stack = vim.g.current_stack or ""
+          return icons.stack[stack] or ""
         end,
         color = function()
-          if vim.g.current_stack == "goth" then
+          local stack = vim.g.current_stack or ""
+          if stack == "goth" then
             return { fg = colors.green, bold = true }
-          elseif vim.g.current_stack == "nextjs" then
+          elseif stack == "nextjs" then
             return { fg = colors.blue, bold = true }
-          elseif vim.g.current_stack == "goth+nextjs" then
+          elseif stack == "goth+nextjs" then
             return { fg = colors.orange, bold = true }
           else
             return { fg = colors.gray, bold = true }

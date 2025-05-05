@@ -702,21 +702,21 @@ function M.setup()
   })
 
   -- Add keybindings for stack switching
-  vim.keymap.set("n", "<leader>usg", function()
+  vim.keymap.set("n", "<leader>sg", function()
     M.configure_stack("goth")
     if package.loaded["snacks.dashboard"] then
       require("snacks.dashboard").open()
     end
   end, { desc = "Focus GOTH Stack + Dashboard" })
 
-  vim.keymap.set("n", "<leader>usn", function()
+  vim.keymap.set("n", "<leader>sn", function()
     M.configure_stack("nextjs")
     if package.loaded["snacks.dashboard"] then
       require("snacks.dashboard").open()
     end
   end, { desc = "Focus Next.js Stack + Dashboard" })
 
-  vim.keymap.set("n", "<leader>usb", function()
+  vim.keymap.set("n", "<leader>sb", function()
     M.configure_stack("both")
     if package.loaded["snacks.dashboard"] then
       require("snacks.dashboard").open()
