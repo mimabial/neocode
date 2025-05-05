@@ -151,10 +151,11 @@ return {
     wk.register({
       ["<leader>u"] = {
         name = "UI/Themes",
-        ["t"] = { "<cmd>ColorSchemeToggle<cr>", "Toggle theme" },
-        ["s"] = { "<cmd>ColorScheme<cr>", "Select theme" },
-        ["v"] = { "<cmd>ColorSchemeVariant<cr>", "Select theme variant" },
-        ["b"] = { "<cmd>ToggleTransparency<cr>", "Toggle transparency" },
+        ["s"] = { "Change theme" },
+        ["S"] = { "Select theme" },
+        ["v"] = { "Change theme variant" },
+        ["V"] = { "Select theme variant" },
+        ["b"] = { "Toggle background transparency" },
       },
     })
 

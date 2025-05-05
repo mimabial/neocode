@@ -199,14 +199,15 @@ function M.setup()
   -- ========================================
   -- Theme and UI - KEEP under <leader>u
   -- ========================================
-  map("n", "<leader>ut", "<cmd>ColorSchemeToggle<cr>", { desc = "Toggle theme" })
-  map("n", "<leader>us", "<cmd>ColorScheme<cr>", { desc = "Select theme" })
-  map("n", "<leader>uv", "<cmd>ColorSchemeVariant<cr>", { desc = "Select theme variant" })
-  map("n", "<leader>ub", "<cmd>ToggleTransparency<cr>", { desc = "Toggle transparency" })
+  map("n", "<leader>us", "<cmd>CycleColorScheme<cr>", { desc = "Toggle theme" })
+  map("n", "<leader>uS", "<cmd>ColorScheme<cr>", { desc = "Select theme" })
+  map("n", "<leader>uv", "<cmd>CycleColorVariant<cr>", { desc = "Select theme variant" })
+  map("n", "<leader>uV", "<cmd>ColorVariant<cr>", { desc = "Select theme variant" })
+  map("n", "<leader>ub", "<cmd>ToggleBackgroundTransparency<cr>", { desc = "Toggle transparency" })
 
   -- AI tools - still under <leader>u for UI-related toggles
-  map("n", "<leader>uc", "<cmd>lua require('copilot.command').toggle()<cr>", { desc = "Toggle Copilot" })
-  map("n", "<leader>ui", "<cmd>CodeiumToggle<cr>", { desc = "Toggle Codeium" })
+  map("n", "<leader>up", "<cmd>lua require('copilot.command').toggle()<cr>", { desc = "Toggle Copilot" })
+  map("n", "<leader>ud", "<cmd>CodeiumToggle<cr>", { desc = "Toggle Codeium" })
 
   -- ========================================
   -- Layout presets

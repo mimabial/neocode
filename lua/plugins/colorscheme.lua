@@ -267,10 +267,42 @@ return {
         vim.notify("Transparency " .. (settings.transparency and "enabled" or "disabled"), vim.log.levels.INFO)
       end
 
+      local function cycle_variant()
+        local current = vim.g.colors_name or "gruvbox-material"
+        local theme = themes[current]
+
+        if not theme or not theme.variants or #theme.variants == 0 then
+          vim.notify("Current theme doesn't have variants", vim.log.levels.WARN)
+          return
+        end
+
+        -- Load current settings
+        local settings = load_settings()
+        local current_variant = settings.variant or theme.variants[1]
+
+        -- Find next variant in cycle
+        local next_idx = 1
+        for i, variant in ipairs(theme.variants) do
+          if variant == current_variant then
+            next_idx = (i % #theme.variants) + 1
+            break
+          end
+        end
+
+        local next_variant = theme.variants[next_idx]
+
+        -- Apply next variant
+        apply_theme(current, next_variant, settings.transparency)
+
+        -- Show notification
+        local icon = theme.icon or ""
+        vim.notify("Changed " .. current .. " variant to " .. next_variant, vim.log.levels.INFO)
+      end
+
       -- Create commands
-      vim.api.nvim_create_user_command("ColorSchemeToggle", function()
+      vim.api.nvim_create_user_command("CycleColorScheme", function()
         cycle_theme()
-      end, { desc = "Toggle between color schemes" })
+      end, { desc = "Cycle through color schemes" })
 
       vim.api.nvim_create_user_command("ColorScheme", function(opts)
         local args = opts.args
@@ -310,7 +342,11 @@ return {
         desc = "Set colorscheme",
       })
 
-      vim.api.nvim_create_user_command("ColorSchemeVariant", function(opts)
+      vim.api.nvim_create_user_command("CycleColorVariant", function()
+        cycle_variant()
+      end, { desc = "Cycle through color scheme variants" })
+
+      vim.api.nvim_create_user_command("ColorVariant", function(opts)
         local current = vim.g.colors_name or "gruvbox-material"
         local theme = themes[current]
 
@@ -348,7 +384,7 @@ return {
         desc = "Set colorscheme variant",
       })
 
-      vim.api.nvim_create_user_command("ToggleTransparency", function()
+      vim.api.nvim_create_user_command("ToggleBackgroundTransparency", function()
         toggle_transparency()
       end, { desc = "Toggle background transparency" })
 
