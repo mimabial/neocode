@@ -113,97 +113,46 @@ function M.setup()
   map("n", "_", "<cmd>Oil .<cr>", { desc = "Open project root" })
 
   -- ========================================
-  -- Search functionality (Snacks/Telescope)
+  -- Search functionality (Snacks)
   -- ========================================
-  local ok_picker, picker = pcall(require, "snacks.picker")
 
-  if ok_picker then
-    local snack_maps = {
-      {
-        "n",
-        "<leader>ff",
-        function()
-          picker.files()
-        end,
-        "Find Files",
-      },
-      {
-        "n",
-        "<leader>fg",
-        function()
-          picker.grep()
-        end,
-        "Find Text (Grep)",
-      },
-      {
-        "n",
-        "<leader>fb",
-        function()
-          picker.buffers()
-        end,
-        "Find Buffers",
-      },
-      {
-        "n",
-        "<leader>fh",
-        function()
-          picker.help()
-        end,
-        "Find Help",
-      },
+  map("n", "<leader>ff", function()
+    require("snacks.picker").files()
+  end, { desc = "Find files" })
 
-      {
-        "n",
-        "<leader>fr",
-        function()
-          picker.recent()
-        end,
-        "Recent Files",
-      },
+  map("n", "<leader>fg", function()
+    require("snacks.picker").grep()
+  end, { desc = "Find text" })
 
-      -- git integration
-      {
-        "n",
-        "<leader>gc",
-        function()
-          picker.git_log()
-        end,
-        "Git Commits",
-      },
+  map("n", "<leader>fb", function()
+    require("snacks.picker").buffers()
+  end, { desc = "Find buffers" })
 
-      {
-        "n",
-        "<leader>gb",
-        function()
-          picker.git_branches()
-        end,
-        "Git Branches",
-      },
+  map("n", "<leader>fr", function()
+    require("snacks.picker").recent()
+  end, { desc = "Recent files" })
 
-      -- lsp integration
-      {
-        "n",
-        "<leader>fd",
-        function()
-          picker.diagnostics({ bufnr = 0 })
-        end,
-        "Doc Diagnostics",
-      },
+  map("n", "<leader>fh", function()
+    require("snacks.picker").help()
+  end, { desc = "Find help" })
 
-      {
-        "n",
-        "<leader>fD",
-        function()
-          picker.diagnostics()
-        end,
-        "Workspace Diagnostics",
-      },
-    }
+  -- Git integration
+  map("n", "<leader>gc", function()
+    require("snacks.picker").git_commits()
+  end, { desc = "Git commits" })
 
-    for _, m in ipairs(snack_maps) do
-      map(m[1], m[2], m[3], vim.tbl_extend("force", opts, { desc = m[4] }))
-    end
-  end
+  map("n", "<leader>gb", function()
+    require("snacks.picker").git_branches()
+  end, { desc = "Git branches" })
+
+  -- LSP integration
+  map("n", "<leader>fd", function()
+    require("snacks.picker").diagnostics({ bufnr = 0 })
+  end, { desc = "Document diagnostics" })
+
+  map("n", "<leader>fD", function()
+    require("snacks.picker").diagnostics()
+  end, { desc = "Workspace diagnostics" })
 
   -- ========================================
   -- Stack switching - CONSOLIDATED UNDER <leader>s
@@ -320,19 +269,6 @@ function M.setup()
             "Next.js Dashboard",
           },
         },
-      },
-    })
-
-    -- Register UI-related keymaps
-    wk.register({
-      ["<leader>u"] = {
-        name = "UI/Settings",
-        ["t"] = { "<cmd>ColorSchemeToggle<cr>", "Toggle theme" },
-        ["s"] = { "<cmd>ColorScheme<cr>", "Select theme" },
-        ["v"] = { "<cmd>ColorSchemeVariant<cr>", "Select theme variant" },
-        ["b"] = { "<cmd>ToggleTransparency<cr>", "Toggle transparency" },
-        ["c"] = { "<cmd>lua require('copilot.command').toggle()<cr>", "Toggle Copilot" },
-        ["i"] = { "<cmd>CodeiumToggle<cr>", "Toggle Codeium" },
       },
     })
   end

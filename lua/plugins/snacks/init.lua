@@ -1,6 +1,6 @@
--- lua/plugins/snacks/init.lua (UPDATED)
+-- lua/plugins/snacks.lua
 
--- Main snacks.nvim configuration with added safeguards
+-- Main snacks.nvim configuration
 local dashboard_cfg = require("plugins.snacks.dashboard")
 local dim_cfg = require("plugins.snacks.dim")
 local input_cfg = require("plugins.snacks.input")
@@ -8,8 +8,8 @@ local picker_cfg = require("plugins.snacks.picker")
 
 return {
   "folke/snacks.nvim",
-  lazy = false, -- Load immediately
-  priority = 900, -- Higher priority
+  lazy = false,
+  priority = 800,
   dependencies = {
     { "nvim-tree/nvim-web-devicons", lazy = false, priority = 950 },
     { "nvim-lua/plenary.nvim", lazy = false, priority = 900 },
@@ -18,43 +18,26 @@ return {
     dashboard = dashboard_cfg,
     dim = dim_cfg,
     input = input_cfg,
-    picker = {},
+    picker = picker_cfg,
   },
   keys = {
     {
       "<leader>ud",
       function()
-        -- Add pcall for safety
-        pcall(function()
-          require("snacks.dashboard").open()
-        end)
+        require("snacks.dashboard").open()
       end,
       desc = "Open Dashboard",
     },
   },
   config = function(_, opts)
-    -- Safe initialization with error handling
-    local ok, snacks = pcall(require, "snacks")
-    if not ok then
-      vim.notify("Failed to load snacks.nvim: " .. tostring(snacks), vim.log.levels.ERROR)
-      return
+    require("snacks").setup(opts)
+
+    if opts.input.enabled then
+      vim.ui.input = require("snacks.input").input
     end
 
-    -- Setup with error handling
-    local setup_ok, setup_err = pcall(function()
-      snacks.setup(opts)
-    end)
-
-    if not setup_ok then
-      vim.notify("Error setting up snacks.nvim: " .. tostring(setup_err), vim.log.levels.ERROR)
-      return
-    end
-
-    -- Create dashboard command with error handling
     vim.api.nvim_create_user_command("Dashboard", function()
-      pcall(function()
-        require("snacks.dashboard").open()
-      end)
+      require("snacks.dashboard").open()
     end, { desc = "Open Snacks Dashboard" })
   end,
 }

@@ -99,7 +99,7 @@ return {
     wk.register({
       ["<leader>f"] = {
         name = "Find",
-        ["f"] = { "<cmd>SnacksFiles<cr>", "Find Files" },
+        ["f"] = { "Find Files" },
         ["g"] = { "Find Text" },
         ["b"] = { "Find Buffers" },
         ["r"] = { "Recent Files" },
