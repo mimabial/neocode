@@ -75,201 +75,146 @@ return {
 
     -- Define top-level groups with consistent naming
     wk.register({
-      ["<leader>"] = { name = "Leader" },
-      ["<leader>L"] = { name = "Layouts" },
-      ["<leader>b"] = { name = "Buffers" },
-      ["<leader>c"] = { name = "Code/LSP" },
-      ["<leader>d"] = { name = "Debug" },
-      ["<leader>e"] = { name = "Explorer" },
-      ["<leader>f"] = { name = "Find/Search" },
-      ["<leader>g"] = { name = "Git" },
-      ["<leader>l"] = { desc = "Lazy/Plugins" },
-      ["<leader>n"] = { name = "Next.js" },
-      ["<leader>s"] = { name = "Stack" },
-      ["<leader>t"] = { name = "Terminal/Toggle" },
-      ["<leader>u"] = { name = "UI/Settings" },
-      ["<leader>x"] = { name = "Diagnostics/Trouble" },
-    })
-
-    -- Editing keymaps descriptions
-    wk.register({
-      [">"] = { desc = "Indent and keep selection" },
-      ["<"] = { desc = "Outdent and keep selection" },
-      ["J"] = { desc = "Move selection down" },
-      ["K"] = { desc = "Move selection up" },
-    }, { mode = "v" })
-
-    wk.register({
-      ["J"] = { desc = "Join lines and keep cursor" },
-    })
-
-    -- Navigation keymaps descriptions
-    wk.register({
-      ["<C-h>"] = { desc = "Navigate left" },
-      ["<C-j>"] = { desc = "Navigate down" },
-      ["<C-k>"] = { desc = "Navigate up" },
-      ["<C-l>"] = { desc = "Navigate right" },
-      ["<C-Up>"] = { desc = "Decrease window height" },
-      ["<C-Down>"] = { desc = "Increase window height" },
-      ["<C-Left>"] = { desc = "Decrease window width" },
-      ["<C-Right>"] = { desc = "Increase window width" },
-      ["j"] = { desc = "Better down navigation" },
-      ["k"] = { desc = "Better up navigation" },
-      ["n"] = { desc = "Next search result centered" },
-      ["N"] = { desc = "Previous search result centered" },
+      { "<leader>", group = "Leader" },
+      { "<leader>L", group = "Layouts" },
+      { "<leader>b", group = "Buffers" },
+      { "<leader>c", group = "Code/LSP" },
+      { "<leader>d", group = "Debug" },
+      { "<leader>e", group = "Explorer" },
+      { "<leader>f", group = "Find/Search" },
+      { "<leader>g", group = "Git" },
+      { "<leader>l", desc = "Lazy/Plugins" },
+      { "<leader>n", group = "Next.js" },
+      { "<leader>s", group = "Stack" },
+      { "<leader>t", group = "Terminal/Toggle" },
+      { "<leader>u", group = "UI/Settings" },
+      { "<leader>x", group = "Diagnostics/Trouble" },
     })
 
     -- Explorer keymaps
     wk.register({
-      ["<leader>eo"] = { desc = "Open Oil Explorer" },
-      ["<leader>es"] = { desc = "Open Snacks Explorer" },
-      ["-"] = { desc = "Open parent directory" },
-      ["_"] = { desc = "Open project root" },
+      { "<leader>eo", desc = "Open Oil Explorer" },
+      { "<leader>es", desc = "Open Snacks Explorer" },
     })
 
     -- Define buffer management descriptions
     wk.register({
-      ["<leader>b"] = {
-        name = "Buffers",
-        b = { desc = "Other Buffer" },
-        d = { desc = "Delete Buffer" },
-        l = { desc = "Close Left Buffers" },
-        n = { desc = "Next Buffer" },
-        o = { desc = "Close Other Buffers" },
-        p = { desc = "Prev Buffer" },
-        r = { desc = "Close Right Buffers" },
-      },
-      ["<S-h>"] = { desc = "Previous buffer" },
-      ["<S-l>"] = { desc = "Next buffer" },
+      { "<leader>b", group = "Buffers" },
+      { "<leader>bb", desc = "Other Buffer" },
+      { "<leader>bd", desc = "Delete Buffer" },
+      { "<leader>bl", desc = "Close Left Buffers" },
+      { "<leader>bn", desc = "Next Buffer" },
+      { "<leader>bo", desc = "Close Other Buffers" },
+      { "<leader>bp", desc = "Prev Buffer" },
+      { "<leader>br", desc = "Close Right Buffers" },
     })
 
     -- Define finder descriptions
     wk.register({
-      ["<leader>f"] = {
-        name = "Find",
-        D = { desc = "Workspace Diagnostics" },
-        b = { desc = "Find Buffers" },
-        d = { desc = "Document Diagnostics" },
-        f = { desc = "Find Files" },
-        g = { desc = "Find Text" },
-        h = { desc = "Find Help" },
-        r = { desc = "Recent Files" },
-      },
+      { "<leader>f", group = "Find" },
+      { "<leader>fD", desc = "Workspace Diagnostics" },
+      { "<leader>fb", desc = "Find Buffers" },
+      { "<leader>fd", desc = "Document Diagnostics" },
+      { "<leader>ff", desc = "Find Files" },
+      { "<leader>fg", desc = "Find Text" },
+      { "<leader>fh", desc = "Find Help" },
+      { "<leader>fr", desc = "Recent Files" },
     })
 
     -- Git commands descriptions
     wk.register({
-      ["<leader>g"] = {
-        name = "Git",
-        P = { desc = "Git Push" },
-        b = { desc = "Git Branches" },
-        c = { desc = "Git Commits" },
-        d = { desc = "DiffView Open" },
-        g = { desc = "LazyGit" },
-        p = { desc = "Git Pull" },
-        s = { desc = "Git Status" },
-      },
+      { "<leader>g", group = "Git" },
+      { "<leader>gP", desc = "Git Push" },
+      { "<leader>gb", desc = "Git Branches" },
+      { "<leader>gc", desc = "Git Commits" },
+      { "<leader>gd", desc = "DiffView Open" },
+      { "<leader>gg", desc = "LazyGit" },
+      { "<leader>gp", desc = "Git Pull" },
+      { "<leader>gs", desc = "Git Status" },
     })
 
     -- Stack commands descriptions
     wk.register({
-      ["<leader>s"] = {
-        name = "Stack",
-        b = { desc = "Focus Both" },
-        d = { desc = "Open Dashboard" },
-        g = { desc = "Focus GOTH" },
-        n = { desc = "Focus Next.js" },
-      },
-      ["<leader>sd"] = {
-        name = "Dashboard",
-        g = { desc = "GOTH Dashboard" },
-        n = { desc = "Next.js Dashboard" },
-      },
+      { "<leader>s", group = "Stack" },
+      { "<leader>sb", desc = "Focus Both" },
+      { "<leader>sd", group = "Dashboard" },
+      { "<leader>sd", desc = "Open Dashboard" },
+      { "<leader>sdg", desc = "GOTH Dashboard" },
+      { "<leader>sdn", desc = "Next.js Dashboard" },
+      { "<leader>sg", desc = "Focus GOTH" },
+      { "<leader>sn", desc = "Focus Next.js" },
     })
 
     -- Terminal commands descriptions
     wk.register({
-      ["<leader>t"] = {
-        name = "Terminal/Toggle",
-        f = { desc = "Terminal (float)" },
-        h = { desc = "Terminal (horizontal)" },
-        v = { desc = "Terminal (vertical)" },
-      },
-      ["<C-\\>"] = { desc = "Toggle terminal" },
+      { "<leader>t", group = "Terminal/Toggle" },
+      { "<leader>tf", desc = "Terminal (float)" },
+      { "<leader>th", desc = "Terminal (horizontal)" },
+      { "<leader>tv", desc = "Terminal (vertical)" },
     })
 
     -- UI settings descriptions
     wk.register({
-      ["<leader>u"] = {
-        name = "UI/Themes",
-        S = { desc = "Select theme" },
-        V = { desc = "Select theme variant" },
-        b = { desc = "Toggle background transparency" },
-        d = { desc = "Toggle Codeium" },
-        p = { desc = "Toggle Copilot" },
-        s = { desc = "Change theme" },
-        v = { desc = "Change theme variant" },
-      },
+      { "<leader>u", group = "UI/Themes" },
+      { "<leader>uS", desc = "Select theme" },
+      { "<leader>uV", desc = "Select theme variant" },
+      { "<leader>ub", desc = "Toggle background transparency" },
+      { "<leader>ud", desc = "Toggle Codeium" },
+      { "<leader>up", desc = "Toggle Copilot" },
+      { "<leader>us", desc = "Change theme" },
+      { "<leader>uv", desc = "Change theme variant" },
     })
 
     -- Layout descriptions
     wk.register({
-      ["<leader>L"] = {
-        name = "Layouts",
-        ["1"] = { desc = "Coding Layout" },
-        ["2"] = { desc = "Terminal Layout" },
-        ["3"] = { desc = "Writing Layout" },
-        ["4"] = { desc = "Debug Layout" },
-      },
+      { "<leader>L", group = "Layouts" },
+      { "<leader>L1", desc = "Coding Layout" },
+      { "<leader>L2", desc = "Terminal Layout" },
+      { "<leader>L3", desc = "Writing Layout" },
+      { "<leader>L4", desc = "Debug Layout" },
     })
 
     -- GOTH stack commands descriptions
     wk.register({
-      ["<leader>gr"] = { desc = "Run Go project" },
-      ["<leader>gs"] = { desc = "Start GOTH server" },
-      ["<leader>gt"] = { desc = "Generate Templ files" },
-      ["<leader>gn"] = { desc = "New Templ component" },
-      ["<leader>goi"] = { desc = "Organize imports" },
-      ["<leader>gie"] = { desc = "Add if err" },
-      ["<leader>gfs"] = { desc = "Fill struct" },
-    }, { mode = "n", buffer = vim.fn.bufnr(), ft = { "go", "templ" } })
+      { "<leader>gfs", buffer = 1, desc = "Fill struct" },
+      { "<leader>gie", buffer = 1, desc = "Add if err" },
+      { "<leader>gn", buffer = 1, desc = "New Templ component" },
+      { "<leader>goi", buffer = 1, desc = "Organize imports" },
+      { "<leader>gr", buffer = 1, desc = "Run Go project" },
+      { "<leader>gs", buffer = 1, desc = "Start GOTH server" },
+      { "<leader>gt", buffer = 1, desc = "Generate Templ files" },
+    })
 
     -- Next.js commands descriptions
     wk.register({
-      ["<leader>n"] = {
-        name = "Next.js",
-        d = { desc = "Next.js dev server" },
-        b = { desc = "Next.js build" },
-        t = { desc = "Next.js tests" },
-        l = { desc = "Next.js lint" },
-        c = { desc = "New component" },
-        p = { desc = "New page" },
-        o = { desc = "Organize Imports" },
-        r = { desc = "Rename File" },
-      },
-    }, { buffer = vim.fn.bufnr(), ft = { "javascript", "typescript", "javascriptreact", "typescriptreact" } })
+      { "<leader>n", buffer = 1, group = "Next.js" },
+      { "<leader>nb", buffer = 1, desc = "Next.js build" },
+      { "<leader>nc", buffer = 1, desc = "New component" },
+      { "<leader>nd", buffer = 1, desc = "Next.js dev server" },
+      { "<leader>nl", buffer = 1, desc = "Next.js lint" },
+      { "<leader>no", buffer = 1, desc = "Organize Imports" },
+      { "<leader>np", buffer = 1, desc = "New page" },
+      { "<leader>nr", buffer = 1, desc = "Rename File" },
+      { "<leader>nt", buffer = 1, desc = "Next.js tests" },
+    })
 
     -- LSP keymaps descriptions
     wk.register({
-      ["g"] = {
-        name = "Goto",
-        ["d"] = { desc = "Go to Definition" },
-        ["D"] = { desc = "Go to Declaration" },
-        ["i"] = { desc = "Go to Implementation" },
-        ["r"] = { desc = "Find References" },
-      },
-      ["K"] = { desc = "Hover Documentation" },
-      ["<C-k>"] = { desc = "Signature Help" },
-      ["<leader>c"] = {
-        name = "Code/LSP",
-        ["r"] = { desc = "Rename Symbol" },
-        ["a"] = { desc = "Code Action" },
-        ["f"] = { desc = "Format" },
-        ["d"] = { desc = "Show Diagnostics" },
-        ["q"] = { desc = "Diagnostics to Quickfix" },
-      },
-      ["[d"] = { desc = "Previous Diagnostic" },
-      ["]d"] = { desc = "Next Diagnostic" },
+      { "<C-k>", desc = "Signature Help" },
+      { "<leader>c", group = "Code/LSP" },
+      { "<leader>ca", desc = "Code Action" },
+      { "<leader>cd", desc = "Show Diagnostics" },
+      { "<leader>cf", desc = "Format" },
+      { "<leader>cq", desc = "Diagnostics to Quickfix" },
+      { "<leader>cr", desc = "Rename Symbol" },
+      { "K", desc = "Hover Documentation" },
+      { "[d", desc = "Previous Diagnostic" },
+      { "]d", desc = "Next Diagnostic" },
+      { "g", group = "Goto" },
+      { "gD", desc = "Go to Declaration" },
+      { "gd", desc = "Go to Definition" },
+      { "gi", desc = "Go to Implementation" },
+      { "gr", desc = "Find References" },
     })
 
     -- Register LSP descriptions on attach
