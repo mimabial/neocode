@@ -115,39 +115,94 @@ function M.setup()
   -- ========================================
   -- Search functionality (Snacks/Telescope)
   -- ========================================
-  local ok_picker = pcall(require, "snacks.picker")
+  local ok_picker, picker = pcall(require, "snacks.picker")
+
   if ok_picker then
-    map("n", "<leader>ff", function()
-      require("snacks.picker").files()
-    end, { desc = "Find files" })
-    map("n", "<leader>fg", function()
-      require("snacks.picker").grep()
-    end, { desc = "Find text" })
-    map("n", "<leader>fb", function()
-      require("snacks.picker").buffers()
-    end, { desc = "Find buffers" })
-    map("n", "<leader>fr", function()
-      require("snacks.picker").recent()
-    end, { desc = "Recent files" })
-    map("n", "<leader>fh", function()
-      require("snacks.picker").help()
-    end, { desc = "Find help" })
+    local snack_maps = {
+      {
+        "n",
+        "<leader>ff",
+        function()
+          picker.files()
+        end,
+        "Find Files",
+      },
+      {
+        "n",
+        "<leader>fg",
+        function()
+          picker.grep()
+        end,
+        "Find Text (Grep)",
+      },
+      {
+        "n",
+        "<leader>fb",
+        function()
+          picker.buffers()
+        end,
+        "Find Buffers",
+      },
+      {
+        "n",
+        "<leader>fh",
+        function()
+          picker.help()
+        end,
+        "Find Help",
+      },
 
-    -- Git integration
-    map("n", "<leader>gc", function()
-      require("snacks.picker").git_commits()
-    end, { desc = "Git commits" })
-    map("n", "<leader>gb", function()
-      require("snacks.picker").git_branches()
-    end, { desc = "Git branches" })
+      {
+        "n",
+        "<leader>fr",
+        function()
+          picker.recent()
+        end,
+        "Recent Files",
+      },
 
-    -- LSP integration
-    map("n", "<leader>fd", function()
-      require("snacks.picker").diagnostics({ bufnr = 0 })
-    end, { desc = "Document diagnostics" })
-    map("n", "<leader>fD", function()
-      require("snacks.picker").diagnostics()
-    end, { desc = "Workspace diagnostics" })
+      -- git integration
+      {
+        "n",
+        "<leader>gc",
+        function()
+          picker.git_log()
+        end,
+        "Git Commits",
+      },
+
+      {
+        "n",
+        "<leader>gb",
+        function()
+          picker.git_branches()
+        end,
+        "Git Branches",
+      },
+
+      -- lsp integration
+      {
+        "n",
+        "<leader>fd",
+        function()
+          picker.diagnostics({ bufnr = 0 })
+        end,
+        "Doc Diagnostics",
+      },
+
+      {
+        "n",
+        "<leader>fD",
+        function()
+          picker.diagnostics()
+        end,
+        "Workspace Diagnostics",
+      },
+    }
+
+    for _, m in ipairs(snack_maps) do
+      map(m[1], m[2], m[3], vim.tbl_extend("force", opts, { desc = m[4] }))
+    end
   end
 
   -- ========================================
