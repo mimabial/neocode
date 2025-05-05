@@ -8,9 +8,8 @@ local picker_cfg = require("plugins.snacks.picker")
 
 return {
   "folke/snacks.nvim",
-  lazy = true, -- Change from false to true to make it properly lazy-loaded
-  event = "VeryLazy", -- Load after initial UI setup, not on BufWinEnter
-  priority = 800,
+  lazy = false, -- Load immediately
+  priority = 900, -- Higher priority
   dependencies = {
     { "nvim-tree/nvim-web-devicons", lazy = false, priority = 950 },
     { "nvim-lua/plenary.nvim", lazy = false, priority = 900 },

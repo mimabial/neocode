@@ -117,17 +117,8 @@ function M.setup()
   -- ========================================
   local ok_picker = pcall(require, "snacks.picker")
   if ok_picker then
-    -- Non-conflicting search keymaps
     map("n", "<leader>ff", function()
-      local ok, picker = pcall(require, "snacks.picker")
-      if ok and picker.files then
-        pcall(picker.files)
-      else
-        -- Fallback to another file finder if available
-        if pcall(require, "telescope.builtin") then
-          require("telescope.builtin").find_files()
-        end
-      end
+      require("snacks.picker").files()
     end, { desc = "Find files" })
     map("n", "<leader>fg", function()
       require("snacks.picker").grep()
