@@ -10,7 +10,7 @@ return {
     position = "bottom",
     height = 10,
     width = 50,
-    icons = true,
+    use_icons = true,
     mode = "workspace_diagnostics",
     fold_open = "v",
     fold_closed = ">",
@@ -41,7 +41,7 @@ return {
     auto_preview = true,
     auto_fold = false,
     auto_jump = { "lsp_definitions" },
-    signs = { error = "", warning = "", hint = "", information = "" },
+    signs = { error = "", warning = "", hint = "", information = "" },
     use_diagnostic_signs = false,
     win_config = {
       border = "single",
