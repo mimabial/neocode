@@ -1,4 +1,5 @@
 -- init.lua – Neovim entrypoint with robust module loading, error handling, and stack detection
+
 -- 0) Leader & feature flags
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
@@ -39,43 +40,29 @@ local function load_module(name, setup_fn)
 end
 
 load_module("config.options", "setup")
-load_module("config.autocmds", "setup")
-load_module("config.keymaps", "setup")
 
-load_module("config.stacks", "setup")
-load_module("config.commands", "setup")
-load_module("config.diagnostics", "setup")
-
--- 4) Initialize plugin manager (Lazy.nvim)
--- Bootstrap Lazy.nvim if missing
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if vim.fn.isdirectory(lazypath) == 0 then
-  vim.notify("📦 Installing lazy.nvim...", vim.log.levels.INFO)
-  vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    "--branch=stable",
-    "https://github.com/folke/lazy.nvim.git",
-    lazypath,
-  })
-  vim.notify("✅ lazy.nvim installed successfully", vim.log.levels.INFO)
-end
-vim.opt.rtp:prepend(lazypath)
-
--- Load lazy
-local lazy_ok, _ = pcall(require, "lazy")
-if not lazy_ok then
-  vim.notify("❌ Failed to load lazy.nvim", vim.log.levels.ERROR)
-  return
-end
-
--- Load plugin configuration
+-- 5) Setup Lazy.nvim
 load_module("config.lazy", "setup")
 
--- Set default colorscheme if not already set
+-- 6) Load secondary modules
+load_module("config.keymaps", "setup")
+load_module("config.lsp", "setup")
+load_module("config.ui", "setup")
+
+load_module("config.autocmds", "setup")
+load_module("autocmds.diagnostics", "setup")
+
+load_module("config.commands", "setup")
+load_module("commands.lazy", "setup")
+
+load_module("config.utils", "setup")
+load_module("utils.stacks", "setup")
+
+-- 8) Load utility modules
+-- load_module("utils.fix_encoding", "setup")
+-- load_module("utils.delete_highlight", "setup")
+
+-- 9) Set default colorscheme if not already set
 if not vim.g.colors_name then
   pcall(vim.api.nvim_command, "colorscheme gruvbox-material")
 end
-
-load_module("config.lsp", "setup")

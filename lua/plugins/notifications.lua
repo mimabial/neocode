@@ -197,8 +197,8 @@ return {
             },
           },
           format = {
-            cmdline = { pattern = "^:", icon = " ", lang = "vim", title = "" },
-            search_down = { kind = "search", pattern = "^/", icon = "󱎸 ", lang = "regex", title = "" },
+            cmdline = { pattern = "^:", icon = " ", lang = "vim", title = "" },
+            search_down = { kind = "search", pattern = "^/", icon = "󰺯 ", lang = "regex", title = "" },
             search_up = { kind = "search", pattern = "^%?", icon = "? ", lang = "regex" },
             filter = { pattern = "^:%s*!", icon = "!", lang = "bash" },
             lua = { pattern = { "^:%s*lua" }, icon = "λ", lang = "lua" },

@@ -44,7 +44,7 @@ return {
       -- Theme definitions with proper metadata
       local themes = {
         ["gruvbox-material"] = {
-          icon = "󰈰 ",
+          icon = "󰎄 ",
           variants = { "soft", "medium", "hard" },
           apply_variant = function(variant)
             vim.g.gruvbox_material_background = variant

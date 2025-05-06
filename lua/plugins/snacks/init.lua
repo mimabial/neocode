@@ -3,7 +3,6 @@
 -- Main snacks.nvim configuration
 local dashboard_cfg = require("plugins.snacks.dashboard")
 local dim_cfg = require("plugins.snacks.dim")
-local input_cfg = require("plugins.snacks.input")
 local picker_cfg = require("plugins.snacks.picker")
 
 return {
@@ -17,7 +16,6 @@ return {
   opts = {
     dashboard = dashboard_cfg,
     dim = dim_cfg,
-    input = input_cfg,
     picker = picker_cfg,
   },
   keys = {
@@ -31,10 +29,6 @@ return {
   },
   config = function(_, opts)
     require("snacks").setup(opts)
-
-    if opts.input.enabled then
-      vim.ui.input = require("snacks.input").input
-    end
 
     vim.api.nvim_create_user_command("Dashboard", function()
       require("snacks.dashboard").open()

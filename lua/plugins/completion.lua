@@ -1,5 +1,5 @@
 -- lua/plugins/completion.lua
--- Enhanced completion menu with improved theme integration and consistent border styling
+-- Enhanced completion menu with improved visual appearance
 
 return {
   -- Enhanced LSP symbols with distinctive icons
@@ -39,7 +39,7 @@ return {
           Operator = "󰆕",
           TypeParameter = "󰅲",
           -- AI completion sources with distinctive icons
-          Copilot = "",
+          Copilot = "",
           Codeium = "󰚩",
         }
 
@@ -165,7 +165,7 @@ return {
       local win_opts = {
         winhighlight = "Normal:CmpNormal,FloatBorder:CmpBorder,CursorLine:CmpSel",
         scrollbar = true,
-        border = border,
+        border = float_config.border,
         col_offset = 0,
         side_padding = float_config.padding and float_config.padding[1] or 1,
       }
@@ -285,11 +285,11 @@ return {
                 return vim_item
               end,
             })(entry, vim_item)
+
             return vim_item
           end,
         },
       })
-
       -- Cmdline completions with enhanced styling
       cmp.setup.cmdline(":", {
         mapping = cmp.mapping.preset.cmdline(),
@@ -336,8 +336,8 @@ return {
           vim.api.nvim_set_hl(0, "CmpGhostText", { fg = colors.gray, italic = true })
 
           -- AI source highlighting
-          vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = colors.copilot, bold = true })
-          vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = colors.codeium, bold = true })
+          vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = colors.copilot })
+          vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = colors.codeium })
 
           -- LSP kinds with subtle color variations
           vim.api.nvim_set_hl(0, "CmpItemKindFunction", { fg = colors.blue, bold = true })
@@ -359,9 +359,12 @@ return {
           vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzy", { fg = colors.green, bold = true })
 
           -- Create distinct highlighting for selected items
+          vim.api.nvim_set_hl(0, "CmpSel", { bg = colors.select_bg, fg = colors.select_fg, bold = true })
           vim.api.nvim_set_hl(0, "CmpItemAbbrDeprecated", { fg = colors.gray, strikethrough = true })
 
           -- Create special highlights for selected items
+          vim.api.nvim_set_hl(0, "CmpItemAbbrMatch", { fg = colors.green, bold = true })
+          vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzy", { fg = colors.green, bold = true })
           vim.api.nvim_set_hl(0, "CmpItemAbbrMatchSelected", { fg = colors.yellow, bg = colors.select_bg, bold = true })
           vim.api.nvim_set_hl(
             0,

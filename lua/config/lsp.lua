@@ -57,7 +57,7 @@ M.on_attach = function(client, bufnr)
   if signature_ok then
     signature.on_attach({
       bind = true,
-      handler_opts = { border = "single" },
+      handler_opts = { border = "rounded" },
       hint_enable = true,
       hint_prefix = "📝 ",
       hint_scheme = "String",
@@ -307,7 +307,7 @@ function M.setup()
   if mason_ok then
     mason.setup({
       ui = {
-        border = "single",
+        border = "rounded",
         icons = {
           package_installed = "✓",
           package_pending = "➜",
@@ -357,7 +357,7 @@ function M.setup()
       source = "if_many",
     },
     float = {
-      border = "single",
+      border = "rounded",
       source = "always",
       header = "",
       prefix = function(diagnostic)
@@ -415,15 +415,6 @@ function M.setup()
       lspconfig[server_name].setup(server_config)
     end
   end
-
-  -- Set handlers for consistent UI
-  vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
-    border = "single",
-  })
-
-  vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
-    border = "single",
-  })
 end
 
 return M

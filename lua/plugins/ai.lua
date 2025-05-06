@@ -226,7 +226,7 @@ return {
         callback = function()
           local colors = get_colors()
           vim.api.nvim_set_hl(0, "CodeiumSuggestion", { fg = colors.gray, italic = true })
-          vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2", bold = true })
+          vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2" })
         end,
       })
 
