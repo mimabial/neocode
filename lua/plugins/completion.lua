@@ -290,11 +290,10 @@ return {
                 return vim_item
               end,
             })(entry, vim_item)
-
+            --
             return vim_item
           end,
         },
-        experimental = { ghost_text = { hl_group = "CmpGhostText" } },
       })
 
       -- Cmdline completions with enhanced styling
