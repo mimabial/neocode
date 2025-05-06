@@ -20,6 +20,7 @@ function M.setup()
   opt.signcolumn = "yes" -- Always show sign column
   opt.termguicolors = true -- True color support
   opt.background = "dark" -- Dark background
+  opt.signcolumn = "yes:1" -- Always show sign column with fixed width
 
   -- Control relative numbers via global flag
   g.disable_relative_number = false

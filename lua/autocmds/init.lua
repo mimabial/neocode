@@ -157,7 +157,7 @@ function M.setup()
       vim.diagnostic.open_float(nil, {
         focusable = false,
         close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
-        border = "rounded",
+        border = "single",
         source = "always",
         prefix = " ",
         scope = "cursor",

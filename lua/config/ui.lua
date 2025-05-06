@@ -120,7 +120,7 @@ end
 M.config = {
   -- Standard float window configuration - base for all UI elements
   float = {
-    border = "rounded", -- Consistent border style
+    border = "single", -- Consistent border style
     padding = { 0, 1 }, -- Consistent padding
     max_width = 80, -- Reasonable max width
     max_height = 20, -- Reasonable max height
@@ -141,7 +141,7 @@ M.config = {
 
   -- Notification configuration
   notification = {
-    border = "sis",
+    border = "single",
     timeout = 3000,
     max_width = 60,
     max_height = 20,
@@ -220,8 +220,8 @@ M.setup_highlights = function()
   vim.api.nvim_set_hl(0, "CmpGhostText", { fg = colors.gray, italic = true })
 
   -- AI integration highlights
-  vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = colors.copilot, bold = true })
-  vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = colors.codeium, bold = true })
+  vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = colors.copilot, bold = false })
+  vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = colors.codeium, bold = false })
   vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = colors.gray, italic = true })
   vim.api.nvim_set_hl(0, "CodeiumSuggestion", { fg = colors.gray, italic = true })
 

@@ -77,33 +77,48 @@ return {
       show_keys = false, -- don’t echo the current key + label in the cmdline
     })
 
-    -- Define top-level groups with consistent naming
+    -- Keybindings
+
     wk.register({
-      { "<leader>", group = "Leader" },
-      { "<leader>L", group = "Layouts" },
-      { "<leader>b", group = "Buffers" },
-      { "<leader>c", group = "Code/LSP" },
-      { "<leader>d", group = "Debug" },
-      { "<leader>e", group = "Explorer" },
-      { "<leader>f", group = "Find/Search" },
-      { "<leader>g", group = "Git" },
-      { "<leader>l", desc = "Lazy/Plugins" },
-      { "<leader>n", group = "Next.js" },
-      { "<leader>s", group = "Stack" },
-      { "<leader>t", group = "Terminal/Toggle" },
-      { "<leader>u", group = "UI/Settings" },
-      { "<leader>x", group = "Diagnostics/Trouble" },
+      ["<leader>"] = { name = "Leader" },
+      a = { name = "Actions" }, -- a: general commands, automations…
+      b = { name = "Buffers" }, -- b: buffer-switching, closing…
+      c = { name = "Code/Completions" }, -- c: snippets, auto-complete…
+      d = { name = "Debug" }, -- d: dap, breakpoints…
+      e = { name = "Explorer" }, -- e: file-tree, symbol-tree…
+      f = { name = "Find/Search" }, -- f: Telescope, grep…
+      g = { name = "Git" }, -- g: blame, status, pull…
+      h = { name = "Help/Doc" }, -- h: `:h`, LSP hover, cheatsheets…
+      i = { name = "Insert/IDE" }, -- i: toggle insert-mode tools…
+      j = { name = "Jump/Navigation" }, -- j: treesitter-jump, marks…
+      k = { name = "Keymaps" }, -- k: toggle which-key, show keys…
+      l = { name = "LSP" }, -- l: formatting, code actions…
+      m = { name = "Marks/Bookmarks" }, -- m: set/jump marks, vim-bookmarks…
+      n = { name = "Next.js" }, -- n: project-specific commands…
+      o = { name = "Open/File" }, -- o: open file, recent, projects…
+      p = { name = "Projects/Packer" }, -- p: sessions, plugin manager…
+      q = { name = "Quit/Close" }, -- q: quit, close buffer, exit…
+      r = { name = "Refactor/Replace" }, -- r: rename, substitute, macros…
+      s = { name = "Session/Search" }, -- s: session save/load, live grep…
+      t = { name = "Terminal/Toggle" }, -- t: floating terminal, toggleterm…
+      u = { name = "UI/Settings" }, -- u: colorscheme, statusline…
+      v = { name = "VCS/Versioning" }, -- v: svn, hg, GitFlow, patch…
+      w = { name = "Windows" }, -- w: splits, tabs, resize…
+      x = { name = "Diagnostics/Trouble" }, -- x: show errors, list references…
+      y = { name = "Yank/Registers" }, -- y: yank history, paste…
+      z = { name = "Utilities/Misc" }, -- z: zoom, toggle wrap, misc…
+    }, {
+      mode = "n",
+      prefix = "",
+      silent = true,
+      noremap = true,
     })
 
-    -- Explorer keymaps
-    wk.register({
-      { "<leader>eo", desc = "Open Oil Explorer" },
-      { "<leader>es", desc = "Open Snacks Explorer" },
-    })
+    -- Define top-level groups with consistent naming
+    wk.register({})
 
     -- Define buffer management descriptions
     wk.register({
-      { "<leader>b", group = "Buffers" },
       { "<leader>bb", desc = "Other Buffer" },
       { "<leader>bd", desc = "Delete Buffer" },
       { "<leader>bl", desc = "Close Left Buffers" },
@@ -115,7 +130,6 @@ return {
 
     -- Define finder descriptions
     wk.register({
-      { "<leader>f", group = "Find" },
       { "<leader>fD", desc = "Workspace Diagnostics" },
       { "<leader>fb", desc = "Find Buffers" },
       { "<leader>fd", desc = "Document Diagnostics" },
@@ -127,7 +141,6 @@ return {
 
     -- Git commands descriptions
     wk.register({
-      { "<leader>g", group = "Git" },
       { "<leader>gP", desc = "Git Push" },
       { "<leader>gb", desc = "Git Branches" },
       { "<leader>gc", desc = "Git Commits" },
@@ -139,7 +152,6 @@ return {
 
     -- Stack commands descriptions
     wk.register({
-      { "<leader>s", group = "Stack" },
       { "<leader>sb", desc = "Focus Both" },
       { "<leader>sd", group = "Dashboard" },
       { "<leader>sd", desc = "Open Dashboard" },
@@ -151,7 +163,6 @@ return {
 
     -- Terminal commands descriptions
     wk.register({
-      { "<leader>t", group = "Terminal/Toggle" },
       { "<leader>tf", desc = "Terminal (float)" },
       { "<leader>th", desc = "Terminal (horizontal)" },
       { "<leader>tv", desc = "Terminal (vertical)" },
@@ -159,7 +170,6 @@ return {
 
     -- UI settings descriptions
     wk.register({
-      { "<leader>u", group = "UI/Themes" },
       { "<leader>uS", desc = "Select theme" },
       { "<leader>uV", desc = "Select theme variant" },
       { "<leader>ub", desc = "Toggle background transparency" },
@@ -171,7 +181,6 @@ return {
 
     -- Layout descriptions
     wk.register({
-      { "<leader>L", group = "Layouts" },
       { "<leader>L1", desc = "Coding Layout" },
       { "<leader>L2", desc = "Terminal Layout" },
       { "<leader>L3", desc = "Writing Layout" },
@@ -191,7 +200,6 @@ return {
 
     -- Next.js commands descriptions
     wk.register({
-      { "<leader>n", buffer = 1, group = "Next.js" },
       { "<leader>nb", buffer = 1, desc = "Next.js build" },
       { "<leader>nc", buffer = 1, desc = "New component" },
       { "<leader>nd", buffer = 1, desc = "Next.js dev server" },

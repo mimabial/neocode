@@ -130,11 +130,21 @@ return {
           icon = "󰄛 ",
           variants = { "mocha", "macchiato", "frappe", "latte" },
           apply_variant = function(variant)
-            pcall(require("catppuccin").setup, { flavour = variant })
+            -- Add better error handling here
+            local ok, cat = pcall(require, "catppuccin")
+            if not ok then
+              vim.notify("Catppuccin plugin not loaded. Try running :Lazy load catppuccin", vim.log.levels.WARN)
+              return false
+            end
+            cat.setup({ flavour = variant })
             return true
           end,
           set_transparency = function(enable)
-            pcall(require("catppuccin").setup, { transparent_background = enable })
+            local ok, cat = pcall(require, "catppuccin")
+            if not ok then
+              return false
+            end
+            cat.setup({ transparent_background = enable })
             return true
           end,
         },

@@ -20,17 +20,17 @@ function M.setup()
       source = "if_many",
     },
     float = {
-      border = "rounded",
+      border = "single",
       severity_sort = true,
       source = true,
       header = "",
       prefix = function(diagnostic)
         -- Use a space icon per severity
         local icons = {
-          [vim.diagnostic.severity.ERROR] = " ",
-          [vim.diagnostic.severity.WARN] = " ",
-          [vim.diagnostic.severity.INFO] = " ",
-          [vim.diagnostic.severity.HINT] = " ",
+          [vim.diagnostic.severity.ERROR] = "", -- Heavy Cross
+          [vim.diagnostic.severity.WARN] = "", -- Warning Sign
+          [vim.diagnostic.severity.INFO] = "", -- Info Sign
+          [vim.diagnostic.severity.HINT] = "", -- Light Bulb
         }
         return icons[diagnostic.severity] or "", ""
       end,
