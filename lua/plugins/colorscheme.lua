@@ -57,7 +57,7 @@ return {
         },
 
         ["tokyonight"] = {
-          icon = "󱣱 ",
+          icon = " ",
           variants = { "storm", "moon", "night", "day" },
           apply_variant = function(variant)
             pcall(require("tokyonight").setup, { style = variant })
@@ -70,7 +70,7 @@ return {
         },
 
         ["everforest"] = {
-          icon = "󰪶 ",
+          icon = "󱢗 ",
           variants = { "soft", "medium", "hard" },
           apply_variant = function(variant)
             vim.g.everforest_background = variant
@@ -83,10 +83,16 @@ return {
         },
 
         ["kanagawa"] = {
-          icon = "󰖭 ",
+          icon = "󰞍 ",
           variants = { "wave", "dragon", "lotus" },
           apply_variant = function(variant)
-            pcall(require("kanagawa").setup, { theme = variant })
+            pcall(require("kanagawa").setup, {
+              theme = variant,
+              background = {
+                dark = variant,
+                light = "lotus",
+              },
+            })
             return true
           end,
           set_transparency = function(enable)
@@ -96,7 +102,7 @@ return {
         },
 
         ["nord"] = {
-          icon = "󰔿 ",
+          icon = " ",
           variants = {}, -- Nord doesn't have variants
           apply_variant = function()
             return false
@@ -108,7 +114,7 @@ return {
         },
 
         ["rose-pine"] = {
-          icon = "󰔎 ",
+          icon = "󱎂 ",
           variants = { "main", "moon", "dawn" },
           apply_variant = function(variant)
             pcall(require("rose-pine").setup, { variant = variant })
@@ -270,7 +276,7 @@ return {
       local function cycle_variant()
         local current = vim.g.colors_name or "gruvbox-material"
         local theme = themes[current]
-
+        vim.notify("Current theme: " .. current, vim.log.levels.INFO)
         if not theme or not theme.variants or #theme.variants == 0 then
           vim.notify("Current theme doesn't have variants", vim.log.levels.WARN)
           return

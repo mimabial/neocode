@@ -71,6 +71,10 @@ return {
         buftypes = { "terminal", "nofile" },
         filetypes = { "TelescopePrompt", "TelescopeResults", "oil", "neo-tree" },
       },
+      silent = true, -- disable default notifications
+      notify = false, -- turn off warning notifications entirely
+      show_help = false, -- don’t show the little help text in the cmdline
+      show_keys = false, -- don’t echo the current key + label in the cmdline
     })
 
     -- Define top-level groups with consistent naming

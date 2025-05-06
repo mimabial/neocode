@@ -39,7 +39,7 @@ return {
           Operator = "󰆕",
           TypeParameter = "󰅲",
           -- AI completion sources with distinctive icons
-          Copilot = "",
+          Copilot = "",
           Codeium = "󰚩",
         }
 
@@ -282,6 +282,11 @@ return {
                   vim_item.kind_hl_group = "CmpItemKind" .. vim_item.kind
                 end
 
+                -- Add highlighting to the item abbr for selected items
+                if cmp.get_selected_entry() and cmp.get_selected_entry().id == entry.id then
+                  vim_item.abbr = selected_icon .. " " .. vim_item.abbr
+                end
+
                 return vim_item
               end,
             })(entry, vim_item)
@@ -289,6 +294,7 @@ return {
             return vim_item
           end,
         },
+        experimental = { ghost_text = { hl_group = "CmpGhostText" } },
       })
 
       -- Cmdline completions with enhanced styling
