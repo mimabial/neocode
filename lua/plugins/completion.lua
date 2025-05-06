@@ -250,8 +250,6 @@ return {
           -- Enhanced formatting with better visual distinction
           format = function(entry, vim_item)
             -- Get menu icons for different sources
-            vim.item
-            local selected_icon = ui_config.menu and ui_config.menu.selected_item_icon or "●"
             local menu_icons = {
               buffer = " Buffer",
               nvim_lsp = " LSP",
