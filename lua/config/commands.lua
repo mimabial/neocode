@@ -6,7 +6,7 @@ local M = {}
 -- Get commands from the correct location
 local commands_ok, commands = pcall(require, "commands.init")
 
--- Re-export all functions from utils.init
+-- Re-export all functions from commands.init
 for k, v in pairs(commands) do
   M[k] = v
 end

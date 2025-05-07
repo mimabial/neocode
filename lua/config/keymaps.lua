@@ -301,11 +301,6 @@ function M.setup()
   map("n", "<leader>L4", "<cmd>Layout debug<cr>", { desc = "Debug Layout" })
 
   -- ========================================
-  -- LSP Keymaps
-  -- ========================================
-  -- LSP keymaps are set up in the LspAttach autocmd for per-buffer activation
-
-  -- ========================================
   -- Dashboard
   -- ========================================
   map("n", "<leader>d", function()
@@ -316,6 +311,14 @@ function M.setup()
       vim.notify("Dashboard not available", vim.log.levels.INFO)
     end
   end, { desc = "Open Dashboard" })
+
+  -- ========================================
+  -- Diagnostics
+  -- ========================================
+  map("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", { desc = "Diagnostics (Trouble)" })
+  map("n", "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", { desc = "Buffer Diagnostics (Trouble)" })
+  map("n", "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", { desc = "Quickfix List (Trouble)" })
+  map("n", "<leader>xL", "<cmd>Trouble loclist toggle<cr>", { desc = "Location List (Trouble)" })
 end
 
 return M
