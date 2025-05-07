@@ -104,6 +104,7 @@ return {
         end
       end,
       desc = "Next trouble/quickfix",
+      flags = { "silent" },
     },
   },
 }

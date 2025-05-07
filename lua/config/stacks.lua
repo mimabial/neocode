@@ -1,12 +1,12 @@
--- lua/config/stacks.lua
--- Enhanced, fail-safe stack detection and configuration for GOTH and Next.js
+-- lua/utils/stacks.lua
+-- Enhanced fail-safe stack detection and configuration for GOTH and Next.js
 
 local M = {}
 
 local fn = vim.fn
 local api = vim.api
 
---- Safely load a module
+-- Safely load a module with basic error handling
 local function safe_require(mod)
   local ok, result = pcall(require, mod)
   if not ok then
@@ -22,9 +22,7 @@ local stack_icons = {
   ["both"] = "󰡄 ",
 }
 
---- Checks if any file matching patterns exists in cwd
--- @param patterns string|table file pattern(s) to check
--- @return boolean with error handling
+-- Check if any file matching patterns exists in cwd with robust error handling
 local function exists(patterns)
   local ok, result = pcall(function()
     if type(patterns) == "string" then
@@ -41,11 +39,7 @@ local function exists(patterns)
   return ok and result or false
 end
 
---- Search file contents for pattern
--- @param file string file path
--- @param pattern string pattern to search for
--- @param max_lines number max lines to check
--- @return boolean
+-- Search file contents for pattern with enhanced safety
 local function file_contains(file, pattern, max_lines)
   local ok, result = pcall(function()
     max_lines = max_lines or 100
@@ -53,7 +47,14 @@ local function file_contains(file, pattern, max_lines)
       return false
     end
 
-    local lines = vim.fn.readfile(file, "", max_lines)
+    local lines
+    -- Handle read errors gracefully
+    local read_ok, read_result = pcall(vim.fn.readfile, file, "", max_lines)
+    if not read_ok or type(read_result) ~= "table" then
+      return false
+    end
+    
+    lines = read_result
     local content = table.concat(lines, "\n")
     return content:match(pattern) ~= nil
   end)
@@ -61,12 +62,11 @@ local function file_contains(file, pattern, max_lines)
   return ok and result or false
 end
 
---- Detect current project stack with more accurate heuristics
--- @return string "goth", "nextjs", "both" or nil
+-- Detect current project stack with enhanced error handling
 function M.detect_stack()
   -- Add safety wrapper around the entire function
   local ok, result = pcall(function()
-    -- GOTH stack indicators with try/catch safety
+    -- GOTH stack indicators with improved error handling
     local goth_score = 0
 
     -- Check safely for Go files
@@ -85,7 +85,12 @@ function M.detect_stack()
     end
 
     -- Check Go imports/usage related to HTMX/Templ with safety checks
-    local gofiles = fn.glob("**/*.go", false, true)
+    local gofiles = {}
+    local glob_ok, glob_result = pcall(fn.glob, "**/*.go", false, true)
+    if glob_ok and type(glob_result) == "table" then
+      gofiles = glob_result
+    end
+    
     for _, file in ipairs(gofiles) do
       if file_contains(file, "html/template") or file_contains(file, "htmx") or file_contains(file, "templ") then
         goth_score = goth_score + 2
@@ -118,14 +123,6 @@ function M.detect_stack()
       end
     end
 
-    -- -- Add debug logging for stack detection
-    -- vim.defer_fn(function()
-    --   vim.notify(
-    --     string.format("Stack detection: GOTH score: %d, Next.js score: %d", goth_score, nextjs_score),
-    --     vim.log.levels.DEBUG
-    --   )
-    -- end, 1000)
-
     -- Determine the result based on scores
     if goth_score >= 4 and nextjs_score >= 4 then
       return "both"
@@ -139,9 +136,13 @@ function M.detect_stack()
     return nil
   end)
 
-  -- If detection fails, provide a fallback
+  -- If detection fails, provide a fallback with basic checks
   if not ok then
-    vim.notify("Stack detection failed: " .. tostring(result), vim.log.levels.WARN)
+    -- Log error but don't expose it to user
+    vim.schedule(function()
+      vim.notify("Stack detection encountered an error, falling back to basic detection", vim.log.levels.DEBUG)
+    end)
+    
     -- Check for some very basic indicators
     if vim.fn.filereadable("go.mod") == 1 then
       return "goth"
@@ -153,8 +154,7 @@ function M.detect_stack()
   return result
 end
 
---- Apply configuration for a given stack
--- @param stack_name string|nil Stack name or nil to auto-detect
+-- Apply configuration for a given stack with enhanced fail-safety
 function M.configure_stack(stack_name)
   local stack = stack_name or M.detect_stack() or ""
   local notify_icon = ""
@@ -162,25 +162,26 @@ function M.configure_stack(stack_name)
   -- Store globally for access by other modules
   if stack == "both" then
     vim.g.current_stack = "goth+nextjs"
-    notify_icon = "󰡄 "
+    notify_icon = stack_icons["both"] or "󰡄 "
   else
     vim.g.current_stack = stack
     if stack == "goth" then
-      notify_icon = "󰟓 "
+      notify_icon = stack_icons["goth"] or "󰟓 "
     elseif stack == "nextjs" then
-      notify_icon = " "
+      notify_icon = stack_icons["nextjs"] or " "
     end
   end
 
   -- Configure for GOTH stack
   if stack == "goth" or stack == "both" then
-    -- Load GOTH-specific LSP and tools
+    -- Notify user
     api.nvim_notify(notify_icon .. "Stack focused on GOTH (Go/Templ/HTMX)", vim.log.levels.INFO, { title = "Stack" })
 
     -- Ensure gopls is configured optimally
     local lspconfig = safe_require("lspconfig")
     if lspconfig and lspconfig.gopls then
-      lspconfig.gopls.setup({
+      -- Configure with error handling
+      pcall(lspconfig.gopls.setup, {
         settings = {
           gopls = {
             analyses = {
@@ -222,7 +223,7 @@ function M.configure_stack(stack_name)
 
     -- Set Templ LSP if available
     if lspconfig and lspconfig.templ then
-      lspconfig.templ.setup({})
+      pcall(lspconfig.templ.setup, {})
     end
 
     -- Configure formatters for Go/Templ
@@ -238,7 +239,9 @@ function M.configure_stack(stack_name)
       end
     end)
 
-    -- Add specific commands for GOTH
+    -- Add GOTH-specific commands safely
+    
+    -- Go Run Command
     vim.api.nvim_create_user_command("GoRun", function()
       -- Check if we're in a Go project
       if vim.fn.filereadable("go.mod") ~= 1 then
@@ -246,8 +249,9 @@ function M.configure_stack(stack_name)
         return
       end
 
-      local term = safe_require("toggleterm.terminal")
-      if term and term.Terminal then
+      -- Try toggleterm first with safety
+      local term_ok, term = pcall(require, "toggleterm.terminal")
+      if term_ok and term.Terminal then
         local Terminal = term.Terminal
         local t = Terminal:new({
           cmd = "go run .",
@@ -259,33 +263,39 @@ function M.configure_stack(stack_name)
         })
         t:toggle()
       else
-        vim.cmd("!go run .")
+        -- Fallback to built-in terminal
+        vim.cmd("terminal go run .")
       end
     end, { desc = "Run Go project" })
 
-    -- Add Templ generation command
+    -- Templ Generation Command
     vim.api.nvim_create_user_command("TemplGenerate", function()
       if vim.fn.executable("templ") ~= 1 then
-        vim.notify("templ command not found", vim.log.levels.ERROR)
+        vim.notify("templ command not found. Install with 'go install github.com/a-h/templ/cmd/templ@latest'", vim.log.levels.ERROR)
         return
       end
 
-      local result = vim.fn.system("templ generate")
-      if vim.v.shell_error ~= 0 then
-        vim.notify("Error generating templ files: " .. result, vim.log.levels.ERROR)
-      else
-        vim.notify("Successfully generated templ files", vim.log.levels.INFO)
-      end
+      vim.notify("Generating Templ files...", vim.log.levels.INFO)
+      vim.fn.jobstart("templ generate", {
+        on_exit = function(_, code)
+          if code == 0 then
+            vim.notify("Successfully generated Templ files", vim.log.levels.INFO)
+          else
+            vim.notify("Error generating Templ files", vim.log.levels.ERROR)
+          end
+        end
+      })
     end, { desc = "Generate Templ files" })
 
-    -- Add GOTH server command for running with hot reload
+    -- GOTH Server Command
     vim.api.nvim_create_user_command("GOTHServer", function()
       -- Check if we have air for hot reload
       local air_exists = vim.fn.filereadable(".air.toml") == 1
       local cmd = air_exists and "air" or "templ generate && go run ."
 
-      local term = safe_require("toggleterm.terminal")
-      if term and term.Terminal then
+      -- Try toggleterm first
+      local term_ok, term = pcall(require, "toggleterm.terminal")
+      if term_ok and term.Terminal then
         local Terminal = term.Terminal
         local t = Terminal:new({
           cmd = cmd,
@@ -298,11 +308,12 @@ function M.configure_stack(stack_name)
         })
         t:toggle()
       else
-        vim.cmd("!" .. cmd)
+        -- Fallback to built-in terminal
+        vim.cmd("terminal " .. cmd)
       end
     end, { desc = "Run GOTH server" })
 
-    -- Add Templ Component creation command
+    -- Templ Component Creator Command
     vim.api.nvim_create_user_command("TemplNew", function()
       -- Get the component name from user input
       local component_name = vim.fn.input("Component Name: ")
@@ -311,11 +322,18 @@ function M.configure_stack(stack_name)
         return
       end
 
+      -- Create components directory if it doesn't exist
+      local dir_ok, _ = pcall(vim.fn.mkdir, "components", "p")
+      if not dir_ok then
+        vim.notify("Failed to create components directory", vim.log.levels.ERROR)
+        return
+      }
+
       -- Create a new buffer
       local bufnr = vim.api.nvim_create_buf(true, false)
 
       -- Set buffer name
-      vim.api.nvim_buf_set_name(bufnr, component_name .. ".templ")
+      vim.api.nvim_buf_set_name(bufnr, "components/" .. component_name .. ".templ")
 
       -- Set filetype
       vim.api.nvim_buf_set_option(bufnr, "filetype", "templ")
@@ -357,11 +375,11 @@ function M.configure_stack(stack_name)
     -- Configure TypeScript LSP with optimal settings
     local lspconfig = safe_require("lspconfig")
     if lspconfig then
-      -- Prefer typescript-tools over tsserver if available
-      local has_ts_tools = pcall(require, "typescript-tools")
+      -- Try typescript-tools first
+      local ts_tools_ok = pcall(require, "typescript-tools")
 
-      if has_ts_tools then
-        -- Use typescript-tools.nvim
+      if ts_tools_ok then
+        -- Use typescript-tools.nvim with error handling
         pcall(function()
           require("typescript-tools").setup({
             settings = {
@@ -379,8 +397,8 @@ function M.configure_stack(stack_name)
           })
         end)
       elseif lspconfig.ts_ls then
-        -- Fallback to basic tsserver
-        lspconfig.ts_ls.setup({
+        -- Fallback to basic tsserver with error handling
+        pcall(lspconfig.ts_ls.setup, {
           settings = {
             typescript = {
               inlayHints = {
@@ -414,9 +432,9 @@ function M.configure_stack(stack_name)
         })
       end
 
-      -- Setup Tailwind CSS
+      -- Setup Tailwind CSS with error handling
       if lspconfig.tailwindcss then
-        lspconfig.tailwindcss.setup({
+        pcall(lspconfig.tailwindcss.setup, {
           filetypes = {
             "html",
             "css",
@@ -435,11 +453,11 @@ function M.configure_stack(stack_name)
 
       -- Setup ESLint if available
       if lspconfig.eslint then
-        lspconfig.eslint.setup({})
+        pcall(lspconfig.eslint.setup, {})
       end
     end
 
-    -- Configure formatters for JS/TS
+    -- Configure formatters for JS/TS with error handling
     pcall(function()
       local conform = safe_require("conform")
       if conform then
@@ -458,7 +476,7 @@ function M.configure_stack(stack_name)
       end
     end)
 
-    -- Add specific Next.js commands
+    -- Add Next.js-specific commands with error handling
 
     -- Next.js dev server
     vim.api.nvim_create_user_command("NextDev", function()
@@ -468,8 +486,9 @@ function M.configure_stack(stack_name)
         return
       end
 
-      local term = safe_require("toggleterm.terminal")
-      if term and term.Terminal then
+      -- Try toggleterm first
+      local term_ok, term = pcall(require, "toggleterm.terminal")
+      if term_ok and term.Terminal then
         local Terminal = term.Terminal
         local t = Terminal:new({
           cmd = "npm run dev",
@@ -482,7 +501,8 @@ function M.configure_stack(stack_name)
         })
         t:toggle()
       else
-        vim.cmd("!npm run dev")
+        -- Fallback to built-in terminal
+        vim.cmd("terminal npm run dev")
       end
     end, { desc = "Run Next.js development server" })
 
@@ -493,8 +513,9 @@ function M.configure_stack(stack_name)
         return
       end
 
-      local term = safe_require("toggleterm.terminal")
-      if term and term.Terminal then
+      -- Try toggleterm first
+      local term_ok, term = pcall(require, "toggleterm.terminal")
+      if term_ok and term.Terminal then
         local Terminal = term.Terminal
         local t = Terminal:new({
           cmd = "npm run build",
@@ -507,11 +528,12 @@ function M.configure_stack(stack_name)
         })
         t:toggle()
       else
-        vim.cmd("!npm run build")
+        -- Fallback to built-in terminal
+        vim.cmd("terminal npm run build")
       end
     end, { desc = "Build Next.js application" })
 
-    -- Next.js component creation
+    -- Next.js component creation with error handling
     vim.api.nvim_create_user_command("NextNewComponent", function()
       -- Get component information
       local component_name = vim.fn.input("Component Name: ")
@@ -523,7 +545,11 @@ function M.configure_stack(stack_name)
       local is_client = vim.fn.confirm("Is this a client component?", "&Yes\n&No", 1) == 1
 
       -- Create components directory if it doesn't exist
-      vim.fn.mkdir("components", "p")
+      local dir_ok, _ = pcall(vim.fn.mkdir, "components", "p")
+      if not dir_ok then
+        vim.notify("Failed to create components directory", vim.log.levels.ERROR)
+        return
+      end
 
       -- File path and content
       local file_path = "components/" .. component_name .. ".tsx"
@@ -570,11 +596,11 @@ function M.configure_stack(stack_name)
       vim.api.nvim_win_set_cursor(0, { 4, 0 })
 
       -- Save the file
-      vim.cmd("write")
+      pcall(vim.cmd, "write")
       vim.notify(" Created new component: " .. file_path, vim.log.levels.INFO, { title = "Next.js" })
     end, { desc = "Create a new Next.js component" })
 
-    -- Next.js page creation
+    -- Next.js page creation with improved error handling
     vim.api.nvim_create_user_command("NextNewPage", function()
       -- Get the page name from user input
       local page_name = vim.fn.input("Page Name (e.g. about): ")
@@ -604,7 +630,11 @@ function M.configure_stack(stack_name)
         }
 
         -- Create directory if it doesn't exist
-        vim.fn.mkdir("app/" .. page_name, "p")
+        local dir_ok, _ = pcall(vim.fn.mkdir, "app/" .. page_name, "p")
+        if not dir_ok then
+          vim.notify("Failed to create app/" .. page_name .. " directory", vim.log.levels.ERROR)
+          return
+        end
       else
         -- Pages Router structure
         file_path = "pages/" .. page_name .. ".tsx"
@@ -631,7 +661,11 @@ function M.configure_stack(stack_name)
         }
 
         -- Create pages directory if needed
-        vim.fn.mkdir("pages", "p")
+        local dir_ok, _ = pcall(vim.fn.mkdir, "pages", "p")
+        if not dir_ok then
+          vim.notify("Failed to create pages directory", vim.log.levels.ERROR)
+          return
+        end
       end
 
       -- Create the file
@@ -642,7 +676,7 @@ function M.configure_stack(stack_name)
       vim.api.nvim_win_set_buf(0, bufnr)
 
       -- Save the file
-      vim.cmd("write")
+      pcall(vim.cmd, "write")
       vim.notify(" Created new page: " .. file_path, vim.log.levels.INFO, { title = "Next.js" })
     end, { desc = "Create a new Next.js page" })
   end
@@ -660,25 +694,27 @@ function M.configure_stack(stack_name)
   return stack
 end
 
---- Initial setup on startup: detect stack and notify
+-- Initial setup on startup: detect stack and notify
 function M.setup()
   if not vim.g.current_stack or vim.g.current_stack == "" then
     local st = M.detect_stack()
     if st then
+      -- Set global stack variable
       if st == "both" then
         vim.g.current_stack = "goth+nextjs"
       else
         vim.g.current_stack = st
       end
 
+      -- Notify user of detected stack with a short delay to avoid startup clutter
       vim.defer_fn(function()
         local icon = ""
         if st == "goth" then
-          icon = "󰟓 "
+          icon = stack_icons["goth"] or "󰟓 "
         elseif st == "nextjs" then
-          icon = " "
+          icon = stack_icons["nextjs"] or " "
         elseif st == "both" then
-          icon = "󰡄 "
+          icon = stack_icons["both"] or "󰡄 "
         end
 
         api.nvim_notify(
@@ -701,27 +737,33 @@ function M.setup()
     end,
   })
 
-  -- Add keybindings for stack switching
-  vim.keymap.set("n", "<leader>sg", function()
-    M.configure_stack("goth")
-    if package.loaded["snacks.dashboard"] then
-      require("snacks.dashboard").open()
-    end
-  end, { desc = "Focus GOTH Stack + Dashboard" })
+  -- Add keybindings for stack switching if not already defined in keymaps.lua
+  if not vim.keymap.get("n", "<leader>sg") then
+    vim.keymap.set("n", "<leader>sg", function()
+      M.configure_stack("goth")
+      if package.loaded["snacks.dashboard"] then
+        pcall(require("snacks.dashboard").open)
+      end
+    end, { desc = "Focus GOTH Stack + Dashboard" })
+  end
 
-  vim.keymap.set("n", "<leader>sn", function()
-    M.configure_stack("nextjs")
-    if package.loaded["snacks.dashboard"] then
-      require("snacks.dashboard").open()
-    end
-  end, { desc = "Focus Next.js Stack + Dashboard" })
+  if not vim.keymap.get("n", "<leader>sn") then
+    vim.keymap.set("n", "<leader>sn", function()
+      M.configure_stack("nextjs")
+      if package.loaded["snacks.dashboard"] then
+        pcall(require("snacks.dashboard").open)
+      end
+    end, { desc = "Focus Next.js Stack + Dashboard" })
+  end
 
-  vim.keymap.set("n", "<leader>sb", function()
-    M.configure_stack("both")
-    if package.loaded["snacks.dashboard"] then
-      require("snacks.dashboard").open()
-    end
-  end, { desc = "Focus Both Stacks + Dashboard" })
+  if not vim.keymap.get("n", "<leader>sb") then
+    vim.keymap.set("n", "<leader>sb", function()
+      M.configure_stack("both")
+      if package.loaded["snacks.dashboard"] then
+        pcall(require("snacks.dashboard").open)
+      end
+    end, { desc = "Focus Both Stacks + Dashboard" })
+  end
 end
 
 return M
