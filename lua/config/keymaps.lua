@@ -81,12 +81,19 @@ function M.setup()
 
   -- File explorer
   map("n", "<leader>e", function()
-    -- Try to use oil first, fallback to built-in explorer
+    -- Try to use oil first, fallback to nvim-tree, then built-in explorer
     local ok, oil = pcall(require, "oil")
     if ok then
       oil.open()
     else
-      vim.cmd("Ex")
+      -- Try nvim-tree next
+      local tree_ok, _ = pcall(require, "nvim-tree.api")
+      if tree_ok then
+        vim.cmd("NvimTreeToggle")
+      else
+        -- Ultimate fallback to built-in
+        vim.cmd("Ex")
+      end
     end
   end, { desc = "Open File Explorer" })
 

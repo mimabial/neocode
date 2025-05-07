@@ -1,130 +1,197 @@
--- lua/plugins/oil.lua
--- Plugin specification for Oil.nvim file explorer with stack-specific integration
+-- lua/plugins/explorer.lua
 return {
-  "stevearc/oil.nvim",
-  lazy = false,
-  priority = 900,
-  dependencies = { "nvim-tree/nvim-web-devicons" },
-
-  opts = {
-    default_file_explorer = true,
-    use_default_keymaps = true,
-    delete_to_trash = true,
-    skip_confirm_for_simple_edits = true,
-    prompt_save_on_select_new_entry = true,
-    cleanup_delay_ms = 2000,
-    lsp_file_methods = { autosave_changes = true },
-
-    columns = {
-      "size",
-      "icon",
-    },
-    buf_options = { buflisted = false, bufhidden = "hide" },
-    win_options = {
-      wrap = false,
-      signcolumn = "no",
-      cursorcolumn = false,
-      foldcolumn = "0",
-      spell = false,
-      list = false,
-      conceallevel = 3,
-      concealcursor = "nvic",
-      number = false,
-      relativenumber = true,
-      cursorline = true,
-    },
-
-    view_options = {
-      show_hidden = false,
-      is_hidden_file = function(name)
-        return vim.startswith(name, ".")
-      end,
-      is_always_hidden = function()
-        return false
-      end,
-    },
-
-    keymaps = {
-      ["g?"] = "actions.show_help",
-      ["<CR>"] = "actions.select",
-      ["<C-s>"] = "actions.select_vsplit",
-      ["<C-h>"] = "actions.select_split",
-      ["<C-t>"] = "actions.select_tab",
-      ["<C-p>"] = "actions.preview",
-      ["<C-c>"] = "actions.close",
-      ["<C-l>"] = "actions.refresh",
-      ["-"] = "actions.parent",
-      ["_"] = "actions.open_cwd",
-      ["`"] = "actions.cd",
-      ["~"] = "actions.tcd",
-      ["gs"] = "actions.change_sort",
-      ["gx"] = "actions.open_external",
-      ["g."] = "actions.toggle_hidden",
-      ["g\\"] = "actions.toggle_trash",
-      ["q"] = "actions.close",
-    },
-
-    float = { padding = 2, border = "rounded", max_width = 0, max_height = 0, win_options = { winblend = 0 } },
-    preview = { border = "rounded", win_options = { winblend = 0 } },
-    progress = { border = "rounded", win_options = { winblend = 0 } },
+  "nvim-tree/nvim-tree.lua",
+  dependencies = {
+    "nvim-tree/nvim-web-devicons",
   },
+  cmd = { "NvimTreeToggle", "NvimTreeFindFile" },
+  keys = {
+    { "<leader>E", "<cmd>NvimTreeToggle<cr>", desc = "NvimTree Explorer" },
+  },
+  opts = function()
+    -- Get UI colors for consistent styling
+    local colors = _G.get_ui_colors and _G.get_ui_colors()
+      or {
+        bg = "#282828",
+        fg = "#d4be98",
+        border = "#665c54",
+      }
 
-  config = function(_, opts)
-    local oil = require("oil")
-    oil.setup(opts)
+    return {
+      disable_netrw = true,
+      hijack_cursor = true,
+      sync_root_with_cwd = true,
+      respect_buf_cwd = true,
+      update_focused_file = {
+        enable = true,
+        update_root = false,
+      },
+      view = {
+        adaptive_size = false,
+        width = 30,
+        side = "left",
+        preserve_window_proportions = true,
+      },
+      git = {
+        enable = true,
+        ignore = false,
+      },
+      filesystem_watchers = {
+        enable = true,
+      },
+      actions = {
+        open_file = {
+          resize_window = true,
+          window_picker = {
+            enable = true,
+          },
+        },
+      },
+      renderer = {
+        root_folder_label = false,
+        highlight_git = true,
+        highlight_opened_files = "name",
+        indent_markers = {
+          enable = true,
+        },
+        icons = {
+          show = {
+            file = true,
+            folder = true,
+            folder_arrow = true,
+            git = true,
+          },
+          glyphs = {
+            git = {
+              unstaged = "•",
+              staged = "✓",
+              unmerged = "",
+              renamed = "➜",
+              untracked = "★",
+              deleted = "",
+              ignored = "◌",
+            },
+          },
+        },
+      },
+      filters = {
+        git_ignored = false,
+        dotfiles = false,
+        custom = {
+          "^.git$",
+          "^node_modules$",
+          "^.cache$",
+          "^.DS_Store$",
+        },
+        exclude = {},
+      },
+      diagnostics = {
+        enable = true,
+        show_on_dirs = true,
+        severity = {
+          min = vim.diagnostic.severity.HINT,
+          max = vim.diagnostic.severity.ERROR,
+        },
+        icons = {
+          hint = " ",
+          info = " ",
+          warning = " ",
+          error = " ",
+        },
+      },
+      on_attach = function(bufnr)
+        local api = require("nvim-tree.api")
 
-    -- Helper: generate view options per stack
-    local function make_view_opts(stack)
-      if stack == "goth" then
-        return {
-          show_hidden = true,
-          is_hidden_file = function(name)
-            return vim.startswith(name, ".") or name == "vendor" or name == "node_modules" or name == "go.sum"
-          end,
-        }
-      elseif stack == "nextjs" then
-        return {
-          show_hidden = true,
-          is_hidden_file = function(name)
-            return vim.startswith(name, ".")
-              or vim.tbl_contains({ "node_modules", ".next", ".turbo", "out", ".vercel" }, name)
-          end,
-        }
-      else
-        return {}
-      end
-    end
-
-    -- Stack-specific Oil commands
-    local function make_cmd(name)
-      local stack = name:sub(4):lower()
-      vim.api.nvim_create_user_command(name, function()
-        local view_override = make_view_opts(stack)
-        local combined_opts = vim.tbl_extend("force", opts.view_options or {}, view_override)
-        oil.open({ view_options = combined_opts })
-        vim.notify("Oil focused on " .. stack:upper() .. " stack", vim.log.levels.INFO)
-      end, { desc = "Oil explorer: " .. name:sub(4) .. " stack" })
-    end
-    make_cmd("OilGOTH")
-    make_cmd("OilNEXTJS")
-
-    -- Theme-specific highlights in oil buffer
-    vim.api.nvim_create_autocmd("FileType", {
-      pattern = "oil",
-      desc = "Oil buffer highlights",
-      callback = function()
-        if vim.g.colors_name == "gruvbox-material" then
-          local hl = vim.api.nvim_set_hl
-          hl(0, "OilDir", { fg = "#7daea3", bold = true })
-          hl(0, "OilDirIcon", { fg = "#7daea3", bold = true })
-          hl(0, "OilLink", { fg = "#89b482", underline = true })
-          hl(0, "OilFile", { fg = "#d4be98" })
-          hl(0, "OilTypeDir", { link = "OilDir" })
-          hl(0, "OilTypeFile", { link = "OilFile" })
-          hl(0, "OilTypeSymlink", { link = "OilLink" })
-          hl(0, "OilColumn", { link = "Comment" })
+        local function opts(desc)
+          return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
         end
+
+        -- Default mappings
+        vim.keymap.set("n", "<CR>", api.node.open.edit, opts("Open"))
+        vim.keymap.set("n", "o", api.node.open.edit, opts("Open"))
+        vim.keymap.set("n", "h", api.node.navigate.parent_close, opts("Close Directory"))
+        vim.keymap.set("n", "v", api.node.open.vertical, opts("Open: Vertical Split"))
+        vim.keymap.set("n", "s", api.node.open.horizontal, opts("Open: Horizontal Split"))
+        vim.keymap.set("n", "r", api.fs.rename, opts("Rename"))
+        vim.keymap.set("n", "y", api.fs.copy.node, opts("Copy"))
+        vim.keymap.set("n", "c", api.fs.copy.node, opts("Copy"))
+        vim.keymap.set("n", "p", api.fs.paste, opts("Paste"))
+        vim.keymap.set("n", "d", api.fs.remove, opts("Delete"))
+        vim.keymap.set("n", "a", api.fs.create, opts("Create"))
+        vim.keymap.set("n", "R", api.tree.reload, opts("Refresh"))
+        vim.keymap.set("n", "?", api.tree.toggle_help, opts("Help"))
       end,
+    }
+  end,
+  config = function(_, opts)
+    -- Safe loading
+    local ok, nvim_tree = pcall(require, "nvim-tree")
+    if not ok then
+      vim.notify("Failed to load nvim-tree", vim.log.levels.WARN)
+      return
+    end
+
+    -- Setup with error handling
+    local setup_ok, err = pcall(function()
+      nvim_tree.setup(opts)
+
+      -- Create stack-specific tree commands
+      vim.api.nvim_create_user_command("NvimTreeGOTH", function()
+        require("nvim-tree.api").tree.toggle({
+          path = vim.fn.getcwd(),
+          find_file = true,
+          filters = {
+            custom = {
+              "^.git$",
+              "^node_modules$",
+              "^vendor$",
+              "^.next$",
+            },
+          },
+        })
+      end, { desc = "Open NvimTree focused on GOTH stack" })
+
+      vim.api.nvim_create_user_command("NvimTreeNext", function()
+        require("nvim-tree.api").tree.toggle({
+          path = vim.fn.getcwd(),
+          find_file = true,
+          filters = {
+            custom = {
+              "^.git$",
+              "^vendor$",
+            },
+          },
+        })
+      end, { desc = "Open NvimTree focused on Next.js stack" })
+    end)
+
+    if not setup_ok then
+      vim.notify("Failed to setup nvim-tree: " .. tostring(err), vim.log.levels.ERROR)
+    end
+
+    -- Update the existing explorer toggle command to support nvim-tree
+    vim.api.nvim_create_user_command("ExplorerToggle", function(opts)
+      local explorer = opts.args ~= "" and opts.args or vim.g.default_explorer or "oil"
+
+      if explorer == "nvim-tree" then
+        pcall(vim.cmd, "NvimTreeToggle")
+      elseif explorer == "oil" then
+        local oil = safe_require("oil")
+        if oil then
+          oil.open()
+        else
+          -- Fallback to NvimTree if oil not available
+          pcall(vim.cmd, "NvimTreeToggle")
+        end
+      elseif explorer == "netrw" then
+        vim.cmd("Explore")
+      end
+    end, {
+      nargs = "?",
+      complete = function()
+        return { "oil", "nvim-tree", "netrw" }
+      end,
+      desc = "Toggle file explorer (oil, nvim-tree, or netrw)",
     })
   end,
 }

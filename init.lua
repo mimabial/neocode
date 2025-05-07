@@ -5,7 +5,7 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 -- Enable default explorer
-vim.g.default_explorer = "oil"
+vim.g.default_explorer = "oil" -- Options: "oil", "nvim-tree", or "netrw"
 vim.g.default_picker = "telescope" -- Prefer telescope over snacks
 
 -- Disable legacy plugins

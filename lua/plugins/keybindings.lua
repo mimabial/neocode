@@ -112,6 +112,12 @@ return {
       ["<leader>bp"] = { desc = "Previous Buffer" },
     })
 
+    -- Explorer keys
+    wk.register({
+      ["<leader>e"] = { desc = "Open File Explorer (Default)" },
+      ["<leader>E"] = { desc = "NvimTree Explorer" },
+    })
+
     -- Telescope/finder keys
     wk.register({
       ["<leader>f"] = { name = "Find/Telescope" },
