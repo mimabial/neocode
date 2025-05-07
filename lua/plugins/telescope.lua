@@ -40,10 +40,10 @@ return {
         results = { "─", "│", " ", " ", " ", " ", "│", " " },
         preview = { "─", " ", " ", " ", "─", "─", " ", " " },
       },
-      vertical = {
-        prompt = { "━", "┃", " ", "┃", "┏", "┓", "┃", "┃" },
-        results = { "━", "┃", "━", "┃", "┣", "┫", "┛", "┗" },
-        preview = { "━", "┃", "━", "┃", "┏", "┓", "┛", "┗" },
+      ebony = {
+        prompt = { " ", " ", " ", " ", " ", " ", " ", " " },
+        results = { "━", " ", " ", " ", " ", " ", " ", " " },
+        preview = { " ", " ", "━", " ", " ", " ", " ", " " },
       },
     }
 
@@ -79,14 +79,14 @@ return {
       {
         "<leader>fl",
         function()
-          -- Toggle between ivory and vertical
-          vim.g.telescope_layout = (vim.g.telescope_layout == "ivory") and "vertical" or "ivory"
+          -- Toggle between ivory and ebony
+          vim.g.telescope_layout = (vim.g.telescope_layout == "ivory") and "ebony" or "ivory"
           local layout = vim.g.telescope_layout
 
           -- Save preference to file
           save_layout(layout)
 
-          vim.notify("Telescope layout: " .. (layout == "ivory" and "bottom_pane" or "vertical") .. " (saved)")
+          vim.notify("Telescope layout: " .. (layout == "ivory" and "ivory" or "ebony") .. " (saved)")
         end,
         desc = "Toggle Layout",
       },
@@ -121,7 +121,7 @@ return {
       { "<leader>ft", with_layout("treesitter"), desc = "Find Symbols (Treesitter)" },
       { "<leader>fk", with_layout("keymaps"), desc = "Find Keymaps" },
 
-      -- Stack-specific finders (fallback to telescope if snacks unavailable)
+      -- Stack-specific finders
       {
         "<leader>sg",
         with_layout(function()
@@ -191,66 +191,16 @@ return {
         end),
         desc = "Find Next.js files",
       },
-
-      -- Mappings for layout toggle with persistence
-      mappings = {
-        i = {
-          ["<C-l>"] = function()
-            -- Toggle layout
-            vim.g.telescope_layout = (vim.g.telescope_layout == "ivory") and "vertical" or "ivory"
-
-            -- Save the layout setting
-            local layout = vim.g.telescope_layout
-
-            -- Save preference to file
-            save_layout(layout)
-
-            -- Get current picker
-            local state = require("telescope.actions.state")
-            local picker = state.get_current_picker()
-
-            -- Update layout
-            if picker then
-              picker.layout_strategy = vim.g.telescope_layout
-              picker:refresh()
-              vim.notify("Telescope layout: " .. (layout == "ivory" and "bottom_pane" or "vertical") .. " (saved)")
-            end
-          end,
-        },
-        n = {
-          ["<C-l>"] = function()
-            -- Toggle layout
-            vim.g.telescope_layout = (vim.g.telescope_layout == "ivory") and "vertical" or "ivory"
-
-            -- Save the layout setting
-            local layout = vim.g.telescope_layout
-
-            -- Save preference to file
-            save_layout(layout)
-
-            -- Get current picker
-            local state = require("telescope.actions.state")
-            local picker = state.get_current_picker()
-
-            -- Update layout
-            if picker then
-              picker.layout_strategy = vim.g.telescope_layout
-              picker:refresh()
-              vim.notify("Telescope layout: " .. (layout == "ivory" and "bottom_pane" or "vertical") .. " (saved)")
-            end
-          end,
-        },
-      },
     }
   end,
 
   config = function()
-    local telescope = require("telescope")
+    -- IMPORTANT: Register custom layout strategies FIRST before any setup
+    local layout_strategies = require("telescope.pickers.layout_strategies")
 
-    -- Custom bottom_pane layout that adds more space between prompt and results
-    require("telescope.pickers.layout_strategies").ivory = function(picker, max_columns, max_lines, layout_config)
-      local layout =
-        require("telescope.pickers.layout_strategies").bottom_pane(picker, max_columns, max_lines, layout_config)
+    -- Create the custom ivory layout (bottom pane style)
+    layout_strategies.ivory = function(picker, max_columns, max_lines, layout_config)
+      local layout = layout_strategies.bottom_pane(picker, max_columns, max_lines, layout_config)
 
       -- Add padding between prompt and results
       if layout.prompt and layout.results then
@@ -269,21 +219,41 @@ return {
       return layout
     end
 
-    -- Create command to toggle layouts with persistence
-    vim.api.nvim_create_user_command("TelescopeToggleLayout", function()
-      -- Toggle layout
-      vim.g.telescope_layout = (vim.g.telescope_layout == "ivory") and "vertical" or "ivory"
-      local layout = vim.g.telescope_layout
+    -- Create custom vertical layout with full screen usage and proper spacing
+    layout_strategies.ebony = function(picker, max_columns, max_lines, layout_config)
+      -- Start with standard vertical layout
+      local layout = layout_strategies.vertical(picker, max_columns, max_lines, layout_config)
 
-      -- Save preference to file
-      local layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
-      local data = vim.fn.json_encode({ layout = layout })
-      vim.fn.mkdir(vim.fn.fnamemodify(layout_file, ":h"), "p")
-      vim.fn.writefile({ data }, layout_file)
+      -- Position preview below results with proper spacing
+      if layout.preview then
+        layout.preview.line = 1
+        -- Make preview take remaining space
+        layout.preview.height = math.floor(max_lines * 0.5)
+        -- Full width
+        layout.preview.width = max_columns
+        layout.preview.col = 0
+      end
+      -- Ensure prompt is at top and takes minimal space
+      if layout.prompt and layout.preview then
+        layout.prompt.line = layout.preview.line + layout.preview.height + 1
+        layout.prompt.width = max_columns - 5
+        layout.prompt.height = 1
+        layout.prompt.col = 0
+      end
+      -- Position results above prompt with proper height
+      if layout.results and layout.prompt then
+        layout.results.line = layout.prompt.line + layout.prompt.height + 1
+        -- Make results take less height - 40% of available space
+        layout.results.height = math.floor(max_lines * 0.5) - layout.prompt.height
+        -- Full width
+        layout.results.width = max_columns
+        layout.results.col = 1
+      end
 
-      local disp_name = (layout == "ivory") and "bottom_pane" or "vertical"
-      vim.notify("Telescope layout: " .. disp_name .. " (saved)")
-    end, {})
+      return layout
+    end
+
+    local telescope = require("telescope")
 
     -- Basic configuration with both layout options predefined
     telescope.setup({
@@ -308,21 +278,22 @@ return {
             width = 1.0,
             prompt_position = "top",
           },
+          ebony = {
+            width = 1.0, -- Full width
+            height = 1.0, -- Full height
+            preview_cutoff = 1, -- Always show preview
+            prompt_position = "top",
+          },
           vertical = {
             prompt_position = "top",
             mirror = false,
             width = 1.0,
             height = 1.0,
-            preview_height = 0.4,
-          },
-          bottom_pane = {
-            height = 0.6,
-            width = 1.0,
-            prompt_position = "top",
+            preview_height = 0.5,
           },
         },
 
-        -- Default borderchars (will be overridden by picker specific borderchars)
+        -- Default borderchars
         borderchars = vim.g.telescope_borders and vim.g.telescope_borders[vim.g.telescope_layout or "ivory"] or {
           prompt = { "─", " ", "─", " ", "─", "─", "─", "─" },
           results = { "─", "│", " ", " ", " ", " ", "│", " " },
@@ -332,7 +303,6 @@ return {
         -- Preview configuration with line numbers
         preview = {
           timeout = 500,
-          -- Make sure preview has enough space for line numbers
           width_padding = 3,
           height_padding = 1,
         },
@@ -345,10 +315,60 @@ return {
           "dist/",
           "build/",
         },
+
+        -- Keyboard mappings for layout toggling
+        mappings = {
+          i = {
+            ["<C-l>"] = function()
+              -- Toggle layout
+              local layout = vim.g.telescope_layout or "ivory"
+              layout = layout == "ivory" and "ebony" or "ivory"
+              vim.g.telescope_layout = layout
+
+              -- Apply to current picker
+              local current_picker = require("telescope.actions.state").get_current_picker()
+              if current_picker then
+                current_picker.layout_strategy = layout
+                current_picker:refresh()
+              end
+
+              -- Save preference
+              local layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
+              local data = vim.fn.json_encode({ layout = layout })
+              vim.fn.mkdir(vim.fn.fnamemodify(layout_file, ":h"), "p")
+              vim.fn.writefile({ data }, layout_file)
+
+              vim.notify("Telescope layout: " .. layout)
+            end,
+          },
+          n = {
+            ["<C-l>"] = function()
+              -- Toggle layout
+              local layout = vim.g.telescope_layout or "ivory"
+              layout = layout == "ivory" and "ebony" or "ivory"
+              vim.g.telescope_layout = layout
+
+              -- Apply to current picker
+              local current_picker = require("telescope.actions.state").get_current_picker()
+              if current_picker then
+                current_picker.layout_strategy = layout
+                current_picker:refresh()
+              end
+
+              -- Save preference
+              local layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
+              local data = vim.fn.json_encode({ layout = layout })
+              vim.fn.mkdir(vim.fn.fnamemodify(layout_file, ":h"), "p")
+              vim.fn.writefile({ data }, layout_file)
+
+              vim.notify("Telescope layout: " .. layout)
+            end,
+          },
+        },
       },
       set_env = { ["COLORTERM"] = "truecolor" },
 
-      cycle_layout_list = { "bottom_pane", "vertical" },
+      cycle_layout_list = { "ivory", "ebony" },
       file_ignore_patterns = {
         "%.git/",
         "node_modules/",
@@ -370,15 +390,6 @@ return {
         "--glob=!node_modules/",
         "--glob=!vendor/",
       },
-      -- Try to recover gracefully if a picker fails
-      on_complete = {
-        function(picker)
-          if picker.status.completed_with_error then
-            vim.notify("Telescope picker encountered an error", vim.log.levels.WARN)
-          end
-        end,
-      },
-      border = true,
       pickers = {
         find_files = {
           prompt_title = false,
@@ -415,7 +426,23 @@ return {
       },
     })
 
-    -- Enhanced preview window settings - explicitly enable line numbers
+    -- Create command to toggle layouts with persistence
+    vim.api.nvim_create_user_command("TelescopeToggleLayout", function()
+      -- Toggle layout
+      vim.g.telescope_layout = (vim.g.telescope_layout == "ivory") and "ebony" or "ivory"
+      local layout = vim.g.telescope_layout
+
+      -- Save preference to file
+      local layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
+      local data = vim.fn.json_encode({ layout = layout })
+      vim.fn.mkdir(vim.fn.fnamemodify(layout_file, ":h"), "p")
+      vim.fn.writefile({ data }, layout_file)
+
+      local disp_name = (layout == "ivory") and "ivory" or "ebony"
+      vim.notify("Telescope layout: " .. disp_name .. " (saved)")
+    end, {})
+
+    -- Enhanced preview window settings
     vim.api.nvim_create_autocmd("User", {
       pattern = "TelescopePreviewerLoaded",
       callback = function()
@@ -430,9 +457,6 @@ return {
         vim.wo.linebreak = true
         vim.wo.list = false
         vim.wo.cursorline = true
-
-        -- Force redraw to ensure line numbers appear
-        vim.cmd("redraw")
       end,
     })
 
@@ -457,10 +481,6 @@ return {
       vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = colors.green, bold = true })
       vim.api.nvim_set_hl(0, "TelescopeSelection", { fg = colors.yellow })
       vim.api.nvim_set_hl(0, "TelescopePromptPrefix", { fg = colors.blue })
-
-      -- Add highlight for line numbers in preview
-      vim.api.nvim_set_hl(0, "TelescopePreviewLine", { fg = colors.blue, bold = true })
-      vim.api.nvim_set_hl(0, "TelescopePreviewLineNr", { fg = colors.gray or "#928374" })
     end
 
     update_highlights()
