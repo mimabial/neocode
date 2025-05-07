@@ -349,40 +349,6 @@ function M.setup()
     return
   end
 
-  -- Global diagnostic configuration
-  vim.diagnostic.config({
-    virtual_text = {
-      prefix = "●",
-      spacing = 4,
-      source = "if_many",
-    },
-    float = {
-      border = "rounded",
-      source = "always",
-      header = "",
-      prefix = function(diagnostic)
-        local icons = {
-          [vim.diagnostic.severity.ERROR] = " ",
-          [vim.diagnostic.severity.WARN] = " ",
-          [vim.diagnostic.severity.INFO] = " ",
-          [vim.diagnostic.severity.HINT] = " ",
-        }
-        return icons[diagnostic.severity] or "", ""
-      end,
-    },
-    signs = true,
-    underline = true,
-    update_in_insert = false,
-    severity_sort = true,
-  })
-
-  -- Setup sign column icons
-  local signs = { Error = "", Warn = "", Hint = "", Info = "" }
-  for type, icon in pairs(signs) do
-    local hl = "DiagnosticSign" .. type
-    vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
-  end
-
   -- Load SchemaStore if available for JSON schemas
   local schemastore_ok, schemastore = pcall(require, "schemastore")
   if schemastore_ok then

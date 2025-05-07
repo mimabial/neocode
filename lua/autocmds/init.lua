@@ -149,23 +149,6 @@ function M.setup()
     desc = "Run lint checks on file save or open",
   })
 
-  -- 8) Show diagnostics in float on cursor hold
-  vim.api.nvim_create_augroup("DiagnosticFloat", { clear = true })
-  vim.api.nvim_create_autocmd("CursorHold", {
-    group = "DiagnosticFloat",
-    callback = function()
-      vim.diagnostic.open_float(nil, {
-        focusable = false,
-        close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
-        border = "single",
-        source = "always",
-        prefix = " ",
-        scope = "cursor",
-      })
-    end,
-    desc = "Show diagnostics in floating window",
-  })
-
   -- 9) Auto-reload changed files
   vim.api.nvim_create_augroup("AutoReload", { clear = true })
   vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHoldI" }, {
@@ -341,56 +324,62 @@ function M.setup()
     desc = "Disable auto comment continuation",
   })
 
-  -- 20) Throttle certain events during undo operations
-  local throttle_group = vim.api.nvim_create_augroup("ThrottleEvents", { clear = true })
-  vim.api.nvim_create_autocmd("OptionSet", {
-    group = throttle_group,
-    pattern = "undolevels",
-    callback = function()
-      -- Disable certain autocmds when undoing
-      if vim.opt.undolevels:get() < 0 then
-        -- Temporarily disable diagnostics (saving current config)
-        vim.g.saved_diagnostic_config = vim.diagnostic.config()
-        vim.diagnostic.config({
-          underline = false,
-          virtual_text = false,
-          signs = false,
-          update_in_insert = false,
-        })
-
-        -- Disable linting
-        if package.loaded["lint"] then
-          vim.g.lint_disabled_during_undo = true
-        end
-        -- Disable git signs updates
-        if package.loaded["gitsigns"] then
-          vim.g.gitsigns_disabled_during_undo = require("gitsigns").toggle_signs(false)
-        end
-      else
-        -- Re-enable diagnostics (restore saved config)
-        if vim.g.saved_diagnostic_config then
-          vim.diagnostic.config(vim.g.saved_diagnostic_config)
-          vim.g.saved_diagnostic_config = nil
-        end
-
-        -- Re-enable linting
-        if vim.g.lint_disabled_during_undo then
-          vim.g.lint_disabled_during_undo = nil
-          if package.loaded["lint"] then
-            require("lint").try_lint()
-          end
-        end
-        -- Re-enable git signs
-        if vim.g.gitsigns_disabled_during_undo then
-          vim.g.gitsigns_disabled_during_undo = nil
-          if package.loaded["gitsigns"] then
-            require("gitsigns").toggle_signs(true)
-          end
-        end
-      end
-    end,
-    desc = "Throttle events during undo operations",
-  })
+  -- -- 20) Throttle certain events during undo operations
+  -- local throttle_group = vim.api.nvim_create_augroup("ThrottleEvents", { clear = true })
+  -- vim.api.nvim_create_autocmd("OptionSet", {
+  --   group = throttle_group,
+  --   pattern = "undolevels",
+  --   callback = function()
+  --     -- Disable certain autocmds when undoing
+  --     if vim.opt.undolevels:get() < 0 then
+  --       -- Temporarily disable diagnostics (saving current config)
+  --       vim.g.saved_diagnostic_config = vim.diagnostic.config()
+  --       vim.diagnostic.config({
+  --         underline = false,
+  --         virtual_text = false,
+  --         signs = false,
+  --         update_in_insert = false,
+  --       })
+  --
+  --       -- Disable linting
+  --       if package.loaded["lint"] then
+  --         vim.g.lint_disabled_during_undo = true
+  --       end
+  --       -- Disable git signs updates
+  --       if package.loaded["gitsigns"] then
+  --         vim.g.gitsigns_disabled_during_undo = require("gitsigns").toggle_signs(false)
+  --       end
+  --     else
+  --       -- Re-enable diagnostics (restore saved config)
+  --       if vim.g.saved_diagnostic_config then
+  --         pcall(vim.diagnostic.config, vim.g.saved_diagnostic_config)
+  --         vim.g.saved_diagnostic_config = nil
+  --       else
+  --         -- Fallback in case saved config wasn't set
+  --         pcall(require, "autocmds.diagnostics")
+  --         if package.loaded["autocmds.diagnostics"] then
+  --           pcall(require("autocmds.diagnostics").setup)
+  --         end
+  --       end
+  --
+  --       -- Re-enable linting
+  --       if vim.g.lint_disabled_during_undo then
+  --         vim.g.lint_disabled_during_undo = nil
+  --         if package.loaded["lint"] then
+  --           require("lint").try_lint()
+  --         end
+  --       end
+  --       -- Re-enable git signs
+  --       if vim.g.gitsigns_disabled_during_undo then
+  --         vim.g.gitsigns_disabled_during_undo = nil
+  --         if package.loaded["gitsigns"] then
+  --           require("gitsigns").toggle_signs(true)
+  --         end
+  --       end
+  --     end
+  --   end,
+  --   desc = "Throttle events during undo operations",
+  -- })
 
   -- 13) Print startup success message
   vim.api.nvim_create_autocmd("User", {

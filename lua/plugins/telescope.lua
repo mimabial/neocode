@@ -99,7 +99,7 @@ return {
       if layout.prompt and layout.preview then
         layout.preview.line = layout.prompt.line + layout.prompt.height + 1
         layout.preview.height = max_lines - layout.preview.line + 1
-        layout.preview.width = math.floor(max_columns * 0.6)
+        layout.preview.width = math.floor(max_columns * 0.6) - 1
       end
 
       return layout
@@ -120,6 +120,7 @@ return {
         vim.wo.number = true
         vim.wo.linebreak = true
         vim.wo.list = false
+        vim.wo.numberwidth = 6
       end,
     })
 

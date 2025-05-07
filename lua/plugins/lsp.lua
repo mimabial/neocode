@@ -306,43 +306,7 @@ return {
       vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" })
 
       vim.lsp.handlers["textDocument/signatureHelp"] =
-        vim.lsp.with(vim.lsp.handlers.signature_help, { border = "rounded" })
-
-      -- Diagnostic configuration
-      vim.diagnostic.config({
-        virtual_text = {
-          prefix = "●",
-          spacing = 4,
-          severity = { min = vim.diagnostic.severity.HINT },
-          source = "if_many",
-        },
-        float = {
-          border = "rounded",
-          severity_sort = true,
-          source = "always",
-          header = "",
-          prefix = function(diagnostic)
-            local icons = {
-              [vim.diagnostic.severity.ERROR] = " ",
-              [vim.diagnostic.severity.WARN] = " ",
-              [vim.diagnostic.severity.INFO] = " ",
-              [vim.diagnostic.severity.HINT] = " ",
-            }
-            return icons[diagnostic.severity] or ""
-          end,
-        },
-        signs = true,
-        underline = true,
-        update_in_insert = false,
-        severity_sort = true,
-      })
-
-      -- Define diagnostic signs
-      local signs = { Error = "", Warn = "", Info = "", Hint = "" }
-      for type, icon in pairs(signs) do
-        local hl = "DiagnosticSign" .. type
-        vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
-      end
+        vim.lsp.with(vim.lsp.handlers.signature_help, { border = "single" })
     end,
   },
 
@@ -352,7 +316,7 @@ return {
     event = "LspAttach",
     opts = {
       bind = true,
-      handler_opts = { border = "rounded" },
+      handler_opts = { border = "single" },
       hint_enable = true,
       hint_prefix = "🔍 ",
       hint_scheme = "String",

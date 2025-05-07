@@ -17,7 +17,6 @@ function M.setup()
   opt.number = true -- Show absolute line numbers
   opt.relativenumber = true -- Show relative line numbers
   opt.cursorline = true -- Highlight current line
-  opt.signcolumn = "yes" -- Always show sign column
   opt.termguicolors = true -- True color support
   opt.background = "dark" -- Dark background
   opt.signcolumn = "yes:1" -- Always show sign column with fixed width

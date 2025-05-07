@@ -41,30 +41,13 @@ return {
     auto_preview = true,
     auto_fold = false,
     auto_jump = { "lsp_definitions" },
-    signs = { error = "", warning = "", hint = "", information = "" },
+    -- signs = { error = "", warning = "", hint = "", information = "" },
     use_diagnostic_signs = false,
     win_config = {
       border = "single",
-      persist = true, -- Keep trouble window open
+      persist = false, -- Keep trouble window open
     },
   },
-
-  -- Explicit config to ensure setup(opts)
-  config = function(_, opts)
-    require("trouble").setup(opts)
-
-    -- Add autocmd to prevent trouble from auto-closing when focus is lost
-    vim.api.nvim_create_autocmd("BufEnter", {
-      pattern = "Trouble",
-      callback = function()
-        -- Set buffer-local option to prevent closing
-        vim.api.nvim_win_set_option(0, "winfixheight", true)
-      end,
-      desc = "Make Trouble window persist",
-    })
-  end,
-
-  -- Keybindings
   keys = {
     {
       "<leader>xx",
