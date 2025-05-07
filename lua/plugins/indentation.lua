@@ -9,42 +9,30 @@ return {
     config = function()
       local rainbow_delimiters = require("rainbow-delimiters")
 
-      -- Define highlight groups immediately
-      local colors = {
-        ["gruvbox-material"] = {
-          "#ea6962", -- Red
-          "#d8a657", -- Yellow
-          "#7daea3", -- Blue
-          "#e78a4e", -- Orange
-          "#89b482", -- Green
-          "#d3869b", -- Purple
-          "#a9b665", -- Light green
-        },
-        ["everforest"] = {
-          "#e67e80", -- Red
-          "#dbbc7f", -- Yellow
-          "#7fbbb3", -- Blue
-          "#e69875", -- Orange
-          "#a7c080", -- Green
-          "#d699b6", -- Purple
-          "#83c092", -- Aqua
-        },
-        ["kanagawa"] = {
-          "#c34043", -- Red
-          "#dca561", -- Yellow
-          "#7e9cd8", -- Blue
-          "#ffa066", -- Orange
-          "#76946a", -- Green
-          "#957fb8", -- Purple
-          "#6a9589", -- Teal
-        },
+      -- Get colors from the unified theme system
+      local colors = _G.get_ui_colors and _G.get_ui_colors()
+        or {
+          red = "#ea6962",
+          yellow = "#d8a657",
+          blue = "#7daea3",
+          orange = "#e78a4e",
+          green = "#89b482",
+          purple = "#d3869b",
+          aqua = "#7daea3",
+        }
+
+      -- Create a palette from the unified colors
+      local palette = {
+        colors.red,
+        colors.yellow,
+        colors.blue,
+        colors.orange,
+        colors.green,
+        colors.purple,
+        colors.aqua,
       }
 
-      -- Select color palette based on current theme
-      local colorscheme = vim.g.colors_name or "gruvbox-material"
-      local palette = colors[colorscheme] or colors["gruvbox-material"]
-
-      -- Directly set highlight groups - not just returning them
+      -- Set highlight groups
       for i, color in ipairs(palette) do
         local hl_group = "RainbowDelimiter" .. i
         vim.api.nvim_set_hl(0, hl_group, { fg = color })

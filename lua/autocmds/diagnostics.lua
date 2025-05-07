@@ -1,31 +1,15 @@
 -- lua/autocmds/diagnostics.lua
 local M = {}
 
--- Helper to get colors (extracted from the ColorScheme callback)
-local function get_diag_colors()
-  local colors
-
-  -- Get colors from theme helpers if available
-  if vim.g.colors_name == "gruvbox-material" and _G.get_gruvbox_colors then
-    colors = _G.get_gruvbox_colors()
-  elseif _G.get_ui_colors then
-    colors = _G.get_ui_colors()
-  else
-    -- Fallback colors
-    colors = {
+-- Apply diagnostic highlights with current colors
+local function apply_diagnostic_highlights()
+  local colors = _G.get_ui_colors and _G.get_ui_colors()
+    or {
       red = "#ea6962",
       yellow = "#d8a657",
-      aqua = "#7daea3",
       blue = "#7daea3",
       green = "#89b482",
     }
-  end
-  return colors
-end
-
--- Apply diagnostic highlights with current colors
-local function apply_diagnostic_highlights()
-  local colors = get_diag_colors()
 
   -- Set all diagnostic highlight groups
   vim.api.nvim_set_hl(0, "DiagnosticSignError", { fg = colors.red, bg = "NONE" })
@@ -60,7 +44,7 @@ function M.setup()
   -- 2) Comprehensive diagnostic display configuration
   vim.diagnostic.config({
     virtual_text = {
-      prefix = " ",
+      prefix = " ",
       spacing = 4,
       source = "if_many",
     },
@@ -71,10 +55,10 @@ function M.setup()
       header = "",
       prefix = function(diagnostic)
         local icons = {
-          [vim.diagnostic.severity.ERROR] = " ", -- nf-fa-times_circle
-          [vim.diagnostic.severity.WARN] = " ", -- nf-fa-exclamation_triangle
-          [vim.diagnostic.severity.INFO] = " ", -- nf-fa-info_circle
-          [vim.diagnostic.severity.HINT] = " ", -- nf-mdi-lightbulb_outline
+          [vim.diagnostic.severity.ERROR] = " ",
+          [vim.diagnostic.severity.WARN] = " ",
+          [vim.diagnostic.severity.INFO] = " ",
+          [vim.diagnostic.severity.HINT] = " ",
         }
         return icons[diagnostic.severity] or ""
       end,
@@ -113,13 +97,6 @@ function M.setup()
 
   -- 6) Apply highlights immediately at startup
   apply_diagnostic_highlights()
-
-  -- 7) Add a command to reset diagnostics if needed
-  vim.api.nvim_create_user_command("DiagnosticsReset", function()
-    vim.diagnostic.config(vim.diagnostic.config())
-    apply_diagnostic_highlights()
-    vim.notify("Diagnostics reset and reapplied", vim.log.levels.INFO)
-  end, { desc = "Reset and reapply diagnostics" })
 end
 
 return M

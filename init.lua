@@ -44,7 +44,10 @@ load_module("config.options", "setup")
 -- 5) Setup Lazy.nvim
 load_module("config.lazy", "setup")
 
--- 6) Load secondary modules
+-- 6) After loading lazy.nvim, but before other modules
+load_module("plugins.colorscheme", "setup") -- Load colorscheme first
+
+-- 7) Load secondary modules
 load_module("config.keymaps", "setup")
 load_module("config.lsp", "setup")
 load_module("config.ui", "setup")
@@ -61,8 +64,3 @@ load_module("utils.stacks", "setup")
 -- 8) Load utility modules
 -- load_module("utils.fix_encoding", "setup")
 -- load_module("utils.delete_highlight", "setup")
-
--- 9) Set default colorscheme if not already set
-if not vim.g.colors_name then
-  pcall(vim.api.nvim_command, "colorscheme gruvbox-material")
-end
