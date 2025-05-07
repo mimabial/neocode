@@ -1,12 +1,12 @@
 -- lua/utils/stacks.lua
--- Enhanced fail-safe stack detection and configuration for GOTH and Next.js
+-- Improved stack detection and configuration with better fail-safety
 
 local M = {}
 
 local fn = vim.fn
 local api = vim.api
 
--- Safely load a module with basic error handling
+-- Safely load a module with error handling
 local function safe_require(mod)
   local ok, result = pcall(require, mod)
   if not ok then
@@ -15,14 +15,13 @@ local function safe_require(mod)
   return result
 end
 
--- Icons for stack indicators
+-- Stack icons for notifications
 local stack_icons = {
   ["goth"] = "󰟓 ",
   ["nextjs"] = " ",
-  ["both"] = "󰡄 ",
 }
 
--- Check if any file matching patterns exists in cwd with robust error handling
+-- Check if any file matching patterns exists in cwd
 local function exists(patterns)
   local ok, result = pcall(function()
     if type(patterns) == "string" then
@@ -39,7 +38,7 @@ local function exists(patterns)
   return ok and result or false
 end
 
--- Search file contents for pattern with enhanced safety
+-- Search file contents for pattern with error handling
 local function file_contains(file, pattern, max_lines)
   local ok, result = pcall(function()
     max_lines = max_lines or 100
@@ -47,14 +46,11 @@ local function file_contains(file, pattern, max_lines)
       return false
     end
 
-    local lines
-    -- Handle read errors gracefully
-    local read_ok, read_result = pcall(vim.fn.readfile, file, "", max_lines)
-    if not read_ok or type(read_result) ~= "table" then
+    local read_ok, lines = pcall(vim.fn.readfile, file, "", max_lines)
+    if not read_ok or type(lines) ~= "table" then
       return false
     end
 
-    lines = read_result
     local content = table.concat(lines, "\n")
     return content:match(pattern) ~= nil
   end)
@@ -62,19 +58,19 @@ local function file_contains(file, pattern, max_lines)
   return ok and result or false
 end
 
--- Detect current project stack with enhanced error handling
+-- Detect current project stack with robust error handling
 function M.detect_stack()
-  -- Add safety wrapper around the entire function
+  -- Safety wrapper around detection logic
   local ok, result = pcall(function()
-    -- GOTH stack indicators with improved error handling
+    -- GOTH stack indicators
     local goth_score = 0
 
-    -- Check safely for Go files
+    -- Check for Go files
     if exists({ "*.go", "go.mod", "go.sum" }) then
       goth_score = goth_score + 2
     end
 
-    -- Check safely for Templ files
+    -- Check for Templ files
     if exists({ "*.templ", "**/components/*.templ", "**/templates/*.templ" }) then
       goth_score = goth_score + 3
     end
@@ -84,7 +80,7 @@ function M.detect_stack()
       goth_score = goth_score + 2
     end
 
-    -- Check Go imports/usage related to HTMX/Templ with safety checks
+    -- Check Go imports/usage related to HTMX/Templ
     local gofiles = {}
     local glob_ok, glob_result = pcall(fn.glob, "**/*.go", false, true)
     if glob_ok and type(glob_result) == "table" then
@@ -98,7 +94,7 @@ function M.detect_stack()
       end
     end
 
-    -- Next.js detection with similar safety enhancements
+    -- Next.js detection
     local nextjs_score = 0
 
     -- Direct Next.js indicators
@@ -124,9 +120,7 @@ function M.detect_stack()
     end
 
     -- Determine the result based on scores
-    if goth_score >= 4 and nextjs_score >= 4 then
-      return "both"
-    elseif goth_score >= 4 then
+    if goth_score >= 4 then
       return "goth"
     elseif nextjs_score >= 4 then
       return "nextjs"
@@ -154,33 +148,29 @@ function M.detect_stack()
   return result
 end
 
--- Apply configuration for a given stack with enhanced fail-safety
+-- Apply configuration for a given stack
 function M.configure_stack(stack_name)
   local stack = stack_name or M.detect_stack() or ""
   local notify_icon = ""
 
   -- Store globally for access by other modules
-  if stack == "both" then
-    vim.g.current_stack = "goth+nextjs"
-    notify_icon = stack_icons["both"] or "󰡄 "
-  else
-    vim.g.current_stack = stack
-    if stack == "goth" then
-      notify_icon = stack_icons["goth"] or "󰟓 "
-    elseif stack == "nextjs" then
-      notify_icon = stack_icons["nextjs"] or " "
-    end
+  vim.g.current_stack = stack
+
+  -- Set stack icon for notification
+  if stack == "goth" then
+    notify_icon = stack_icons["goth"] or "󰟓 "
+  elseif stack == "nextjs" then
+    notify_icon = stack_icons["nextjs"] or " "
   end
 
   -- Configure for GOTH stack
-  if stack == "goth" or stack == "both" then
+  if stack == "goth" then
     -- Notify user
     api.nvim_notify(notify_icon .. "Stack focused on GOTH (Go/Templ/HTMX)", vim.log.levels.INFO, { title = "Stack" })
 
     -- Ensure gopls is configured optimally
     local lspconfig = safe_require("lspconfig")
     if lspconfig and lspconfig.gopls then
-      -- Configure with error handling
       pcall(lspconfig.gopls.setup, {
         settings = {
           gopls = {
@@ -263,7 +253,7 @@ function M.configure_stack(stack_name)
   end
 
   -- Configure for Next.js stack
-  if stack == "nextjs" or stack == "both" then
+  if stack == "nextjs" then
     api.nvim_notify(notify_icon .. "Stack focused on Next.js", vim.log.levels.INFO, { title = "Stack" })
 
     -- Configure TypeScript LSP with optimal settings
@@ -390,28 +380,12 @@ function M.setup()
     local st = M.detect_stack()
     if st then
       -- Set global stack variable
-      if st == "both" then
-        vim.g.current_stack = "goth+nextjs"
-      else
-        vim.g.current_stack = st
-      end
+      vim.g.current_stack = st
 
       -- Notify user of detected stack with a short delay to avoid startup clutter
       vim.defer_fn(function()
-        local icon = ""
-        if st == "goth" then
-          icon = stack_icons["goth"] or "󰟓 "
-        elseif st == "nextjs" then
-          icon = stack_icons["nextjs"] or " "
-        elseif st == "both" then
-          icon = stack_icons["both"] or "󰡄 "
-        end
-
-        api.nvim_notify(
-          icon .. "Detected project stack: " .. (st == "both" and "GOTH+Next.js" or st),
-          vim.log.levels.INFO,
-          { title = "Stack" }
-        )
+        local icon = st == "goth" and stack_icons["goth"] or stack_icons["nextjs"]
+        api.nvim_notify(icon .. "Detected project stack: " .. st, vim.log.levels.INFO, { title = "Stack" })
       end, 500)
     end
   end
@@ -423,7 +397,7 @@ function M.setup()
     nargs = "?",
     desc = "Focus on a specific tech stack",
     complete = function()
-      return { "goth", "nextjs", "both" }
+      return { "goth", "nextjs" }
     end,
   })
 end

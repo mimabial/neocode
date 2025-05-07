@@ -1,5 +1,5 @@
 -- lua/config/keymaps.lua
--- Standardized keymap definitions with consistent structure and telescope integration
+-- Now with symbols-outline integration
 
 local M = {}
 
@@ -105,6 +105,11 @@ function M.setup()
       vim.cmd("Ex")
     end
   end, { desc = "File Explorer (parent dir)" })
+
+  -- ========================================
+  -- Symbols Outline
+  -- ========================================
+  map("n", "<leader>cs", "<cmd>SymbolsOutline<cr>", { desc = "Symbols Outline" })
 
   -- ========================================
   -- Telescope (search & find)
@@ -244,22 +249,6 @@ function M.setup()
       vim.notify("Stack configuration module not available", vim.log.levels.WARN)
     end
   end, { desc = "Focus Next.js Stack" })
-
-  -- Both stacks
-  map("n", "<leader>sb", function()
-    local ok, stacks = pcall(require, "utils.stacks")
-    if ok and stacks.configure_stack then
-      stacks.configure_stack("both")
-      -- Try to open dashboard if available
-      pcall(function()
-        if package.loaded["snacks.dashboard"] then
-          require("snacks.dashboard").open()
-        end
-      end)
-    else
-      vim.notify("Stack configuration module not available", vim.log.levels.WARN)
-    end
-  end, { desc = "Focus Both Stacks" })
 
   -- ========================================
   -- Terminal Integration

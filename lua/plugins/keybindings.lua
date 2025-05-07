@@ -1,5 +1,5 @@
 -- lua/plugins/keybindings.lua
--- Enhanced WhichKey configuration with better integration and standardized groups
+-- Enhanced WhichKey configuration with symbols-outline integration
 
 return {
   "folke/which-key.nvim",
@@ -147,7 +147,6 @@ return {
       ["<leader>s"] = { name = "Stack/Sessions" },
       ["<leader>sg"] = { desc = "Focus GOTH Stack" },
       ["<leader>sn"] = { desc = "Focus Next.js Stack" },
-      ["<leader>sb"] = { desc = "Focus Both Stacks" },
     })
 
     -- Terminal commands
@@ -179,13 +178,14 @@ return {
       ["<leader>L4"] = { desc = "Debug Layout" },
     })
 
-    -- LSP commands - these are added dynamically in autocmd
+    -- LSP commands with symbols-outline integration
     wk.register({
       ["<leader>c"] = { name = "Code/LSP" },
       ["<leader>ca"] = { desc = "Code Action" },
       ["<leader>cd"] = { desc = "Show Diagnostics" },
       ["<leader>cf"] = { desc = "Format" },
       ["<leader>cr"] = { desc = "Rename Symbol" },
+      ["<leader>cs"] = { desc = "Symbols Outline" }, -- New symbols-outline integration
     })
 
     -- Trouble/Diagnostics keys
@@ -222,6 +222,7 @@ return {
             ["f"] = { desc = "Format" },
             ["d"] = { desc = "Show Diagnostics" },
             ["q"] = { desc = "Diagnostics to Quickfix" },
+            ["s"] = { desc = "Symbols Outline" }, -- Add inside LspAttach for buffer-specific binding
           },
           ["[d"] = { desc = "Previous Diagnostic" },
           ["]d"] = { desc = "Next Diagnostic" },

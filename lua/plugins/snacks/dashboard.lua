@@ -1,5 +1,5 @@
 -- lua/plugins/snacks/dashboard.lua
--- Dashboard configuration for snacks.nvim with stack switching
+-- Dashboard configuration for snacks.nvim with improved stack switching
 return {
   enabled = true,
   -- Theme compatible with gruvbox-material
@@ -59,8 +59,6 @@ return {
             return "String"
           elseif stack == "nextjs" then
             return "Function"
-          elseif stack == "goth+nextjs" then
-            return "Keyword"
           else
             return "Comment"
           end
@@ -75,9 +73,6 @@ return {
           elseif stack == "nextjs" then
             icon = " "
             stack = "Next.js Stack (React/TypeScript)"
-          elseif stack == "goth+nextjs" then
-            icon = "󰡄 "
-            stack = "FullStack Mode (GOTH + Next.js)"
           end
 
           return {
@@ -139,14 +134,6 @@ return {
               return vim.g.current_stack == "nextjs" and "Function" or "Comment"
             end,
           },
-          {
-            key = "sb",
-            text = "󰡄  Both Stacks",
-            action = "StackFocus both",
-            hl = function()
-              return vim.g.current_stack == "goth+nextjs" and "Keyword" or "Comment"
-            end,
-          },
         },
       },
     },
@@ -190,8 +177,6 @@ return {
             return { "", "󰟓  GOTH Commands" }
           elseif stack == "nextjs" then
             return { "", "  Next.js Commands" }
-          elseif stack == "goth+nextjs" then
-            return { "", "󰡄  FullStack Commands" }
           else
             return { "", "  Terminal Commands" }
           end
@@ -211,18 +196,20 @@ return {
           -- Common commands
           table.insert(cmds, { key = "gg", text = "  LazyGit", action = "LazyGit" })
 
-          if stack == "goth" or stack == "goth+nextjs" then
+          if stack == "goth" then
             -- GOTH stack commands
             table.insert(cmds, { key = "gs", text = "󰟓  Start GOTH server", action = "GOTHServer" })
             table.insert(cmds, { key = "gt", text = "  Run Go tests", action = "GoTest" })
             table.insert(cmds, { key = "tg", text = "  Generate Templ files", action = "TemplGenerate" })
+            table.insert(cmds, { key = "cs", text = "  Show Symbols", action = "SymbolsOutline" })
           end
 
-          if stack == "nextjs" or stack == "goth+nextjs" then
+          if stack == "nextjs" then
             -- Next.js stack commands
             table.insert(cmds, { key = "nd", text = "  Start Next.js dev", action = "NextDev" })
             table.insert(cmds, { key = "nb", text = "  Build Next.js app", action = "NextBuild" })
             table.insert(cmds, { key = "nl", text = "  Run Next.js lint", action = "NextLint" })
+            table.insert(cmds, { key = "cs", text = "  Show Symbols", action = "SymbolsOutline" })
           end
 
           -- Add general terminal command
