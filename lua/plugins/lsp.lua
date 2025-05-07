@@ -1,4 +1,4 @@
--- lua/plugins/lsp.lua
+-- lua/plugins/lsp.lua - Consolidated LSP configuration
 return {
   -- Core LSP functionality
   {
@@ -12,6 +12,8 @@ return {
       "hrsh7th/cmp-nvim-lsp",
       -- Schemas for JSON/YAML
       "b0o/SchemaStore.nvim",
+      -- Signature help
+      "ray-x/lsp_signature.nvim",
     },
     config = function()
       -- Set up Mason first for server management
@@ -35,7 +37,7 @@ return {
           "templ",
           "html",
           -- Next.js stack
-          "ts_ls",
+          "tsserver",
           "tailwindcss",
           "cssls",
           "eslint",
@@ -44,12 +46,18 @@ return {
         automatic_installation = true,
       })
 
+      -- Check if Neovim supports inlay hints (0.10+)
+      local inlay_hints_supported = vim.fn.has("nvim-0.10") == 1
+
       -- Shared capabilities for all servers
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
 
-      -- Enable inlay hints if Neovim >= 0.10
-      local inlay_hints_supported = vim.fn.has("nvim-0.10") == 1
+      -- Add folding ranges capability
+      capabilities.textDocument.foldingRange = {
+        dynamicRegistration = false,
+        lineFoldingOnly = true,
+      }
 
       -- Configure keymaps when LSP attaches to buffer
       local on_attach = function(client, bufnr)
@@ -89,22 +97,6 @@ return {
         buf_set_keymap("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
         buf_set_keymap("n", "<leader>cq", vim.diagnostic.setloclist, { desc = "Diagnostics to loclist" })
 
-        -- Stack-specific keymaps
-        if client.name == "gopls" then
-          -- Go-specific keymaps
-          buf_set_keymap("n", "<leader>goi", "<cmd>GoImports<CR>", { desc = "Organize imports" })
-          buf_set_keymap("n", "<leader>gie", "<cmd>GoIfErr<CR>", { desc = "Add if err" })
-          buf_set_keymap("n", "<leader>gfs", "<cmd>GoFillStruct<CR>", { desc = "Fill struct" })
-        end
-
-        if client.name == "ts_ls" or client.name == "typescript-tools" then
-          -- TypeScript-specific keymaps
-          buf_set_keymap("n", "<leader>toi", "<cmd>TypescriptOrganizeImports<CR>", { desc = "Organize imports" })
-          buf_set_keymap("n", "<leader>tru", "<cmd>TypescriptRemoveUnused<CR>", { desc = "Remove unused" })
-          buf_set_keymap("n", "<leader>tfa", "<cmd>TypescriptFixAll<CR>", { desc = "Fix all" })
-          buf_set_keymap("n", "<leader>tai", "<cmd>TypescriptAddMissingImports<CR>", { desc = "Add missing imports" })
-        end
-
         -- Enable inlay hints if supported
         if inlay_hints_supported and client.server_capabilities.inlayHintProvider then
           if vim.lsp.inlay_hint and vim.lsp.inlay_hint.enable then
@@ -112,7 +104,7 @@ return {
           end
         end
 
-        -- Setup lsp_signature if available
+        -- Setup lsp_signature
         local signature_ok, signature = pcall(require, "lsp_signature")
         if signature_ok then
           signature.on_attach({
@@ -124,6 +116,27 @@ return {
             hi_parameter = "IncSearch",
             toggle_key = "<C-k>",
           }, bufnr)
+        end
+
+        -- Stack-specific keymaps
+        if client.name == "gopls" then
+          -- Go-specific keymaps
+          buf_set_keymap(
+            "n",
+            "<leader>goi",
+            "<cmd>lua require('utils.go_utils').organize_imports()<CR>",
+            { desc = "Organize imports" }
+          )
+          buf_set_keymap("n", "<leader>gie", "<cmd>GoIfErr<CR>", { desc = "Add if err" })
+          buf_set_keymap("n", "<leader>gfs", "<cmd>GoFillStruct<CR>", { desc = "Fill struct" })
+        end
+
+        if client.name == "tsserver" or client.name == "typescript-tools" then
+          -- TypeScript-specific keymaps
+          buf_set_keymap("n", "<leader>toi", "<cmd>TypescriptOrganizeImports<CR>", { desc = "Organize imports" })
+          buf_set_keymap("n", "<leader>tru", "<cmd>TypescriptRemoveUnused<CR>", { desc = "Remove unused" })
+          buf_set_keymap("n", "<leader>tfa", "<cmd>TypescriptFixAll<CR>", { desc = "Fix all" })
+          buf_set_keymap("n", "<leader>tai", "<cmd>TypescriptAddMissingImports<CR>", { desc = "Add missing imports" })
         end
       end
 
@@ -137,20 +150,23 @@ return {
         settings = {
           Lua = {
             runtime = { version = "LuaJIT" },
-            diagnostics = { globals = { "vim", "require" } },
+            diagnostics = {
+              globals = { "vim", "require" },
+              disable = { "missing-fields", "no-unknown" },
+            },
             workspace = {
               library = vim.api.nvim_get_runtime_file("", true),
               checkThirdParty = false,
             },
             telemetry = { enable = false },
-            hint = {
-              enable = inlay_hints_supported,
+            hint = inlay_hints_supported and {
+              enable = true,
               setType = true,
               paramType = true,
               paramName = "All",
               semicolon = "All",
               arrayIndex = "All",
-            },
+            } or nil,
           },
         },
       })
@@ -177,7 +193,7 @@ return {
             symbolMatcher = "fuzzy",
             buildFlags = { "-tags=integration,e2e" },
             experimentalPostfixCompletions = true,
-            hints = {
+            hints = inlay_hints_supported and {
               assignVariableTypes = true,
               compositeLiteralFields = true,
               compositeLiteralTypes = true,
@@ -185,7 +201,7 @@ return {
               functionTypeParameters = true,
               parameterNames = true,
               rangeVariableTypes = true,
-            },
+            } or nil,
           },
         },
       })
@@ -217,7 +233,7 @@ return {
       })
 
       -- TypeScript/JavaScript configuration (Next.js stack)
-      lspconfig.ts_ls.setup({
+      lspconfig.tsserver.setup({
         on_attach = function(client, bufnr)
           -- Disable formatting if using prettier through null-ls/conform
           client.server_capabilities.documentFormattingProvider = false
@@ -227,7 +243,7 @@ return {
         capabilities = capabilities,
         settings = {
           typescript = {
-            inlayHints = {
+            inlayHints = inlay_hints_supported and {
               includeInlayParameterNameHints = "all",
               includeInlayParameterNameHintsWhenArgumentMatchesName = false,
               includeInlayFunctionParameterTypeHints = true,
@@ -235,10 +251,10 @@ return {
               includeInlayPropertyDeclarationTypeHints = true,
               includeInlayFunctionLikeReturnTypeHints = true,
               includeInlayEnumMemberValueHints = true,
-            },
+            } or nil,
           },
           javascript = {
-            inlayHints = {
+            inlayHints = inlay_hints_supported and {
               includeInlayParameterNameHints = "all",
               includeInlayParameterNameHintsWhenArgumentMatchesName = false,
               includeInlayFunctionParameterTypeHints = true,
@@ -246,7 +262,7 @@ return {
               includeInlayPropertyDeclarationTypeHints = true,
               includeInlayFunctionLikeReturnTypeHints = true,
               includeInlayEnumMemberValueHints = true,
-            },
+            } or nil,
           },
         },
       })
@@ -302,9 +318,42 @@ return {
         },
       })
 
+      -- Set up diagnostic signs and style
+      local signs = { Error = "", Warn = "", Info = "", Hint = "" }
+      for type, icon in pairs(signs) do
+        local hl = "DiagnosticSign" .. type
+        vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
+      end
+
+      -- Configure diagnostics display
+      vim.diagnostic.config({
+        virtual_text = {
+          prefix = " ",
+          spacing = 4,
+          source = "if_many",
+        },
+        float = {
+          border = "rounded",
+          source = "always",
+          header = "",
+          prefix = function(diagnostic)
+            local icons = {
+              [vim.diagnostic.severity.ERROR] = " ",
+              [vim.diagnostic.severity.WARN] = " ",
+              [vim.diagnostic.severity.INFO] = " ",
+              [vim.diagnostic.severity.HINT] = " ",
+            }
+            return icons[diagnostic.severity] or ""
+          end,
+        },
+        signs = true,
+        underline = true,
+        update_in_insert = false,
+        severity_sort = true,
+      })
+
       -- Set up LSP handlers with borders
       vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" })
-
       vim.lsp.handlers["textDocument/signatureHelp"] =
         vim.lsp.with(vim.lsp.handlers.signature_help, { border = "single" })
     end,
