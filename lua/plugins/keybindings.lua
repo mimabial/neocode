@@ -142,6 +142,16 @@ return {
       ["<leader>gs"] = { desc = "Git Status" },
     })
 
+    wk.register({
+      ["<leader>r"] = { name = "Refactoring" },
+      ["<leader>rr"] = { desc = "Refactoring menu" },
+      ["<leader>re"] = { desc = "Extract function" },
+      ["<leader>rv"] = { desc = "Extract variable" },
+      ["<leader>ri"] = { desc = "Inline variable" },
+      ["<leader>rp"] = { desc = "Debug print" },
+      ["<leader>rc"] = { desc = "Clean debug prints" },
+    })
+
     -- Stack commands
     wk.register({
       ["<leader>s"] = { name = "Stack/Sessions" },

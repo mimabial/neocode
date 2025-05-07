@@ -1,7 +1,6 @@
 -- lua/plugins/snacks.lua
 
 -- Main snacks.nvim configuration
-local dashboard_cfg = require("plugins.snacks.dashboard")
 local dim_cfg = require("plugins.snacks.dim")
 
 return {
@@ -13,7 +12,6 @@ return {
     { "nvim-lua/plenary.nvim", lazy = false, priority = 900 },
   },
   opts = {
-    dashboard = dashboard_cfg,
     dim = dim_cfg,
   },
   config = function(_, opts)
