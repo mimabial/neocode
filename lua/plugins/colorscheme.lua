@@ -316,13 +316,18 @@ return {
             self.current.transparency = transparency
           end
 
-          -- Run theme-specific setup
-          theme_info.setup(self.current.variant, self.current.transparency)
+          -- Run theme-specific setup with error handling
+          local setup_ok, setup_err = pcall(theme_info.setup, self.current.variant, self.current.transparency)
+          if not setup_ok then
+            vim.notify("Error in theme setup: " .. tostring(setup_err), vim.log.levels.WARN)
+          end
 
-          -- Apply colorscheme
-          local success = pcall(vim.cmd, "colorscheme " .. name)
+          -- Apply colorscheme with enhanced error handling
+          local success, err = pcall(vim.cmd, "colorscheme " .. name)
           if not success then
-            vim.notify("Failed to load colorscheme " .. name, vim.log.levels.ERROR)
+            vim.notify("Failed to load colorscheme " .. name .. ": " .. tostring(err), vim.log.levels.ERROR)
+            -- Try loading default colorscheme as fallback
+            pcall(vim.cmd, "colorscheme default")
             return false
           end
 
@@ -538,7 +543,16 @@ return {
       -- Load and apply saved settings
       theme.current = theme:load()
       vim.defer_fn(function()
-        theme:apply()
+        local ok, err = pcall(function()
+          theme:apply()
+        end)
+        if not ok then
+          vim.notify("Error applying theme: " .. tostring(err), vim.log.levels.ERROR)
+          -- Fallback to simple theme setup
+          vim.g.gruvbox_material_background = "medium"
+          vim.g.gruvbox_material_better_performance = 1
+          pcall(vim.cmd, "colorscheme gruvbox-material")
+        end
       end, 100)
     end,
   },

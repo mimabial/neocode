@@ -76,9 +76,18 @@ return {
       -- Update highlights on colorscheme change
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
-          -- Select color palette based on new theme
-          local colorscheme = vim.g.colors_name or "gruvbox-material"
-          local palette = colors[colorscheme] or colors["gruvbox-material"]
+          local theme_colors = _G.get_ui_colors and _G.get_ui_colors() or {}
+
+          -- Create a proper ordered palette from the named colors
+          local palette = {
+            theme_colors.red or "#ea6962",
+            theme_colors.yellow or "#d8a657",
+            theme_colors.blue or "#7daea3",
+            theme_colors.orange or "#e78a4e",
+            theme_colors.green or "#89b482",
+            theme_colors.purple or "#d3869b",
+            theme_colors.aqua or "#7daea3",
+          }
 
           -- Update highlight groups
           for i, color in ipairs(palette) do
@@ -100,7 +109,7 @@ return {
       -- Local function to get highlight colors - this fixes the error
       local function get_highlight_value(name)
         local hl = vim.api.nvim_get_hl(0, { name = name })
-        local fg = hl.fg or hl.foreground
+        local fg = hl.fg
         return fg and string.format("#%06x", fg) or nil
       end
 
@@ -171,45 +180,25 @@ return {
 
       -- Make sure rainbow delimiters highlights exist before configuring ibl
       local function ensure_rainbow_highlights()
-        local colorscheme = vim.g.colors_name or "gruvbox-material"
-        local colors = {
-          ["gruvbox-material"] = {
-            "#ea6962", -- Red
-            "#d8a657", -- Yellow
-            "#7daea3", -- Blue
-            "#e78a4e", -- Orange
-            "#89b482", -- Green
-            "#d3869b", -- Purple
-            "#a9b665", -- Light green
-          },
-          ["everforest"] = {
-            "#e67e80", -- Red
-            "#dbbc7f", -- Yellow
-            "#7fbbb3", -- Blue
-            "#e69875", -- Orange
-            "#a7c080", -- Green
-            "#d699b6", -- Purple
-            "#83c092", -- Aqua
-          },
-          ["kanagawa"] = {
-            "#c34043", -- Red
-            "#dca561", -- Yellow
-            "#7e9cd8", -- Blue
-            "#ffa066", -- Orange
-            "#76946a", -- Green
-            "#957fb8", -- Purple
-            "#6a9589", -- Teal
-          },
-        }
-        local palette = colors[colorscheme] or colors["gruvbox-material"]
+        local theme_colors = _G.get_ui_colors and _G.get_ui_colors() or {}
 
-        -- Directly set highlight groups before ibl uses them
+        -- Create a proper ordered palette from the named colors
+        local palette = {
+          theme_colors.red or "#ea6962",
+          theme_colors.yellow or "#d8a657",
+          theme_colors.blue or "#7daea3",
+          theme_colors.orange or "#e78a4e",
+          theme_colors.green or "#89b482",
+          theme_colors.purple or "#d3869b",
+          theme_colors.aqua or "#7daea3",
+        }
+
+        -- Set highlight groups
         for i, color in ipairs(palette) do
           local hl_group = "RainbowDelimiter" .. i
           vim.api.nvim_set_hl(0, hl_group, { fg = color })
         end
       end
-
       -- Call this before setting up ibl
       ensure_rainbow_highlights()
 
@@ -223,7 +212,7 @@ return {
           -- Define the get_highlight_value function within this callback too
           local function get_highlight_value(name)
             local hl = vim.api.nvim_get_hl(0, { name = name })
-            local fg = hl.fg or hl.foreground
+            local fg = hl.fg
             return fg and string.format("#%06x", fg) or nil
           end
 
@@ -232,6 +221,7 @@ return {
             vim.api.nvim_set_hl(0, "IblScope", { fg = scope_hl, bold = true })
           end
 
+          -- Add safe check before using ipairs on palette
           -- Ensure rainbow highlights still exist
           ensure_rainbow_highlights()
 
