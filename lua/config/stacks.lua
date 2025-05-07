@@ -53,7 +53,7 @@ local function file_contains(file, pattern, max_lines)
     if not read_ok or type(read_result) ~= "table" then
       return false
     end
-    
+
     lines = read_result
     local content = table.concat(lines, "\n")
     return content:match(pattern) ~= nil
@@ -90,7 +90,7 @@ function M.detect_stack()
     if glob_ok and type(glob_result) == "table" then
       gofiles = glob_result
     end
-    
+
     for _, file in ipairs(gofiles) do
       if file_contains(file, "html/template") or file_contains(file, "htmx") or file_contains(file, "templ") then
         goth_score = goth_score + 2
@@ -142,7 +142,7 @@ function M.detect_stack()
     vim.schedule(function()
       vim.notify("Stack detection encountered an error, falling back to basic detection", vim.log.levels.DEBUG)
     end)
-    
+
     -- Check for some very basic indicators
     if vim.fn.filereadable("go.mod") == 1 then
       return "goth"
@@ -240,7 +240,7 @@ function M.configure_stack(stack_name)
     end)
 
     -- Add GOTH-specific commands safely
-    
+
     -- Go Run Command
     vim.api.nvim_create_user_command("GoRun", function()
       -- Check if we're in a Go project
@@ -271,7 +271,10 @@ function M.configure_stack(stack_name)
     -- Templ Generation Command
     vim.api.nvim_create_user_command("TemplGenerate", function()
       if vim.fn.executable("templ") ~= 1 then
-        vim.notify("templ command not found. Install with 'go install github.com/a-h/templ/cmd/templ@latest'", vim.log.levels.ERROR)
+        vim.notify(
+          "templ command not found. Install with 'go install github.com/a-h/templ/cmd/templ@latest'",
+          vim.log.levels.ERROR
+        )
         return
       end
 
@@ -283,7 +286,7 @@ function M.configure_stack(stack_name)
           else
             vim.notify("Error generating Templ files", vim.log.levels.ERROR)
           end
-        end
+        end,
       })
     end, { desc = "Generate Templ files" })
 
@@ -327,7 +330,7 @@ function M.configure_stack(stack_name)
       if not dir_ok then
         vim.notify("Failed to create components directory", vim.log.levels.ERROR)
         return
-      }
+      end
 
       -- Create a new buffer
       local bufnr = vim.api.nvim_create_buf(true, false)

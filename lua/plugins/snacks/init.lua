@@ -3,7 +3,6 @@
 -- Main snacks.nvim configuration
 local dashboard_cfg = require("plugins.snacks.dashboard")
 local dim_cfg = require("plugins.snacks.dim")
-local picker_cfg = require("plugins.snacks.picker")
 
 return {
   "folke/snacks.nvim",
@@ -16,22 +15,8 @@ return {
   opts = {
     dashboard = dashboard_cfg,
     dim = dim_cfg,
-    picker = picker_cfg,
-  },
-  keys = {
-    {
-      "<leader>ud",
-      function()
-        require("snacks.dashboard").open()
-      end,
-      desc = "Open Dashboard",
-    },
   },
   config = function(_, opts)
     require("snacks").setup(opts)
-
-    vim.api.nvim_create_user_command("Dashboard", function()
-      require("snacks.dashboard").open()
-    end, { desc = "Open Snacks Dashboard" })
   end,
 }

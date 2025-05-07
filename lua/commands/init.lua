@@ -24,20 +24,8 @@ function M.setup()
         oil.open()
       else
         -- Fallback to netrw if oil not available
+        vim.notify("Oil not found, falling back to built-in explorer", vim.log.levels.WARN)
         vim.cmd("Explore")
-      end
-    elseif explorer == "snacks" then
-      local snacks = safe_require("snacks")
-      if snacks and snacks.explorer then
-        snacks.explorer()
-      else
-        -- Fallback to oil or netrw
-        local oil = safe_require("oil")
-        if oil then
-          oil.open()
-        else
-          vim.cmd("Explore")
-        end
       end
     end
   end, {

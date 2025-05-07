@@ -121,8 +121,3 @@ if not vim.g.colors_name then
     end
   end
 end
-
--- Final setup message
-vim.defer_fn(function()
-  vim.notify("Neovim configuration loaded successfully", vim.log.levels.INFO)
-end, 1000)
