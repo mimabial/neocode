@@ -1,329 +1,395 @@
--- lua/plugins/mini-bufremove.lua
--- Smart buffer removal with safety features
+-- lua/plugins/statusline.lua
+-- Refactored lualine.nvim setup with improved stack indicators and icons
 return {
-  {
-    "echasnovski/mini.bufremove",
-    -- Lazy load on key events
-    keys = {
-      {
-        "<leader>bd",
-        function()
-          local bd = require("mini.bufremove").delete
-          if vim.bo.modified then
-            local choice = vim.fn.confirm(("Save changes to %q?"):format(vim.fn.bufname()), "&Yes\n&No\n&Cancel")
-            if choice == 1 then -- Yes
-              vim.cmd.write()
-              bd(0)
-            elseif choice == 2 then -- No
-              bd(0, true)
-            end
-          else
-            bd(0)
-          end
-        end,
-        desc = "Delete Buffer",
-      },
-      {
-        "<leader>bD",
-        function()
-          require("mini.bufremove").delete(0, true)
-        end,
-        desc = "Delete Buffer (Force)",
-      },
-    },
-    -- Safe minimal config
-    opts = {},
+  "nvim-lualine/lualine.nvim",
+  event = "VeryLazy",
+  priority = 75,
+  dependencies = {
+    "nvim-tree/nvim-web-devicons",
+    "lewis6991/gitsigns.nvim",
   },
 
-  {
-    "akinsho/bufferline.nvim",
-    event = "VeryLazy",
-    version = "*",
-    dependencies = {
-      "nvim-tree/nvim-web-devicons",
-      "echasnovski/mini.bufremove",
-    },
-    keys = {
-      { "<leader>bp", "<cmd>BufferLinePick<cr>", desc = "Pick buffer" },
-      { "<leader>bc", "<cmd>BufferLinePickClose<cr>", desc = "Pick buffer to close" },
-      { "<leader>bP", "<cmd>BufferLineTogglePin<cr>", desc = "Toggle pin" },
-      { "<leader>bC", "<cmd>BufferLineGroupClose ungrouped<cr>", desc = "Close non-pinned buffers" },
-      { "<leader>bo", "<cmd>BufferLineCloseOthers<cr>", desc = "Close other buffers" },
-      { "<leader>br", "<cmd>BufferLineCloseRight<cr>", desc = "Close buffers to the right" },
-      { "<leader>bl", "<cmd>BufferLineCloseLeft<cr>", desc = "Close buffers to the left" },
-      { "<S-h>", "<cmd>BufferLineCyclePrev<cr>", desc = "Prev buffer" },
-      { "<S-l>", "<cmd>BufferLineNext<cr>", desc = "Next buffer" },
-      { "<A-1>", "<cmd>BufferLineGoToBuffer 1<cr>", desc = "Go to buffer 1" },
-      { "<A-2>", "<cmd>BufferLineGoToBuffer 2<cr>", desc = "Go to buffer 2" },
-      { "<A-3>", "<cmd>BufferLineGoToBuffer 3<cr>", desc = "Go to buffer 3" },
-      { "<A-4>", "<cmd>BufferLineGoToBuffer 4<cr>", desc = "Go to buffer 4" },
-      { "<A-5>", "<cmd>BufferLineGoToBuffer 5<cr>", desc = "Go to buffer 5" },
-      { "<A-6>", "<cmd>BufferLineGoToBuffer 6<cr>", desc = "Go to buffer 6" },
-      { "<A-7>", "<cmd>BufferLineGoToBuffer 7<cr>", desc = "Go to buffer 7" },
-      { "<A-8>", "<cmd>BufferLineGoToBuffer 8<cr>", desc = "Go to buffer 8" },
-      { "<A-9>", "<cmd>BufferLineGoToBuffer 9<cr>", desc = "Go to buffer 9" },
-    },
-    opts = function()
-      -- Define icons for bufferline elements
-      local icons = {
-        error = " ",
-        warning = " ",
-        info = " ",
-        hint = " ",
-        diagnostic = "󰅲 ",
-        terminal = "",
+  init = function()
+    -- Preserve laststatus and hide until ready
+    vim.g.lualine_laststatus = vim.o.laststatus
+    if vim.fn.argc(-1) > 0 then
+      vim.o.statusline = " "
+    else
+      vim.o.laststatus = 0
+    end
+  end,
+
+  opts = function()
+    local fn = vim.fn
+    local utils = require("config.utils")
+
+    -- Gruvbox-compatible colors
+    local colors = {
+      bg = "#282828",
+      fg = "#d4be98",
+      yellow = "#d8a657",
+      green = "#89b482",
+      blue = "#7daea3",
+      aqua = "#7daea3",
+      purple = "#d3869b",
+      red = "#ea6962",
+      orange = "#e78a4e",
+      gray = "#928374",
+    }
+
+    local icons = {
+      diagnostics = {
+        Error = " ", -- nf-fa-ban
+        Warn = " ", -- nf-fa-exclamation_triangle
+        Info = " ", -- nf-fa-info_circle
+        Hint = " ", -- nf-fa-question_circle
+      },
+      git = {
+        added = "", -- nf-fa-check_square
+        modified = "", -- nf-oct-diff_modified
+        removed = "", -- nf-fa-trash_o
+      },
+      stack = {
+        goth = "󰟓 GOTH",
+        nextjs = " Next.js",
+        ["goth+nextjs"] = "󰡄 FullStack",
+        [""] = "",
+      },
+      file = {
         modified = "●",
-        directory = "󰉋 ",
-        close = "󰅖",
-        left_trunc_marker = "",
-        right_trunc_marker = "",
-        group_close = "",
-        pinned = "車",
+        readonly = "",
+        unnamed = "[No Name]",
+        newfile = "[New]",
+      },
+    }
+
+    -- Mode color mapping
+    local mode_color = {
+      n = colors.green,
+      i = colors.blue,
+      v = colors.purple,
+      [""] = colors.purple,
+      V = colors.purple,
+      c = colors.orange,
+      no = colors.red,
+      s = colors.yellow,
+      S = colors.yellow,
+      ic = colors.blue,
+      R = colors.red,
+      Rv = colors.red,
+      cv = colors.orange,
+      ce = colors.orange,
+      r = colors.red,
+      rm = colors.red,
+      ["r?"] = colors.red,
+      ["!"] = colors.red,
+      t = colors.green,
+    }
+
+    -- Root directory function
+    local function root_dir()
+      return {
+        function()
+          local cwd = vim.fn.getcwd()
+          local home = os.getenv("HOME") or ""
+          local disp = cwd:sub(1, #home) == home and "~" .. cwd:sub(#home + 1) or cwd
+          return "󰉋 " .. vim.fn.fnamemodify(disp, ":t")
+        end,
+        color = function()
+          return { fg = utils.get_hl_color("Directory", "fg", colors.blue), bold = true }
+        end,
+        cond = function()
+          return not vim.b.no_root_dir
+        end,
       }
+    end
 
-      -- Get color palette based on current theme
-      local function get_theme_colors()
-        local colorscheme = vim.g.colors_name or "gruvbox-material"
+    -- Pretty file path
+    local function pretty_path()
+      return {
+        function()
+          local path = vim.fn.expand("%:p:~:.")
+          local filename = vim.fn.expand("%:t")
+          local extension = vim.fn.expand("%:e")
+          local icon = require("nvim-web-devicons").get_icon(filename, extension)
 
-        if colorscheme == "gruvbox-material" and _G.get_gruvbox_colors then
-          return _G.get_gruvbox_colors()
-        elseif colorscheme == "everforest" and _G.get_everforest_colors then
-          return _G.get_everforest_colors()
-        elseif colorscheme == "kanagawa" and _G.get_kanagawa_colors then
-          return _G.get_kanagawa_colors()
-        else
-          -- Fallback colors
-          return {
-            bg = "#282828",
-            bg1 = "#32302f",
-            red = "#ea6962",
-            green = "#a9b665",
-            yellow = "#d8a657",
-            blue = "#7daea3",
-            magenta = "#d3869b",
-            cyan = "#89b482",
-            fg = "#d4be98",
-            grey = "#928374",
-          }
+          if vim.fn.winwidth(0) > 90 then
+            return (icon and icon .. " " or "") .. path
+          else
+            return (icon and icon .. " " or "") .. filename
+          end
+        end,
+        cond = function()
+          return vim.fn.expand("%:t") ~= ""
+        end,
+      }
+    end
+
+    -- Stack badge
+    local function stack_badge()
+      return {
+        function()
+          local stack = vim.g.current_stack or ""
+          return icons.stack[stack] or ""
+        end,
+        color = function()
+          local stack = vim.g.current_stack or ""
+          if stack == "goth" then
+            return { fg = colors.green, bold = true }
+          elseif stack == "nextjs" then
+            return { fg = colors.blue, bold = true }
+          elseif stack == "goth+nextjs" then
+            return { fg = colors.orange, bold = true }
+          else
+            return { fg = colors.gray, bold = true }
+          end
+        end,
+        cond = function()
+          -- Always show stack indicator, with more graceful fallback
+          return true
+        end,
+      }
+    end
+
+    -- Enhanced LSP indicator with icons
+    local function lsp_status()
+      return {
+        function()
+          local buf_clients = vim.lsp.get_clients({ bufnr = 0 })
+          if #buf_clients == 0 then
+            return "󰅠 No LSP"
+          end
+
+          local lsp_names = {}
+          -- Filter out copilot, conform, etc.
+          for _, client in ipairs(buf_clients) do
+            if not vim.tbl_contains({ "copilot", "null-ls", "conform" }, client.name) then
+              table.insert(lsp_names, client.name)
+            end
+          end
+
+          local names_str = table.concat(lsp_names, ", ")
+          -- If the name string is too long, truncate it
+          if #names_str > 30 then
+            names_str = string.sub(names_str, 1, 27) .. "..."
+          end
+
+          return " " .. names_str
+        end,
+        color = { fg = colors.green, gui = "bold" },
+        cond = function()
+          return true
+        end, -- Always show LSP status
+      }
+    end
+
+    -- AI assistant indicators
+    local function ai_indicators()
+      return {
+        function()
+          local indicators = {}
+          -- Check both Copilot and Codeium status
+          if vim.g.copilot_enabled ~= 0 then
+            table.insert(indicators, "copilot")
+          end
+          if vim.g.codeium_enabled then
+            table.insert(indicators, "codeium")
+          end
+
+          return #indicators > 0 and table.concat(indicators, " ") or ""
+        end,
+        color = { fg = colors.purple },
+        cond = function()
+          return vim.g.copilot_enabled ~= 0 or vim.g.codeium_enabled
+        end,
+      }
+    end
+
+    -- File size
+    local function file_size()
+      local function format_size(size)
+        local units = { "B", "K", "M", "G" }
+        local idx = 1
+        while size > 1024 and idx < #units do
+          size = size / 1024
+          idx = idx + 1
         end
+        return string.format("%.1f%s", size, units[idx])
       end
 
-      -- Determine stack icon based on detected stack
-      local function get_stack_icon()
-        local stack = vim.g.current_stack or ""
-        if stack == "goth" then
-          return "󰟓 "
-        elseif stack == "nextjs" then
-          return " "
-        elseif stack == "goth+nextjs" then
-          return "󰡄 "
-        else
+      return function()
+        local f = vim.fn.expand("%:p")
+        if f == "" or vim.bo.buftype ~= "" then
           return ""
         end
-      end
-
-      return {
-        options = {
-          close_command = function(n)
-            local bd = require("mini.bufremove").delete
-            if vim.bo[n].modified then
-              local choice = vim.fn.confirm(("Save changes to %q?"):format(vim.fn.bufname(n)), "&Yes\n&No\n&Cancel")
-              if choice == 1 then -- Yes
-                vim.cmd("buffer " .. n)
-                vim.cmd.write()
-                bd(n)
-              elseif choice == 2 then -- No
-                bd(n, true) -- Force delete
-              end
-            else
-              bd(n)
-            end
-          end,
-          right_mouse_command = function(n)
-            require("mini.bufremove").delete(n, false)
-          end,
-          mode = "buffers",
-          sort_by = "insert_after_current",
-          always_show_bufferline = false,
-          diagnostics = "nvim_lsp",
-          diagnostics_update_in_insert = false,
-          diagnostics_indicator = function(count, level, diagnostics_dict, context)
-            local s = " "
-            for severity, icon in pairs({
-              error = icons.error,
-              warning = icons.warning,
-              info = icons.info,
-              hint = icons.hint,
-            }) do
-              local n = diagnostics_dict[severity]
-              if n and n > 0 then
-                s = s .. icon .. n .. " "
-              end
-            end
-            return s
-          end,
-          -- Configure offsets for file explorer and special filetypes
-          offsets = {
-            {
-              filetype = "neo-tree",
-              text = "File Explorer",
-              highlight = "Directory",
-              separator = true,
-              text_align = "left",
-            },
-            {
-              filetype = "oil",
-              text = "Directory",
-              highlight = "Directory",
-              separator = true,
-              text_align = "left",
-            },
-          },
-          separator_style = "thin",
-          indicator = {
-            icon = "▎",
-            style = "icon",
-          },
-          -- Add stack indicator to the left of the bufferline
-          custom_areas = {
-            left = function()
-              local stack_icon = get_stack_icon()
-              if stack_icon ~= "" then
-                return {
-                  { text = stack_icon, guifg = get_theme_colors().green, guibg = get_theme_colors().bg },
-                }
-              end
-              return {}
-            end,
-          },
-          hover = {
-            enabled = true,
-            delay = 150,
-            reveal = { "close" },
-          },
-        },
-        highlights = (function()
-          local colors = get_theme_colors()
-          local hl = require("bufferline.highlights")
-          local fill_bg = colors.bg
-          local bg = colors.bg1
-          local modified_bg = colors.bg1
-          local selected_bg = colors.blue
-          local visible_bg = colors.bg1
-          local diagnostic_bg = colors.bg1
-          local error_fg = colors.red
-          local warning_fg = colors.yellow
-          local info_fg = colors.blue
-          local hint_fg = colors.green
-
-          return {
-            fill = { bg = fill_bg },
-            background = { bg = bg },
-            buffer_visible = { bg = visible_bg },
-            buffer_selected = { bg = selected_bg, fg = colors.bg, bold = true },
-            close_button = { bg = bg },
-            close_button_visible = { bg = visible_bg },
-            close_button_selected = { bg = selected_bg },
-            diagnostic = { bg = diagnostic_bg },
-            diagnostic_visible = { bg = visible_bg },
-            diagnostic_selected = { bg = selected_bg },
-            error = { bg = bg, fg = error_fg },
-            error_visible = { bg = visible_bg, fg = error_fg },
-            error_selected = { bg = selected_bg, fg = error_fg },
-            error_diagnostic = { bg = diagnostic_bg, fg = error_fg },
-            error_diagnostic_visible = { bg = visible_bg, fg = error_fg },
-            error_diagnostic_selected = { bg = selected_bg, fg = error_fg },
-            warning = { bg = bg, fg = warning_fg },
-            warning_visible = { bg = visible_bg, fg = warning_fg },
-            warning_selected = { bg = selected_bg, fg = warning_fg },
-            warning_diagnostic = { bg = diagnostic_bg, fg = warning_fg },
-            warning_diagnostic_visible = { bg = visible_bg, fg = warning_fg },
-            warning_diagnostic_selected = { bg = selected_bg, fg = warning_fg },
-            info = { bg = bg, fg = info_fg },
-            info_visible = { bg = visible_bg, fg = info_fg },
-            info_selected = { bg = selected_bg, fg = info_fg },
-            info_diagnostic = { bg = diagnostic_bg, fg = info_fg },
-            info_diagnostic_visible = { bg = visible_bg, fg = info_fg },
-            info_diagnostic_selected = { bg = selected_bg, fg = info_fg },
-            hint = { bg = bg, fg = hint_fg },
-            hint_visible = { bg = visible_bg, fg = hint_fg },
-            hint_selected = { bg = selected_bg, fg = hint_fg },
-            hint_diagnostic = { bg = diagnostic_bg, fg = hint_fg },
-            hint_diagnostic_visible = { bg = visible_bg, fg = hint_fg },
-            hint_diagnostic_selected = { bg = selected_bg, fg = hint_fg },
-            modified = { bg = modified_bg, fg = colors.orange },
-            modified_visible = { bg = visible_bg, fg = colors.orange },
-            modified_selected = { bg = selected_bg, fg = colors.yellow },
-            duplicate = { bg = bg, fg = colors.grey, italic = true },
-            duplicate_visible = { bg = visible_bg, fg = colors.grey, italic = true },
-            duplicate_selected = { bg = selected_bg, fg = colors.fg, italic = true },
-            separator = { bg = fill_bg, fg = fill_bg },
-            separator_visible = { bg = visible_bg, fg = visible_bg },
-            separator_selected = { bg = selected_bg, fg = selected_bg },
-            indicator_selected = { bg = selected_bg, fg = selected_bg },
-            pick = { bg = bg, fg = colors.green, bold = true },
-            pick_visible = { bg = visible_bg, fg = colors.green, bold = true },
-            pick_selected = { bg = selected_bg, fg = colors.green, bold = true },
-          }
-        end)(),
-      }
-    end,
-    config = function(_, opts)
-      -- Safe loading of bufferline
-      local ok, bufferline = pcall(require, "bufferline")
-      if not ok then
-        vim.notify("Failed to load bufferline.nvim", vim.log.levels.ERROR)
-        return
-      end
-
-      -- Setup bufferline with provided options
-      bufferline.setup(opts)
-
-      -- Update bufferline colors on colorscheme change
-      vim.api.nvim_create_autocmd("ColorScheme", {
-        callback = function()
-          -- Force a refresh of bufferline highlights after colorscheme change
-          local ok, bufferline = pcall(require, "bufferline")
-          if ok then
-            bufferline.setup(opts)
-          end
-        end,
-      })
-
-      -- Hide bufferline for certain filetypes
-      vim.api.nvim_create_autocmd("FileType", {
-        pattern = {
-          "^help$",
-          "^startify$",
-          "^dashboard$",
-          "^packer$",
-          "^neogitstatus$",
-          "^NvimTree$",
-          "^Trouble$",
-          "^alpha$",
-          "^lir$",
-          "^neo-tree$",
-          "^Outline$",
-          "^oil$",
-        },
-        callback = function()
-          vim.cmd("set showtabline=0")
-        end,
-      })
-
-      -- Create user command to toggle bufferline
-      vim.api.nvim_create_user_command("BufferLineToggle", function()
-        if vim.o.showtabline == 0 then
-          vim.o.showtabline = 2
-          vim.notify("Bufferline enabled", vim.log.levels.INFO)
-        else
-          vim.o.showtabline = 0
-          vim.notify("Bufferline disabled", vim.log.levels.INFO)
+        local size = vim.fn.getfsize(f)
+        if size <= 0 then
+          return ""
         end
-      end, { desc = "Toggle bufferline visibility" })
+        return format_size(size)
+      end
+    end
 
-      -- Add keymap to toggle bufferline
-      vim.keymap.set("n", "<leader>bt", "<cmd>BufferLineToggle<cr>", { desc = "Toggle bufferline" })
-    end,
-  },
+    -- Search count
+    local function search_count()
+      return function()
+        -- Try hlslens if available
+        local hlslens_ok, hlslens = pcall(require, "hlslens")
+        if hlslens_ok and not vim.g.hlslens_disabled then
+          -- Use hlslens' exportData function if it exists
+          if hlslens.exportData then
+            local data = hlslens.exportData()
+            if data and data.total_count > 0 then
+              return string.format(" %d/%d", data.nearest_index or 1, data.total_count)
+            end
+          end
+        end
+
+        -- Fall back to vanilla vim searchcount
+        local sc = vim.fn.searchcount({ maxcount = 999, timeout = 500 })
+        if vim.v.hlsearch == 1 and sc.total > 0 then
+          return string.format(" %d/%d", sc.current, sc.total)
+        end
+        return ""
+      end
+    end
+
+    -- File encoding
+    local function file_encoding()
+      return {
+        "encoding",
+        fmt = string.upper,
+        color = { fg = colors.green },
+        cond = function()
+          return vim.bo.fileencoding ~= "utf-8"
+        end,
+      }
+    end
+
+    -- File format
+    local function file_format()
+      return {
+        "fileformat",
+        symbols = {
+          unix = " ", -- e712
+          dos = " ", -- e70f
+          mac = " ", -- e711
+        },
+        color = { fg = colors.green },
+        cond = function()
+          return vim.bo.fileformat ~= "unix"
+        end,
+      }
+    end
+
+    -- Progress
+    local function progress()
+      return {
+        "progress",
+        color = { fg = colors.fg, gui = "bold" },
+      }
+    end
+
+    -- Location
+    local function location()
+      return {
+        "location",
+        color = { fg = colors.fg, gui = "bold" },
+      }
+    end
+
+    -- Return the lualine configuration
+    return {
+      options = {
+        component_separators = { left = "", right = "" },
+        section_separators = { left = "", right = "" },
+        theme = "gruvbox-material",
+        globalstatus = vim.o.laststatus == 3,
+        disabled_filetypes = {
+          statusline = { "alpha", "dashboard", "neo-tree", "oil", "Trouble", "lazy" },
+        },
+      },
+      -- Add custom indicators for both stacks
+      sections = {
+        lualine_a = {
+          {
+            "mode",
+            color = function()
+              local m = vim.api.nvim_get_mode().mode
+              return { bg = mode_color[m] or colors.blue, fg = colors.bg, gui = "bold" }
+            end,
+            padding = { left = 1, right = 1 },
+          },
+        },
+        lualine_b = {
+          {
+            "branch",
+            icon = "",
+            color = { fg = colors.orange, gui = "bold" },
+            padding = { right = 1 },
+          },
+        },
+        lualine_c = {
+          root_dir(),
+          {
+            "diagnostics",
+            symbols = icons.diagnostics,
+            colored = true,
+          },
+          pretty_path(),
+          stack_badge(),
+        },
+        lualine_x = {
+          ai_indicators(),
+          lsp_status(),
+          file_size(),
+          search_count(),
+          { "filetype", icon_only = true },
+          file_encoding(),
+          file_format(),
+        },
+        lualine_y = { progress() },
+        lualine_z = { location() },
+      },
+      inactive_sections = {
+        lualine_a = {},
+        lualine_b = {},
+        lualine_c = { pretty_path() },
+        lualine_x = { location() },
+        lualine_y = {},
+        lualine_z = {},
+      },
+      tabline = {},
+      extensions = {
+        "neo-tree",
+        "lazy",
+        "trouble",
+        "toggleterm",
+        "quickfix",
+        "oil",
+        "nvim-dap-ui",
+      },
+    }
+  end,
+
+  config = function(_, opts)
+    require("lualine").setup(opts)
+
+    -- Add reload on colorscheme change
+    vim.api.nvim_create_autocmd("ColorScheme", {
+      callback = function()
+        require("lualine").refresh()
+      end,
+    })
+
+    -- Set autocmd to restore user's laststatus when lualine unloads
+    vim.api.nvim_create_autocmd("User", {
+      pattern = "LazyLoad",
+      callback = function(event)
+        if event.data == "lualine.nvim" then
+          vim.o.laststatus = vim.g.lualine_laststatus or 2
+        end
+      end,
+    })
+  end,
 }

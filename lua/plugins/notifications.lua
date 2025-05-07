@@ -171,14 +171,6 @@ return {
     opts = function()
       -- Get UI config if available
       local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
-      local notification_config = ui_config.notification or {}
-
-      -- Get colors from centralized theme function
-      local colors = _G.get_ui_colors and _G.get_ui_colors()
-        or {
-          bg = "#282828",
-          border = "#665c54",
-        }
 
       -- Ensure consistent single border
       local border = "single"
@@ -189,18 +181,10 @@ return {
         max_height = 20,
       }, ui_config.float or {})
 
-      return {
-        background_colour = colors.bg,
-        fps = 60,
-        level = vim.log.levels.INFO,
-        minimum_width = 30,
-        timeout = notification_config.timeout or 3000,
-        max_width = notification_config.max_width or 60,
-        max_height = notification_config.max_height or 10,
-        stages = notification_config.stages or "fade",
-        render = "wrapped-compact",
+      -- Make sure border is always single
+      float_config.border = border
 
-        top_down = true,
+      return {
         cmdline = {
           enabled = true,
           view = "cmdline_popup",
