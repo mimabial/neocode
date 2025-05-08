@@ -91,9 +91,6 @@ load_module("config.ui", "setup")
 -- Load keymaps - critical for usability
 load_module("config.keymaps", "setup")
 
--- Load LSP configuration - enhances editing but not critical
-load_module("config.lsp", "setup")
-
 -- Load additional modules that enhance functionality
 load_module("config.autocmds", "setup")
 load_module("autocmds.diagnostics", "setup")
