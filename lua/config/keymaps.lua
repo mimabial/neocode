@@ -121,14 +121,8 @@ function M.setup()
     if ok then
       telescope.find_files()
     else
-      -- Fall back to snacks if available
-      local snacks_ok, snacks = pcall(require, "snacks.picker")
-      if snacks_ok and snacks.files then
-        snacks.files()
-      else
-        -- Ultimate fallback to built-in
-        vim.cmd("find")
-      end
+      -- Ultimate fallback to built-in
+      vim.cmd("find")
     end
   end, { desc = "Find Files" })
 
@@ -137,18 +131,13 @@ function M.setup()
     if ok then
       telescope.live_grep()
     else
-      local snacks_ok, snacks = pcall(require, "snacks.picker")
-      if snacks_ok and snacks.grep then
-        snacks.grep()
-      else
-        -- Fallback to built-in grep
-        vim.ui.input({ prompt = "Search pattern: " }, function(input)
-          if input then
-            vim.cmd("vimgrep " .. input .. " **/*")
-            vim.cmd("copen")
-          end
-        end)
-      end
+      -- Fallback to built-in grep
+      vim.ui.input({ prompt = "Search pattern: " }, function(input)
+        if input then
+          vim.cmd("vimgrep " .. input .. " **/*")
+          vim.cmd("copen")
+        end
+      end)
     end
   end, { desc = "Find Text (Grep)" })
 
@@ -157,12 +146,7 @@ function M.setup()
     if ok then
       telescope.buffers()
     else
-      local snacks_ok, snacks = pcall(require, "snacks.picker")
-      if snacks_ok and snacks.buffers then
-        snacks.buffers()
-      else
-        vim.cmd("ls")
-      end
+      vim.cmd("ls")
     end
   end, { desc = "Find Buffers" })
 
@@ -171,12 +155,7 @@ function M.setup()
     if ok then
       telescope.oldfiles()
     else
-      local snacks_ok, snacks = pcall(require, "snacks.picker")
-      if snacks_ok and snacks.recent then
-        snacks.recent()
-      else
-        vim.cmd("browse oldfiles")
-      end
+      vim.cmd("browse oldfiles")
     end
   end, { desc = "Recent Files" })
 
@@ -185,12 +164,7 @@ function M.setup()
     if ok then
       telescope.help_tags()
     else
-      local snacks_ok, snacks = pcall(require, "snacks.picker")
-      if snacks_ok and snacks.help then
-        snacks.help()
-      else
-        vim.cmd("help")
-      end
+      vim.cmd("help")
     end
   end, { desc = "Find Help" })
 
@@ -223,10 +197,10 @@ function M.setup()
     local ok, stacks = pcall(require, "utils.stacks")
     if ok and stacks.configure_stack then
       stacks.configure_stack("goth")
-      -- Try to open dashboard if available
+      -- Try to open alpha dashboard if available
       pcall(function()
-        if package.loaded["snacks.dashboard"] then
-          require("snacks.dashboard").open()
+        if package.loaded["alpha"] then
+          vim.cmd("Alpha")
         end
       end)
     else
@@ -239,10 +213,10 @@ function M.setup()
     local ok, stacks = pcall(require, "utils.stacks")
     if ok and stacks.configure_stack then
       stacks.configure_stack("nextjs")
-      -- Try to open dashboard if available
+      -- Try to open alpha dashboard if available
       pcall(function()
-        if package.loaded["snacks.dashboard"] then
-          require("snacks.dashboard").open()
+        if package.loaded["alpha"] then
+          vim.cmd("Alpha")
         end
       end)
     else
@@ -292,14 +266,7 @@ function M.setup()
   -- ========================================
   -- Dashboard
   -- ========================================
-  map("n", "<leader>d", function()
-    local ok, dashboard = pcall(require, "snacks.dashboard")
-    if ok then
-      dashboard.open()
-    else
-      vim.notify("Dashboard not available", vim.log.levels.INFO)
-    end
-  end, { desc = "Open Dashboard" })
+  map("n", "<leader>d", "<cmd>Alpha<cr>", { desc = "Open Dashboard" })
 
   -- ========================================
   -- Diagnostics

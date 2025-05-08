@@ -118,3 +118,12 @@ if not vim.g.colors_name then
     end
   end
 end
+
+-- Open alpha dashboard if available
+if vim.fn.argc() == 0 then
+  vim.defer_fn(function()
+    if package.loaded["alpha"] then
+      vim.cmd("Alpha")
+    end
+  end, 10)
+end
