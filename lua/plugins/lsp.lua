@@ -37,7 +37,6 @@ return {
           "templ",
           "html",
           -- Next.js stack
-          "tsserver",
           "tailwindcss",
           "cssls",
           "eslint",
@@ -233,7 +232,7 @@ return {
       })
 
       -- TypeScript/JavaScript configuration (Next.js stack)
-      lspconfig.tsserver.setup({
+      lspconfig.ts_ls.setup({
         on_attach = function(client, bufnr)
           -- Disable formatting if using prettier through null-ls/conform
           client.server_capabilities.documentFormattingProvider = false
