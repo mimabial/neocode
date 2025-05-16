@@ -381,41 +381,41 @@ function M.setup()
   --   desc = "Throttle events during undo operations",
   -- })
 
-  -- 13) Print startup success message
-  vim.api.nvim_create_autocmd("User", {
-    pattern = "LazyVimStarted",
-    callback = function()
-      local lazy_stats = require("lazy").stats()
-      local ms = math.floor(lazy_stats.startuptime * 100 + 0.5) / 100
-      local v = vim.version()
-
-      local stack_icon = ""
-      if vim.g.current_stack == "goth" then
-        stack_icon = "󰟓 "
-      elseif vim.g.current_stack == "nextjs" then
-        stack_icon = " "
-      elseif vim.g.current_stack == "goth+nextjs" then
-        stack_icon = "󰡄 "
-      end
-
-      local msg = string.format(
-        "⚡ Neovim v%d.%d.%d loaded %d/%d plugins in %.2fms %s",
-        v.major,
-        v.minor,
-        v.patch,
-        lazy_stats.loaded,
-        lazy_stats.count,
-        ms,
-        stack_icon
-      )
-      vim.notify(msg, vim.log.levels.INFO, { title = "Neovim Started" })
-
-      -- Open dashboard if enabled
-      if package.loaded["snacks.dashboard"] and vim.fn.argc() == 0 then
-        vim.cmd("Dashboard")
-      end
-    end,
-  })
+  -- -- 13) Print startup success message
+  -- vim.api.nvim_create_autocmd("User", {
+  --   pattern = "LazyVimStarted",
+  --   callback = function()
+  --     local lazy_stats = require("lazy").stats()
+  --     local ms = math.floor(lazy_stats.startuptime * 100 + 0.5) / 100
+  --     local v = vim.version()
+  --
+  --     local stack_icon = ""
+  --     if vim.g.current_stack == "goth" then
+  --       stack_icon = "󰟓 "
+  --     elseif vim.g.current_stack == "nextjs" then
+  --       stack_icon = " "
+  --     elseif vim.g.current_stack == "goth+nextjs" then
+  --       stack_icon = "󰡄 "
+  --     end
+  --
+  --     local msg = string.format(
+  --       "⚡ Neovim v%d.%d.%d loaded %d/%d plugins in %.2fms %s",
+  --       v.major,
+  --       v.minor,
+  --       v.patch,
+  --       lazy_stats.loaded,
+  --       lazy_stats.count,
+  --       ms,
+  --       stack_icon
+  --     )
+  --     vim.notify(msg, vim.log.levels.INFO, { title = "Neovim Started" })
+  --
+  --     -- Open dashboard if enabled
+  --     if package.loaded["snacks.dashboard"] and vim.fn.argc() == 0 then
+  --       vim.cmd("Dashboard")
+  --     end
+  --   end,
+  -- })
 
   -- 14) Try to load project-specific configuration if it exists
   local project_init = vim.fn.getcwd() .. "/.nvim/init.lua"
