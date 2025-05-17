@@ -1,18 +1,22 @@
 -- lua/plugins/keybindings.lua
--- Enhanced WhichKey configuration with symbols-outline integration
-
 return {
   "folke/which-key.nvim",
-  event = "VeryLazy",
+  event = "UIEnter",
   priority = 820,
   config = function()
+    -- Health check for which-key
+    local health_ok, health = pcall(require, "which-key.health")
+    if health_ok and type(health.check) == "function" then
+      health.check()
+    end
+
     local ok, wk = pcall(require, "which-key")
     if not ok then
       vim.notify("[whichkey] which-key.nvim not found", vim.log.levels.WARN)
       return
     end
 
-    -- Setup with better theming
+    -- Setup which-key with updated options
     wk.setup({
       plugins = {
         marks = true,
@@ -33,11 +37,10 @@ return {
         separator = "➜",
         group = "+",
       },
-      window = {
-        border = "single", -- Match border style with other UI elements
-        position = "bottom",
-        margin = { 1, 0, 1, 0 },
-        padding = { 1, 1, 1, 1 },
+      win = {
+        no_overlap = true,
+        border = "single",
+        padding = { 1, 1 },
       },
       layout = {
         height = { min = 4, max = 25 },
@@ -45,50 +48,25 @@ return {
         spacing = 3,
         align = "left",
       },
-      ignore_missing = true, -- Don't show "no mapping found"
-      hidden = { "<silent>", "<cmd>", "<Cmd>", "<CR>", "^:", "^ ", "^call ", "^lua " },
-      show_help = false, -- Keep UI clean
-      show_keys = false, -- Don't show the key in the command line
-      triggers = "auto",
-      triggers_nowait = {
-        -- marks
-        "`",
-        "'",
-        "g`",
-        "g'",
-        -- registers
-        '"',
-        "<c-r>",
-        -- spelling
-        "z=",
-      },
-      triggers_blacklist = {
-        i = { "j", "k" },
-        v = { "j", "k" },
-      },
-      -- Disable the WhichKey popup for certain buf/win types
+      filter = function(mapping)
+        -- show mappings with a description or group label
+        return (mapping.desc and mapping.desc ~= "") or (mapping.group and mapping.group ~= "")
+      end,
+      show_help = false,
+      show_keys = false,
       disable = {
-        buftypes = { "terminal", "nofile" },
-        filetypes = {
-          "TelescopePrompt",
-          "TelescopeResults",
-          "oil",
-          "neo-tree",
-          "dashboard",
-          "alpha",
-          "lazy",
-        },
+        bt = { "terminal", "nofile" },
+        ft = { "TelescopePrompt", "TelescopeResults", "oil", "neo-tree", "dashboard", "alpha", "lazy" },
       },
     })
 
-    -- Standard leader key group definitions - match keymaps.lua structure
-    local groups = {
+    -- Consolidated which-key registrations using new recommended spec
+    wk.register({
       ["<leader>"] = { name = "Leader" },
       ["<leader>a"] = { name = "Actions" },
       ["<leader>b"] = { name = "Buffers" },
       ["<leader>c"] = { name = "Code/LSP" },
       ["<leader>d"] = { name = "Debug/Dashboard" },
-      ["<leader>e"] = { name = "Explorer" },
       ["<leader>f"] = { name = "Find/Telescope" },
       ["<leader>g"] = { name = "Git" },
       ["<leader>L"] = { name = "Layouts" },
@@ -97,42 +75,25 @@ return {
       ["<leader>u"] = { name = "UI/Settings" },
       ["<leader>w"] = { name = "Windows" },
       ["<leader>x"] = { name = "Diagnostics/Trouble" },
-    }
 
-    -- Register standard groups
-    wk.register(groups)
-
-    -- Buffer management keys
-    wk.register({
       ["<leader>bb"] = { desc = "Other Buffer" },
       ["<leader>bd"] = { desc = "Delete Buffer" },
       ["<leader>bf"] = { desc = "First Buffer" },
       ["<leader>bl"] = { desc = "Last Buffer" },
       ["<leader>bn"] = { desc = "Next Buffer" },
       ["<leader>bp"] = { desc = "Previous Buffer" },
-    })
 
-    -- Explorer keys
-    wk.register({
       ["<leader>e"] = { desc = "Open File Explorer (Default)" },
       ["<leader>E"] = { desc = "NvimTree Explorer" },
-    })
 
-    -- Telescope/finder keys
-    wk.register({
-      ["<leader>f"] = { name = "Find/Telescope" },
+      ["<leader>fD"] = { desc = "Workspace Diagnostics" },
+      ["<leader>fb"] = { desc = "Find Buffers" },
+      ["<leader>fd"] = { desc = "Document Diagnostics" },
       ["<leader>ff"] = { desc = "Find Files" },
       ["<leader>fg"] = { desc = "Find Text (Grep)" },
-      ["<leader>fb"] = { desc = "Find Buffers" },
-      ["<leader>fr"] = { desc = "Recent Files" },
       ["<leader>fh"] = { desc = "Find Help" },
-      ["<leader>fd"] = { desc = "Document Diagnostics" },
-      ["<leader>fD"] = { desc = "Workspace Diagnostics" },
-    })
+      ["<leader>fr"] = { desc = "Recent Files" },
 
-    -- Git commands
-    wk.register({
-      ["<leader>g"] = { name = "Git" },
       ["<leader>gP"] = { desc = "Git Push" },
       ["<leader>gb"] = { desc = "Git Branches" },
       ["<leader>gc"] = { desc = "Git Commits" },
@@ -140,141 +101,117 @@ return {
       ["<leader>gg"] = { desc = "LazyGit" },
       ["<leader>gp"] = { desc = "Git Pull" },
       ["<leader>gs"] = { desc = "Git Status" },
-    })
 
-    wk.register({
-      ["<leader>r"] = { name = "Refactoring" },
-      ["<leader>rr"] = { desc = "Refactoring menu" },
+      ["<leader>rc"] = { desc = "Clean debug prints" },
       ["<leader>re"] = { desc = "Extract function" },
-      ["<leader>rv"] = { desc = "Extract variable" },
       ["<leader>ri"] = { desc = "Inline variable" },
       ["<leader>rp"] = { desc = "Debug print" },
-      ["<leader>rc"] = { desc = "Clean debug prints" },
-    })
+      ["<leader>rr"] = { desc = "Refactoring menu" },
+      ["<leader>rv"] = { desc = "Extract variable" },
 
-    -- Stack commands
-    wk.register({
-      ["<leader>s"] = { name = "Stack/Sessions" },
       ["<leader>sg"] = { desc = "Focus GOTH Stack" },
       ["<leader>sn"] = { desc = "Focus Next.js Stack" },
-    })
 
-    -- Terminal commands
-    wk.register({
-      ["<leader>t"] = { name = "Terminal/Toggle" },
       ["<leader>tf"] = { desc = "Terminal (float)" },
       ["<leader>th"] = { desc = "Terminal (horizontal)" },
       ["<leader>tv"] = { desc = "Terminal (vertical)" },
-    })
 
-    -- UI settings
-    wk.register({
-      ["<leader>u"] = { name = "UI/Settings" },
-      ["<leader>us"] = { desc = "Cycle color scheme" },
       ["<leader>uS"] = { desc = "Select color scheme" },
-      ["<leader>uv"] = { desc = "Cycle color variant" },
       ["<leader>uV"] = { desc = "Select color variant" },
       ["<leader>ub"] = { desc = "Toggle transparency" },
       ["<leader>uc"] = { desc = "Toggle Copilot" },
       ["<leader>ui"] = { desc = "Toggle Codeium" },
-    })
+      ["<leader>us"] = { desc = "Cycle color scheme" },
+      ["<leader>uv"] = { desc = "Cycle color variant" },
 
-    -- Layout presets
-    wk.register({
-      ["<leader>L"] = { name = "Layouts" },
       ["<leader>L1"] = { desc = "Coding Layout" },
       ["<leader>L2"] = { desc = "Terminal Layout" },
       ["<leader>L3"] = { desc = "Writing Layout" },
       ["<leader>L4"] = { desc = "Debug Layout" },
-    })
 
-    -- LSP commands with symbols-outline integration
-    wk.register({
-      ["<leader>c"] = { name = "Code/LSP" },
       ["<leader>ca"] = { desc = "Code Action" },
       ["<leader>cd"] = { desc = "Show Diagnostics" },
       ["<leader>cf"] = { desc = "Format" },
       ["<leader>cr"] = { desc = "Rename Symbol" },
-      ["<leader>cs"] = { desc = "Symbols Outline" }, -- New symbols-outline integration
-    })
+      ["<leader>cs"] = { desc = "Symbols Outline" },
 
-    -- Trouble/Diagnostics keys
-    wk.register({
-      ["<leader>x"] = { name = "Diagnostics/Trouble" },
-      ["<leader>xx"] = { desc = "Diagnostics (Trouble)" },
-      ["<leader>xX"] = { desc = "Buffer Diagnostics (Trouble)" },
-      ["<leader>xQ"] = { desc = "Quickfix List (Trouble)" },
       ["<leader>xL"] = { desc = "Location List (Trouble)" },
-    })
+      ["<leader>xQ"] = { desc = "Quickfix List (Trouble)" },
+      ["<leader>xX"] = { desc = "Buffer Diagnostics (Trouble)" },
+      ["<leader>xx"] = { desc = "Diagnostics (Trouble)" },
+    }, { prefix = "", mode = "n" })
 
-    -- LSP keybinding descriptions - set in LspAttach
+    -- LSP registrations
+    local function register_lsp_keys(bufnr)
+      local wk_lsp_ok, wk_lsp = pcall(require, "which-key")
+      if not wk_lsp_ok then
+        return
+      end
+      wk_lsp.register({
+        ["g"] = {
+          name = "Goto",
+          d = { desc = "Go to Definition" },
+          D = { desc = "Go to Declaration" },
+          i = { desc = "Go to Implementation" },
+          r = { desc = "Find References" },
+        },
+        K = { desc = "Hover Documentation" },
+        ["<C-k>"] = { desc = "Signature Help" },
+        ["[d"] = { desc = "Previous Diagnostic" },
+        ["]d"] = { desc = "Next Diagnostic" },
+        ["<leader>c"] = {
+          name = "Code/LSP",
+          r = { desc = "Rename Symbol" },
+          a = { desc = "Code Action" },
+          f = { desc = "Format" },
+          d = { desc = "Show Diagnostics" },
+          q = { desc = "Diagnostics to Quickfix" },
+          s = { desc = "Symbols Outline" },
+        },
+      }, { buffer = bufnr })
+    end
+
     vim.api.nvim_create_autocmd("LspAttach", {
       callback = function(args)
-        if not ok or not wk then
-          return
-        end
-
-        local bufnr = args.buf
-        wk.register({
-          ["g"] = {
-            name = "Goto",
-            ["d"] = { desc = "Go to Definition" },
-            ["D"] = { desc = "Go to Declaration" },
-            ["i"] = { desc = "Go to Implementation" },
-            ["r"] = { desc = "Find References" },
-          },
-          ["K"] = { desc = "Hover Documentation" },
-          ["<C-k>"] = { desc = "Signature Help" },
-          ["<leader>c"] = {
-            name = "Code/LSP",
-            ["r"] = { desc = "Rename Symbol" },
-            ["a"] = { desc = "Code Action" },
-            ["f"] = { desc = "Format" },
-            ["d"] = { desc = "Show Diagnostics" },
-            ["q"] = { desc = "Diagnostics to Quickfix" },
-            ["s"] = { desc = "Symbols Outline" }, -- Add inside LspAttach for buffer-specific binding
-          },
-          ["[d"] = { desc = "Previous Diagnostic" },
-          ["]d"] = { desc = "Next Diagnostic" },
-        }, { buffer = bufnr })
+        register_lsp_keys(args.buf)
       end,
     })
 
-    -- File-type specific keymaps for GOTH stack
+    -- Filetype-specific mappings (GOTH stack)
     vim.api.nvim_create_autocmd("FileType", {
       pattern = { "go", "templ" },
       callback = function(args)
-        if not ok or not wk then
+        local ok_ft, wk_ft = pcall(require, "which-key")
+        if not ok_ft then
           return
         end
-
-        wk.register({
+        wk_ft.register({
           ["<leader>g"] = {
             name = "GOTH",
-            ["r"] = { desc = "Run Go project" },
-            ["s"] = { desc = "Start GOTH server" },
-            ["t"] = { desc = "Generate Templ files" },
-            ["n"] = { desc = "New Templ component" },
+            r = { desc = "Run Go project" },
+            s = { desc = "Start GOTH server" },
+            t = { desc = "Generate Templ files" },
+            n = { desc = "New Templ component" },
           },
         }, { buffer = args.buf })
       end,
     })
 
-    -- File-type specific keymaps for Next.js
+    -- Filetype-specific mappings (Next.js stack)
     vim.api.nvim_create_autocmd("FileType", {
       pattern = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
       callback = function(args)
-        if not ok or not wk then
+        local ok_ft, wk_ft = pcall(require, "which-key")
+        if not ok_ft then
           return
         end
-
-        wk.register({
+        wk_ft.register({
           ["<leader>n"] = {
             name = "Next.js",
-            ["d"] = { desc = "Next.js dev server" },
-            ["b"] = { desc = "Next.js build" },
-            ["c"] = { desc = "New component" },
-            ["p"] = { desc = "New page" },
+            d = { desc = "Next.js dev server" },
+            b = { desc = "Next.js build" },
+            c = { desc = "New component" },
+            p = { desc = "New page" },
           },
         }, { buffer = args.buf })
       end,

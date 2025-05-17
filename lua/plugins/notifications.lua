@@ -368,6 +368,11 @@ return {
 
       -- Setup noice with error handling
       local setup_ok, err = pcall(function()
+        if opts.messages and opts.messages.view then
+          opts.messages.view_history = "messages"
+          opts.messages.view_search = "virtualtext"
+        end
+
         noice.setup(opts)
       end)
       if not setup_ok then

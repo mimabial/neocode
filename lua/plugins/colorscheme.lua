@@ -56,19 +56,6 @@ return {
           end,
         },
 
-        ["tokyonight"] = {
-          icon = " ",
-          variants = { "storm", "moon", "night", "day" },
-          apply_variant = function(variant)
-            pcall(require("tokyonight").setup, { style = variant })
-            return true
-          end,
-          set_transparency = function(enable)
-            pcall(require("tokyonight").setup, { transparent = enable })
-            return true
-          end,
-        },
-
         ["everforest"] = {
           icon = "󱢗 ",
           variants = { "soft", "medium", "hard" },
@@ -122,29 +109,6 @@ return {
           end,
           set_transparency = function(enable)
             pcall(require("rose-pine").setup, { disable_background = enable })
-            return true
-          end,
-        },
-
-        ["catppuccin"] = {
-          icon = "󰄛 ",
-          variants = { "mocha", "macchiato", "frappe", "latte" },
-          apply_variant = function(variant)
-            -- Add better error handling here
-            local ok, cat = pcall(require, "catppuccin")
-            if not ok then
-              vim.notify("Catppuccin plugin not loaded. Try running :Lazy load catppuccin", vim.log.levels.WARN)
-              return false
-            end
-            cat.setup({ flavour = variant })
-            return true
-          end,
-          set_transparency = function(enable)
-            local ok, cat = pcall(require, "catppuccin")
-            if not ok then
-              return false
-            end
-            cat.setup({ transparent_background = enable })
             return true
           end,
         },
