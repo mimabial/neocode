@@ -142,6 +142,45 @@ return {
       -- Configure language servers
       local lspconfig = require("lspconfig")
 
+      -- Python LSP configuration
+      lspconfig.pyright.setup({
+        on_attach = on_attach,
+        capabilities = capabilities,
+        settings = {
+          python = {
+            analysis = {
+              typeCheckingMode = "basic",
+              diagnosticMode = "workspace",
+              inlayHints = {
+                variableTypes = true,
+                functionReturnTypes = true,
+              },
+            },
+            venvPath = vim.fn.exists("$VIRTUAL_ENV") == 1 and vim.fn.expand("$VIRTUAL_ENV") or "",
+          },
+        },
+        before_init = function(_, config)
+          -- Try to automatically detect virtualenv
+          local util = require("lspconfig.util")
+          local path = util.path
+
+          -- Check for virtualenv in common locations
+          local venv_paths = {
+            vim.fn.getcwd() .. "/.venv",
+            vim.fn.getcwd() .. "/venv",
+            vim.fn.getcwd() .. "/env",
+            vim.fn.expand("$HOME") .. "/.virtualenvs/" .. vim.fn.fnamemodify(vim.fn.getcwd(), ":t"),
+          }
+
+          for _, venv in ipairs(venv_paths) do
+            if vim.fn.isdirectory(venv) == 1 then
+              config.settings.python.venvPath = venv
+              break
+            end
+          end
+        end,
+      })
+
       -- Lua LSP configuration
       lspconfig.lua_ls.setup({
         on_attach = on_attach,
