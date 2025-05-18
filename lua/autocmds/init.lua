@@ -174,43 +174,7 @@ function M.setup()
     desc = "Highlight HTMX attributes",
   })
 
-  -- 11) LSP keymaps and formatting
-  vim.api.nvim_create_augroup("LspActions", { clear = true })
-  vim.api.nvim_create_autocmd("LspAttach", {
-    group = "LspActions",
-    callback = function(args)
-      local client = vim.lsp.get_client_by_id(args.data.client_id)
-      if not client or client.name == "copilot" then
-        return
-      end
-      local bufnr = args.buf
-      local function bufmap(lhs, rhs, desc)
-        vim.keymap.set("n", lhs, rhs, { buffer = bufnr, desc = desc })
-      end
-      bufmap("gd", vim.lsp.buf.definition, "Go to Definition")
-      bufmap("gD", vim.lsp.buf.declaration, "Go to Declaration")
-      bufmap("gi", vim.lsp.buf.implementation, "Go to Implementation")
-      if safe_require("snacks.picker") then
-        bufmap("gr", function()
-          require("snacks.picker").lsp_references()
-        end, "Find References")
-      else
-        bufmap("gr", vim.lsp.buf.references, "Find References")
-      end
-      bufmap("K", vim.lsp.buf.hover, "Hover Documentation")
-      bufmap("<C-k>", vim.lsp.buf.signature_help, "Signature Help")
-      bufmap("<leader>cr", vim.lsp.buf.rename, "Rename Symbol")
-      bufmap("<leader>ca", vim.lsp.buf.code_action, "Code Action")
-      bufmap("<leader>cf", function()
-        vim.lsp.buf.format({ bufnr = bufnr })
-      end, "Format Buffer")
-      bufmap("<leader>cd", vim.diagnostic.open_float, "Show Diagnostics")
-      bufmap("<leader>cq", vim.diagnostic.setqflist, "Diagnostics to Quickfix")
-    end,
-    desc = "Setup LSP-specific keybindings",
-  })
-
-  -- 12) Templ indentation
+  -- 11) Templ indentation
   vim.api.nvim_create_augroup("TemplIndent", { clear = true })
   vim.api.nvim_create_autocmd("FileType", {
     group = "TemplIndent",
@@ -237,7 +201,7 @@ function M.setup()
     desc = "Configure Templ indentation",
   })
 
-  -- 13) Terminal mode settings
+  -- 12) Terminal mode settings
   vim.api.nvim_create_augroup("TerminalMode", { clear = true })
   vim.api.nvim_create_autocmd("TermOpen", {
     group = "TerminalMode",
@@ -261,7 +225,7 @@ function M.setup()
     desc = "Configure terminal keymaps",
   })
 
-  -- 14) Refresh gitsigns after lazygit after lazygit
+  -- 13) Refresh gitsigns after lazygit after lazygit
   local git_grp = vim.api.nvim_create_augroup("GitSignsRefresh", { clear = true })
   vim.api.nvim_create_autocmd("TermClose", {
     group = git_grp,
@@ -275,7 +239,7 @@ function M.setup()
     end,
   })
 
-  -- 15) Inlay hints (Neovim >=0.10)
+  -- 14) Inlay hints (Neovim >=0.10)
   local hint_grp = vim.api.nvim_create_augroup("LspInlayHints", { clear = true })
   vim.api.nvim_create_autocmd("LspAttach", {
     group = hint_grp,
@@ -292,7 +256,7 @@ function M.setup()
     end,
   })
 
-  -- 16) Update window title) Update window title
+  -- 15) Update window title) Update window title
   vim.api.nvim_create_augroup("WinTitle", { clear = true })
   vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost", "VimResume" }, {
     group = "WinTitle",
@@ -307,13 +271,13 @@ function M.setup()
     desc = "Set window title",
   })
 
-  -- 17) Project-specific autocmds
+  -- 16) Project-specific autocmds
   local proj = vim.fn.getcwd() .. "/.nvim/autocmds.lua"
   if vim.fn.filereadable(proj) == 1 then
     pcall(dofile, proj)
   end
 
-  -- 19) Disable auto comment continuation
+  -- 17) Disable auto comment continuation
   vim.api.nvim_create_augroup("NoCommentCont", { clear = true })
   vim.api.nvim_create_autocmd("FileType", {
     group = "NoCommentCont",
@@ -324,100 +288,7 @@ function M.setup()
     desc = "Disable auto comment continuation",
   })
 
-  -- -- 20) Throttle certain events during undo operations
-  -- local throttle_group = vim.api.nvim_create_augroup("ThrottleEvents", { clear = true })
-  -- vim.api.nvim_create_autocmd("OptionSet", {
-  --   group = throttle_group,
-  --   pattern = "undolevels",
-  --   callback = function()
-  --     -- Disable certain autocmds when undoing
-  --     if vim.opt.undolevels:get() < 0 then
-  --       -- Temporarily disable diagnostics (saving current config)
-  --       vim.g.saved_diagnostic_config = vim.diagnostic.config()
-  --       vim.diagnostic.config({
-  --         underline = false,
-  --         virtual_text = false,
-  --         signs = false,
-  --         update_in_insert = false,
-  --       })
-  --
-  --       -- Disable linting
-  --       if package.loaded["lint"] then
-  --         vim.g.lint_disabled_during_undo = true
-  --       end
-  --       -- Disable git signs updates
-  --       if package.loaded["gitsigns"] then
-  --         vim.g.gitsigns_disabled_during_undo = require("gitsigns").toggle_signs(false)
-  --       end
-  --     else
-  --       -- Re-enable diagnostics (restore saved config)
-  --       if vim.g.saved_diagnostic_config then
-  --         pcall(vim.diagnostic.config, vim.g.saved_diagnostic_config)
-  --         vim.g.saved_diagnostic_config = nil
-  --       else
-  --         -- Fallback in case saved config wasn't set
-  --         pcall(require, "autocmds.diagnostics")
-  --         if package.loaded["autocmds.diagnostics"] then
-  --           pcall(require("autocmds.diagnostics").setup)
-  --         end
-  --       end
-  --
-  --       -- Re-enable linting
-  --       if vim.g.lint_disabled_during_undo then
-  --         vim.g.lint_disabled_during_undo = nil
-  --         if package.loaded["lint"] then
-  --           require("lint").try_lint()
-  --         end
-  --       end
-  --       -- Re-enable git signs
-  --       if vim.g.gitsigns_disabled_during_undo then
-  --         vim.g.gitsigns_disabled_during_undo = nil
-  --         if package.loaded["gitsigns"] then
-  --           require("gitsigns").toggle_signs(true)
-  --         end
-  --       end
-  --     end
-  --   end,
-  --   desc = "Throttle events during undo operations",
-  -- })
-
-  -- -- 13) Print startup success message
-  -- vim.api.nvim_create_autocmd("User", {
-  --   pattern = "LazyVimStarted",
-  --   callback = function()
-  --     local lazy_stats = require("lazy").stats()
-  --     local ms = math.floor(lazy_stats.startuptime * 100 + 0.5) / 100
-  --     local v = vim.version()
-  --
-  --     local stack_icon = ""
-  --     if vim.g.current_stack == "goth" then
-  --       stack_icon = "󰟓 "
-  --     elseif vim.g.current_stack == "nextjs" then
-  --       stack_icon = " "
-  --     elseif vim.g.current_stack == "goth+nextjs" then
-  --       stack_icon = "󰡄 "
-  --     end
-  --
-  --     local msg = string.format(
-  --       "⚡ Neovim v%d.%d.%d loaded %d/%d plugins in %.2fms %s",
-  --       v.major,
-  --       v.minor,
-  --       v.patch,
-  --       lazy_stats.loaded,
-  --       lazy_stats.count,
-  --       ms,
-  --       stack_icon
-  --     )
-  --     vim.notify(msg, vim.log.levels.INFO, { title = "Neovim Started" })
-  --
-  --     -- Open dashboard if enabled
-  --     if package.loaded["snacks.dashboard"] and vim.fn.argc() == 0 then
-  --       vim.cmd("Dashboard")
-  --     end
-  --   end,
-  -- })
-
-  -- 14) Try to load project-specific configuration if it exists
+  -- 18) Try to load project-specific configuration if it exists
   local project_init = vim.fn.getcwd() .. "/.nvim/init.lua"
   if vim.fn.filereadable(project_init) == 1 then
     vim.notify("📝 Loading project-specific configuration", vim.log.levels.INFO)

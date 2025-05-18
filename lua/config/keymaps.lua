@@ -14,6 +14,7 @@ function M.setup()
   local function safe_require(mod)
     local ok, module = pcall(require, mod)
     if not ok then
+      vim.notify(string.format("Error loading module '%s': %s", mod, module), vim.log.levels.WARN)
       return nil
     end
     return module
@@ -112,84 +113,6 @@ function M.setup()
   map("n", "<leader>cs", "<cmd>SymbolsOutline<cr>", { desc = "Symbols Outline" })
 
   -- ========================================
-  -- Telescope (search & find)
-  -- ========================================
-  -- Core search functionality
-  map("n", "<leader>ff", function()
-    -- Attempt to use Telescope first
-    local ok, telescope = pcall(require, "telescope.builtin")
-    if ok then
-      telescope.find_files()
-    else
-      -- Ultimate fallback to built-in
-      vim.cmd("find")
-    end
-  end, { desc = "Find Files" })
-
-  map("n", "<leader>fg", function()
-    local ok, telescope = pcall(require, "telescope.builtin")
-    if ok then
-      telescope.live_grep()
-    else
-      -- Fallback to built-in grep
-      vim.ui.input({ prompt = "Search pattern: " }, function(input)
-        if input then
-          vim.cmd("vimgrep " .. input .. " **/*")
-          vim.cmd("copen")
-        end
-      end)
-    end
-  end, { desc = "Find Text (Grep)" })
-
-  map("n", "<leader>fb", function()
-    local ok, telescope = pcall(require, "telescope.builtin")
-    if ok then
-      telescope.buffers()
-    else
-      vim.cmd("ls")
-    end
-  end, { desc = "Find Buffers" })
-
-  map("n", "<leader>fr", function()
-    local ok, telescope = pcall(require, "telescope.builtin")
-    if ok then
-      telescope.oldfiles()
-    else
-      vim.cmd("browse oldfiles")
-    end
-  end, { desc = "Recent Files" })
-
-  map("n", "<leader>fh", function()
-    local ok, telescope = pcall(require, "telescope.builtin")
-    if ok then
-      telescope.help_tags()
-    else
-      vim.cmd("help")
-    end
-  end, { desc = "Find Help" })
-
-  -- LSP integration with Telescope
-  map("n", "<leader>fd", function()
-    local ok, telescope = pcall(require, "telescope.builtin")
-    if ok then
-      telescope.diagnostics({ bufnr = 0 })
-    else
-      -- Fallback to builtin diagnostics
-      vim.diagnostic.setloclist()
-    end
-  end, { desc = "Document Diagnostics" })
-
-  map("n", "<leader>fD", function()
-    local ok, telescope = pcall(require, "telescope.builtin")
-    if ok then
-      telescope.diagnostics()
-    else
-      -- Fallback to builtin diagnostics
-      vim.diagnostic.setqflist()
-    end
-  end, { desc = "Workspace Diagnostics" })
-
-  -- ========================================
   -- Stack-Specific Commands
   -- ========================================
   -- GOTH stack
@@ -223,14 +146,6 @@ function M.setup()
       vim.notify("Stack configuration module not available", vim.log.levels.WARN)
     end
   end, { desc = "Focus Next.js Stack" })
-
-  -- ========================================
-  -- Terminal Integration
-  -- ========================================
-  map("n", "<leader>tf", "<cmd>ToggleTerm direction=float<cr>", { desc = "Terminal (float)" })
-  map("n", "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", { desc = "Terminal (horizontal)" })
-  map("n", "<leader>tv", "<cmd>ToggleTerm direction=vertical<cr>", { desc = "Terminal (vertical)" })
-  map("n", "<C-\\>", "<cmd>ToggleTerm<cr>", { desc = "Toggle terminal" })
 
   -- ========================================
   -- Git Integration
