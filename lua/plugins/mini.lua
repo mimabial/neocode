@@ -25,7 +25,44 @@ return {
     "echasnovski/mini.icons",
     lazy = true,
     config = function()
-      require("mini.icons").setup()
+      local icons = require("mini.icons")
+      icons.setup()
+
+      -- Update icons with theme colors
+      local function update_icon_colors()
+        local colors = _G.get_ui_colors and _G.get_ui_colors()
+          or {
+            blue = "#7daea3",
+            red = "#ea6962",
+            green = "#89b482",
+            yellow = "#d8a657",
+            purple = "#d3869b",
+            orange = "#e78a4e",
+          }
+
+        -- Apply colors to icon groups
+        local icon_hl_groups = {
+          MiniIconsDevicons = { fg = colors.blue },
+          MiniIconsFiletype = { fg = colors.purple },
+          MiniIconsSpinner = { fg = colors.green },
+          MiniIconsFolder = { fg = colors.yellow },
+          MiniIconsGit = { fg = colors.orange },
+          MiniIconsConceal = { fg = colors.blue },
+        }
+
+        -- Set highlight groups
+        for group, attrs in pairs(icon_hl_groups) do
+          vim.api.nvim_set_hl(0, group, attrs)
+        end
+      end
+
+      -- Update on theme change
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = update_icon_colors,
+      })
+
+      -- Initial color setup
+      update_icon_colors()
     end,
   },
 }
