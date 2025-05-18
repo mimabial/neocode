@@ -1,4 +1,3 @@
--- lua/plugins/keybindings.lua
 return {
   "folke/which-key.nvim",
   event = "UIEnter",
@@ -56,7 +55,7 @@ return {
       show_keys = false,
       disable = {
         bt = { "terminal", "nofile" },
-        ft = { "TelescopePrompt", "TelescopeResults", "oil", "neo-tree", "dashboard", "alpha", "lazy" },
+        ft = { "TelescopePrompt", "TelescopeResults", "neo-tree", "dashboard", "alpha", "lazy" },
       },
     })
 
@@ -165,7 +164,7 @@ return {
           a = { desc = "Code Action" },
           f = { desc = "Format" },
           d = { desc = "Show Diagnostics" },
-          q = { desc = "Diagnostics to Quickfix" },
+          q = { desc = "Diagnostics to loclist" }, -- Fixed from "Quickfix" to "loclist"
           s = { desc = "Symbols Outline" },
         },
       }, { buffer = bufnr })
@@ -186,12 +185,11 @@ return {
           return
         end
         wk_ft.register({
-          ["<leader>g"] = {
-            name = "GOTH",
-            r = { desc = "Run Go project" },
-            s = { desc = "Start GOTH server" },
-            t = { desc = "Generate Templ files" },
-            n = { desc = "New Templ component" },
+          ["<leader>s"] = {
+            name = "Stack Actions",
+            r = { desc = "Run GOTH Server" },
+            t = { desc = "Run Go Tests" },
+            g = { desc = "Generate Templ Files" },
           },
         }, { buffer = args.buf })
       end,
@@ -206,12 +204,11 @@ return {
           return
         end
         wk_ft.register({
-          ["<leader>n"] = {
-            name = "Next.js",
-            d = { desc = "Next.js dev server" },
-            b = { desc = "Next.js build" },
-            c = { desc = "New component" },
-            p = { desc = "New page" },
+          ["<leader>s"] = {
+            name = "Stack Actions",
+            r = { desc = "Run Next.js Server" },
+            b = { desc = "Build Next.js App" },
+            l = { desc = "Lint Next.js App" },
           },
         }, { buffer = args.buf })
       end,
