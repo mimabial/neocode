@@ -86,9 +86,6 @@ return {
         -- LSP actions
         buf_set_keymap("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "Code actions" })
         buf_set_keymap("n", "<leader>cr", vim.lsp.buf.rename, { desc = "Rename symbol" })
-        buf_set_keymap("n", "<leader>cf", function()
-          vim.lsp.buf.format({ async = true })
-        end, { desc = "Format buffer" })
 
         -- Diagnostics
         buf_set_keymap("n", "<leader>cd", vim.diagnostic.open_float, { desc = "Show diagnostics" })

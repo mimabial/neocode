@@ -12,7 +12,7 @@ return {
       function()
         require("conform").format({ async = true, lsp_fallback = true })
       end,
-      mode = "",
+      mode = { "n", "v" },
       desc = "Format buffer",
     },
     {
@@ -149,6 +149,7 @@ return {
     local conform = require("conform")
     conform.setup(opts)
 
+    -- Create Format command with LSP fallback
     vim.api.nvim_create_user_command("Format", function(args)
       local range = args.range > 0
           and {
@@ -171,16 +172,6 @@ return {
         return vim.tbl_keys(require("conform").formatters)
       end,
       desc = "Format with specific formatter",
-    })
-
-    vim.api.nvim_create_autocmd("BufWritePre", {
-      group = vim.api.nvim_create_augroup("StackSpecificFormat", { clear = true }),
-      pattern = { "*.templ" },
-      callback = function()
-        if vim.fn.executable("templ") ~= 1 then
-          vim.notify("templ command not found. Install templ to enable formatting.", vim.log.levels.WARN)
-        end
-      end,
     })
   end,
 }
