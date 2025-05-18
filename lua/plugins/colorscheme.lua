@@ -377,18 +377,6 @@ return {
   },
 
   -- Additional themes
-  {
-    "folke/tokyonight.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("tokyonight").setup({
-        style = "storm",
-        transparent = false,
-        styles = { comments = { italic = true }, keywords = { italic = true } },
-      })
-    end,
-  },
 
   {
     "sainnhe/everforest",
@@ -494,20 +482,6 @@ return {
         variant = "main",
         disable_background = false,
         disable_italics = false,
-      })
-    end,
-  },
-
-  {
-    "catppuccin/nvim",
-    name = "catppuccin",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("catppuccin").setup({
-        flavour = "mocha",
-        transparent_background = false,
-        styles = { comments = { "italic" }, keywords = { "italic" } },
       })
     end,
   },

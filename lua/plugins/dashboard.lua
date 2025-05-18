@@ -119,5 +119,21 @@ return {
 
     -- Add keymap for dashboard
     vim.keymap.set("n", "<leader>d", ":Alpha<CR>", { desc = "Open Dashboard" })
+
+    -- Set up autocommand to keep dashboard visible
+    vim.api.nvim_create_autocmd("User", {
+      pattern = "AlphaReady",
+      callback = function()
+        vim.cmd("set showtabline=0")
+        -- Clean up empty buffers
+        vim.api.nvim_create_autocmd("BufUnload", {
+          buffer = 0,
+          once = true,
+          callback = function()
+            vim.cmd("set showtabline=2")
+          end,
+        })
+      end,
+    })
   end,
 }
