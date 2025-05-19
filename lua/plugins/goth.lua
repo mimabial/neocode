@@ -1,6 +1,6 @@
 -- lua/plugins/goth.lua
 
-local goth_utils = require("utils.goth")
+local goth_utils = require("utils.stacks")
 
 local function new_toggleterm_command(name, cmd, opts)
   vim.api.nvim_create_user_command(name, function()

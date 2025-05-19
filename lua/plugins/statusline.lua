@@ -21,7 +21,7 @@ return {
 
   opts = function()
     local fn = vim.fn
-    local utils = require("config.utils")
+    local utils = require("utils.core")
 
     -- Gruvbox-compatible colors
     local colors = {

@@ -100,7 +100,7 @@ load_module("config.commands", "setup")
 load_module("commands.lazy", "setup")
 
 -- Utilities and specialized features
-load_module("config.utils", "setup")
+load_module("utils.core", "setup")
 
 -- Stack detection and configuration - should be loaded last
 load_module("utils.stacks", "setup")

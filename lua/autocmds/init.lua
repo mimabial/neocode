@@ -239,23 +239,6 @@ function M.setup()
     end,
   })
 
-  -- 14) Inlay hints (Neovim >=0.10)
-  local hint_grp = vim.api.nvim_create_augroup("LspInlayHints", { clear = true })
-  vim.api.nvim_create_autocmd("LspAttach", {
-    group = hint_grp,
-    desc = "Enable LSP inlay hints if supported by the server",
-    callback = function(args)
-      local client = vim.lsp.get_client_by_id(args.data.client_id)
-      if not client or not client.server_capabilities or not client.server_capabilities.inlayHintProvider then
-        return
-      end
-      -- Call the 'enable' method, passing true and the buffer number
-      if vim.lsp.inlay_hint and vim.lsp.inlay_hint.enable then
-        vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
-      end
-    end,
-  })
-
   -- 15) Update window title) Update window title
   vim.api.nvim_create_augroup("WinTitle", { clear = true })
   vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost", "VimResume" }, {

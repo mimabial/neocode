@@ -114,7 +114,7 @@ function M.setup()
   opt.fillchars = { eob = " " } -- Hide end-of-buffer tildes
 
   -- Statusline: append search count
-  opt.statusline:append(" %=%{v:lua.require'config.utils'.search_count()}")
+  opt.statusline:append(" %=%{v:lua.require'utils.core'.search_count()}")
 end
 
 return M

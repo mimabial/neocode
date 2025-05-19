@@ -1,7 +1,13 @@
 -- lua/plugins/alpha.lua
 return {
   "goolord/alpha-nvim",
-  event = "VimEnter",
+  event = function()
+    -- Only load for empty buffers at startup
+    if vim.fn.argc() == 0 and vim.fn.line2byte("$") == -1 then
+      return "VimEnter"
+    end
+  end,
+  cmd = "Alpha", -- Also load on command
   enabled = true,
   config = function()
     local alpha = require("alpha")

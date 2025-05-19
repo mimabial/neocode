@@ -95,9 +95,11 @@ return {
 
         -- Enable inlay hints if supported
         if inlay_hints_supported and client.server_capabilities.inlayHintProvider then
-          if vim.lsp.inlay_hint and vim.lsp.inlay_hint.enable then
-            vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
-          end
+          pcall(function()
+            if vim.lsp.inlay_hint and vim.lsp.inlay_hint.enable then
+              vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+            end
+          end)
         end
 
         -- Setup lsp_signature

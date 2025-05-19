@@ -1,7 +1,3 @@
--- lua/plugins/format.lua
-
-local format_utils = require("utils.format")
-
 return {
   "stevearc/conform.nvim",
   event = { "BufWritePre" },
@@ -47,6 +43,23 @@ return {
   end,
   opts = function()
     local util = require("conform.util")
+
+    -- Check if templ supports stdin formatting
+    local function check_templ_supports_stdin()
+      local handle = io.popen("templ version 2>&1")
+      if not handle then
+        return false
+      end
+      local result = handle:read("*a")
+      handle:close()
+
+      local major, minor = result:match("v(%d+)%.(%d+)")
+      if major and minor then
+        return tonumber(major) > 0 or (tonumber(major) == 0 and tonumber(minor) >= 2)
+      end
+      return false
+    end
+
     return {
       log_level = vim.log.levels.DEBUG,
       format_on_save = function(bufnr)
