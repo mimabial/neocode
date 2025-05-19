@@ -95,9 +95,10 @@ return {
 
         -- Enable inlay hints if supported
         if inlay_hints_supported and client.server_capabilities.inlayHintProvider then
+          -- Only use this specific approach for Neovim 0.10+
           pcall(function()
-            if vim.lsp.inlay_hint and vim.lsp.inlay_hint.enable then
-              vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+            if vim.lsp.inlay_hint and type(vim.lsp.inlay_hint.enable) == "function" then
+              vim.lsp.inlay_hint.enable(bufnr, true)
             end
           end)
         end
@@ -416,7 +417,7 @@ return {
   {
     "lvimuser/lsp-inlayhints.nvim",
     event = "LspAttach",
-    enabled = vim.fn.has("nvim-0.10") == 0,
+    enabled = vim.fn.has("nvim-0.10") == 0, -- Only enable for older Neovim versions
     opts = {
       inlay_hints = {
         parameter_hints = { show = true },

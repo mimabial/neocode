@@ -153,7 +153,7 @@ return {
         function()
           local buf_clients = vim.lsp.get_clients({ bufnr = 0 })
           if #buf_clients == 0 then
-            return "󰅠 No LSP"
+            return "󰅠 no lsp"
           end
 
           local lsp_names = {}
@@ -165,7 +165,7 @@ return {
           end
 
           local names_str = table.concat(lsp_names, ", ")
-          -- If the name string is too long, truncate it
+          -- Truncate if too long
           if #names_str > 30 then
             names_str = string.sub(names_str, 1, 27) .. "..."
           end
@@ -173,9 +173,6 @@ return {
           return " " .. names_str
         end,
         color = { fg = colors.green, gui = "bold" },
-        cond = function()
-          return true
-        end, -- Always show LSP status
       }
     end
 
@@ -328,11 +325,6 @@ return {
         },
         lualine_c = {
           root_dir(),
-          {
-            "diagnostics",
-            symbols = icons.diagnostics,
-            colored = true,
-          },
           pretty_path(),
           stack_badge(),
         },
