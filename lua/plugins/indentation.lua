@@ -38,6 +38,24 @@ return {
           "#957fb8", -- Purple
           "#6a9589", -- Teal
         },
+        ["nord"] = {
+          "#bf616a", -- Red
+          "#ebcb8b", -- Yellow
+          "#81a1c1", -- Blue
+          "#d08770", -- Orange
+          "#a3be8c", -- Green
+          "#b48ead", -- Purple
+          "#88c0d0", -- Teal
+        },
+        ["rose-pine"] = {
+          "#eb6f92", -- Red
+          "#f6c177", -- Yellow
+          "#9ccfd8", -- Blue
+          "#ea9a97", -- Orange
+          "#3e8fb0", -- Green
+          "#c4a7e7", -- Purple
+          "#31748f", -- Teal
+        },
       }
 
       -- Select color palette based on current theme
