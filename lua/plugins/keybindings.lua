@@ -69,11 +69,13 @@ return {
       ["<leader>f"] = { name = "Find/Telescope" },
       ["<leader>g"] = { name = "Git" },
       ["<leader>L"] = { name = "Layouts" },
+      ["<leader>n"] = { name = "Notifications" },
       ["<leader>s"] = { name = "Stack/Sessions" },
       ["<leader>t"] = { name = "Terminal/Toggle" },
       ["<leader>u"] = { name = "UI/Settings" },
       ["<leader>w"] = { name = "Windows" },
       ["<leader>x"] = { name = "Diagnostics/Trouble" },
+      ["<leader>z"] = { name = "Folds" },
 
       ["<leader>bb"] = { desc = "Other Buffer" },
       ["<leader>bd"] = { desc = "Delete Buffer" },
@@ -138,6 +140,14 @@ return {
       ["<leader>xQ"] = { desc = "Quickfix List (Trouble)" },
       ["<leader>xX"] = { desc = "Buffer Diagnostics (Trouble)" },
       ["<leader>xx"] = { desc = "Diagnostics (Trouble)" },
+
+      ["<leader>za"] = { desc = "Toggle fold" },
+      ["<leader>zR"] = { desc = "Open all folds" },
+      ["<leader>zM"] = { desc = "Close all folds" },
+      ["<leader>zo"] = { desc = "Open fold" },
+      ["<leader>zc"] = { desc = "Close fold" },
+      ["<leader>zf"] = { desc = "Create fold" },
+      ["<leader>zd"] = { desc = "Delete fold" },
     }, { prefix = "", mode = "n" })
 
     -- LSP registrations
