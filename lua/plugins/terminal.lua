@@ -49,12 +49,16 @@ return {
     winbar = {
       enabled = true,
       name_formatter = function(term)
+        if not term or not term.cmd then
+          return " Terminal" -- Default fallback name
+        end
+
         local title = term.display_name or term.name
         local icon = ""
 
         -- Determine icon based on cmd
         if term.cmd:match("go") then
-          icon = "󰟓"
+          icon = ""
         elseif term.cmd:match("npm") or term.cmd:match("yarn") or term.cmd:match("pnpm") then
           icon = ""
         elseif term.cmd:match("git") or term.cmd:match("lazygit") then
