@@ -1,5 +1,3 @@
--- init.lua – Enhanced Neovim entrypoint with robust module loading and error handling
-
 -- Set leader key early to ensure keymaps work correctly
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
@@ -29,7 +27,7 @@ local function safe_require(mod)
   return m
 end
 
--- More robust module loading with optional fallbacks
+-- Robust module loading with optional fallbacks
 local function load_module(name, setup_fn, fallback_fn)
   local mod = safe_require(name)
   if mod and type(mod[setup_fn]) == "function" then
@@ -79,7 +77,7 @@ if vim.fn.isdirectory(lazypath) == 0 then
   end
 end
 
--- Always add lazy.nvim to runtime path
+-- Add lazy.nvim to runtime path
 vim.opt.rtp:prepend(lazypath)
 
 -- Load plugin system with error handling

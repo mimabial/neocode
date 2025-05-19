@@ -111,24 +111,5 @@ return {
     for i = 1, 9 do
       map("n", "<leader>b" .. i, "<cmd>BufferLineGoToBuffer " .. i .. "<cr>", "Go to buffer " .. i)
     end
-
-    -- Register which-key descriptions
-    local ok, wk = pcall(require, "which-key")
-    if ok then
-      wk.register({
-        ["<leader>bP"] = { desc = "Pick buffer" },
-        ["<leader>b<"] = { desc = "Move buffer left" },
-        ["<leader>b>"] = { desc = "Move buffer right" },
-        ["<leader>b."] = { desc = "Sort by directory" },
-        ["<leader>b,"] = { desc = "Sort by extension" },
-      })
-
-      -- Register buffer number keys
-      for i = 1, 9 do
-        wk.register({
-          ["<leader>b" .. i] = { desc = "Go to buffer " .. i },
-        })
-      end
-    end
   end,
 }

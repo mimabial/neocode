@@ -9,14 +9,14 @@ return {
       health.check()
     end
 
-    local ok, wk = pcall(require, "which-key")
+    local ok, which_key = pcall(require, "which-key")
     if not ok then
-      vim.notify("[whichkey] which-key.nvim not found", vim.log.levels.WARN)
+      vim.notify("[Error] which-key.nvim not found", vim.log.levels.WARN)
       return
     end
 
-    -- Setup which-key with updated options
-    wk.setup({
+    -- Setup which-key
+    which_key.setup({
       plugins = {
         marks = true,
         registers = true,
@@ -47,8 +47,8 @@ return {
         spacing = 3,
         align = "left",
       },
+      -- show mappings with a description or group label
       filter = function(mapping)
-        -- show mappings with a description or group label
         return (mapping.desc and mapping.desc ~= "") or (mapping.group and mapping.group ~= "")
       end,
       show_help = false,
@@ -59,10 +59,9 @@ return {
       },
     })
 
-    -- Consolidated which-key registrations using new recommended spec
-    wk.register({
+    -- Group definitions
+    which_key.register({
       ["<leader>"] = { name = "Leader" },
-      ["<leader>a"] = { name = "Actions" },
       ["<leader>b"] = { name = "Buffers" },
       ["<leader>c"] = { name = "Code/LSP" },
       ["<leader>d"] = { name = "Debug/Dashboard" },
@@ -70,131 +69,159 @@ return {
       ["<leader>g"] = { name = "Git" },
       ["<leader>L"] = { name = "Layouts" },
       ["<leader>n"] = { name = "Notifications" },
+      ["<leader>r"] = { name = "Refactoring" },
       ["<leader>s"] = { name = "Stack/Sessions" },
       ["<leader>t"] = { name = "Terminal/Toggle" },
       ["<leader>u"] = { name = "UI/Settings" },
       ["<leader>w"] = { name = "Windows" },
       ["<leader>x"] = { name = "Diagnostics/Trouble" },
       ["<leader>z"] = { name = "Folds" },
+    })
 
+    -- Buffer mappings
+    which_key.register({
       ["<leader>bb"] = { desc = "Other Buffer" },
       ["<leader>bd"] = { desc = "Delete Buffer" },
       ["<leader>bf"] = { desc = "First Buffer" },
       ["<leader>bl"] = { desc = "Last Buffer" },
       ["<leader>bn"] = { desc = "Next Buffer" },
       ["<leader>bp"] = { desc = "Previous Buffer" },
+      ["<leader>bP"] = { desc = "Pick Buffer" },
+      ["<leader>b<"] = { desc = "Move Buffer Left" },
+      ["<leader>b>"] = { desc = "Move Buffer Right" },
+      ["<leader>b."] = { desc = "Sort by Directory" },
+      ["<leader>b,"] = { desc = "Sort by Extension" },
+    })
 
-      ["<leader>e"] = { desc = "Open File Explorer (Default)" },
+      for i = 1, 9 do
+        which_key.register({
+          ["<leader>b" .. i] = { desc = "Go to buffer " .. i },
+        })
+      end
+
+    -- File/Explorer
+    which_key.register({
+      ["<leader>e"] = { desc = "Open File Explorer" },
       ["<leader>E"] = { desc = "NvimTree Explorer" },
+    })
 
-      ["<leader>fD"] = { desc = "Workspace Diagnostics" },
-      ["<leader>fb"] = { desc = "Find Buffers" },
-      ["<leader>fd"] = { desc = "Document Diagnostics" },
+    -- Telescope/Find
+    which_key.register({
       ["<leader>ff"] = { desc = "Find Files" },
       ["<leader>fg"] = { desc = "Find Text (Grep)" },
-      ["<leader>fh"] = { desc = "Find Help" },
+      ["<leader>fb"] = { desc = "Find Buffers" },
       ["<leader>fr"] = { desc = "Recent Files" },
+      ["<leader>fh"] = { desc = "Find Help" },
+      ["<leader>fd"] = { desc = "Document Diagnostics" },
+      ["<leader>fD"] = { desc = "Workspace Diagnostics" },
+    })
 
-      ["<leader>gP"] = { desc = "Git Push" },
+    -- Git
+    which_key.register({
+      ["<leader>gg"] = { desc = "LazyGit" },
+      ["<leader>gd"] = { desc = "DiffView Open" },
+      ["<leader>gs"] = { desc = "Git Status" },
       ["<leader>gb"] = { desc = "Git Branches" },
       ["<leader>gc"] = { desc = "Git Commits" },
-      ["<leader>gd"] = { desc = "DiffView Open" },
-      ["<leader>gg"] = { desc = "LazyGit" },
       ["<leader>gp"] = { desc = "Git Pull" },
-      ["<leader>gs"] = { desc = "Git Status" },
+      ["<leader>gP"] = { desc = "Git Push" },
+    })
 
-      ["<leader>rc"] = { desc = "Clean debug prints" },
+    -- Refactoring
+    which_key.register({
+      ["<leader>rr"] = { desc = "Refactoring menu" },
       ["<leader>re"] = { desc = "Extract function" },
       ["<leader>ri"] = { desc = "Inline variable" },
       ["<leader>rp"] = { desc = "Debug print" },
-      ["<leader>rr"] = { desc = "Refactoring menu" },
+      ["<leader>rc"] = { desc = "Clean debug prints" },
       ["<leader>rv"] = { desc = "Extract variable" },
+    })
 
+    -- Stack
+    which_key.register({
       ["<leader>sg"] = { desc = "Focus GOTH Stack" },
       ["<leader>sn"] = { desc = "Focus Next.js Stack" },
+    })
 
+    -- Terminal
+    which_key.register({
       ["<leader>tf"] = { desc = "Terminal (float)" },
       ["<leader>th"] = { desc = "Terminal (horizontal)" },
       ["<leader>tv"] = { desc = "Terminal (vertical)" },
+      ["<leader>tt"] = { desc = "Toggle Terminal" },
+    })
 
+    -- UI/Settings
+    which_key.register({
+      ["<leader>us"] = { desc = "Cycle color scheme" },
       ["<leader>uS"] = { desc = "Select color scheme" },
+      ["<leader>uv"] = { desc = "Cycle color variant" },
       ["<leader>uV"] = { desc = "Select color variant" },
       ["<leader>ub"] = { desc = "Toggle transparency" },
       ["<leader>uc"] = { desc = "Toggle Copilot" },
       ["<leader>ui"] = { desc = "Toggle Codeium" },
-      ["<leader>us"] = { desc = "Cycle color scheme" },
-      ["<leader>uv"] = { desc = "Cycle color variant" },
+    })
 
+    -- Layouts
+    which_key.register({
       ["<leader>L1"] = { desc = "Coding Layout" },
       ["<leader>L2"] = { desc = "Terminal Layout" },
       ["<leader>L3"] = { desc = "Writing Layout" },
       ["<leader>L4"] = { desc = "Debug Layout" },
+    })
 
+    -- LSP mappings
+    which_key.register({
       ["<leader>ca"] = { desc = "Code Action" },
       ["<leader>cd"] = { desc = "Show Diagnostics" },
       ["<leader>cf"] = { desc = "Format" },
       ["<leader>cr"] = { desc = "Rename Symbol" },
       ["<leader>cs"] = { desc = "Symbols Outline" },
+    })
 
-      ["<leader>xL"] = { desc = "Location List (Trouble)" },
-      ["<leader>xQ"] = { desc = "Quickfix List (Trouble)" },
-      ["<leader>xX"] = { desc = "Buffer Diagnostics (Trouble)" },
+    -- Trouble/Diagnostics
+    which_key.register({
       ["<leader>xx"] = { desc = "Diagnostics (Trouble)" },
+      ["<leader>xX"] = { desc = "Buffer Diagnostics (Trouble)" },
+      ["<leader>xQ"] = { desc = "Quickfix List (Trouble)" },
+      ["<leader>xL"] = { desc = "Location List (Trouble)" },
+    })
 
-      ["<leader>za"] = { desc = "Toggle fold" },
+    -- Folds
+    which_key.register({
       ["<leader>zR"] = { desc = "Open all folds" },
       ["<leader>zM"] = { desc = "Close all folds" },
       ["<leader>zo"] = { desc = "Open fold" },
       ["<leader>zc"] = { desc = "Close fold" },
+      ["<leader>za"] = { desc = "Toggle fold" },
       ["<leader>zf"] = { desc = "Create fold" },
       ["<leader>zd"] = { desc = "Delete fold" },
-    }, { prefix = "", mode = "n" })
+    })
 
-    -- LSP registrations
-    local function register_lsp_keys(bufnr)
-      local wk_lsp_ok, wk_lsp = pcall(require, "which-key")
-      if not wk_lsp_ok then
-        return
-      end
-      wk_lsp.register({
-        ["g"] = {
-          name = "Goto",
-          d = { desc = "Go to Definition" },
-          D = { desc = "Go to Declaration" },
-          i = { desc = "Go to Implementation" },
-          r = { desc = "Find References" },
-        },
-        K = { desc = "Hover Documentation" },
-        ["<C-k>"] = { desc = "Signature Help" },
-        ["[d"] = { desc = "Previous Diagnostic" },
-        ["]d"] = { desc = "Next Diagnostic" },
-        ["<leader>c"] = {
-          name = "Code/LSP",
-          r = { desc = "Rename Symbol" },
-          a = { desc = "Code Action" },
-          f = { desc = "Format" },
-          d = { desc = "Show Diagnostics" },
-          q = { desc = "Diagnostics to loclist" }, -- Fixed from "Quickfix" to "loclist"
-          s = { desc = "Symbols Outline" },
-        },
-      }, { buffer = bufnr })
-    end
-
+    -- Register LSP-specific keymaps when LSP attaches
     vim.api.nvim_create_autocmd("LspAttach", {
       callback = function(args)
-        register_lsp_keys(args.buf)
+        which_key.register({
+          ["g"] = {
+            name = "Goto",
+            d = { desc = "Go to Definition" },
+            D = { desc = "Go to Declaration" },
+            i = { desc = "Go to Implementation" },
+            r = { desc = "Find References" },
+          },
+          K = { desc = "Hover Documentation" },
+          ["<C-k>"] = { desc = "Signature Help" },
+          ["[d"] = { desc = "Previous Diagnostic" },
+          ["]d"] = { desc = "Next Diagnostic" },
+        }, { buffer = args.buf })
       end,
     })
 
-    -- Filetype-specific mappings (GOTH stack)
+    -- Stack-specific keymaps for GOTH
     vim.api.nvim_create_autocmd("FileType", {
       pattern = { "go", "templ" },
       callback = function(args)
-        local ok_ft, wk_ft = pcall(require, "which-key")
-        if not ok_ft then
-          return
-        end
-        wk_ft.register({
+        which_key.register({
           ["<leader>s"] = {
             name = "Stack Actions",
             r = { desc = "Run GOTH Server" },
@@ -205,15 +232,11 @@ return {
       end,
     })
 
-    -- Filetype-specific mappings (Next.js stack)
+    -- Stack-specific keymaps for Next.js
     vim.api.nvim_create_autocmd("FileType", {
       pattern = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
       callback = function(args)
-        local ok_ft, wk_ft = pcall(require, "which-key")
-        if not ok_ft then
-          return
-        end
-        wk_ft.register({
+        which_key.register({
           ["<leader>s"] = {
             name = "Stack Actions",
             r = { desc = "Run Next.js Server" },

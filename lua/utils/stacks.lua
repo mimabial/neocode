@@ -1,10 +1,6 @@
--- lua/utils/stacks.lua
--- Improved stack detection and configuration with better fail-safety
-
 local M = {}
 
 local fn = vim.fn
-local api = vim.api
 
 -- Safely load a module with error handling
 local function safe_require(mod)
@@ -23,39 +19,33 @@ local stack_icons = {
 
 -- Check if any file matching patterns exists in cwd
 local function exists(patterns)
-  local ok, result = pcall(function()
-    if type(patterns) == "string" then
-      return vim.fn.glob(patterns) ~= ""
+  if type(patterns) == "string" then
+    return fn.glob(patterns) ~= ""
+  end
+  
+  for _, pat in ipairs(patterns) do
+    if fn.glob(pat) ~= "" then
+      return true
     end
-    for _, pat in ipairs(patterns) do
-      if vim.fn.glob(pat) ~= "" then
-        return true
-      end
-    end
-    return false
-  end)
-
-  return ok and result or false
+  end
+  return false
 end
 
 -- Search file contents for pattern with error handling
 local function file_contains(file, pattern, max_lines)
-  local ok, result = pcall(function()
-    max_lines = max_lines or 100
-    if vim.fn.filereadable(file) == 0 then
-      return false
-    end
+  max_lines = max_lines or 100
+  
+  if fn.filereadable(file) == 0 then
+    return false
+  end
 
-    local read_ok, lines = pcall(vim.fn.readfile, file, "", max_lines)
-    if not read_ok or type(lines) ~= "table" then
-      return false
-    end
+  local lines = fn.readfile(file, "", max_lines)
+  if type(lines) ~= "table" then
+    return false
+  end
 
-    local content = table.concat(lines, "\n")
-    return content:match(pattern) ~= nil
-  end)
-
-  return ok and result or false
+  local content = table.concat(lines, "\n")
+  return content:match(pattern) ~= nil
 end
 
 -- Detect current project stack with robust error handling
@@ -82,10 +72,9 @@ function M.detect_stack()
 
     -- Check Go imports/usage related to HTMX/Templ
     local gofiles = {}
-    local glob_ok, glob_result = pcall(fn.glob, "**/*.go", false, true)
-    if glob_ok and type(glob_result) == "table" then
-      gofiles = glob_result
-    end
+    pcall(function()
+      gofiles = fn.glob("**/*.go", false, true)
+    end)
 
     for _, file in ipairs(gofiles) do
       if file_contains(file, "html/template") or file_contains(file, "htmx") or file_contains(file, "templ") then
@@ -120,7 +109,9 @@ function M.detect_stack()
     end
 
     -- Determine the result based on scores
-    if goth_score >= 4 then
+    if goth_score >= 4 and nextjs_score >= 4 then
+      return "goth+nextjs" -- Both stacks detected
+    elseif goth_score >= 4 then
       return "goth"
     elseif nextjs_score >= 4 then
       return "nextjs"
@@ -131,16 +122,16 @@ function M.detect_stack()
   end)
 
   -- If detection fails, provide a fallback with basic checks
-  if not ok then
+  if not ok or not result then
     -- Log error but don't expose it to user
     vim.schedule(function()
       vim.notify("Stack detection encountered an error, falling back to basic detection", vim.log.levels.DEBUG)
     end)
 
     -- Check for some very basic indicators
-    if vim.fn.filereadable("go.mod") == 1 then
+    if fn.filereadable("go.mod") == 1 then
       return "goth"
-    elseif vim.fn.filereadable("next.config.js") == 1 or vim.fn.filereadable("package.json") == 1 then
+    elseif fn.filereadable("next.config.js") == 1 or fn.filereadable("package.json") == 1 then
       return "nextjs"
     end
   end
@@ -161,12 +152,14 @@ function M.configure_stack(stack_name)
     notify_icon = stack_icons["goth"] or "󰟓 "
   elseif stack == "nextjs" then
     notify_icon = stack_icons["nextjs"] or " "
+  elseif stack == "goth+nextjs" then
+    notify_icon = stack_icons["goth"] or "󰟓 " .. " + " .. stack_icons["nextjs"] or " "
   end
 
   -- Configure for GOTH stack
-  if stack == "goth" then
+  if stack == "goth" or stack == "goth+nextjs" then
     -- Notify user
-    api.nvim_notify(notify_icon .. "Stack focused on GOTH (Go/Templ/HTMX)", vim.log.levels.INFO, { title = "Stack" })
+    vim.notify(notify_icon .. "Stack focused on GOTH (Go/Templ/HTMX)", vim.log.levels.INFO, { title = "Stack" })
 
     -- Ensure gopls is configured optimally
     local lspconfig = safe_require("lspconfig")
@@ -231,7 +224,7 @@ function M.configure_stack(stack_name)
 
     -- Add GOTH-specific commands safely
     vim.api.nvim_create_user_command("TemplGenerate", function()
-      if vim.fn.executable("templ") ~= 1 then
+      if fn.executable("templ") ~= 1 then
         vim.notify(
           "templ command not found. Install with 'go install github.com/a-h/templ/cmd/templ@latest'",
           vim.log.levels.ERROR
@@ -240,7 +233,7 @@ function M.configure_stack(stack_name)
       end
 
       vim.notify("Generating Templ files...", vim.log.levels.INFO)
-      vim.fn.jobstart("templ generate", {
+      fn.jobstart("templ generate", {
         on_exit = function(_, code)
           if code == 0 then
             vim.notify("Successfully generated Templ files", vim.log.levels.INFO)
@@ -253,8 +246,8 @@ function M.configure_stack(stack_name)
   end
 
   -- Configure for Next.js stack
-  if stack == "nextjs" then
-    api.nvim_notify(notify_icon .. "Stack focused on Next.js", vim.log.levels.INFO, { title = "Stack" })
+  if stack == "nextjs" or stack == "goth+nextjs" then
+    vim.notify(notify_icon .. "Stack focused on Next.js", vim.log.levels.INFO, { title = "Stack" })
 
     -- Configure TypeScript LSP with optimal settings
     local lspconfig = safe_require("lspconfig")
@@ -361,7 +354,7 @@ function M.configure_stack(stack_name)
     end)
   end
 
-  -- Apply colorscheme highlights based on stack
+  -- Update UI based on stack
   pcall(function()
     local colors_name = vim.g.colors_name
     if colors_name then
@@ -372,6 +365,31 @@ function M.configure_stack(stack_name)
 
   -- Return the configured stack
   return stack
+end
+
+-- Find main.go file for debugging
+function M.find_main_go()
+  local main_file = fn.findfile("main.go", fn.getcwd() .. "/**")
+  if main_file == "" then
+    vim.notify("Could not find main.go file", vim.log.levels.ERROR)
+    return nil
+  end
+  return main_file
+end
+
+-- Run templ generate with error handling
+function M.run_templ_generate()
+  if fn.executable("templ") ~= 1 then
+    vim.notify("templ command not found. Install templ first.", vim.log.levels.ERROR)
+    return false
+  end
+
+  local result = fn.system("templ generate")
+  if vim.v.shell_error ~= 0 then
+    vim.notify("Error generating templ files: " .. result, vim.log.levels.ERROR)
+    return false
+  end
+  return true
 end
 
 -- Initial setup on startup: detect stack and notify
@@ -385,7 +403,7 @@ function M.setup()
       -- Notify user of detected stack with a short delay to avoid startup clutter
       vim.defer_fn(function()
         local icon = st == "goth" and stack_icons["goth"] or stack_icons["nextjs"]
-        api.nvim_notify(icon .. "Detected project stack: " .. st, vim.log.levels.INFO, { title = "Stack" })
+        vim.notify(icon .. "Detected project stack: " .. st, vim.log.levels.INFO, { title = "Stack" })
       end, 500)
     end
   end
@@ -397,32 +415,9 @@ function M.setup()
     nargs = "?",
     desc = "Focus on a specific tech stack",
     complete = function()
-      return { "goth", "nextjs" }
+      return { "goth", "nextjs", "goth+nextjs" }
     end,
   })
-end
-
-function M.find_main_go()
-  local main_file = vim.fn.findfile("main.go", vim.fn.getcwd() .. "/**")
-  if main_file == "" then
-    vim.notify("Could not find main.go file", vim.log.levels.ERROR)
-    return nil
-  end
-  return main_file
-end
-
-function M.run_templ_generate()
-  if vim.fn.executable("templ") ~= 1 then
-    vim.notify("templ command not found. Install templ first.", vim.log.levels.ERROR)
-    return false
-  end
-
-  local result = vim.fn.system("templ generate")
-  if vim.v.shell_error ~= 0 then
-    vim.notify("Error generating templ files: " .. result, vim.log.levels.ERROR)
-    return false
-  end
-  return true
 end
 
 return M
