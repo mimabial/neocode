@@ -6,7 +6,6 @@ return {
     priority = 80,
     opts = {
       columns = {
-        "icon",
         "size",
       },
       view_options = {

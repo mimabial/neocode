@@ -13,19 +13,12 @@ return {
       local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
       local notification_config = ui_config.notification or {}
 
-      -- Get colors from UI module
-      local colors = _G.get_ui_colors and _G.get_ui_colors()
-        or {
-          bg = "#000000",
-          border = "#665c54",
-        }
-
       return {
-        background_colour = colors.bg, -- Use theme background color
+        background_colour = "#000000",
         fps = 60,
         level = vim.log.levels.INFO,
         minimum_width = 30,
-        timeout = notification_config.timeout or 3000,
+        timeout = notification_config.timeout or 2000,
         max_width = notification_config.max_width or 60,
         max_height = notification_config.max_height or 10,
         stages = notification_config.stages or "fade",
@@ -34,13 +27,12 @@ return {
         -- Use single border style
         on_open = function(win)
           -- Set border highlight and border style if possible
-          local success, _ = pcall(function()
+          pcall(function()
             vim.api.nvim_win_set_config(win, {
               border = "single",
             })
             -- Set border highlight to match the theme
-            local buf = vim.api.nvim_win_get_buf(win)
-            pcall(vim.api.nvim_buf_set_option, buf, "winhl", "FloatBorder:NotifyBorder")
+            vim.api.nvim_win_set_option(win, "winhighlight", "NormalFloat:NotifyBackground,FloatBorder:NotifyBorder")
           end)
         end,
         icons = {
@@ -54,43 +46,74 @@ return {
     end,
     config = function(_, opts)
       local notify = require("notify")
-      notify.setup(opts)
-      vim.notify = notify
+
+      -- Setup with error handling
+      local setup_ok, err = pcall(function()
+        notify.setup(opts)
+        -- Override vim.notify with plugin's notification function
+        vim.notify = notify
+      end)
+
+      if not setup_ok then
+        vim.notify("[ERROR] Failed to setup notify: " .. tostring(err), vim.log.levels.ERROR)
+        return
+      end
 
       -- Set up colorscheme-dependent highlighting
-      vim.api.nvim_create_autocmd("ColorScheme", {
-        callback = function()
-          -- Get current theme colors using direct color retrieval instead of going through setup
-          local colors = _G.get_ui_colors and _G.get_ui_colors()
-            or {
-              red = "#ea6962",
-              yellow = "#d8a657",
-              blue = "#7daea3",
-              green = "#89b482",
-              purple = "#d3869b",
-              border = "#665c54",
-              gray = "#928374",
-            }
+      local function update_notify_highlights()
+        -- Get current theme colors
+        local colors = _G.get_ui_colors and _G.get_ui_colors()
+          or {
+            bg = "#282828",
+            red = "#ea6962",
+            yellow = "#d8a657",
+            blue = "#7daea3",
+            green = "#89b482",
+            purple = "#d3869b",
+            border = "#665c54",
+            gray = "#928374",
+          }
 
-          -- Set notification highlights to match theme directly without triggering additional events
-          vim.api.nvim_set_hl(0, "NotifyERROR", { fg = colors.red })
-          vim.api.nvim_set_hl(0, "NotifyWARN", { fg = colors.yellow })
-          vim.api.nvim_set_hl(0, "NotifyINFO", { fg = colors.blue })
-          vim.api.nvim_set_hl(0, "NotifyDEBUG", { fg = colors.gray or "#928374" })
-          vim.api.nvim_set_hl(0, "NotifyTRACE", { fg = colors.purple })
-          vim.api.nvim_set_hl(0, "NotifyBorder", { fg = colors.border })
+        -- Set notification highlights to match theme
+        vim.api.nvim_set_hl(0, "NotifyERROR", { fg = colors.red })
+        vim.api.nvim_set_hl(0, "NotifyWARN", { fg = colors.yellow })
+        vim.api.nvim_set_hl(0, "NotifyINFO", { fg = colors.blue })
+        vim.api.nvim_set_hl(0, "NotifyDEBUG", { fg = colors.gray })
+        vim.api.nvim_set_hl(0, "NotifyTRACE", { fg = colors.purple })
+        vim.api.nvim_set_hl(0, "NotifyBorder", { fg = colors.border })
+        vim.api.nvim_set_hl(0, "NotifyBackground", { bg = colors.bg })
 
-          -- Update borders for existing notification windows without triggering additional events
-          pcall(function()
-            for _, win in ipairs(vim.api.nvim_list_wins()) do
-              local buf = vim.api.nvim_win_get_buf(win)
-              if vim.bo[buf].filetype == "notify" then
-                pcall(vim.api.nvim_win_set_config, win, { border = "single" })
-                pcall(vim.api.nvim_buf_set_option, buf, "winhl", "FloatBorder:NotifyBorder")
-              end
+        -- Make sure notification title and background match theme too
+        vim.api.nvim_set_hl(0, "NotifyERRORTitle", { fg = colors.red, bg = colors.bg })
+        vim.api.nvim_set_hl(0, "NotifyWARNTitle", { fg = colors.yellow, bg = colors.bg })
+        vim.api.nvim_set_hl(0, "NotifyINFOTitle", { fg = colors.blue, bg = colors.bg })
+        vim.api.nvim_set_hl(0, "NotifyDEBUGTitle", { fg = colors.gray, bg = colors.bg })
+        vim.api.nvim_set_hl(0, "NotifyTRACETitle", { fg = colors.purple, bg = colors.bg })
+
+        -- Set notification content background
+        vim.api.nvim_set_hl(0, "NotifyERRORBody", { bg = colors.bg })
+        vim.api.nvim_set_hl(0, "NotifyWARNBody", { bg = colors.bg })
+        vim.api.nvim_set_hl(0, "NotifyINFOBody", { bg = colors.bg })
+        vim.api.nvim_set_hl(0, "NotifyDEBUGBody", { bg = colors.bg })
+        vim.api.nvim_set_hl(0, "NotifyTRACEBody", { bg = colors.bg })
+
+        -- Update borders for existing notification windows
+        for _, win in ipairs(vim.api.nvim_list_wins()) do
+          if vim.api.nvim_win_is_valid(win) then
+            local buf = vim.api.nvim_win_get_buf(win)
+            if vim.bo[buf].filetype == "notify" then
+              vim.api.nvim_win_set_option(win, "winhighlight", "NormalFloat:NotifyBackground,FloatBorder:NotifyBorder")
             end
-          end)
-        end,
+          end
+        end
+      end
+
+      -- Initial setup of highlights
+      update_notify_highlights()
+
+      -- Update highlights when colorscheme changes
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = update_notify_highlights,
       })
     end,
   },
@@ -393,28 +416,47 @@ return {
         end,
       })
 
-      -- Get colors from central UI config if available
-      local colors = _G.get_ui_colors and _G.get_ui_colors()
-        or {
-          red = "#ea6962",
-          yellow = "#d8a657",
-          blue = "#7daea3",
-          border = "#665c54",
-        }
+      -- Update highlights for Noice elements
+      local function update_noice_highlights()
+        -- Get colors from central UI config if available
+        local colors = _G.get_ui_colors and _G.get_ui_colors()
+          or {
+            bg = "#282828",
+            red = "#ea6962",
+            yellow = "#d8a657",
+            blue = "#7daea3",
+            border = "#665c54",
+          }
 
-      -- Apply consistent highlighting - Direct approach without causing additional events
+        -- Set highlights directly
+        vim.api.nvim_set_hl(0, "NoiceCmdlinePopupBorder", { fg = colors.border })
+        vim.api.nvim_set_hl(0, "NoiceCmdlinePopupTitle", { fg = colors.blue, bold = true })
+        vim.api.nvim_set_hl(0, "NoiceConfirmBorder", { fg = colors.border })
+        vim.api.nvim_set_hl(0, "NoiceCmdlinePopupBorderSearch", { fg = colors.border })
+        vim.api.nvim_set_hl(0, "NoiceCmdlineIconSearch", { fg = colors.yellow })
+
+        -- Notification type highlights
+        vim.api.nvim_set_hl(0, "NoiceError", { fg = colors.red })
+        vim.api.nvim_set_hl(0, "NoiceErrorTitle", { fg = colors.red, bold = true })
+        vim.api.nvim_set_hl(0, "NoiceWarning", { fg = colors.yellow })
+        vim.api.nvim_set_hl(0, "NoiceWarningTitle", { fg = colors.yellow, bold = true })
+        vim.api.nvim_set_hl(0, "NoiceInfo", { fg = colors.blue })
+        vim.api.nvim_set_hl(0, "NoiceInfoTitle", { fg = colors.blue, bold = true })
+
+        -- Ensure popup background matches theme
+        vim.api.nvim_set_hl(0, "NoicePopup", { bg = colors.bg })
+        vim.api.nvim_set_hl(0, "NoicePopupmenu", { bg = colors.bg })
+        vim.api.nvim_set_hl(0, "NoicePopupBorder", { fg = colors.border })
+        vim.api.nvim_set_hl(0, "NoicePopupTitle", { fg = colors.blue, bold = true })
+      end
+
+      -- Set initial highlights
+      update_noice_highlights()
+
+      -- Update highlights when colorscheme changes
       vim.api.nvim_create_autocmd("ColorScheme", {
         pattern = "*",
-        callback = function()
-          -- Set highlights directly without any additional setup calls that might trigger events
-          vim.api.nvim_set_hl(0, "NoiceCmdlinePopupBorder", { fg = colors.border })
-          vim.api.nvim_set_hl(0, "NoiceCmdlinePopupTitle", { fg = colors.blue, bold = true })
-          vim.api.nvim_set_hl(0, "NoiceConfirmBorder", { fg = colors.border })
-
-          -- Notification type highlights
-          vim.api.nvim_set_hl(0, "NoiceError", { fg = colors.red })
-          vim.api.nvim_set_hl(0, "NoiceWarning", { fg = colors.yellow })
-        end,
+        callback = update_noice_highlights,
       })
     end,
   },
