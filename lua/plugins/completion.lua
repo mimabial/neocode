@@ -76,46 +76,23 @@ return {
       local lspkind = require("lspkind")
 
       -- Get theme colors from central UI config if available
-      local colors
-      if _G.get_ui_colors then
-        colors = _G.get_ui_colors()
-      else
-        -- Fallback to standalone function
-        local function get_hl_by_name(name)
-          local hl = vim.api.nvim_get_hl(0, { name = name }) or {}
-          return hl
-        end
-
-        -- Get theme colors or use fallbacks
-        local normal = get_hl_by_name("Normal")
-        local pmenu = get_hl_by_name("Pmenu")
-        local pmenusel = get_hl_by_name("PmenuSel")
-        local border = get_hl_by_name("FloatBorder")
-
-        colors = {
-          fg = normal.fg or 0xd4be98,
-          bg = pmenu.bg or 0x32302f,
-          select_bg = pmenusel.bg or 0x45403d,
-          select_fg = pmenusel.fg or 0xd4be98,
-          border = border.fg or 0x665c54,
-          copilot = 0x6CC644,
-          codeium = 0x09B6A2,
-          blue = 0x7daea3,
-          green = 0x89b482,
-          orange = 0xe78a4e,
-          yellow = 0xd8a657,
-          purple = 0xd3869b,
-          red = 0xea6962,
-          gray = 0x928374,
+      local colors = _G.get_ui_colors and _G.get_ui_colors()
+        or {
+          fg = "#d4be98",
+          bg = "#32302f",
+          select_bg = "#45403d",
+          select_fg = "#d4be98",
+          border = "#665c54",
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+          blue = "#7daea3",
+          green = "#89b482",
+          orange = "#e78a4e",
+          yellow = "#d8a657",
+          purple = "#d3869b",
+          red = "#ea6962",
+          gray = "#928374",
         }
-
-        -- Convert number colors to hex strings
-        for k, v in pairs(colors) do
-          if type(v) == "number" then
-            colors[k] = string.format("#%06x", v)
-          end
-        end
-      end
 
       -- AI suggestion priority comparator
       local function ai_priority(entry1, entry2)

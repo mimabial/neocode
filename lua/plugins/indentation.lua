@@ -109,13 +109,6 @@ return {
     event = "BufReadPre",
     dependencies = { "HiPhish/rainbow-delimiters.nvim" },
     opts = function()
-      -- Local function to get highlight colors - this fixes the error
-      local function get_highlight_value(name)
-        local hl = vim.api.nvim_get_hl(0, { name = name })
-        local fg = hl.fg or hl.foreground
-        return fg and string.format("#%06x", fg) or nil
-      end
-
       -- Default indent character
       local indent_char = "│"
 
@@ -183,40 +176,18 @@ return {
 
       -- Make sure rainbow delimiters highlights exist before configuring ibl
       local function ensure_rainbow_highlights()
-        local colorscheme = vim.g.colors_name or "gruvbox-material"
-        local colors = {
-          ["gruvbox-material"] = {
-            "#ea6962", -- Red
-            "#d8a657", -- Yellow
-            "#7daea3", -- Blue
-            "#e78a4e", -- Orange
-            "#89b482", -- Green
-            "#d3869b", -- Purple
-            "#a9b665", -- Light green
-          },
-          ["everforest"] = {
-            "#e67e80", -- Red
-            "#dbbc7f", -- Yellow
-            "#7fbbb3", -- Blue
-            "#e69875", -- Orange
-            "#a7c080", -- Green
-            "#d699b6", -- Purple
-            "#83c092", -- Aqua
-          },
-          ["kanagawa"] = {
-            "#c34043", -- Red
-            "#dca561", -- Yellow
-            "#7e9cd8", -- Blue
-            "#ffa066", -- Orange
-            "#76946a", -- Green
-            "#957fb8", -- Purple
-            "#6a9589", -- Teal
-          },
-        }
-        local palette = colors[colorscheme] or colors["gruvbox-material"]
+        local colors = _G.get_ui_colors and _G.get_ui_colors()
+          or {
+            blue = "#7daea3",
+            red = "#ea6962",
+            green = "#89b482",
+            yellow = "#d8a657",
+            purple = "#d3869b",
+            orange = "#e78a4e",
+          }
 
         -- Directly set highlight groups before ibl uses them
-        for i, color in ipairs(palette) do
+        for i, color in ipairs(colors) do
           local hl_group = "RainbowDelimiter" .. i
           vim.api.nvim_set_hl(0, hl_group, { fg = color })
         end
@@ -235,7 +206,7 @@ return {
           -- Define the get_highlight_value function within this callback too
           local function get_highlight_value(name)
             local hl = vim.api.nvim_get_hl(0, { name = name })
-            local fg = hl.fg or hl.foreground
+            local fg = hl.fg
             return fg and string.format("#%06x", fg) or nil
           end
 

@@ -140,9 +140,9 @@ return {
         templ = {
           command = "templ",
           args = function()
-            return format_utils.check_templ_supports_stdin() and { "fmt", "-" } or { "fmt", "$FILENAME" }
+            return check_templ_supports_stdin() and { "fmt", "-" } or { "fmt", "$FILENAME" }
           end,
-          stdin = format_utils.check_templ_supports_stdin,
+          stdin = check_templ_supports_stdin,
         },
         black = { prepend_args = { "--fast", "--line-length", "88" } },
         isort = { prepend_args = { "--profile", "black" } },
@@ -169,7 +169,7 @@ return {
             start = { args.line1, 0 },
             ["end"] = { args.line2, 999999 },
           }
-        or nil
+          or nil
       conform.format({ async = true, lsp_fallback = true, range = range })
     end, { range = true, desc = "Format buffer or range" })
 

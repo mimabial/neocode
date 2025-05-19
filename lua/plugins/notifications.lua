@@ -394,26 +394,18 @@ return {
       })
 
       -- Get colors from central UI config if available
-      local get_colors = _G.get_ui_colors
-        or function()
-          -- Default gruvbox-compatible colors
-          return {
-            red = "#ea6962",
-            yellow = "#d8a657",
-            blue = "#7daea3",
-            green = "#89b482",
-            purple = "#d3869b",
-            gray = "#928374",
-            border = "#665c54",
-          }
-        end
+      local colors = _G.get_ui_colors and _G.get_ui_colors()
+        or {
+          red = "#ea6962",
+          yellow = "#d8a657",
+          blue = "#7daea3",
+          border = "#665c54",
+        }
 
       -- Apply consistent highlighting - Direct approach without causing additional events
       vim.api.nvim_create_autocmd("ColorScheme", {
         pattern = "*",
         callback = function()
-          local colors = get_colors()
-
           -- Set highlights directly without any additional setup calls that might trigger events
           vim.api.nvim_set_hl(0, "NoiceCmdlinePopupBorder", { fg = colors.border })
           vim.api.nvim_set_hl(0, "NoiceCmdlinePopupTitle", { fg = colors.blue, bold = true })

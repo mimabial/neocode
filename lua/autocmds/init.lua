@@ -149,6 +149,17 @@ function M.setup()
     desc = "Run lint checks on file save or open",
   })
 
+  -- 8) Exit notify windows with 'q'
+  vim.api.nvim_create_autocmd("FileType", {
+    pattern = "notify",
+    callback = function()
+      -- map 'q' to close the float
+      vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = true, silent = true, desc = "Close notification" })
+      -- (optionally) map <Esc> as well
+      vim.keymap.set("n", "<Esc>", "<cmd>close<cr>", { buffer = true, silent = true })
+    end,
+  })
+
   -- 9) Auto-reload changed files
   vim.api.nvim_create_augroup("AutoReload", { clear = true })
   vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHoldI" }, {
