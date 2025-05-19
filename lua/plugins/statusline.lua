@@ -1,5 +1,3 @@
--- lua/plugins/lualine.lua
--- Refactored lualine.nvim setup with improved stack indicators and icons
 return {
   "nvim-lualine/lualine.nvim",
   event = "VeryLazy",
@@ -39,10 +37,10 @@ return {
 
     local icons = {
       diagnostics = {
-        Error = " ", -- nf-fa-ban
-        Warn = " ", -- nf-fa-exclamation_triangle
-        Info = " ", -- nf-fa-info_circle
-        Hint = " ", -- nf-fa-question_circle
+        Error = " ", -- nf-fa-ban
+        Warn = " ", -- nf-fa-exclamation_triangle
+        Info = " ", -- nf-fa-info_circle
+        Hint = " ", -- nf-fa-question_circle
       },
       git = {
         added = "", -- nf-fa-check_square
@@ -304,7 +302,8 @@ return {
         theme = "gruvbox-material",
         globalstatus = vim.o.laststatus == 3,
         disabled_filetypes = {
-          statusline = { "alpha", "dashboard", "neo-tree", "oil", "Trouble", "lazy" },
+          statusline = { "alpha", "dashboard", "neo-tree", "oil", "Trouble", "lazy", "NvimTree" },
+          winbar = { "alpha", "dashboard", "neo-tree", "oil", "Trouble", "lazy", "NvimTree" },
         },
       },
       -- Add custom indicators for both stacks
@@ -366,6 +365,7 @@ return {
         "quickfix",
         "oil",
         "nvim-dap-ui",
+        "nvim-tree",
       },
     }
   end,
