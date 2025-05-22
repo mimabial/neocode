@@ -66,23 +66,14 @@ return {
         if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
           return
         end
-
-        -- Skip formatting for files containing CSS-in-Python patterns
-        local content = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, 50, false), "\n")
-        if content:match("custom_css_content") or content:match('"""%s*/%*.*CSS') then
-          return
-        end
-
         local ft = vim.bo[bufnr].filetype
         if vim.tbl_contains({ "sql", "diff", "gitcommit", "oil" }, ft) then
           return
         end
-
         local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(bufnr))
         if ok and stats and stats.size > 1000000 then
           return
         end
-
         local async = vim.api.nvim_buf_line_count(bufnr) > 1000
         return { timeout_ms = 5000, lsp_fallback = true, async = async, quiet = false }
       end,
@@ -102,7 +93,7 @@ return {
         lua = { "stylua" },
         go = { "gofumpt", "goimports" },
         templ = { "templ" },
-        python = { "isort", "black" },
+        python = { "ruff_organize_imports", "ruff_format" },
         rust = { "rustfmt" },
         c = { "clang_format" },
         cpp = { "clang_format" },
@@ -153,8 +144,29 @@ return {
           end,
           stdin = check_templ_supports_stdin,
         },
-        black = { prepend_args = { "--fast", "--line-length", "88" } },
-        isort = { prepend_args = { "--profile", "black" } },
+        ruff_format = {
+          command = "ruff",
+          args = {
+            "format",
+            "--stdin-filename",
+            "$FILENAME",
+            "-",
+          },
+          stdin = true,
+        },
+        ruff_organize_imports = {
+          command = "ruff",
+          args = {
+            "check",
+            "--select",
+            "I",
+            "--fix",
+            "--stdin-filename",
+            "$FILENAME",
+            "-",
+          },
+          stdin = true,
+        },
         shfmt = { prepend_args = { "-i", "2", "-ci" } },
         clang_format = {
           prepend_args = function(_, ctx)
