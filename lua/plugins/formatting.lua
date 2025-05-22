@@ -66,14 +66,23 @@ return {
         if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
           return
         end
+
+        -- Skip formatting for files containing CSS-in-Python patterns
+        local content = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, 50, false), "\n")
+        if content:match("custom_css_content") or content:match('"""%s*/%*.*CSS') then
+          return
+        end
+
         local ft = vim.bo[bufnr].filetype
         if vim.tbl_contains({ "sql", "diff", "gitcommit", "oil" }, ft) then
           return
         end
+
         local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(bufnr))
         if ok and stats and stats.size > 1000000 then
           return
         end
+
         local async = vim.api.nvim_buf_line_count(bufnr) > 1000
         return { timeout_ms = 5000, lsp_fallback = true, async = async, quiet = false }
       end,
@@ -169,7 +178,7 @@ return {
             start = { args.line1, 0 },
             ["end"] = { args.line2, 999999 },
           }
-          or nil
+        or nil
       conform.format({ async = true, lsp_fallback = true, range = range })
     end, { range = true, desc = "Format buffer or range" })
 
