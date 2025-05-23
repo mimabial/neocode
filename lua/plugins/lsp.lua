@@ -28,23 +28,6 @@ return {
         },
       })
 
-      require("mason-lspconfig").setup({
-        ensure_installed = {
-          -- Core language servers for both stacks
-          "lua_ls",
-          -- GOTH stack
-          "gopls",
-          "templ",
-          "html",
-          -- Next.js stack
-          "tailwindcss",
-          "cssls",
-          "eslint",
-          "jsonls",
-        },
-        automatic_installation = true,
-      })
-
       -- Check if Neovim supports inlay hints (0.10+)
       local inlay_hints_supported = vim.fn.has("nvim-0.10") == 1
 
@@ -139,220 +122,207 @@ return {
         end
       end
 
-      -- Configure language servers
-      local lspconfig = require("lspconfig")
-
-      -- Python LSP configuration
-      lspconfig.pyright.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        settings = {
-          python = {
-            analysis = {
-              typeCheckingMode = "basic",
-              diagnosticMode = "workspace",
-              inlayHints = {
-                variableTypes = true,
-                functionReturnTypes = true,
-              },
-            },
-            venvPath = vim.fn.exists("$VIRTUAL_ENV") == 1 and vim.fn.expand("$VIRTUAL_ENV") or "",
-          },
-        },
-        before_init = function(_, config)
-          -- Try to automatically detect virtualenv
-          local util = require("lspconfig.util")
-          local path = util.path
-
-          -- Check for virtualenv in common locations
-          local venv_paths = {
-            vim.fn.getcwd() .. "/.venv",
-            vim.fn.getcwd() .. "/venv",
-            vim.fn.getcwd() .. "/env",
-            vim.fn.expand("$HOME") .. "/.virtualenvs/" .. vim.fn.fnamemodify(vim.fn.getcwd(), ":t"),
-          }
-
-          for _, venv in ipairs(venv_paths) do
-            if vim.fn.isdirectory(venv) == 1 then
-              config.settings.python.venvPath = venv
-              break
-            end
-          end
-        end,
-      })
-
-      -- Lua LSP configuration
-      lspconfig.lua_ls.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        settings = {
-          Lua = {
-            runtime = { version = "LuaJIT" },
-            diagnostics = {
-              globals = { "vim", "require" },
-              disable = { "missing-fields", "no-unknown" },
-            },
-            workspace = {
-              library = vim.api.nvim_get_runtime_file("", true),
-              checkThirdParty = false,
-            },
-            telemetry = { enable = false },
-            hint = inlay_hints_supported and {
-              enable = true,
-              setType = true,
-              paramType = true,
-              paramName = "All",
-              semicolon = "All",
-              arrayIndex = "All",
-            } or nil,
-          },
-        },
-      })
-
-      -- Go LSP configuration (GOTH stack)
-      lspconfig.gopls.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        settings = {
-          gopls = {
-            analyses = {
-              unusedparams = true,
-              shadow = true,
-              fieldalignment = true,
-              nilness = true,
-              unusedwrite = true,
-              useany = true,
-            },
-            staticcheck = true,
-            gofumpt = true,
-            usePlaceholders = true,
-            completeUnimported = true,
-            matcher = "fuzzy",
-            symbolMatcher = "fuzzy",
-            buildFlags = { "-tags=integration,e2e" },
-            experimentalPostfixCompletions = true,
-            hints = inlay_hints_supported and {
-              assignVariableTypes = true,
-              compositeLiteralFields = true,
-              compositeLiteralTypes = true,
-              constantValues = true,
-              functionTypeParameters = true,
-              parameterNames = true,
-              rangeVariableTypes = true,
-            } or nil,
-          },
-        },
-      })
-
-      -- Templ LSP configuration (GOTH stack)
-      lspconfig.templ.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-      })
-
-      -- HTML LSP configuration (shared by both stacks)
-      lspconfig.html.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        filetypes = { "html", "templ" }, -- Support both HTML and Templ files
-        settings = {
-          html = {
-            format = {
-              indentInnerHtml = true,
-              wrapLineLength = 100,
-              wrapAttributes = "auto",
-            },
-            hover = {
-              documentation = true,
-              references = true,
-            },
-          },
-        },
-      })
-
-      -- TypeScript/JavaScript configuration (Next.js stack)
-      lspconfig.ts_ls.setup({
-        on_attach = function(client, bufnr)
-          -- Disable formatting if using prettier through null-ls/conform
-          client.server_capabilities.documentFormattingProvider = false
-          client.server_capabilities.documentRangeFormattingProvider = false
-          on_attach(client, bufnr)
-        end,
-        capabilities = capabilities,
-        settings = {
-          typescript = {
-            inlayHints = inlay_hints_supported and {
-              includeInlayParameterNameHints = "all",
-              includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-              includeInlayFunctionParameterTypeHints = true,
-              includeInlayVariableTypeHints = true,
-              includeInlayPropertyDeclarationTypeHints = true,
-              includeInlayFunctionLikeReturnTypeHints = true,
-              includeInlayEnumMemberValueHints = true,
-            } or nil,
-          },
-          javascript = {
-            inlayHints = inlay_hints_supported and {
-              includeInlayParameterNameHints = "all",
-              includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-              includeInlayFunctionParameterTypeHints = true,
-              includeInlayVariableTypeHints = true,
-              includeInlayPropertyDeclarationTypeHints = true,
-              includeInlayFunctionLikeReturnTypeHints = true,
-              includeInlayEnumMemberValueHints = true,
-            } or nil,
-          },
-        },
-      })
-
-      -- Tailwind CSS configuration (Next.js stack, but also available for GOTH)
-      lspconfig.tailwindcss.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        filetypes = {
+      require("mason-lspconfig").setup({
+        ensure_installed = {
+          -- Core language servers for both stacks
+          "lua_ls",
+          -- GOTH stack
+          "gopls",
+          "templ",
           "html",
-          "css",
-          "scss",
-          "javascript",
-          "javascriptreact",
-          "typescript",
-          "typescriptreact",
-          "templ", -- Also available for templ files
+          -- Next.js stack
+          "tailwindcss",
+          "cssls",
+          "eslint",
+          "jsonls",
         },
-        init_options = {
-          userLanguages = {
-            templ = "html", -- Treat templ as HTML for tailwind
-          },
-        },
-      })
+        automatic_installation = true,
+        handlers = {
+          -- Default handler for servers without custom config
+          function(server_name)
+            require("lspconfig")[server_name].setup({
+              on_attach = on_attach,
+              capabilities = capabilities,
+            })
+          end,
 
-      -- CSS configuration (Next.js stack)
-      lspconfig.cssls.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-      })
+          -- Custom handlers for specific servers
+          ["lua_ls"] = function()
+            require("lspconfig").lua_ls.setup({
+              on_attach = on_attach,
+              capabilities = capabilities,
+              settings = {
+                Lua = {
+                  runtime = { version = "LuaJIT" },
+                  diagnostics = {
+                    globals = { "vim", "require" },
+                    disable = { "missing-fields", "no-unknown" },
+                  },
+                  workspace = {
+                    library = vim.api.nvim_get_runtime_file("", true),
+                    checkThirdParty = false,
+                  },
+                  telemetry = { enable = false },
+                  hint = inlay_hints_supported and {
+                    enable = true,
+                    setType = true,
+                    paramType = true,
+                    paramName = "All",
+                    semicolon = "All",
+                    arrayIndex = "All",
+                  } or nil,
+                },
+              },
+            })
+          end,
 
-      -- ESLint configuration (Next.js stack)
-      lspconfig.eslint.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        settings = {
-          packageManager = "npm",
-          experimental = {
-            useFlatConfig = false,
-          },
-        },
-      })
+          ["gopls"] = function()
+            require("lspconfig").gopls.setup({
+              on_attach = on_attach,
+              capabilities = capabilities,
+              settings = {
+                gopls = {
+                  analyses = {
+                    unusedparams = true,
+                    shadow = true,
+                    fieldalignment = true,
+                    nilness = true,
+                    unusedwrite = true,
+                    useany = true,
+                  },
+                  staticcheck = true,
+                  gofumpt = true,
+                  usePlaceholders = true,
+                  completeUnimported = true,
+                  matcher = "fuzzy",
+                  symbolMatcher = "fuzzy",
+                  buildFlags = { "-tags=integration,e2e" },
+                  experimentalPostfixCompletions = true,
+                  hints = inlay_hints_supported and {
+                    assignVariableTypes = true,
+                    compositeLiteralFields = true,
+                    compositeLiteralTypes = true,
+                    constantValues = true,
+                    functionTypeParameters = true,
+                    parameterNames = true,
+                    rangeVariableTypes = true,
+                  } or nil,
+                },
+              },
+            })
+          end,
 
-      -- JSON configuration with SchemaStore support
-      lspconfig.jsonls.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        settings = {
-          json = {
-            schemas = require("schemastore").json.schemas(),
-            validate = { enable = true },
-          },
+          ["html"] = function()
+            require("lspconfig").html.setup({
+              on_attach = on_attach,
+              capabilities = capabilities,
+              filetypes = { "html", "templ" },
+              settings = {
+                html = {
+                  format = {
+                    indentInnerHtml = true,
+                    wrapLineLength = 100,
+                    wrapAttributes = "auto",
+                  },
+                  hover = {
+                    documentation = true,
+                    references = true,
+                  },
+                },
+              },
+            })
+          end,
+
+          ["ts_ls"] = function()
+            require("lspconfig").ts_ls.setup({
+              on_attach = function(client, bufnr)
+                -- Disable formatting if using prettier
+                client.server_capabilities.documentFormattingProvider = false
+                client.server_capabilities.documentRangeFormattingProvider = false
+                on_attach(client, bufnr)
+              end,
+              capabilities = capabilities,
+              settings = {
+                typescript = {
+                  inlayHints = inlay_hints_supported and {
+                    includeInlayParameterNameHints = "all",
+                    includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                    includeInlayFunctionParameterTypeHints = true,
+                    includeInlayVariableTypeHints = true,
+                    includeInlayPropertyDeclarationTypeHints = true,
+                    includeInlayFunctionLikeReturnTypeHints = true,
+                    includeInlayEnumMemberValueHints = true,
+                  } or nil,
+                },
+                javascript = {
+                  inlayHints = inlay_hints_supported and {
+                    includeInlayParameterNameHints = "all",
+                    includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                    includeInlayFunctionParameterTypeHints = true,
+                    includeInlayVariableTypeHints = true,
+                    includeInlayPropertyDeclarationTypeHints = true,
+                    includeInlayFunctionLikeReturnTypeHints = true,
+                    includeInlayEnumMemberValueHints = true,
+                  } or nil,
+                },
+              },
+            })
+          end,
+
+          ["tailwindcss"] = function()
+            require("lspconfig").tailwindcss.setup({
+              on_attach = on_attach,
+              capabilities = capabilities,
+              filetypes = {
+                "html",
+                "css",
+                "scss",
+                "javascript",
+                "javascriptreact",
+                "typescript",
+                "typescriptreact",
+                "templ",
+              },
+              init_options = {
+                userLanguages = {
+                  templ = "html",
+                },
+              },
+            })
+          end,
+
+          ["jsonls"] = function()
+            require("lspconfig").jsonls.setup({
+              on_attach = on_attach,
+              capabilities = capabilities,
+              settings = {
+                json = {
+                  schemas = require("schemastore").json.schemas(),
+                  validate = { enable = true },
+                },
+              },
+            })
+          end,
+
+          ["pyright"] = function()
+            require("lspconfig").pyright.setup({
+              on_attach = on_attach,
+              capabilities = capabilities,
+              settings = {
+                python = {
+                  analysis = {
+                    typeCheckingMode = "basic",
+                    diagnosticMode = "workspace",
+                    inlayHints = {
+                      variableTypes = true,
+                      functionReturnTypes = true,
+                    },
+                  },
+                  venvPath = vim.fn.exists("$VIRTUAL_ENV") == 1 and vim.fn.expand("$VIRTUAL_ENV") or "",
+                },
+              },
+            })
+          end,
         },
       })
 
@@ -417,7 +387,7 @@ return {
   {
     "lvimuser/lsp-inlayhints.nvim",
     event = "LspAttach",
-    enabled = vim.fn.has("nvim-0.10") == 0, -- Only enable for older Neovim versions
+    enabled = vim.fn.has("nvim-0.10") == 0,
     opts = {
       inlay_hints = {
         parameter_hints = { show = true },
