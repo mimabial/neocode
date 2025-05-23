@@ -1,283 +1,297 @@
 -- lua/plugins/ai.lua
--- Enhanced AI integration with consistent UI styling for both Copilot and Codeium
+-- Multi-AI provider system with persistent settings
 
+local M = {}
+
+-- AI Provider registry
+local providers = {
+  codeium = {
+    name = "Codeium",
+    icon = "󰚩",
+    free = true,
+    default = true,
+  },
+  copilot = {
+    name = "GitHub Copilot",
+    icon = "",
+    free = true, -- has free tier
+    default = false,
+  },
+  tabnine = {
+    name = "Tabnine",
+    icon = "󰏚",
+    free = true, -- has free tier
+    default = false,
+  },
+}
+
+-- Settings file path
+local settings_file = vim.fn.stdpath("data") .. "/ai_provider_settings.json"
+
+-- Load persistent settings
+local function load_settings()
+  local default_settings = {}
+  for name, provider in pairs(providers) do
+    default_settings[name] = provider.default or false
+  end
+
+  if vim.fn.filereadable(settings_file) == 0 then
+    return default_settings
+  end
+
+  local content = vim.fn.readfile(settings_file)
+  if #content == 0 then
+    return default_settings
+  end
+
+  local ok, parsed = pcall(vim.fn.json_decode, table.concat(content, ""))
+  if not ok or type(parsed) ~= "table" then
+    return default_settings
+  end
+
+  -- Merge with defaults to handle new providers
+  for name, _ in pairs(providers) do
+    if parsed[name] == nil then
+      parsed[name] = default_settings[name]
+    end
+  end
+
+  return parsed
+end
+
+-- Save settings
+local function save_settings(settings)
+  vim.fn.mkdir(vim.fn.fnamemodify(settings_file, ":h"), "p")
+  local ok, json = pcall(vim.fn.json_encode, settings)
+  if not ok then
+    vim.notify("Failed to encode AI provider settings", vim.log.levels.ERROR)
+    return false
+  end
+  local success = pcall(vim.fn.writefile, { json }, settings_file)
+  return success
+end
+
+-- Get current settings
+local current_settings = load_settings()
+
+-- Get active provider
+local function get_active_provider()
+  for name, enabled in pairs(current_settings) do
+    if enabled then
+      return name
+    end
+  end
+  return nil
+end
+
+-- Set active provider (disable all others)
+local function set_active_provider(provider_name)
+  if not providers[provider_name] then
+    vim.notify("Unknown AI provider: " .. provider_name, vim.log.levels.ERROR)
+    return false
+  end
+
+  -- Disable all providers
+  for name, _ in pairs(current_settings) do
+    current_settings[name] = false
+  end
+
+  -- Enable the selected one
+  current_settings[provider_name] = true
+
+  -- Save settings
+  save_settings(current_settings)
+
+  -- Notify user
+  local provider = providers[provider_name]
+  vim.notify(provider.icon .. " " .. provider.name .. " enabled", vim.log.levels.INFO, { title = "AI Provider" })
+
+  return true
+end
+
+-- Toggle specific provider
+local function toggle_provider(provider_name)
+  if not providers[provider_name] then
+    vim.notify("Unknown AI provider: " .. provider_name, vim.log.levels.ERROR)
+    return
+  end
+
+  local currently_active = get_active_provider()
+
+  if currently_active == provider_name then
+    -- Disable current provider
+    current_settings[provider_name] = false
+    save_settings(current_settings)
+    vim.notify("AI assistance disabled", vim.log.levels.INFO, { title = "AI Provider" })
+  else
+    -- Enable this provider (disables others)
+    set_active_provider(provider_name)
+  end
+end
+
+-- Cycle through providers
+local function cycle_providers()
+  local provider_names = vim.tbl_keys(providers)
+  table.sort(provider_names) -- Consistent order
+
+  local current = get_active_provider()
+  local current_idx = 0
+
+  -- Find current provider index
+  for i, name in ipairs(provider_names) do
+    if name == current then
+      current_idx = i
+      break
+    end
+  end
+
+  -- Get next provider
+  local next_idx = (current_idx % #provider_names) + 1
+  local next_provider = provider_names[next_idx]
+
+  set_active_provider(next_provider)
+end
+
+-- Create commands and keymaps
+local function setup_commands()
+  -- Individual toggle commands
+  for name, provider in pairs(providers) do
+    local cmd_name = "AI" .. provider.name:gsub("%s+", "")
+    vim.api.nvim_create_user_command(cmd_name, function()
+      toggle_provider(name)
+    end, { desc = "Toggle " .. provider.name })
+  end
+
+  -- Cycle command
+  vim.api.nvim_create_user_command("AICycle", cycle_providers, { desc = "Cycle AI providers" })
+
+  -- Status command
+  vim.api.nvim_create_user_command("AIStatus", function()
+    local active = get_active_provider()
+    if active then
+      local provider = providers[active]
+      vim.notify(provider.icon .. " Active: " .. provider.name, vim.log.levels.INFO, { title = "AI Provider" })
+    else
+      vim.notify("No AI provider active", vim.log.levels.INFO, { title = "AI Provider" })
+    end
+  end, { desc = "Show active AI provider" })
+
+  -- Keymaps
+  vim.keymap.set("n", "<leader>ua", cycle_providers, { desc = "Cycle AI providers" })
+  vim.keymap.set("n", "<leader>uc", function()
+    toggle_provider("copilot")
+  end, { desc = "Toggle Copilot" })
+  vim.keymap.set("n", "<leader>ui", function()
+    toggle_provider("codeium")
+  end, { desc = "Toggle Codeium" })
+  vim.keymap.set("n", "<leader>ut", function()
+    toggle_provider("tabnine")
+  end, { desc = "Toggle Tabnine" })
+end
+
+-- Initialize
+setup_commands()
+
+-- Plugin configurations
 return {
-  -- GitHub Copilot integration
+  -- GitHub Copilot
   {
     "zbirenbaum/copilot.lua",
+    enabled = function()
+      return current_settings.copilot
+    end,
     cmd = "Copilot",
     event = "InsertEnter",
-    dependencies = {
-      "zbirenbaum/copilot-cmp", -- For completion menu integration
-    },
-    opts = function()
-      -- Get UI config if available
-      local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
-
-      return {
-        suggestion = {
-          enabled = true,
-          auto_trigger = true,
-          debounce = 75,
-          keymap = {
-            accept = "<C-]>",
-            accept_word = "<M-]>",
-            accept_line = "<C-l>",
-            next = "<M-]>",
-            prev = "<M-[>",
-            dismiss = "<C-[>",
-          },
-        },
-        panel = {
-          enabled = true,
-          auto_refresh = true,
-          layout = {
-            position = "bottom", -- | top | left | right
-            ratio = 0.4,
-          },
-        },
-        filetypes = {
-          -- Enable for all filetypes including templ
-          ["*"] = true,
-          -- Except these
-          TelescopePrompt = false,
-          DressingInput = false,
-          ["neo-tree-popup"] = false,
-          ["oil"] = false,
-          help = false,
-          git = false,
-          gitcommit = false,
-          gitrebase = false,
-        },
-      }
-    end,
-    config = function(_, opts)
-      -- Safely load copilot with error handling
-      local ok, copilot = pcall(require, "copilot")
-      if not ok then
-        vim.notify("Failed to load Copilot: " .. tostring(copilot), vim.log.levels.WARN)
-        return
-      end
-
-      -- Try to setup copilot with error handling
-      local setup_ok, err = pcall(function()
-        copilot.setup(opts)
-      end)
-
-      if not setup_ok then
-        vim.notify("Copilot setup failed: " .. tostring(err), vim.log.levels.WARN)
-      end
-
-      -- Get colors from central UI config if available
-      local get_colors = _G.get_ui_colors
-        or function()
-          -- Default gruvbox-compatible colors
-          return {
-            bg = "#282828",
-            bg1 = "#32302f",
-            gray = "#928374",
-            selection_bg = "#45403d",
-          }
-        end
-
-      -- Highlight groups for copilot
-      vim.api.nvim_create_autocmd("ColorScheme", {
-        pattern = "*",
-        callback = function()
-          local colors = get_colors()
-
-          -- Set highlight groups compatible with the current theme
-          vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = colors.gray, italic = true })
-          vim.api.nvim_set_hl(0, "CopilotAnnotation", { fg = colors.gray, italic = true })
-          vim.api.nvim_set_hl(
-            0,
-            "CopilotSuggestionActive",
-            { bg = colors.bg1, fg = colors.gray, italic = true, bold = true }
-          )
-        end,
-      })
-
-      -- Toggle keymap with fancy notification and status check
-      vim.keymap.set("n", "<leader>uc", function()
-        local status_ok, status = pcall(function()
-          return require("copilot.client").is_started()
-        end)
-
-        if not status_ok then
-          vim.notify("Could not check Copilot status", vim.log.levels.WARN)
-          return
-        end
-
-        if status then
-          -- Try to disable with error handling
-          pcall(vim.api.nvim_command, "Copilot disable")
-          vim.notify(" Copilot disabled", vim.log.levels.INFO, { title = "Copilot" })
-        else
-          -- Try to enable with error handling
-          pcall(vim.api.nvim_command, "Copilot enable")
-          vim.notify(" Copilot enabled", vim.log.levels.INFO, { title = "Copilot" })
-        end
-      end, { desc = "Toggle Copilot" })
-    end,
-  },
-
-  -- Copilot CMP integration
-  {
-    "zbirenbaum/copilot-cmp",
-    dependencies = { "zbirenbaum/copilot.lua", "hrsh7th/nvim-cmp" },
+    dependencies = { "zbirenbaum/copilot-cmp" },
     opts = {
-      method = "getCompletionsCycling",
-      formatters = {
-        label = function(suggestion)
-          local label = suggestion.displayText or ""
-          if vim.startswith(label, "copilot:") then
-            label = label:sub(9)
-          end
-          return " " .. label
-        end,
-        insert_text = function(suggestion)
-          return suggestion.insertText
-        end,
-        preview = function(suggestion)
-          return suggestion.displayText
-        end,
+      suggestion = {
+        enabled = true,
+        auto_trigger = true,
+        debounce = 75,
+        keymap = {
+          accept = "<C-g>",
+          accept_word = "<M-g>",
+          accept_line = "<C-l>",
+          next = "<M-]>",
+          prev = "<M-[>",
+          dismiss = "<C-[>",
+        },
+      },
+      panel = {
+        enabled = true,
+        auto_refresh = true,
+        layout = { position = "bottom", ratio = 0.4 },
+      },
+      filetypes = {
+        ["*"] = true,
+        TelescopePrompt = false,
+        oil = false,
+        help = false,
+        gitcommit = false,
       },
     },
     config = function(_, opts)
-      -- Safe loading
-      local ok, copilot_cmp = pcall(require, "copilot_cmp")
-      if not ok then
-        vim.notify("Failed to load copilot-cmp", vim.log.levels.WARN)
-        return
-      end
+      require("copilot").setup(opts)
 
-      -- Setup with error handling
-      local setup_ok, err = pcall(function()
-        copilot_cmp.setup(opts)
-      end)
-
-      if not setup_ok then
-        vim.notify("copilot-cmp setup failed: " .. tostring(err), vim.log.levels.WARN)
-      end
+      -- Highlight setup
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = function()
+          local colors = _G.get_ui_colors and _G.get_ui_colors() or { gray = "#928374" }
+          vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = colors.gray, italic = true })
+        end,
+      })
     end,
   },
 
-  -- Codeium integration
+  -- Copilot CMP
+  {
+    "zbirenbaum/copilot-cmp",
+    enabled = function()
+      return current_settings.copilot
+    end,
+    dependencies = { "zbirenbaum/copilot.lua", "hrsh7th/nvim-cmp" },
+    config = function()
+      require("copilot_cmp").setup()
+    end,
+  },
+
+  -- Codeium
   {
     "Exafunction/codeium.nvim",
+    enabled = function()
+      return current_settings.codeium
+    end,
     cmd = "Codeium",
     event = "InsertEnter",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "hrsh7th/nvim-cmp",
-    },
-    enabled = true, -- Always enable so it can act as a fallback
+    dependencies = { "nvim-lua/plenary.nvim", "hrsh7th/nvim-cmp" },
     config = function()
-      -- Safe loading
-      local ok, codeium = pcall(require, "codeium")
-      if not ok then
-        vim.notify("Failed to load Codeium", vim.log.levels.WARN)
-        return
-      end
-
-      -- Get UI config if available
-      local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
-      local float_config = ui_config.float or { border = "single" }
-
-      -- Setup with error handling and UI enhancements
-      local setup_ok, err = pcall(function()
-        codeium.setup({
-          config = {
-            enable_chat = true,
-            tools = {
-              -- Apply UI styling from central config
-              language_server = {
-                enabled = true,
-              },
-              selector = {
-                enabled = true,
-                border = float_config.border,
-                max_width = ui_config.float and ui_config.float.max_width or 80,
-              },
-            },
-          },
-        })
-      end)
-
-      if not setup_ok then
-        vim.notify("Codeium setup failed: " .. tostring(err), vim.log.levels.WARN)
-      end
-
-      -- Ensure Codeium is enabled by default
-      if vim.g.codeium_enabled == nil then
-        vim.g.codeium_enabled = true
-      end
-
-      -- Get colors function from UI module or fallback
-      local get_colors = _G.get_ui_colors or function()
-        return {
-          gray = "#928374",
-        }
-      end
-
-      -- Highlight groups for suggestions
-      vim.api.nvim_create_autocmd("ColorScheme", {
-        pattern = "*",
-        callback = function()
-          local colors = get_colors()
-          vim.api.nvim_set_hl(0, "CodeiumSuggestion", { fg = colors.gray, italic = true })
-          vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2" })
-        end,
+      require("codeium").setup({
+        enable_chat = true,
       })
 
-      -- Toggle Codeium on/off with error handling
-      vim.keymap.set("n", "<leader>ui", function()
-        local toggle_ok = pcall(vim.api.nvim_command, "CodeiumToggle")
-        if not toggle_ok then
-          vim.notify("Failed to toggle Codeium", vim.log.levels.WARN)
-        end
-      end, { desc = "Toggle Codeium" })
-
-      -- Insert-mode keymaps
+      -- Keymaps
       local keymaps = {
         ["<C-g>"] = {
           function()
-            -- Updated to use the correct API function with additional safety checks
-            local codeium = require("codeium")
-            if codeium and codeium.complete then
-              return codeium.complete()
-            end
-            return ""
+            return require("codeium").complete()
           end,
           "Accept suggestion",
         },
         ["<C-;>"] = {
           function()
-            local codeium = require("codeium")
-            if codeium and codeium.cycle_completions then
-              return codeium.cycle_completions(1)
-            end
-            return ""
+            return require("codeium").cycle_completions(1)
           end,
           "Next completion",
         },
         ["<C-,>"] = {
           function()
-            local codeium = require("codeium")
-            if codeium and codeium.cycle_completions then
-              return codeium.cycle_completions(-1)
-            end
-            return ""
+            return require("codeium").cycle_completions(-1)
           end,
           "Prev completion",
         },
         ["<C-x>"] = {
           function()
-            local codeium = require("codeium")
-            if codeium and codeium.clear then
-              return codeium.clear()
-            end
-            return ""
+            return require("codeium").clear()
           end,
           "Clear suggestions",
         },
@@ -286,6 +300,43 @@ return {
       for key, mapping in pairs(keymaps) do
         vim.keymap.set("i", key, mapping[1], { expr = true, desc = "Codeium: " .. mapping[2] })
       end
+
+      -- Highlight setup
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = function()
+          vim.api.nvim_set_hl(0, "CodeiumSuggestion", { fg = "#928374", italic = true })
+          vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2" })
+        end,
+      })
+    end,
+  },
+
+  -- Tabnine
+  {
+    "codota/tabnine-nvim",
+    enabled = function()
+      return current_settings.tabnine
+    end,
+    build = "./dl_binaries.sh",
+    event = "InsertEnter",
+    dependencies = { "hrsh7th/nvim-cmp" },
+    config = function()
+      require("tabnine").setup({
+        disable_auto_comment = true,
+        accept_keymap = "<C-g>",
+        dismiss_keymap = "<C-x>",
+        debounce_ms = 800,
+        suggestion_color = { gui = "#808080", cterm = 244 },
+        exclude_filetypes = { "TelescopePrompt", "oil" },
+      })
+
+      -- Highlight setup
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = function()
+          vim.api.nvim_set_hl(0, "TabnineSuggestion", { fg = "#928374", italic = true })
+          vim.api.nvim_set_hl(0, "CmpItemKindTabnine", { fg = "#CA42F0" })
+        end,
+      })
     end,
   },
 }
