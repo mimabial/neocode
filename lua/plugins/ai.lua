@@ -84,6 +84,23 @@ local function get_active_provider()
   return nil
 end
 
+-- Update global variables for statusline
+local function update_globals()
+  -- Set global variables that statusline checks
+  vim.g.ai_provider_active = get_active_provider()
+  vim.g.copilot_enabled = current_settings.copilot and 1 or 0
+  vim.g.codeium_enabled = current_settings.codeium or false
+  vim.g.tabnine_enabled = current_settings.tabnine or false
+
+  -- Trigger User event for statusline refresh
+  vim.api.nvim_exec_autocmds("User", { pattern = "AIProviderChanged" })
+
+  -- Refresh statusline if lualine is loaded
+  if package.loaded["lualine"] then
+    require("lualine").refresh()
+  end
+end
+
 -- Set active provider (disable all others)
 local function set_active_provider(provider_name)
   if not providers[provider_name] then
@@ -101,6 +118,9 @@ local function set_active_provider(provider_name)
 
   -- Save settings
   save_settings(current_settings)
+
+  -- Update globals and refresh statusline
+  update_globals()
 
   -- Notify user
   local provider = providers[provider_name]
@@ -122,6 +142,7 @@ local function toggle_provider(provider_name)
     -- Disable current provider
     current_settings[provider_name] = false
     save_settings(current_settings)
+    update_globals()
     vim.notify("AI assistance disabled", vim.log.levels.INFO, { title = "AI Provider" })
   else
     -- Enable this provider (disables others)
@@ -189,7 +210,8 @@ local function setup_commands()
   end, { desc = "Toggle Tabnine" })
 end
 
--- Initialize
+-- Initialize globals on startup
+update_globals()
 setup_commands()
 
 -- Plugin configurations

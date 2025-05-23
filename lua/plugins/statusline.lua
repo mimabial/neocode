@@ -21,31 +21,52 @@ return {
     local fn = vim.fn
     local utils = require("utils.core")
 
-    -- Gruvbox-compatible colors
-    local colors = {
-      bg = "#282828",
-      fg = "#d4be98",
-      yellow = "#d8a657",
-      green = "#89b482",
-      blue = "#7daea3",
-      aqua = "#7daea3",
-      purple = "#d3869b",
-      red = "#ea6962",
-      orange = "#e78a4e",
-      gray = "#928374",
-    }
+    -- Get dynamic colors from current theme
+    local function get_theme_colors()
+      -- Try to get colors from global theme functions
+      if _G.get_ui_colors then
+        return _G.get_ui_colors()
+      end
+
+      -- Fallback to extracting colors from highlight groups
+      local function get_hl_color(group, attr, fallback)
+        local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group })
+        local val = ok and hl[attr]
+        if not val then
+          return fallback
+        end
+        if type(val) == "number" then
+          return string.format("#%06x", val)
+        end
+        return tostring(val)
+      end
+
+      -- Extract theme colors dynamically
+      return {
+        bg = get_hl_color("Normal", "bg", "#282828"),
+        fg = get_hl_color("Normal", "fg", "#d4be98"),
+        yellow = get_hl_color("DiagnosticWarn", "fg", "#d8a657"),
+        green = get_hl_color("DiagnosticOk", "fg", "#89b482"),
+        blue = get_hl_color("Function", "fg", "#7daea3"),
+        aqua = get_hl_color("Type", "fg", "#7daea3"),
+        purple = get_hl_color("Keyword", "fg", "#d3869b"),
+        red = get_hl_color("DiagnosticError", "fg", "#ea6962"),
+        orange = get_hl_color("Number", "fg", "#e78a4e"),
+        gray = get_hl_color("Comment", "fg", "#928374"),
+      }
+    end
 
     local icons = {
       diagnostics = {
-        Error = " ", -- nf-fa-ban
-        Warn = " ", -- nf-fa-exclamation_triangle
-        Info = " ", -- nf-fa-info_circle
-        Hint = " ", -- nf-fa-question_circle
+        Error = " ",
+        Warn = " ",
+        Info = " ",
+        Hint = " ",
       },
       git = {
-        added = "", -- nf-fa-check_square
-        modified = "", -- nf-oct-diff_modified
-        removed = "", -- nf-fa-trash_o
+        added = "",
+        modified = "",
+        removed = "",
       },
       stack = {
         goth = "goth",
@@ -59,9 +80,17 @@ return {
         unnamed = "[No Name]",
         newfile = "[New]",
       },
+      ai = {
+        copilot = "",
+        codeium = "󰚩",
+        tabnine = "󰏚",
+      },
     }
 
-    -- Mode color mapping
+    -- Get current theme colors
+    local colors = get_theme_colors()
+
+    -- Mode color mapping using dynamic colors
     local mode_color = {
       n = colors.green,
       i = colors.blue,
@@ -141,7 +170,6 @@ return {
           end
         end,
         cond = function()
-          -- Always show stack indicator, with more graceful fallback
           return true
         end,
       }
@@ -157,7 +185,6 @@ return {
           end
 
           local lsp_names = {}
-          -- Filter out copilot, conform, etc.
           for _, client in ipairs(buf_clients) do
             if not vim.tbl_contains({ "copilot", "null-ls", "conform" }, client.name) then
               table.insert(lsp_names, client.name)
@@ -165,7 +192,6 @@ return {
           end
 
           local names_str = table.concat(lsp_names, ", ")
-          -- Truncate if too long
           if #names_str > 30 then
             names_str = string.sub(names_str, 1, 27) .. "..."
           end
@@ -176,24 +202,32 @@ return {
       }
     end
 
-    -- AI assistant indicators
+    -- AI assistant indicators (fixed)
     local function ai_indicators()
       return {
         function()
-          local indicators = {}
-          -- Check both Copilot and Codeium status
-          if vim.g.copilot_enabled ~= 0 then
-            table.insert(indicators, "copilot")
-          end
-          if vim.g.codeium_enabled then
-            table.insert(indicators, "codeium")
+          local active_provider = vim.g.ai_provider_active
+          if not active_provider then
+            return ""
           end
 
-          return #indicators > 0 and table.concat(indicators, " ") or ""
+          local icon = icons.ai[active_provider] or ""
+          return icon
         end,
-        color = { fg = colors.purple },
+        color = function()
+          local active_provider = vim.g.ai_provider_active
+          if active_provider == "copilot" then
+            return { fg = "#6CC644" }
+          elseif active_provider == "codeium" then
+            return { fg = "#09B6A2" }
+          elseif active_provider == "tabnine" then
+            return { fg = "#CA42F0" }
+          else
+            return { fg = colors.purple }
+          end
+        end,
         cond = function()
-          return vim.g.copilot_enabled ~= 0 or vim.g.codeium_enabled
+          return vim.g.ai_provider_active ~= nil
         end,
       }
     end
@@ -226,10 +260,8 @@ return {
     -- Search count
     local function search_count()
       return function()
-        -- Try hlslens if available
         local hlslens_ok, hlslens = pcall(require, "hlslens")
         if hlslens_ok and not vim.g.hlslens_disabled then
-          -- Use hlslens' exportData function if it exists
           if hlslens.exportData then
             local data = hlslens.exportData()
             if data and data.total_count > 0 then
@@ -238,7 +270,6 @@ return {
           end
         end
 
-        -- Fall back to vanilla vim searchcount
         local sc = vim.fn.searchcount({ maxcount = 999, timeout = 500 })
         if vim.v.hlsearch == 1 and sc.total > 0 then
           return string.format(" %d/%d", sc.current, sc.total)
@@ -264,9 +295,9 @@ return {
       return {
         "fileformat",
         symbols = {
-          unix = " ", -- e712
-          dos = " ", -- e70f
-          mac = " ", -- e711
+          unix = " ",
+          dos = " ",
+          mac = " ",
         },
         color = { fg = colors.green },
         cond = function()
@@ -296,14 +327,13 @@ return {
       options = {
         component_separators = { left = "", right = "" },
         section_separators = { left = "", right = "" },
-        theme = "gruvbox-material",
+        theme = "auto",
         globalstatus = vim.o.laststatus == 3,
         disabled_filetypes = {
           statusline = { "alpha", "dashboard", "neo-tree", "oil", "Trouble", "lazy", "NvimTree" },
           winbar = { "alpha", "dashboard", "neo-tree", "oil", "Trouble", "lazy", "NvimTree" },
         },
       },
-      -- Add custom indicators for both stacks
       sections = {
         lualine_a = {
           {
@@ -365,8 +395,18 @@ return {
   config = function(_, opts)
     require("lualine").setup(opts)
 
-    -- Add reload on colorscheme change
+    -- Add reload on colorscheme change and AI provider changes
     vim.api.nvim_create_autocmd("ColorScheme", {
+      callback = function()
+        vim.defer_fn(function()
+          require("lualine").refresh()
+        end, 50)
+      end,
+    })
+
+    -- Refresh on AI provider changes
+    vim.api.nvim_create_autocmd("User", {
+      pattern = "AIProviderChanged",
       callback = function()
         require("lualine").refresh()
       end,
