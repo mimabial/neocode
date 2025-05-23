@@ -61,6 +61,12 @@ return {
 
       -- Set up colorscheme-dependent highlighting
       local function update_notify_highlights()
+        -- Wait for colorscheme to be ready
+        if not vim.g.colors_name then
+          vim.defer_fn(update_notify_highlights, 50)
+          return
+        end
+
         -- Get current theme colors
         local colors = _G.get_ui_colors and _G.get_ui_colors()
           or {
@@ -108,12 +114,14 @@ return {
         end
       end
 
-      -- Initial setup of highlights
-      update_notify_highlights()
+      -- Delay initial highlight setup to ensure colorscheme is loaded
+      vim.defer_fn(update_notify_highlights, 50)
 
       -- Update highlights when colorscheme changes
       vim.api.nvim_create_autocmd("ColorScheme", {
-        callback = update_notify_highlights,
+        callback = function()
+          vim.defer_fn(update_notify_highlights, 10)
+        end,
       })
     end,
   },
@@ -125,6 +133,7 @@ return {
       return not vim.g.use_snacks_ui
     end,
     event = "VeryLazy",
+    priority = 400, -- Lower than notify
     dependencies = {
       "MunifTanjim/nui.nvim",
       "rcarriga/nvim-notify",
@@ -220,8 +229,8 @@ return {
             },
           },
           format = {
-            cmdline = { pattern = "^:", icon = " ", lang = "vim", title = "" },
-            search_down = { kind = "search", pattern = "^/", icon = " ", lang = "regex", title = "" },
+            cmdline = { pattern = "^:", icon = ":", lang = "vim", title = "" },
+            search_down = { kind = "search", pattern = "^/", icon = "/", lang = "regex", title = "" },
             search_up = { kind = "search", pattern = "^%?", icon = "? ", lang = "regex" },
             filter = { pattern = "^:%s*!", icon = "!", lang = "bash" },
             lua = { pattern = { "^:%s*lua" }, icon = "λ", lang = "lua" },
@@ -418,6 +427,12 @@ return {
 
       -- Update highlights for Noice elements
       local function update_noice_highlights()
+        -- Wait for colorscheme to be ready
+        if not vim.g.colors_name then
+          vim.defer_fn(update_noice_highlights, 50)
+          return
+        end
+
         -- Get colors from central UI config if available
         local colors = _G.get_ui_colors and _G.get_ui_colors()
           or {
@@ -450,13 +465,15 @@ return {
         vim.api.nvim_set_hl(0, "NoicePopupTitle", { fg = colors.blue, bold = true })
       end
 
-      -- Set initial highlights
-      update_noice_highlights()
+      -- Delay initial highlight setup to ensure colorscheme is loaded
+      vim.defer_fn(update_noice_highlights, 75)
 
       -- Update highlights when colorscheme changes
       vim.api.nvim_create_autocmd("ColorScheme", {
         pattern = "*",
-        callback = update_noice_highlights,
+        callback = function()
+          vim.defer_fn(update_noice_highlights, 10)
+        end,
       })
     end,
   },

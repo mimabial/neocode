@@ -369,10 +369,8 @@ return {
       end, { desc = "Toggle background transparency" })
 
       -- Apply initial theme
-      vim.defer_fn(function()
-        local settings = load_settings()
-        apply_theme(settings.theme, settings.variant, settings.transparency)
-      end, 100)
+      local settings = load_settings()
+      apply_theme(settings.theme, settings.variant, settings.transparency)
     end,
   },
 
