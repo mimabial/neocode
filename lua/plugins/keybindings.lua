@@ -55,7 +55,7 @@ return {
       show_keys = false,
       disable = {
         bt = { "terminal", "nofile" },
-        ft = { "TelescopePrompt", "TelescopeResults", "neo-tree", "dashboard", "alpha", "lazy" },
+        ft = { "TelescopePrompt", "TelescopeResults", "neo-tree", "lazy", "starter" },
       },
     })
 
@@ -93,11 +93,11 @@ return {
       ["<leader>b,"] = { desc = "Sort by Extension" },
     })
 
-      for i = 1, 9 do
-        which_key.register({
-          ["<leader>b" .. i] = { desc = "Go to buffer " .. i },
-        })
-      end
+    for i = 1, 9 do
+      which_key.register({
+        ["<leader>b" .. i] = { desc = "Go to buffer " .. i },
+      })
+    end
 
     -- File/Explorer
     which_key.register({

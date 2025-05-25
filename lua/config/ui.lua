@@ -8,43 +8,10 @@ M.get_colors = function()
   -- Try to get colors from global theme functions first
   if vim.g.colors_name == "gruvbox-material" and _G.get_gruvbox_colors then
     return _G.get_gruvbox_colors()
-  elseif vim.g.colors_name == "tokyonight" and package.loaded["tokyonight.colors"] then
-    local colors = require("tokyonight.colors").setup()
-    return {
-      bg = colors.bg,
-      bg1 = colors.bg_dark,
-      fg = colors.fg,
-      red = colors.red,
-      green = colors.green,
-      yellow = colors.yellow,
-      blue = colors.blue,
-      purple = colors.purple,
-      aqua = colors.teal,
-      orange = colors.orange,
-      gray = colors.comment,
-      border = colors.border,
-    }
   elseif vim.g.colors_name == "everforest" and _G.get_everforest_colors then
     return _G.get_everforest_colors()
   elseif vim.g.colors_name == "kanagawa" and _G.get_kanagawa_colors then
     return _G.get_kanagawa_colors()
-  elseif vim.g.colors_name == "catppuccin" and package.loaded["catppuccin.palettes"] then
-    local flavour = require("catppuccin").options and require("catppuccin").options.flavour or "mocha"
-    local colors = require("catppuccin.palettes").get_palette(flavour)
-    return {
-      bg = colors.base,
-      bg1 = colors.mantle,
-      fg = colors.text,
-      red = colors.red,
-      green = colors.green,
-      yellow = colors.yellow,
-      blue = colors.blue,
-      purple = colors.mauve,
-      aqua = colors.teal,
-      orange = colors.peach,
-      gray = colors.overlay0,
-      border = colors.surface0,
-    }
   elseif vim.g.colors_name == "nord" and package.loaded["nord.colors"] then
     local colors = require("nord.colors")
     return {

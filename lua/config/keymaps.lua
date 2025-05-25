@@ -1,6 +1,3 @@
--- lua/config/keymaps.lua
--- Now with symbols-outline integration
-
 local M = {}
 
 function M.setup()

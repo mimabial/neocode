@@ -1,4 +1,3 @@
--- lua/config/commands.lua
 -- Centralized commands with Telescope integration and improved error handling
 
 local M = {}

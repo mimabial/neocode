@@ -1,4 +1,3 @@
--- lua/plugins/lsp.lua - Consolidated LSP configuration
 return {
   -- Core LSP functionality
   {

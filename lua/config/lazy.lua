@@ -1,4 +1,3 @@
--- lua/config/lazy.lua – Enhanced Lazy.nvim configuration with better plugin management
 local M = {}
 
 -- Helper for safe loads (avoid dependency on config.utils.safe_require)
@@ -52,9 +51,6 @@ function M.setup()
       -- Set colorscheme with fallbacks
       colorscheme = {
         "gruvbox-material",
-        "tokyonight",
-        "nord",
-        "habamax",
       },
       missing = true, -- Install missing plugins on startup
     },
@@ -111,8 +107,6 @@ function M.setup()
 
       -- Theme plugins
       ["gruvbox-material"] = 90,
-      ["tokyonight.nvim"] = 90,
-      ["nord.nvim"] = 90,
 
       -- Core functionality plugins
       ["telescope.nvim"] = 80, -- Primary picker

@@ -1,4 +1,3 @@
--- lua/plugins/editor.lua
 -- Editor UI and UX enhancements
 ---@diagnostic disable: duplicate-set-field
 return {

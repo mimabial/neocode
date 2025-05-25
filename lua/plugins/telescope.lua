@@ -394,6 +394,7 @@ return {
         find_files = {
           prompt_title = false,
           preview_title = false,
+          no_ignore = false,
           hidden = true,
           follow = true,
           find_command = { "fd", "--type", "f", "--strip-cwd-prefix", "--hidden", "--exclude", ".git" },
@@ -402,6 +403,7 @@ return {
         live_grep = {
           prompt_title = false,
           preview_title = false,
+          only_sort_text = true,
           prompt_prefix = " Live Grep: ",
           additional_args = function()
             return {
@@ -415,6 +417,56 @@ return {
             }
           end,
         },
+        buffers = {
+          prompt_prefix = " Buffers: ",
+          previewer = false,
+          sort_mru = true,
+          ignore_current_buffer = false,
+        },
+        help_tags = {
+          prompt_prefix = " Help Tags: ",
+          wrap_results = true,
+        },
+        oldfiles = {
+          prompt_prefix = " Recent Files: ",
+          cwd_only = true,
+        },
+        grep_string = {
+          prompt_prefix = " Find Current Word: ",
+          only_sort_text = true,
+        },
+        command_history = {
+          prompt_prefix = " Command History: ",
+          max_item_count = 100,
+        },
+        search_history = {
+          prompt_prefix = " Search History: ",
+          max_item_count = 100,
+        },
+        git_commits = {
+          prompt_prefix = " Git Commits: ",
+          preview = true,
+        },
+        git_branches = {
+          prompt_prefix = " Git Branches: ",
+          show_remote_tracking_branch = true,
+        },
+        git_status = {
+          prompt_prefix = " Git Status: ",
+          show_staged = true,
+        },
+        diagnostics = {
+          prompt_prefix = " Workspace Diagnostics: ",
+          severity_sort = true,
+        },
+        treesitter = {
+          prompt_prefix = " Find Symbols: ",
+          symbols = { "class", "function", "method", "variable" },
+        },
+        keymaps = {
+          prompt_prefix = " Find Keymaps: ",
+          default_text = "",
+        },
       },
       extensions = {
         fzf = {
@@ -426,33 +478,25 @@ return {
       },
     })
 
-    -- Create command to toggle layouts with persistence
+    -- Command for toggling layouts
     vim.api.nvim_create_user_command("TelescopeToggleLayout", function()
-      -- Toggle layout
       vim.g.telescope_layout = (vim.g.telescope_layout == "ivory") and "ebony" or "ivory"
       local layout = vim.g.telescope_layout
-
-      -- Save preference to file
       local layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
       local data = vim.fn.json_encode({ layout = layout })
       vim.fn.mkdir(vim.fn.fnamemodify(layout_file, ":h"), "p")
       vim.fn.writefile({ data }, layout_file)
-
-      local disp_name = (layout == "ivory") and "ivory" or "ebony"
-      vim.notify("Telescope layout: " .. disp_name .. " (saved)")
+      vim.notify("Telescope layout: " .. (layout == "ivory" and "ivory" or "ebony") .. " (saved)")
     end, {})
 
-    -- Enhanced preview window settings
+    -- Enhanced preview settings
     vim.api.nvim_create_autocmd("User", {
       pattern = "TelescopePreviewerLoaded",
       callback = function()
-        -- Setup line numbers
         vim.wo.number = true
         vim.wo.relativenumber = false
         vim.wo.signcolumn = "yes:1"
         vim.wo.numberwidth = 4
-
-        -- Other preview window settings
         vim.wo.wrap = false
         vim.wo.linebreak = true
         vim.wo.list = false
@@ -474,8 +518,7 @@ return {
           yellow = "#d8a657",
           blue = "#7daea3",
         }
-
-      vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = colors.border })
+      vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = colors.orange })
       vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = colors.border })
       vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { fg = colors.border })
       vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = colors.green, bold = true })
