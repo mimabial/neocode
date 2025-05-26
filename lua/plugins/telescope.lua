@@ -520,7 +520,23 @@ return {
     -- Auto-update borders on window resize
     vim.api.nvim_create_autocmd("VimResized", {
       callback = function()
-        update_telescope_borders(vim.o.columns)
+        -- Recompute borders for your new width
+        local max_columns = vim.o.columns
+        update_telescope_borders(max_columns)
+
+        -- Grab the open picker (if any)
+        local current_picker = require("telescope.actions.state").get_current_picker()
+        if current_picker then
+          local layout = vim.g.telescope_layout or "ivory"
+          local borders = vim.g.telescope_borders[layout]
+
+          -- Update both the “template” options and the live options
+          current_picker.original_options.borderchars = borders
+          current_picker.options.borderchars = borders
+
+          -- Force a redraw
+          current_picker:resume()
+        end
       end,
     })
 
@@ -567,7 +583,7 @@ return {
       vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = colors.orange })
       vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = colors.border })
       vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { fg = colors.orange })
-      vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = colors.green, bold = true })
+      vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = colors.blue, bold = true })
       vim.api.nvim_set_hl(0, "TelescopeSelection", { fg = colors.blue })
       vim.api.nvim_set_hl(0, "TelescopePromptPrefix", { fg = colors.blue })
     end
