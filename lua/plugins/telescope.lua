@@ -66,6 +66,69 @@ return {
       end
     end
 
+    -- Stack-specific finder functions (separate from with_layout)
+    local function find_goth_files()
+      local layout = vim.g.telescope_layout or "ivory"
+      local borders = vim.g.telescope_borders[layout] or vim.g.telescope_borders.ivory
+
+      require("telescope.builtin").find_files({
+        layout_strategy = layout,
+        borderchars = borders,
+        find_command = {
+          "find",
+          ".",
+          "-type",
+          "f",
+          "-name",
+          "*.go",
+          "-o",
+          "-name",
+          "*.templ",
+          "-not",
+          "-path",
+          "*/vendor/*",
+          "-not",
+          "-path",
+          "*/node_modules/*",
+        },
+      })
+    end
+
+    local function find_nextjs_files()
+      local layout = vim.g.telescope_layout or "ivory"
+      local borders = vim.g.telescope_borders[layout] or vim.g.telescope_borders.ivory
+
+      require("telescope.builtin").find_files({
+        layout_strategy = layout,
+        borderchars = borders,
+        find_command = {
+          "find",
+          ".",
+          "-type",
+          "f",
+          "\\(",
+          "-name",
+          "*.tsx",
+          "-o",
+          "-name",
+          "*.jsx",
+          "-o",
+          "-name",
+          "*.ts",
+          "-o",
+          "-name",
+          "*.js",
+          "\\)",
+          "-not",
+          "-path",
+          "*/node_modules/*",
+          "-not",
+          "-path",
+          "*/.next/*",
+        },
+      })
+    end
+
     -- Return keymaps
     return {
       -- Core finder functions - using our layout wrapper
@@ -121,76 +184,9 @@ return {
       { "<leader>ft", with_layout("treesitter"), desc = "Find Symbols (Treesitter)" },
       { "<leader>fk", with_layout("keymaps"), desc = "Find Keymaps" },
 
-      -- Stack-specific finders
-      {
-        "<leader>sg",
-        with_layout(function()
-          local ok, snacks = pcall(require, "snacks.picker")
-          if ok and snacks.custom and snacks.custom.goth_files then
-            snacks.custom.goth_files()
-          else
-            require("telescope.builtin").find_files({
-              find_command = {
-                "find",
-                ".",
-                "-type",
-                "f",
-                "-name",
-                "*.go",
-                "-o",
-                "-name",
-                "*.templ",
-                "-not",
-                "-path",
-                "*/vendor/*",
-                "-not",
-                "-path",
-                "*/node_modules/*",
-              },
-            })
-          end
-        end),
-        desc = "Find GOTH files",
-      },
-
-      {
-        "<leader>sn",
-        with_layout(function()
-          local ok, snacks = pcall(require, "snacks.picker")
-          if ok and snacks.custom and snacks.custom.nextjs_files then
-            snacks.custom.nextjs_files()
-          else
-            require("telescope.builtin").find_files({
-              find_command = {
-                "find",
-                ".",
-                "-type",
-                "f",
-                "\\(",
-                "-name",
-                "*.tsx",
-                "-o",
-                "-name",
-                "*.jsx",
-                "-o",
-                "-name",
-                "*.ts",
-                "-o",
-                "-name",
-                "*.js",
-                "\\)",
-                "-not",
-                "-path",
-                "*/node_modules/*",
-                "-not",
-                "-path",
-                "*/.next/*",
-              },
-            })
-          end
-        end),
-        desc = "Find Next.js files",
-      },
+      -- Stack-specific finders (uses separate functions)
+      { "<leader>sg", find_goth_files, desc = "Find GOTH files" },
+      { "<leader>sn", find_nextjs_files, desc = "Find Next.js files" },
     }
   end,
 
@@ -200,20 +196,30 @@ return {
 
     -- Create the custom ivory layout (bottom pane style)
     layout_strategies.ivory = function(picker, max_columns, max_lines, layout_config)
+      if max_columns < 120 then
+        return layout_strategies.ebony(picker, max_columns, max_lines, layout_config)
+      end
+
       local layout = layout_strategies.bottom_pane(picker, max_columns, max_lines, layout_config)
+
+      if layout.prompt then
+        layout.prompt.height = 1
+        layout.prompt.width = max_columns - 1
+      end
 
       -- Add padding between prompt and results
       if layout.prompt and layout.results then
-        layout.results.line = layout.prompt.line + layout.prompt.height + 1 -- Extra space here
+        layout.results.line = layout.prompt.line + layout.prompt.height + 1
         layout.results.height = max_lines - layout.results.line + 1
         layout.results.width = math.floor(max_columns * 0.4)
       end
 
       -- Make preview take full remaining height
       if layout.prompt and layout.preview then
+        layout.preview.col = layout.results.width + 1
         layout.preview.line = layout.prompt.line + layout.prompt.height + 1
         layout.preview.height = max_lines - layout.preview.line + 1
-        layout.preview.width = math.floor(max_columns * 0.6) - 1
+        layout.preview.width = math.floor(max_columns * 0.6)
       end
 
       return layout
@@ -227,25 +233,21 @@ return {
       -- Position preview below results with proper spacing
       if layout.preview then
         layout.preview.line = 1
-        -- Make preview take remaining space
         layout.preview.height = math.floor(max_lines * 0.5)
-        -- Full width
         layout.preview.width = max_columns
         layout.preview.col = 0
       end
       -- Ensure prompt is at top and takes minimal space
       if layout.prompt and layout.preview then
         layout.prompt.line = layout.preview.line + layout.preview.height + 1
-        layout.prompt.width = max_columns - 5
+        layout.prompt.width = max_columns - 1
         layout.prompt.height = 1
         layout.prompt.col = 0
       end
       -- Position results above prompt with proper height
       if layout.results and layout.prompt then
         layout.results.line = layout.prompt.line + layout.prompt.height + 1
-        -- Make results take less height - 40% of available space
         layout.results.height = math.floor(max_lines * 0.5) - layout.prompt.height
-        -- Full width
         layout.results.width = max_columns
         layout.results.col = 1
       end
@@ -264,7 +266,7 @@ return {
 
         prompt_prefix = " ",
         selection_caret = "  ",
-        path_display = { "truncate" },
+        path_display = { "filename_first" },
         selection_strategy = "reset",
         sorting_strategy = "ascending",
 
@@ -277,19 +279,13 @@ return {
             height = 0.6,
             width = 1.0,
             prompt_position = "top",
+            preview_cutoff = 0, -- Always show preview
           },
           ebony = {
             width = 1.0, -- Full width
             height = 1.0, -- Full height
             preview_cutoff = 1, -- Always show preview
             prompt_position = "top",
-          },
-          vertical = {
-            prompt_position = "top",
-            mirror = false,
-            width = 1.0,
-            height = 1.0,
-            preview_height = 0.5,
           },
         },
 
@@ -305,6 +301,7 @@ return {
           timeout = 500,
           width_padding = 3,
           height_padding = 1,
+          hide_on_startup = false,
         },
         color_devicons = true,
         file_ignore_patterns = {
@@ -430,6 +427,8 @@ return {
         oldfiles = {
           prompt_prefix = " Recent Files: ",
           cwd_only = true,
+          prompt_title = false,
+          preview_title = false,
         },
         grep_string = {
           prompt_prefix = " Find Current Word: ",
@@ -520,9 +519,9 @@ return {
         }
       vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = colors.orange })
       vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = colors.border })
-      vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { fg = colors.border })
+      vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { fg = colors.orange })
       vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = colors.green, bold = true })
-      vim.api.nvim_set_hl(0, "TelescopeSelection", { fg = colors.yellow })
+      vim.api.nvim_set_hl(0, "TelescopeSelection", { fg = colors.blue })
       vim.api.nvim_set_hl(0, "TelescopePromptPrefix", { fg = colors.blue })
     end
 

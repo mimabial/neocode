@@ -7,6 +7,7 @@ return {
     opts = {
       columns = {
         "size",
+        "icon",
       },
       view_options = {
         show_hidden = true,
@@ -49,14 +50,6 @@ return {
       { "<leader>E", "<cmd>NvimTreeToggle<cr>", desc = "NvimTree Explorer" },
     },
     opts = function()
-      -- Get UI colors for consistent styling
-      local colors = _G.get_ui_colors and _G.get_ui_colors()
-        or {
-          bg = "#282828",
-          fg = "#d4be98",
-          border = "#665c54",
-        }
-
       return {
         disable_netrw = true,
         hijack_cursor = true,
