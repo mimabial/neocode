@@ -194,65 +194,68 @@ return {
     -- IMPORTANT: Register custom layout strategies FIRST before any setup
     local layout_strategies = require("telescope.pickers.layout_strategies")
 
+    -- Reusable function for ebony layout positioning
+    local function apply_ebony_layout(layout)
+      -- Position preview at top with full width
+      if layout.preview then
+        layout.preview.line = 1
+        layout.preview.height = math.floor(layout.max_lines * 0.5)
+        layout.preview.width = layout.max_columns
+        layout.preview.col = 0
+      end
+      -- Position prompt below preview
+      if layout.prompt and layout.preview then
+        layout.prompt.line = layout.preview.line + layout.preview.height + 1
+        layout.prompt.width = layout.max_columns - 1
+        layout.prompt.height = 1
+        layout.prompt.col = 0
+      end
+      -- Position results below prompt
+      if layout.results and layout.prompt then
+        layout.results.line = layout.prompt.line + layout.prompt.height + 1
+        layout.results.height = math.floor(layout.max_lines * 0.5) - layout.prompt.height
+        layout.results.width = layout.max_columns
+        layout.results.col = 0
+      end
+      return layout
+    end
+
     -- Create the custom ivory layout (bottom pane style)
-    layout_strategies.ivory = function(picker, max_columns, max_lines, layout_config)
+    layout_strategies.ivory = function(max_columns)
       if max_columns < 120 then
-        return layout_strategies.ebony(picker, max_columns, max_lines, layout_config)
+        local layout = layout_strategies.vertical()
+        return apply_ebony_layout(layout)
       end
 
-      local layout = layout_strategies.bottom_pane(picker, max_columns, max_lines, layout_config)
+      local layout = layout_strategies.bottom_pane()
 
       if layout.prompt then
         layout.prompt.height = 1
-        layout.prompt.width = max_columns - 1
+        layout.prompt.width = layout.max_columns - 1
       end
 
       -- Add padding between prompt and results
       if layout.prompt and layout.results then
         layout.results.line = layout.prompt.line + layout.prompt.height + 1
-        layout.results.height = max_lines - layout.results.line + 1
-        layout.results.width = math.floor(max_columns * 0.4)
+        layout.results.height = layout.max_lines - layout.results.line + 1
+        layout.results.width = math.floor(layout.max_columns * 0.4)
       end
 
       -- Make preview take full remaining height
       if layout.prompt and layout.preview then
         layout.preview.col = layout.results.width + 1
         layout.preview.line = layout.prompt.line + layout.prompt.height + 1
-        layout.preview.height = max_lines - layout.preview.line + 1
-        layout.preview.width = math.floor(max_columns * 0.6)
+        layout.preview.height = layout.max_lines - layout.preview.line + 1
+        layout.preview.width = math.floor(layout.max_columns * 0.6)
       end
 
       return layout
     end
 
     -- Create custom vertical layout with full screen usage and proper spacing
-    layout_strategies.ebony = function(picker, max_columns, max_lines, layout_config)
-      -- Start with standard vertical layout
-      local layout = layout_strategies.vertical(picker, max_columns, max_lines, layout_config)
-
-      -- Position preview below results with proper spacing
-      if layout.preview then
-        layout.preview.line = 1
-        layout.preview.height = math.floor(max_lines * 0.5)
-        layout.preview.width = max_columns
-        layout.preview.col = 0
-      end
-      -- Ensure prompt is at top and takes minimal space
-      if layout.prompt and layout.preview then
-        layout.prompt.line = layout.preview.line + layout.preview.height + 1
-        layout.prompt.width = max_columns - 1
-        layout.prompt.height = 1
-        layout.prompt.col = 0
-      end
-      -- Position results above prompt with proper height
-      if layout.results and layout.prompt then
-        layout.results.line = layout.prompt.line + layout.prompt.height + 1
-        layout.results.height = math.floor(max_lines * 0.5) - layout.prompt.height
-        layout.results.width = max_columns
-        layout.results.col = 1
-      end
-
-      return layout
+    layout_strategies.ebony = function()
+      local layout = layout_strategies.vertical()
+      return apply_ebony_layout(layout)
     end
 
     local telescope = require("telescope")
