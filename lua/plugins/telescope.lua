@@ -228,24 +228,8 @@ return {
       max_lines = max_lines or vim.o.lines
 
       if max_columns < 120 then
-        -- Define border styles
-        vim.g.telescope_borders = {
-          ivory = {
-            prompt = { " ", " ", " ", " ", " ", " ", " ", " " },
-            results = { "━", " ", " ", " ", " ", " ", " ", " " },
-            preview = { " ", " ", "━", " ", " ", " ", " ", " " },
-          },
-        }
         return apply_ebony_layout(picker, max_columns, max_lines)
       end
-
-      vim.g.telescope_borders = {
-        ivory = {
-          prompt = { "─", " ", "─", " ", "─", "─", "─", "─" },
-          results = { "─", "│", " ", " ", " ", " ", "│", " " },
-          preview = { "─", " ", " ", " ", "─", "─", " ", " " },
-        },
-      }
 
       local layout = layout_strategies.bottom_pane(picker, max_columns, max_lines)
 
@@ -280,10 +264,80 @@ return {
       return apply_ebony_layout(picker, max_columns, max_lines)
     end
 
+    -- Function to get responsive borders based on terminal width
+    local function get_responsive_borders(max_columns)
+      max_columns = max_columns or vim.o.columns
+
+      if max_columns < 120 then
+        -- Subtle borders for medium and small screens
+        return {
+          ivory = {
+            prompt = { " ", " ", " ", " ", " ", " ", " ", " " },
+            results = { "━", " ", " ", " ", " ", " ", " ", " " },
+            preview = { " ", " ", "━", " ", " ", " ", " ", " " },
+          },
+          ebony = {
+            prompt = { " ", " ", " ", " ", " ", " ", " ", " " },
+            results = { "━", " ", " ", " ", " ", " ", " ", " " },
+            preview = { " ", " ", "━", " ", " ", " ", " ", " " },
+          },
+        }
+      else
+        -- Full decorative borders for wide screens
+        return {
+          ivory = {
+            prompt = { "─", " ", "─", " ", "─", "─", "─", "─" },
+            results = { "─", "│", " ", " ", " ", " ", "│", " " },
+            preview = { "─", " ", " ", " ", "─", "─", " ", " " },
+          },
+          ebony = {
+            prompt = { " ", " ", " ", " ", " ", " ", " ", " " },
+            results = { "━", " ", " ", " ", " ", " ", " ", " " },
+            preview = { " ", " ", "━", " ", " ", " ", " ", " " },
+          },
+        }
+      end
+    end
+
+    -- Update borders function
+    local function update_telescope_borders(max_columns)
+      vim.g.telescope_borders = get_responsive_borders(max_columns)
+    end
+
+    -- Enhanced layout toggle with responsive borders
+    local function toggle_layout_with_responsive_borders()
+      local max_columns = vim.o.columns
+
+      -- Update borders based on current terminal size
+      update_telescope_borders(max_columns)
+
+      -- Toggle layout
+      local layout = vim.g.telescope_layout or "ivory"
+      layout = layout == "ivory" and "ebony" or "ivory"
+      vim.g.telescope_layout = layout
+
+      -- Get current picker and refresh
+      local current_picker = require("telescope.actions.state").get_current_picker()
+      if current_picker then
+        current_picker.layout_strategy = layout
+        current_picker.original_options.borderchars = vim.g.telescope_borders[layout]
+        current_picker:refresh()
+      end
+
+      -- Save preference
+      local layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
+      local data = vim.fn.json_encode({ layout = layout })
+      vim.fn.mkdir(vim.fn.fnamemodify(layout_file, ":h"), "p")
+      vim.fn.writefile({ data }, layout_file)
+
+      vim.notify("Telescope layout: " .. layout .. " (borders updated for " .. max_columns .. " cols)")
+    end
+
     local telescope = require("telescope")
 
     -- Basic configuration with both layout options predefined
     telescope.setup({
+
       defaults = {
         prompt_title = false,
         preview_title = false,
@@ -314,12 +368,13 @@ return {
           },
         },
 
-        -- Default borderchars
-        borderchars = vim.g.telescope_borders and vim.g.telescope_borders[vim.g.telescope_layout or "ivory"] or {
-          prompt = { "─", " ", "─", " ", "─", "─", "─", "─" },
-          results = { "─", "│", " ", " ", " ", " ", "│", " " },
-          preview = { "─", " ", " ", " ", "─", "─", " ", " " },
-        },
+        -- Dynamic borderchars based on terminal width
+        borderchars = function()
+          local max_columns = vim.o.columns
+          update_telescope_borders(max_columns)
+          local layout = vim.g.telescope_layout or "ivory"
+          return vim.g.telescope_borders[layout]
+        end,
 
         -- Preview configuration with line numbers
         preview = {
@@ -341,50 +396,10 @@ return {
         -- Keyboard mappings for layout toggling
         mappings = {
           i = {
-            ["<C-l>"] = function()
-              -- Toggle layout
-              local layout = vim.g.telescope_layout or "ivory"
-              layout = layout == "ivory" and "ebony" or "ivory"
-              vim.g.telescope_layout = layout
-
-              -- Apply to current picker
-              local current_picker = require("telescope.actions.state").get_current_picker()
-              if current_picker then
-                current_picker.layout_strategy = layout
-                current_picker:refresh()
-              end
-
-              -- Save preference
-              local layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
-              local data = vim.fn.json_encode({ layout = layout })
-              vim.fn.mkdir(vim.fn.fnamemodify(layout_file, ":h"), "p")
-              vim.fn.writefile({ data }, layout_file)
-
-              vim.notify("Telescope layout: " .. layout)
-            end,
+            ["<C-l>"] = toggle_layout_with_responsive_borders,
           },
           n = {
-            ["<C-l>"] = function()
-              -- Toggle layout
-              local layout = vim.g.telescope_layout or "ivory"
-              layout = layout == "ivory" and "ebony" or "ivory"
-              vim.g.telescope_layout = layout
-
-              -- Apply to current picker
-              local current_picker = require("telescope.actions.state").get_current_picker()
-              if current_picker then
-                current_picker.layout_strategy = layout
-                current_picker:refresh()
-              end
-
-              -- Save preference
-              local layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
-              local data = vim.fn.json_encode({ layout = layout })
-              vim.fn.mkdir(vim.fn.fnamemodify(layout_file, ":h"), "p")
-              vim.fn.writefile({ data }, layout_file)
-
-              vim.notify("Telescope layout: " .. layout)
-            end,
+            ["<C-l>"] = toggle_layout_with_responsive_borders,
           },
         },
       },
@@ -500,6 +515,13 @@ return {
           case_mode = "smart_case",
         },
       },
+    })
+
+    -- Auto-update borders on window resize
+    vim.api.nvim_create_autocmd("VimResized", {
+      callback = function()
+        update_telescope_borders(vim.o.columns)
+      end,
     })
 
     -- Command for toggling layouts
