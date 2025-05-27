@@ -36,7 +36,7 @@ return {
     -- Define border styles
     vim.g.telescope_borders = {
       ivory = {
-        prompt = { "─", " ", "─", " ", "─", "─", "─", "─" },
+        prompt = { " ", " ", "─", " ", " ", " ", "─", "─" },
         results = { "─", "│", " ", " ", " ", " ", "│", " " },
         preview = { "─", " ", " ", " ", "─", "─", " ", " " },
       },
@@ -235,6 +235,7 @@ return {
 
       if layout.prompt then
         layout.prompt.height = 1
+        layout.prompt.line = math.floor(max_lines * 0.55)
         layout.prompt.width = max_columns - 1
       end
 
@@ -286,7 +287,7 @@ return {
         -- Full decorative borders for wide screens
         return {
           ivory = {
-            prompt = { "─", " ", "─", " ", "─", "─", "─", "─" },
+            prompt = { " ", " ", "─", " ", " ", " ", "─", "─" },
             results = { "─", "│", " ", " ", " ", " ", "│", " " },
             preview = { "─", " ", " ", " ", "─", "─", " ", " " },
           },
@@ -355,7 +356,7 @@ return {
         -- Layouts configuration
         layout_config = {
           ivory = {
-            height = 0.6,
+            height = 1,
             width = 1.0,
             prompt_position = "top",
             preview_cutoff = 0, -- Always show preview

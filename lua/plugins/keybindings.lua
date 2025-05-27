@@ -17,35 +17,8 @@ return {
 
     -- Setup which-key
     which_key.setup({
-      plugins = {
-        marks = true,
-        registers = true,
-        spelling = { enabled = false },
-        presets = {
-          operators = false,
-          motions = false,
-          text_objects = false,
-          windows = true,
-          nav = true,
-          z = true,
-          g = true,
-        },
-      },
-      icons = {
-        breadcrumb = "»",
-        separator = "➜",
-        group = "+",
-      },
       win = {
-        no_overlap = true,
-        border = "single",
-        padding = { 1, 1 },
-      },
-      layout = {
-        height = { min = 4, max = 25 },
-        width = { min = 20, max = 50 },
-        spacing = 3,
-        align = "left",
+        title = false,
       },
       -- show mappings with a description or group label
       filter = function(mapping)

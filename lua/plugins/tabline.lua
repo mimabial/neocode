@@ -56,51 +56,57 @@ return {
     },
   },
   config = function(_, opts)
-    local bufferline = require("bufferline")
-    bufferline.setup(opts)
+    require("bufferline").setup(opts)
 
-    -- Function to update bufferline highlights based on current theme
-    local function update_bufferline_highlights()
-      -- Wait a bit for theme colors to be properly set
-      vim.defer_fn(function()
-        local colors = _G.get_ui_colors and _G.get_ui_colors()
-          or {
-            bg = "#282828",
-            fg = "#d4be98",
-            blue = "#7daea3",
-            green = "#89b482",
-            red = "#ea6962",
-            yellow = "#d8a657",
-            gray = "#928374",
-            border = "#665c54",
-          }
+    -- Check if transparency is enabled
+    local function is_transparency_enabled()
+      local cache_dir = vim.fn.stdpath("cache")
+      local settings_file = cache_dir .. "/theme_settings.json"
 
-        -- Set bufferline highlight groups
-        local highlights = {
-          BufferLineBackground = { fg = colors.gray, bg = colors.bg },
-          BufferLineBufferSelected = { fg = colors.fg, bg = colors.bg, bold = true },
-          BufferLineBufferVisible = { fg = colors.fg, bg = colors.bg },
-          BufferLineModified = { fg = colors.green, bg = colors.bg },
-          BufferLineModifiedSelected = { fg = colors.green, bg = colors.bg },
-          BufferLineError = { fg = colors.red, bg = colors.bg },
-          BufferLineErrorSelected = { fg = colors.red, bg = colors.bg, bold = true },
-          BufferLineWarning = { fg = colors.yellow, bg = colors.bg },
-          BufferLineIndicatorSelected = { fg = colors.blue, bg = colors.bg },
-          BufferLineFill = { fg = colors.fg, bg = colors.bg },
-        }
+      if vim.fn.filereadable(settings_file) == 0 then
+        return false
+      end
 
-        for group, attrs in pairs(highlights) do
-          vim.api.nvim_set_hl(0, group, attrs)
-        end
+      local content = vim.fn.readfile(settings_file)
+      if #content == 0 then
+        return false
+      end
 
-        -- Force bufferline to refresh its appearance
-        pcall(function()
-          bufferline.setup(opts)
-        end)
-      end, 50)
+      local ok, parsed = pcall(vim.fn.json_decode, table.concat(content, ""))
+      return ok and parsed and parsed.transparency or false
     end
 
-    -- Update highlights on colorscheme change
+    -- Update bufferline highlights
+    local function update_bufferline_highlights()
+      local colors = _G.get_ui_colors and _G.get_ui_colors()
+        or {
+          bg = "#282828",
+          fg = "#d4be98",
+          blue = "#7daea3",
+          green = "#89b482",
+          red = "#ea6962",
+          yellow = "#d8a657",
+          gray = "#928374",
+          border = "#665c54",
+        }
+
+      -- Use transparent background if enabled
+      local bg_color = is_transparency_enabled() and "NONE" or colors.bg
+
+      -- Set highlight groups
+      vim.api.nvim_set_hl(0, "BufferLineBackground", { fg = colors.gray, bg = bg_color })
+      vim.api.nvim_set_hl(0, "BufferLineBufferSelected", { fg = colors.fg, bg = bg_color, bold = true })
+      vim.api.nvim_set_hl(0, "BufferLineBufferVisible", { fg = colors.fg, bg = bg_color })
+      vim.api.nvim_set_hl(0, "BufferLineModified", { fg = colors.green, bg = bg_color })
+      vim.api.nvim_set_hl(0, "BufferLineModifiedSelected", { fg = colors.green, bg = bg_color })
+      vim.api.nvim_set_hl(0, "BufferLineError", { fg = colors.red, bg = bg_color })
+      vim.api.nvim_set_hl(0, "BufferLineErrorSelected", { fg = colors.red, bg = bg_color, bold = true })
+      vim.api.nvim_set_hl(0, "BufferLineWarning", { fg = colors.yellow, bg = bg_color })
+      vim.api.nvim_set_hl(0, "BufferLineIndicatorSelected", { fg = colors.blue, bg = bg_color })
+      vim.api.nvim_set_hl(0, "BufferLineFill", { fg = colors.fg, bg = bg_color })
+    end
+
+    -- Apply highlights on colorscheme change
     vim.api.nvim_create_autocmd("ColorScheme", {
       callback = update_bufferline_highlights,
     })

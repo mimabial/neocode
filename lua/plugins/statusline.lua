@@ -21,6 +21,24 @@ return {
     local fn = vim.fn
     local utils = require("utils.core")
 
+    -- Check if transparency is enabled
+    local function is_transparency_enabled()
+      local cache_dir = vim.fn.stdpath("cache")
+      local settings_file = cache_dir .. "/theme_settings.json"
+
+      if vim.fn.filereadable(settings_file) == 0 then
+        return false
+      end
+
+      local content = vim.fn.readfile(settings_file)
+      if #content == 0 then
+        return false
+      end
+
+      local ok, parsed = pcall(vim.fn.json_decode, table.concat(content, ""))
+      return ok and parsed and parsed.transparency or false
+    end
+
     -- Get dynamic colors from current theme
     local function get_theme_colors()
       -- Try to get colors from global theme functions
@@ -42,8 +60,9 @@ return {
       end
 
       -- Extract theme colors dynamically
+      local base_bg = get_hl_color("Normal", "bg", "#282828")
       return {
-        bg = get_hl_color("Normal", "bg", "#282828"),
+        bg = is_transparency_enabled() and "NONE" or base_bg,
         fg = get_hl_color("Normal", "fg", "#d4be98"),
         yellow = get_hl_color("DiagnosticWarn", "fg", "#d8a657"),
         green = get_hl_color("DiagnosticOk", "fg", "#89b482"),
@@ -71,7 +90,6 @@ return {
       stack = {
         goth = "goth",
         nextjs = "nextjs",
-        ["goth+nextjs"] = "goth+nextjs",
         [""] = "",
       },
       file = {
@@ -81,7 +99,7 @@ return {
         newfile = "[New]",
       },
       ai = {
-        copilot = "",
+        copilot = "",
         codeium = "󰚩",
         tabnine = "󰏚",
       },
