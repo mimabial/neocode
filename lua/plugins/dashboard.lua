@@ -342,35 +342,6 @@ return {
           })
         end, { buffer = true, desc = "Show help" })
 
-        --         -- Add help
-        --         vim.keymap.set("n", "?", function()
-        --           vim.notify(
-        --             [[
-        -- Navigation:
-        --   j/k       - Move down/up
-        --   gg        - Go to first item
-        --   G         - Go to last item
-        --   <C-f>     - Next section
-        --   <C-b>     - Previous section
-        --   <C-d>     - Half page down (4 items)
-        --   <C-u>     - Half page up (4 items)
-        --
-        -- Actions:
-        --   <CR>      - Execute action
-        --   <Esc>     - Close starter
-        --   q         - Quit Neovim
-        --   R         - Refresh display
-        --
-        -- Tips:
-        --   • Every item has a quick select key
-        --   • All vim navigation keys work
-        --   • Press the number to jump directly
-        --           ]],
-        --             vim.log.levels.INFO,
-        --             { title = "Mini Starter Help" }
-        --           )
-        --         end, { buffer = true, desc = "Show help" })
-
         -- Update highlights based on colorscheme
         local colors = _G.get_ui_colors and _G.get_ui_colors()
           or {
