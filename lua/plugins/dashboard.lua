@@ -268,6 +268,10 @@ return {
           vim.api.nvim_set_hl(0, "StarterHelpNormal", { bg = colors.bg, fg = colors.fg })
           vim.api.nvim_set_hl(0, "StarterHelpBorder", { fg = colors.border })
           vim.api.nvim_set_hl(0, "StarterHelpTitle", { fg = colors.blue, bold = true })
+          vim.api.nvim_set_hl(0, "StarterHelpHeader", { fg = colors.yellow, bold = true })
+          vim.api.nvim_set_hl(0, "StarterHelpBullet", { fg = colors.purple })
+          vim.api.nvim_set_hl(0, "StarterHelpKey", { fg = colors.purple })
+          vim.api.nvim_set_hl(0, "StarterHelpAngleBracket", { fg = colors.purple })
 
           -- Create a temporary buffer for help display
           local help_text = {
@@ -299,6 +303,18 @@ return {
           vim.bo[buf].modifiable = false
           vim.bo[buf].readonly = true
 
+          -- Set up syntax highlighting for the help text
+          vim.api.nvim_buf_call(buf, function()
+            -- Headers (lines ending with :)
+            vim.cmd([[syntax match StarterHelpHeader /^  \w\+:$/]])
+            -- Bullet points (•)
+            vim.cmd([[syntax match StarterHelpBullet /•/]])
+            -- Keys/commands (everything before " - ")
+            vim.cmd([[syntax match StarterHelpKey /\s\+\zs[^-]\+\ze\s\+-/]])
+            -- Angle bracket keys like <C-f>, <CR>, <Esc>
+            vim.cmd([[syntax match StarterHelpAngleBracket /<[^>]*>/]])
+          end)
+
           local width = 45
           local height = #help_text + 2
           local win = vim.api.nvim_open_win(buf, true, {
@@ -309,7 +325,7 @@ return {
             row = (vim.o.lines - height) / 2,
             border = "single",
             title = " Mini Starter Help ",
-            title_pos = "center",
+            title_pos = "right",
             style = "minimal",
           })
 
