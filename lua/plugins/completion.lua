@@ -8,40 +8,37 @@ return {
     lazy = true,
     priority = 75,
     opts = function()
-      -- Get icons from UI config if available
-      local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
-      local icons = ui_config.icons and ui_config.icons.kinds
-        or {
-          -- Default icons if UI config not available
-          Text = "󰉿",
-          Method = "󰆧",
-          Function = "󰊕",
-          Constructor = "󰆧",
-          Field = "󰜢",
-          Variable = "󰀫",
-          Class = "󰠱",
-          Interface = "󰕘",
-          Module = "󰏗",
-          Property = "󰜢",
-          Unit = "󰑭",
-          Value = "󰎠",
-          Enum = "󰒻",
-          Keyword = "󰌋",
-          Snippet = "󰅪",
-          Color = "󰏘",
-          File = "󰈙",
-          Reference = "󰈇",
-          Folder = "󰉋",
-          EnumMember = "󰒻",
-          Constant = "󰏿",
-          Struct = "󰙅",
-          Event = "󰉁",
-          Operator = "󰆕",
-          TypeParameter = "󰅲",
-          -- AI completion sources with distinctive icons
-          Copilot = "",
-          Codeium = "󰚩",
-        }
+      local icons = {
+        -- LSP kinds
+        Text = "󰉿",
+        Method = "󰆧",
+        Function = "󰊕",
+        Constructor = "󰆧",
+        Field = "󰜢",
+        Variable = "󰀫",
+        Class = "󰠱",
+        Interface = "󰕘",
+        Module = "󰏗",
+        Property = "󰜢",
+        Unit = "󰑭",
+        Value = "󰎠",
+        Enum = "󰒻",
+        Keyword = "󰌋",
+        Snippet = "󰅪",
+        Color = "󰏘",
+        File = "󰈙",
+        Reference = "󰈇",
+        Folder = "󰉋",
+        EnumMember = "󰒻",
+        Constant = "󰏿",
+        Struct = "󰙅",
+        Event = "󰉁",
+        Operator = "󰆕",
+        TypeParameter = "󰅲",
+        -- AI completion sources
+        Copilot = "",
+        Codeium = "󰚩",
+      }
 
       return {
         preset = "codicons",

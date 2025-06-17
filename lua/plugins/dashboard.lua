@@ -150,36 +150,226 @@ return {
         vim.opt_local.winbar = ""
         vim.opt_local.statuscolumn = ""
 
-        -- Add refresh keybinding
-        vim.keymap.set("n", "R", refresh, { buffer = true, desc = "Refresh starter" })
+        vim.keymap.set("n", "j", function()
+          require("mini.starter").update_current_item("next")
+        end, { buffer = true, desc = "Next item" })
 
-        -- Add help
+        vim.keymap.set("n", "k", function()
+          require("mini.starter").update_current_item("prev")
+        end, { buffer = true, desc = "Previous item" })
+
+        -- Page navigation (section-based)
+        vim.keymap.set("n", "<C-f>", function()
+          -- Jump to next section based on known section boundaries
+          -- Telescope: 1-7, Files: 8-10, Sessions: 11-12, Git: 13-15, System: 16-19
+          local section_starts = { 1, 8, 11, 13, 16 }
+
+          -- Get current item index (Mini.starter uses 1-based indexing)
+          local current_idx = vim.b.ministarter_current or 1
+
+          -- Find next section start
+          for _, start_idx in ipairs(section_starts) do
+            if start_idx > current_idx then
+              -- Jump to this section start
+              local jumps = start_idx - current_idx
+              for _ = 1, jumps do
+                starter.update_current_item("next")
+              end
+              return
+            end
+          end
+
+          -- If no next section, go to last item
+          starter.update_current_item("last")
+        end, { buffer = true, desc = "Next section" })
+
+        vim.keymap.set("n", "<C-b>", function()
+          -- Jump to previous section based on known section boundaries
+          local section_starts = { 1, 8, 11, 13, 16 }
+
+          -- Get current item index
+          local current_idx = vim.b.ministarter_current or 1
+
+          -- Find previous section start
+          local prev_start = 1
+          for _, start_idx in ipairs(section_starts) do
+            if start_idx >= current_idx then
+              break
+            end
+            prev_start = start_idx
+          end
+
+          -- Jump to previous section start
+          if prev_start < current_idx then
+            local jumps = current_idx - prev_start
+            for _ = 1, jumps do
+              starter.update_current_item("prev")
+            end
+          else
+            -- If already at first section, go to first item
+            starter.update_current_item("first")
+          end
+        end, { buffer = true, desc = "Previous section" })
+
+        -- Since sections vary from 2-7 items,
+        -- jumping by 4 items will reliably
+        -- cross most section boundaries
+
+        vim.keymap.set("n", "<C-d>", function()
+          -- Jump forward by 4 items
+          for _ = 1, 4 do
+            starter.update_current_item("next")
+          end
+        end, { buffer = true, desc = "Half page down" })
+
+        vim.keymap.set("n", "<C-u>", function()
+          -- Jump backward by 4 items
+          for _ = 1, 4 do
+            starter.update_current_item("prev")
+          end
+        end, { buffer = true, desc = "Half page up" })
+
+        vim.keymap.set("n", "gg", function()
+          starter.update_current_item("first")
+        end, { buffer = true, desc = "First item" })
+
+        vim.keymap.set("n", "G", function()
+          starter.update_current_item("last")
+        end, { buffer = true, desc = "Last item" })
+
+        vim.keymap.set("n", "R", refresh, { buffer = true, desc = "Refresh starter" })
+        vim.keymap.set("n", "q", "<cmd>qa<cr>", { buffer = true, desc = "Quit Neovim" })
+
+        vim.keymap.set("n", "<Esc>", function()
+          -- Close starter and return to previous buffer or quit if none
+          local buffers = vim.fn.getbufinfo({ buflisted = 1 })
+          local normal_buffers = vim.tbl_filter(function(buf)
+            return buf.name ~= "" and vim.bo[buf.bufnr].filetype ~= "starter"
+          end, buffers)
+
+          if #normal_buffers > 0 then
+            vim.cmd("buffer " .. normal_buffers[1].bufnr)
+          else
+            vim.cmd("enew")
+          end
+        end, { buffer = true, desc = "Close starter" })
+
         vim.keymap.set("n", "?", function()
-          vim.notify(
-            [[
-Mini Starter Help:
-  
-Navigation:
-  j/k       - Move down/up (vim style)
-  h/l       - Move left/right
-  <CR>      - Execute action
-  <Esc>     - Close starter
-  q         - Quit Neovim
-  R         - Refresh display
-  
-Quick selection:
-  1-9       - Select items 1-9
-  a-z       - Select items 10+
-  
-Tips:
-  • Every item has a quick select key
-  • All vim navigation keys work
-  • Press the number/letter to jump directly
-          ]],
-            vim.log.levels.INFO,
-            { title = "Mini Starter Help" }
+          -- Get current theme colors
+          local colors = _G.get_ui_colors and _G.get_ui_colors()
+            or {
+              bg = "#282828",
+              fg = "#d4be98",
+              border = "#665c54",
+              blue = "#7daea3",
+            }
+
+          -- Create help highlight groups
+          vim.api.nvim_set_hl(0, "StarterHelpNormal", { bg = colors.bg, fg = colors.fg })
+          vim.api.nvim_set_hl(0, "StarterHelpBorder", { fg = colors.border })
+          vim.api.nvim_set_hl(0, "StarterHelpTitle", { fg = colors.blue, bold = true })
+
+          -- Create a temporary buffer for help display
+          local help_text = {
+            "  Navigation:",
+            "     j/k       - Move down/up",
+            "     gg/G      - Move to first/last",
+            "     <C-f>     - Next section",
+            "     <C-b>     - Previous section",
+            "     <C-d>     - Half page down (4 items)",
+            "     <C-u>     - Half page up (4 items)",
+            "",
+            "  Actions:",
+            "     <CR>      - Execute action",
+            "     <Esc>     - Close starter",
+            "     q         - Quit Neovim",
+            "     R         - Refresh display",
+            "",
+            "  Tips:",
+            "     • Every item has a quick select key",
+            "     • All vim navigation keys work",
+            "     • Press the number to jump directly",
+            "",
+            "  Press 'q' to close...",
+          }
+
+          -- Create help popup
+          local buf = vim.api.nvim_create_buf(false, true)
+          vim.api.nvim_buf_set_lines(buf, 0, -1, false, help_text)
+          vim.bo[buf].modifiable = false
+          vim.bo[buf].readonly = true
+
+          local width = 45
+          local height = #help_text + 2
+          local win = vim.api.nvim_open_win(buf, true, {
+            relative = "editor",
+            width = width,
+            height = height,
+            col = (vim.o.columns - width) / 2,
+            row = (vim.o.lines - height) / 2,
+            border = "single",
+            title = " Mini Starter Help ",
+            title_pos = "center",
+            style = "minimal",
+          })
+
+          vim.api.nvim_win_set_option(
+            win,
+            "winhighlight",
+            "Normal:StarterHelpNormal,FloatBorder:StarterHelpBorder,FloatTitle:StarterHelpTitle"
           )
+
+          -- Close on any key
+          vim.keymap.set("n", "<CR>", function()
+            vim.api.nvim_win_close(win, true)
+          end, { buffer = buf })
+          vim.keymap.set("n", "<Esc>", function()
+            vim.api.nvim_win_close(win, true)
+          end, { buffer = buf })
+          vim.keymap.set("n", "q", function()
+            vim.api.nvim_win_close(win, true)
+          end, { buffer = buf })
+
+          -- Auto-close on any key
+          vim.api.nvim_create_autocmd("BufLeave", {
+            buffer = buf,
+            once = true,
+            callback = function()
+              if vim.api.nvim_win_is_valid(win) then
+                vim.api.nvim_win_close(win, true)
+              end
+            end,
+          })
         end, { buffer = true, desc = "Show help" })
+
+        --         -- Add help
+        --         vim.keymap.set("n", "?", function()
+        --           vim.notify(
+        --             [[
+        -- Navigation:
+        --   j/k       - Move down/up
+        --   gg        - Go to first item
+        --   G         - Go to last item
+        --   <C-f>     - Next section
+        --   <C-b>     - Previous section
+        --   <C-d>     - Half page down (4 items)
+        --   <C-u>     - Half page up (4 items)
+        --
+        -- Actions:
+        --   <CR>      - Execute action
+        --   <Esc>     - Close starter
+        --   q         - Quit Neovim
+        --   R         - Refresh display
+        --
+        -- Tips:
+        --   • Every item has a quick select key
+        --   • All vim navigation keys work
+        --   • Press the number to jump directly
+        --           ]],
+        --             vim.log.levels.INFO,
+        --             { title = "Mini Starter Help" }
+        --           )
+        --         end, { buffer = true, desc = "Show help" })
 
         -- Update highlights based on colorscheme
         local colors = _G.get_ui_colors and _G.get_ui_colors()
