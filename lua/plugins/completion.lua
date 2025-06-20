@@ -73,39 +73,7 @@ return {
       local lspkind = require("lspkind")
 
       -- Get theme colors from central UI config if available
-      local colors = _G.get_ui_colors and _G.get_ui_colors()
-        or {
-          fg = "#d4be98",
-          bg = "#32302f",
-          select_bg = "#45403d",
-          select_fg = "#d4be98",
-          border = "#665c54",
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-          blue = "#7daea3",
-          green = "#89b482",
-          orange = "#e78a4e",
-          yellow = "#d8a657",
-          purple = "#d3869b",
-          red = "#ea6962",
-          gray = "#928374",
-        }
-
-      -- AI suggestion priority comparator
-      local function ai_priority(entry1, entry2)
-        local name1 = entry1.source.name or ""
-        local name2 = entry2.source.name or ""
-
-        -- Priority ratings: copilot > codeium > lsp > others
-        local p1 = name1 == "copilot" and 100 or (name1 == "codeium" and 95 or (name1 == "nvim_lsp" and 90 or 0))
-        local p2 = name2 == "copilot" and 100 or (name2 == "codeium" and 95 or (name2 == "nvim_lsp" and 90 or 0))
-
-        if p1 ~= p2 then
-          return p1 > p2
-        end
-        -- If priorities are equal, fall through to other comparators
-        return nil
-      end
+      local colors = _G.get_ui_colors()
 
       -- Build sources list with improved organization
       local sources = {
@@ -180,8 +148,24 @@ return {
         mapping = cmp.mapping.preset.insert({
           ["<C-n>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
           ["<C-p>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
-          ["<C-b>"] = cmp.mapping.scroll_docs(-4),
-          ["<C-f>"] = cmp.mapping.scroll_docs(4),
+          ["<C-u>"] = cmp.mapping.scroll_docs(-4),
+          ["<C-d>"] = cmp.mapping.scroll_docs(4),
+          -- Jump to the next snippet placeholder
+          ["<C-f>"] = cmp.mapping(function(fallback)
+            if luasnip.jumpable(1) then
+              luasnip.jump(1)
+            else
+              fallback()
+            end
+          end, { "i", "s" }),
+          -- Jump to the previous snippet placeholder
+          ["<C-b>"] = cmp.mapping(function(fallback)
+            if luasnip.jumpable(-1) then
+              luasnip.jump(-1)
+            else
+              fallback()
+            end
+          end, { "i", "s" }),
           ["<C-Space>"] = cmp.mapping.complete(),
           ["<C-e>"] = cmp.mapping.abort(),
           ["<CR>"] = cmp.mapping.confirm({ select = true }),
@@ -298,9 +282,7 @@ return {
         pattern = "*",
         callback = function()
           -- Update colors
-          if _G.get_ui_colors then
-            colors = _G.get_ui_colors()
-          end
+          colors = _G.get_ui_colors()
 
           -- Create better highlighting
           -- Basic UI elements

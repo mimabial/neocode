@@ -2,7 +2,7 @@ return {
   "echasnovski/mini.starter",
   version = false,
   event = function()
-    -- Only load for empty buffers at startup
+    -- Load for empty buffers at startup
     if vim.fn.argc() == 0 and vim.fn.line2byte("$") == -1 then
       return "VimEnter"
     end
@@ -20,13 +20,12 @@ return {
 
     local function footer()
       local stats = require("lazy").stats()
-      local version = vim.version()
-      local nvim_version = string.format("v%d.%d.%d", version.major, version.minor, version.patch)
+      local v = vim.version()
 
       return table.concat({
         "",
         string.format("⚡ %d/%d plugins loaded in %.2fms", stats.loaded, stats.count, stats.startuptime),
-        string.format("  Neovim %s", nvim_version),
+        string.format("Neovim v%d.%d.%d", v.major, v.minor, v.patch),
         "",
         "Press 'q' to quit • Press '?' for help",
       }, "\n")
@@ -256,13 +255,7 @@ return {
 
         vim.keymap.set("n", "?", function()
           -- Get current theme colors
-          local colors = _G.get_ui_colors and _G.get_ui_colors()
-            or {
-              bg = "#282828",
-              fg = "#d4be98",
-              border = "#665c54",
-              blue = "#7daea3",
-            }
+          local colors = _G.get_ui_colors()
 
           -- Create help highlight groups
           vim.api.nvim_set_hl(0, "StarterHelpNormal", { bg = colors.bg, fg = colors.fg })
@@ -276,23 +269,23 @@ return {
           -- Create a temporary buffer for help display
           local help_text = {
             "  Navigation:",
-            "     j/k       - Move down/up",
-            "     gg/G      - Move to first/last",
-            "     <C-f>     - Next section",
-            "     <C-b>     - Previous section",
-            "     <C-d>     - Half page down (4 items)",
-            "     <C-u>     - Half page up (4 items)",
+            "    j/k       - Move down/up",
+            "    gg/G      - Move to first/last",
+            "    <C-f>     - Next section",
+            "    <C-b>     - Previous section",
+            "    <C-d>     - Half page down (4 items)",
+            "    <C-u>     - Half page up (4 items)",
             "",
             "  Actions:",
-            "     <CR>      - Execute action",
-            "     <Esc>     - Close starter",
-            "     q         - Quit Neovim",
-            "     R         - Refresh display",
+            "    <CR>      - Execute action",
+            "    <Esc>     - Close starter",
+            "    q         - Quit Neovim",
+            "    R         - Refresh display",
             "",
             "  Tips:",
-            "     • Every item has a quick select key",
-            "     • All vim navigation keys work",
-            "     • Press the number to jump directly",
+            "    • Every item has a quick select key",
+            "    • All vim navigation keys work",
+            "    • Press the number to jump directly",
             "",
             "  Press 'q' to close...",
           }
@@ -359,17 +352,7 @@ return {
         end, { buffer = true, desc = "Show help" })
 
         -- Update highlights based on colorscheme
-        local colors = _G.get_ui_colors and _G.get_ui_colors()
-          or {
-            blue = "#7daea3",
-            green = "#89b482",
-            yellow = "#d8a657",
-            purple = "#d3869b",
-            red = "#ea6962",
-            orange = "#e78a4e",
-            gray = "#928374",
-            fg = "#d4be98",
-          }
+        local colors = _G.get_ui_colors()
 
         -- Set highlight groups
         vim.api.nvim_set_hl(0, "MiniStarterHeader", { fg = colors.green, bold = true })
@@ -408,15 +391,16 @@ return {
     vim.api.nvim_create_autocmd("ColorScheme", {
       callback = function()
         if vim.bo.filetype == "starter" then
-          local colors = _G.get_ui_colors and _G.get_ui_colors() or {}
-          vim.api.nvim_set_hl(0, "MiniStarterHeader", { fg = colors.green or "#89b482", bold = true })
-          vim.api.nvim_set_hl(0, "MiniStarterFooter", { fg = colors.gray or "#928374", italic = true })
-          vim.api.nvim_set_hl(0, "MiniStarterSection", { fg = colors.yellow or "#d8a657", bold = true })
-          vim.api.nvim_set_hl(0, "MiniStarterItemBullet", { fg = colors.blue or "#7daea3" })
-          vim.api.nvim_set_hl(0, "MiniStarterItemPrefix", { fg = colors.purple or "#d3869b" })
-          vim.api.nvim_set_hl(0, "MiniStarterItem", { fg = colors.fg or "#d4be98" })
-          vim.api.nvim_set_hl(0, "MiniStarterCurrent", { fg = colors.orange or "#e78a4e", bold = true })
-          vim.api.nvim_set_hl(0, "MiniStarterQuery", { fg = colors.red or "#ea6962", bold = true })
+          local colors = _G.get_ui_colors()
+
+          vim.api.nvim_set_hl(0, "MiniStarterHeader", { fg = colors.green, bold = true })
+          vim.api.nvim_set_hl(0, "MiniStarterFooter", { fg = colors.gray, italic = true })
+          vim.api.nvim_set_hl(0, "MiniStarterSection", { fg = colors.yellow, bold = true })
+          vim.api.nvim_set_hl(0, "MiniStarterItemBullet", { fg = colors.blue })
+          vim.api.nvim_set_hl(0, "MiniStarterItemPrefix", { fg = colors.purple })
+          vim.api.nvim_set_hl(0, "MiniStarterItem", { fg = colors.fg })
+          vim.api.nvim_set_hl(0, "MiniStarterCurrent", { fg = colors.orange, bold = true })
+          vim.api.nvim_set_hl(0, "MiniStarterQuery", { fg = colors.red, bold = true })
         end
       end,
     })

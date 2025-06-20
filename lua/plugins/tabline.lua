@@ -78,17 +78,7 @@ return {
 
     -- Update bufferline highlights
     local function update_bufferline_highlights()
-      local colors = _G.get_ui_colors and _G.get_ui_colors()
-        or {
-          bg = "#282828",
-          fg = "#d4be98",
-          blue = "#7daea3",
-          green = "#89b482",
-          red = "#ea6962",
-          yellow = "#d8a657",
-          gray = "#928374",
-          border = "#665c54",
-        }
+      local colors = _G.get_ui_colors()
 
       -- Use transparent background if enabled
       local bg_color = is_transparency_enabled() and "NONE" or colors.bg

@@ -31,13 +31,15 @@ return {
           gray = "#928374",
           border = "#665c54",
           fg = "#d4be98",
+          popup_bg = "#282828",
+          selection_bg = "#45403d",
+          selection_fg = "#d4be98",
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
         }
       end
 
-      -- Default UI colors function
-      _G.get_ui_colors = _G.get_gruvbox_colors
-
-      -- Theme management code (moved from plenary)
+      -- Theme management code
       local cache_dir = vim.fn.stdpath("cache")
       local settings_file = cache_dir .. "/theme_settings.json"
 
@@ -184,17 +186,6 @@ return {
         if not success then
           vim.notify("Failed to load colorscheme " .. name, vim.log.levels.ERROR)
           return false
-        end
-
-        -- Update UI colors function
-        if name == "gruvbox-material" and _G.get_gruvbox_colors then
-          _G.get_ui_colors = _G.get_gruvbox_colors
-        elseif name == "everforest" and _G.get_everforest_colors then
-          _G.get_ui_colors = _G.get_everforest_colors
-        elseif name == "kanagawa" and _G.get_kanagawa_colors then
-          _G.get_ui_colors = _G.get_kanagawa_colors
-        elseif name == "nord" and _G.get_nord_colors then
-          _G.get_ui_colors = _G.get_nord_colors
         end
 
         -- Save settings
@@ -400,6 +391,11 @@ return {
           gray = "#859289",
           border = "#4f5b58",
           fg = "#d3c6aa",
+          popup_bg = "#2d353b",
+          selection_bg = "#414b50",
+          selection_fg = "#d3c6aa",
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
         }
       end
     end,
@@ -425,16 +421,21 @@ return {
         return {
           bg = p.sumiInk1,
           bg1 = p.sumiInk2,
+          fg = p.fujiWhite,
           red = p.autumnRed,
-          orange = p.surimiOrange,
-          yellow = p.carpYellow,
           green = p.springGreen,
-          aqua = p.waveAqua1,
+          yellow = p.carpYellow,
           blue = p.crystalBlue,
           purple = p.oniViolet,
+          aqua = p.waveAqua1,
+          orange = p.surimiOrange,
           gray = p.fujiGray,
           border = p.sumiInk4,
-          fg = p.fujiWhite,
+          popup_bg = p.sumiInk1,
+          selection_bg = p.sumiInk4,
+          selection_fg = p.fujiWhite,
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
         }
       end
     end,
@@ -452,19 +453,29 @@ return {
 
       -- Export colors
       _G.get_nord_colors = function()
+        local ok, colors = pcall(require, "nord.colors")
+        if not ok then
+          return nil
+        end
+
         return {
-          bg = "#2e3440",
-          bg1 = "#3b4252",
-          red = "#bf616a",
-          orange = "#d08770",
-          yellow = "#ebcb8b",
-          green = "#a3be8c",
-          aqua = "#88c0d0",
-          blue = "#81a1c1",
-          purple = "#b48ead",
-          gray = "#4c566a",
-          border = "#434c5e",
-          fg = "#eceff4",
+          bg = colors.nord0,
+          bg1 = colors.nord1,
+          fg = colors.nord4,
+          red = colors.nord11,
+          green = colors.nord14,
+          yellow = colors.nord13,
+          blue = colors.nord9,
+          purple = colors.nord15,
+          aqua = colors.nord8,
+          orange = colors.nord12,
+          gray = colors.nord3,
+          border = colors.nord3,
+          popup_bg = colors.nord0,
+          selection_bg = colors.nord2,
+          selection_fg = colors.nord4,
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
         }
       end
     end,
@@ -481,6 +492,34 @@ return {
         disable_background = false,
         disable_italics = false,
       })
+
+      -- Export colors
+      _G.get_rose_pine_colors = function()
+        local ok, palette = pcall(require, "rose-pine.palette")
+        if not ok then
+          return nil
+        end
+
+        return {
+          bg = palette.base,
+          bg1 = palette.surface,
+          fg = palette.text,
+          red = palette.love,
+          green = palette.pine,
+          yellow = palette.gold,
+          blue = palette.foam,
+          purple = palette.iris,
+          aqua = palette.foam,
+          orange = palette.rose,
+          gray = palette.muted,
+          border = palette.highlight_low,
+          popup_bg = palette.base,
+          selection_bg = palette.highlight_low,
+          selection_fg = palette.text,
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
     end,
   },
 }

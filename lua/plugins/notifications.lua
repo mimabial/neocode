@@ -13,7 +13,7 @@ return {
         minimum_width = 30,
         max_width = 80,
         max_height = 20,
-        timeout = 3000,
+        timeout = 2000,
         stages = "fade",
         render = "wrapped-compact",
         top_down = true,
@@ -61,17 +61,7 @@ return {
         end
 
         -- Get current theme colors
-        local colors = _G.get_ui_colors and _G.get_ui_colors()
-          or {
-            bg = "#282828",
-            red = "#ea6962",
-            yellow = "#d8a657",
-            blue = "#7daea3",
-            green = "#89b482",
-            purple = "#d3869b",
-            border = "#665c54",
-            gray = "#928374",
-          }
+        local colors = _G.get_ui_colors()
 
         -- Set notification highlights to match theme
         vim.api.nvim_set_hl(0, "NotifyERROR", { fg = colors.red })
@@ -194,31 +184,16 @@ return {
 
     -- Plugin-specific options
     opts = function()
-      -- Get UI config if available
-      local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
-
-      -- Ensure consistent single border
-      local border = "single"
-      local float_config = vim.tbl_deep_extend("force", {
-        border = border,
-        padding = { 0, 1 },
-        max_width = 80,
-        max_height = 20,
-      }, ui_config.float or {})
-
-      -- Make sure border is always single
-      float_config.border = border
-
       return {
         cmdline = {
           enabled = true,
           view = "cmdline_popup",
           opts = {
             position = { row = "30%", col = "50%" },
-            size = { width = math.min(60, float_config.max_width or 60), height = "auto" },
+            size = { width = 60, height = "auto" },
             border = {
-              style = border,
-              padding = float_config.padding or { 0, 1 },
+              style = "single",
+              padding = { 0, 1 },
             },
           },
           format = {
@@ -285,17 +260,17 @@ return {
             enabled = true,
             silent = false,
             view = nil, -- Use the default options
-            opts = { border = border },
+            opts = { border = "single" },
           },
           signature = {
             enabled = true,
             auto_open = { enabled = true, trigger = true, luasnip = true, throttle = 50 },
-            opts = { border = border },
+            opts = { border = "single" },
           },
           message = {
             enabled = true,
             view = "notify",
-            opts = { border = border },
+            opts = { border = "single" },
           },
           documentation = {
             view = "hover",
@@ -303,7 +278,7 @@ return {
               lang = "markdown",
               replace = true,
               render = "plain",
-              border = border,
+              border = "single",
               position = { row = 2, col = 0 },
             },
           },
@@ -347,17 +322,17 @@ return {
         views = {
           cmdline_popup = {
             position = { row = 5, col = "50%" },
-            size = { width = math.min(60, float_config.max_width or 60), height = "auto" },
-            border = { style = border },
+            size = { width = 60, height = "auto" },
+            border = { style = "single" },
           },
           popupmenu = {
             relative = "editor",
             position = { row = 8, col = "50%" },
-            size = { width = math.min(60, float_config.max_width or 60), height = 10 },
-            border = { style = border, padding = float_config.padding or { 0, 1 } },
+            size = { width = 60, height = 10 },
+            border = { style = "single", padding = { 0, 1 } },
           },
           hover = {
-            border = { style = border },
+            border = { style = "single" },
             position = { row = 2, col = 0 },
             size = { width = "auto", height = "auto" },
           },
@@ -427,14 +402,7 @@ return {
         end
 
         -- Get colors from central UI config if available
-        local colors = _G.get_ui_colors and _G.get_ui_colors()
-          or {
-            bg = "#282828",
-            red = "#ea6962",
-            yellow = "#d8a657",
-            blue = "#7daea3",
-            border = "#665c54",
-          }
+        local colors = _G.get_ui_colors()
 
         -- Set highlights directly
         vim.api.nvim_set_hl(0, "NoiceCmdlinePopupBorder", { fg = colors.border })

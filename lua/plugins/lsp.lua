@@ -40,6 +40,10 @@ return {
         lineFoldingOnly = true,
       }
 
+      local lspconfig_defaults = require("lspconfig").util.default_config
+      lspconfig_defaults.capabilities =
+        vim.tbl_deep_extend("force", lspconfig_defaults.capabilities, require("cmp_nvim_lsp").default_capabilities())
+
       -- Configure keymaps when LSP attaches to buffer
       local on_attach = function(client, bufnr)
         -- Skip certain LSP clients for keymappings

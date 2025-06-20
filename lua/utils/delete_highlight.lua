@@ -125,9 +125,7 @@ function M.setup()
   -- Update highlight color when colorscheme changes
   vim.api.nvim_create_autocmd("ColorScheme", {
     callback = function()
-      -- Get colors based on current theme
-      local colors = _G.get_ui_colors and _G.get_ui_colors() or { red = "#FF3333" }
-      -- Set highlight with slightly transparent red
+      local colors = _G.get_ui_colors()
       vim.api.nvim_set_hl(0, "DeleteHighlight", { bg = colors.red, fg = "#FFFFFF", blend = 30 })
     end,
   })

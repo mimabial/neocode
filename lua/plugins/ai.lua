@@ -1,8 +1,3 @@
--- lua/plugins/ai.lua
--- Multi-AI provider system with persistent settings
-
-local M = {}
-
 -- AI Provider registry
 local providers = {
   codeium = {
@@ -14,12 +9,6 @@ local providers = {
   copilot = {
     name = "GitHub Copilot",
     icon = "",
-    free = true, -- has free tier
-    default = false,
-  },
-  tabnine = {
-    name = "Tabnine",
-    icon = "󰏚",
     free = true, -- has free tier
     default = false,
   },
@@ -90,7 +79,6 @@ local function update_globals()
   vim.g.ai_provider_active = get_active_provider()
   vim.g.copilot_enabled = current_settings.copilot and 1 or 0
   vim.g.codeium_enabled = current_settings.codeium or false
-  vim.g.tabnine_enabled = current_settings.tabnine or false
 
   -- Trigger User event for statusline refresh
   vim.api.nvim_exec_autocmds("User", { pattern = "AIProviderChanged" })
@@ -205,9 +193,6 @@ local function setup_commands()
   vim.keymap.set("n", "<leader>ui", function()
     toggle_provider("codeium")
   end, { desc = "Toggle Codeium" })
-  vim.keymap.set("n", "<leader>ut", function()
-    toggle_provider("tabnine")
-  end, { desc = "Toggle Tabnine" })
 end
 
 -- Initialize globals on startup
@@ -258,7 +243,7 @@ return {
       -- Highlight setup
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
-          local colors = _G.get_ui_colors and _G.get_ui_colors() or { gray = "#928374" }
+          local colors = _G.get_ui_colors()
           vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = colors.gray, italic = true })
         end,
       })
@@ -326,37 +311,9 @@ return {
       -- Highlight setup
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
-          vim.api.nvim_set_hl(0, "CodeiumSuggestion", { fg = "#928374", italic = true })
+          local colors = _G.get_ui_colors()
+          vim.api.nvim_set_hl(0, "CodeiumSuggestion", { fg = colors.gray, italic = true })
           vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = "#09B6A2" })
-        end,
-      })
-    end,
-  },
-
-  -- Tabnine
-  {
-    "codota/tabnine-nvim",
-    enabled = function()
-      return current_settings.tabnine
-    end,
-    build = "./dl_binaries.sh",
-    event = "InsertEnter",
-    dependencies = { "hrsh7th/nvim-cmp" },
-    config = function()
-      require("tabnine").setup({
-        disable_auto_comment = true,
-        accept_keymap = "<C-g>",
-        dismiss_keymap = "<C-x>",
-        debounce_ms = 800,
-        suggestion_color = { gui = "#808080", cterm = 244 },
-        exclude_filetypes = { "TelescopePrompt", "oil" },
-      })
-
-      -- Highlight setup
-      vim.api.nvim_create_autocmd("ColorScheme", {
-        callback = function()
-          vim.api.nvim_set_hl(0, "TabnineSuggestion", { fg = "#928374", italic = true })
-          vim.api.nvim_set_hl(0, "CmpItemKindTabnine", { fg = "#CA42F0" })
         end,
       })
     end,

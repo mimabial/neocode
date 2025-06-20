@@ -574,13 +574,8 @@ return {
 
     -- Apply highlight groups that match the theme
     local function update_highlights()
-      local colors = _G.get_ui_colors and _G.get_ui_colors()
-        or {
-          border = "#665c54",
-          green = "#89b482",
-          yellow = "#d8a657",
-          blue = "#7daea3",
-        }
+      local colors = _G.get_ui_colors()
+
       vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = colors.orange })
       vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = colors.border })
       vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { fg = colors.orange })

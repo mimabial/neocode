@@ -194,15 +194,7 @@ return {
 
       -- Make sure rainbow delimiters highlights exist before configuring ibl
       local function ensure_rainbow_highlights()
-        local colors = _G.get_ui_colors and _G.get_ui_colors()
-          or {
-            blue = "#7daea3",
-            red = "#ea6962",
-            green = "#89b482",
-            yellow = "#d8a657",
-            purple = "#d3869b",
-            orange = "#e78a4e",
-          }
+        local colors = _G.get_ui_colors()
 
         -- Directly set highlight groups before ibl uses them
         for i, color in ipairs(colors) do

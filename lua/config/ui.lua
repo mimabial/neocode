@@ -5,45 +5,24 @@ local M = {}
 
 -- Get theme-consistent colors that adapt to the current colorscheme
 M.get_colors = function()
-  -- Try to get colors from global theme functions first
+  -- Try theme-specific color functions first
+  local theme_colors = nil
+
   if vim.g.colors_name == "gruvbox-material" and _G.get_gruvbox_colors then
-    return _G.get_gruvbox_colors()
+    theme_colors = _G.get_gruvbox_colors()
   elseif vim.g.colors_name == "everforest" and _G.get_everforest_colors then
-    return _G.get_everforest_colors()
+    theme_colors = _G.get_everforest_colors()
   elseif vim.g.colors_name == "kanagawa" and _G.get_kanagawa_colors then
-    return _G.get_kanagawa_colors()
-  elseif vim.g.colors_name == "nord" and package.loaded["nord.colors"] then
-    local colors = require("nord.colors")
-    return {
-      bg = colors.nord0,
-      bg1 = colors.nord1,
-      fg = colors.nord4,
-      red = colors.nord11,
-      green = colors.nord14,
-      yellow = colors.nord13,
-      blue = colors.nord9,
-      purple = colors.nord15,
-      aqua = colors.nord8,
-      orange = colors.nord12,
-      gray = colors.nord3,
-      border = colors.nord3,
-    }
-  elseif vim.g.colors_name == "rose-pine" and package.loaded["rose-pine.palette"] then
-    local palette = require("rose-pine.palette")
-    return {
-      bg = palette.base,
-      bg1 = palette.surface,
-      fg = palette.text,
-      red = palette.love,
-      green = palette.pine,
-      yellow = palette.gold,
-      blue = palette.foam,
-      purple = palette.iris,
-      aqua = palette.foam,
-      orange = palette.rose,
-      gray = palette.muted,
-      border = palette.highlight_low,
-    }
+    theme_colors = _G.get_kanagawa_colors()
+  elseif vim.g.colors_name == "nord" and _G.get_nord_colors then
+    theme_colors = _G.get_nord_colors()
+  elseif vim.g.colors_name == "rose-pine" and _G.get_rose_pine_colors then
+    theme_colors = _G.get_rose_pine_colors()
+  end
+
+  -- If we got valid theme colors, return them
+  if theme_colors and type(theme_colors) == "table" then
+    return theme_colors
   end
 
   -- Fallback to extracting from highlight groups
@@ -96,73 +75,6 @@ M.config = {
       cursorline = true, -- Highlight current line
       signcolumn = "no", -- No sign column in floats
       wrap = false, -- No wrapping by default
-    },
-  },
-
-  -- Menu-specific configurations
-  menu = {
-    border = "single",
-    selected_item_icon = "●", -- Consistent selection indicator
-    unselected_item_icon = "○",
-  },
-
-  -- Notification configuration
-  notification = {
-    border = "single",
-    timeout = 3000,
-    max_width = 60,
-    max_height = 20,
-    stages = "fade", -- Consistent animation
-  },
-
-  -- Consistent icons across UI
-  icons = {
-    diagnostics = {
-      Error = " ",
-      Warn = " ",
-      Info = " ",
-      Hint = " ",
-    },
-    git = {
-      added = "",
-      modified = "",
-      removed = "",
-    },
-    kinds = {
-      -- LSP kinds
-      Class = "󰠱",
-      Color = "󰏘",
-      Constant = "󰏿",
-      Constructor = "󰆧",
-      Enum = "󰒻",
-      EnumMember = "󰒻",
-      Event = "󰉁",
-      Field = "󰜢",
-      File = "󰈙",
-      Folder = "󰉋",
-      Function = "󰊕",
-      Interface = "󰕘",
-      Keyword = "󰌋",
-      Method = "󰆧",
-      Module = "󰏗",
-      Operator = "󰆕",
-      Property = "󰜢",
-      Reference = "󰈇",
-      Snippet = "󰅪",
-      Struct = "󰙅",
-      Text = "󰉿",
-      TypeParameter = "󰅲",
-      Unit = "󰑭",
-      Value = "󰎠",
-      Variable = "󰀫",
-      -- AI completion
-      Copilot = "",
-      Codeium = "󰚩",
-    },
-    stack = {
-      goth = "󰟓 ",
-      nextjs = " ",
-      ["goth+nextjs"] = "󰡄 ",
     },
   },
 }

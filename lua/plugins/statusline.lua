@@ -39,42 +39,6 @@ return {
       return ok and parsed and parsed.transparency or false
     end
 
-    -- Get dynamic colors from current theme
-    local function get_theme_colors()
-      -- Try to get colors from global theme functions
-      if _G.get_ui_colors then
-        return _G.get_ui_colors()
-      end
-
-      -- Fallback to extracting colors from highlight groups
-      local function get_hl_color(group, attr, fallback)
-        local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group })
-        local val = ok and hl[attr]
-        if not val then
-          return fallback
-        end
-        if type(val) == "number" then
-          return string.format("#%06x", val)
-        end
-        return tostring(val)
-      end
-
-      -- Extract theme colors dynamically
-      local base_bg = get_hl_color("Normal", "bg", "#282828")
-      return {
-        bg = is_transparency_enabled() and "NONE" or base_bg,
-        fg = get_hl_color("Normal", "fg", "#d4be98"),
-        yellow = get_hl_color("DiagnosticWarn", "fg", "#d8a657"),
-        green = get_hl_color("DiagnosticOk", "fg", "#89b482"),
-        blue = get_hl_color("Function", "fg", "#7daea3"),
-        aqua = get_hl_color("Type", "fg", "#7daea3"),
-        purple = get_hl_color("Keyword", "fg", "#d3869b"),
-        red = get_hl_color("DiagnosticError", "fg", "#ea6962"),
-        orange = get_hl_color("Number", "fg", "#e78a4e"),
-        gray = get_hl_color("Comment", "fg", "#928374"),
-      }
-    end
-
     local icons = {
       diagnostics = {
         Error = " ",
@@ -88,8 +52,8 @@ return {
         removed = "",
       },
       stack = {
-        goth = "goth",
-        nextjs = "nextjs",
+        goth = " ",
+        nextjs = " ",
         [""] = "",
       },
       file = {
@@ -101,12 +65,11 @@ return {
       ai = {
         copilot = "",
         codeium = "󰚩",
-        tabnine = "󰏚",
       },
     }
 
     -- Get current theme colors
-    local colors = get_theme_colors()
+    local colors = get_ui_colors()
 
     -- Mode color mapping using dynamic colors
     local mode_color = {
@@ -238,8 +201,6 @@ return {
             return { fg = "#6CC644" }
           elseif active_provider == "codeium" then
             return { fg = "#09B6A2" }
-          elseif active_provider == "tabnine" then
-            return { fg = "#CA42F0" }
           else
             return { fg = colors.purple }
           end

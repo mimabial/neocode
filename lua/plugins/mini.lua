@@ -30,15 +30,7 @@ return {
 
       -- Update icons with theme colors
       local function update_icon_colors()
-        local colors = _G.get_ui_colors and _G.get_ui_colors()
-          or {
-            blue = "#7daea3",
-            red = "#ea6962",
-            green = "#89b482",
-            yellow = "#d8a657",
-            purple = "#d3869b",
-            orange = "#e78a4e",
-          }
+        local colors = _G.get_ui_colors()
 
         -- Apply colors to icon groups
         local icon_hl_groups = {

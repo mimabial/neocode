@@ -1,31 +1,8 @@
--- lua/autocmds/diagnostics.lua
 local M = {}
-
--- Helper to get colors (extracted from the ColorScheme callback)
-local function get_diag_colors()
-  local colors
-
-  -- Get colors from theme helpers if available
-  if vim.g.colors_name == "gruvbox-material" and _G.get_gruvbox_colors then
-    colors = _G.get_gruvbox_colors()
-  elseif _G.get_ui_colors then
-    colors = _G.get_ui_colors()
-  else
-    -- Fallback colors
-    colors = {
-      red = "#ea6962",
-      yellow = "#d8a657",
-      aqua = "#7daea3",
-      blue = "#7daea3",
-      green = "#89b482",
-    }
-  end
-  return colors
-end
 
 -- Apply diagnostic highlights with current colors
 local function apply_diagnostic_highlights()
-  local colors = get_diag_colors()
+  local colors = _G.get_ui_colors()
 
   -- Set all diagnostic highlight groups
   vim.api.nvim_set_hl(0, "DiagnosticSignError", { fg = colors.red, bg = "NONE" })
