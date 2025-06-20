@@ -51,61 +51,6 @@ return {
         vim.notify("[ERROR] Failed to setup notify: " .. tostring(err), vim.log.levels.ERROR)
         return
       end
-
-      -- Set up colorscheme-dependent highlighting
-      local function update_notify_highlights()
-        -- Wait for colorscheme to be ready
-        if not vim.g.colors_name then
-          vim.defer_fn(update_notify_highlights, 50)
-          return
-        end
-
-        -- Get current theme colors
-        local colors = _G.get_ui_colors()
-
-        -- Set notification highlights to match theme
-        vim.api.nvim_set_hl(0, "NotifyERROR", { fg = colors.red })
-        vim.api.nvim_set_hl(0, "NotifyWARN", { fg = colors.yellow })
-        vim.api.nvim_set_hl(0, "NotifyINFO", { fg = colors.blue })
-        vim.api.nvim_set_hl(0, "NotifyDEBUG", { fg = colors.gray })
-        vim.api.nvim_set_hl(0, "NotifyTRACE", { fg = colors.purple })
-        vim.api.nvim_set_hl(0, "NotifyBorder", { fg = colors.border })
-        vim.api.nvim_set_hl(0, "NotifyBackground", { bg = colors.bg })
-
-        -- Make sure notification title and background match theme too
-        vim.api.nvim_set_hl(0, "NotifyERRORTitle", { fg = colors.red, bg = colors.bg })
-        vim.api.nvim_set_hl(0, "NotifyWARNTitle", { fg = colors.yellow, bg = colors.bg })
-        vim.api.nvim_set_hl(0, "NotifyINFOTitle", { fg = colors.blue, bg = colors.bg })
-        vim.api.nvim_set_hl(0, "NotifyDEBUGTitle", { fg = colors.gray, bg = colors.bg })
-        vim.api.nvim_set_hl(0, "NotifyTRACETitle", { fg = colors.purple, bg = colors.bg })
-
-        -- Set notification content background
-        vim.api.nvim_set_hl(0, "NotifyERRORBody", { bg = colors.bg })
-        vim.api.nvim_set_hl(0, "NotifyWARNBody", { bg = colors.bg })
-        vim.api.nvim_set_hl(0, "NotifyINFOBody", { bg = colors.bg })
-        vim.api.nvim_set_hl(0, "NotifyDEBUGBody", { bg = colors.bg })
-        vim.api.nvim_set_hl(0, "NotifyTRACEBody", { bg = colors.bg })
-
-        -- Update borders for existing notification windows
-        for _, win in ipairs(vim.api.nvim_list_wins()) do
-          if vim.api.nvim_win_is_valid(win) then
-            local buf = vim.api.nvim_win_get_buf(win)
-            if vim.bo[buf].filetype == "notify" then
-              vim.api.nvim_win_set_option(win, "winhighlight", "NormalFloat:NotifyBackground,FloatBorder:NotifyBorder")
-            end
-          end
-        end
-      end
-
-      -- Delay initial highlight setup to ensure colorscheme is loaded
-      vim.defer_fn(update_notify_highlights, 50)
-
-      -- Update highlights when colorscheme changes
-      vim.api.nvim_create_autocmd("ColorScheme", {
-        callback = function()
-          vim.defer_fn(update_notify_highlights, 10)
-        end,
-      })
     end,
   },
 

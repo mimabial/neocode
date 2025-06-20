@@ -571,22 +571,5 @@ return {
     pcall(function()
       telescope.load_extension("fzf")
     end)
-
-    -- Apply highlight groups that match the theme
-    local function update_highlights()
-      local colors = _G.get_ui_colors()
-
-      vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = colors.orange })
-      vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = colors.border })
-      vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { fg = colors.orange })
-      vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = colors.blue, bold = true })
-      vim.api.nvim_set_hl(0, "TelescopeSelection", { fg = colors.blue })
-      vim.api.nvim_set_hl(0, "TelescopePromptPrefix", { fg = colors.blue })
-    end
-
-    update_highlights()
-    vim.api.nvim_create_autocmd("ColorScheme", {
-      callback = update_highlights,
-    })
   end,
 }

@@ -192,7 +192,6 @@ return {
         sorting = {
           priority_weight = 2,
           comparators = {
-            ai_priority, -- Our custom AI comparator first
             cmp.config.compare.offset,
             cmp.config.compare.exact,
             cmp.config.compare.score,
@@ -275,67 +274,6 @@ return {
         window = {
           completion = cmp.config.window.bordered(win_opts),
         },
-      })
-
-      -- Enhanced highlight groups for completion menu that adapt to theme
-      vim.api.nvim_create_autocmd("ColorScheme", {
-        pattern = "*",
-        callback = function()
-          -- Update colors
-          colors = _G.get_ui_colors()
-
-          -- Create better highlighting
-          -- Basic UI elements
-          vim.api.nvim_set_hl(0, "CmpNormal", { bg = colors.bg })
-          vim.api.nvim_set_hl(0, "CmpBorder", { fg = colors.border })
-          vim.api.nvim_set_hl(0, "CmpSel", { bg = colors.select_bg, fg = colors.select_fg, bold = true })
-          vim.api.nvim_set_hl(0, "CmpGhostText", { fg = colors.gray, italic = true })
-
-          -- AI source highlighting
-          vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = colors.copilot })
-          vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = colors.codeium })
-
-          -- LSP kinds with subtle color variations
-          vim.api.nvim_set_hl(0, "CmpItemKindFunction", { fg = colors.blue, bold = true })
-          vim.api.nvim_set_hl(0, "CmpItemKindMethod", { fg = colors.blue })
-          vim.api.nvim_set_hl(0, "CmpItemKindVariable", { fg = colors.orange })
-          vim.api.nvim_set_hl(0, "CmpItemKindField", { fg = colors.green })
-          vim.api.nvim_set_hl(0, "CmpItemKindClass", { fg = colors.yellow, bold = true })
-          vim.api.nvim_set_hl(0, "CmpItemKindInterface", { fg = colors.yellow })
-          vim.api.nvim_set_hl(0, "CmpItemKindStruct", { fg = colors.purple })
-          vim.api.nvim_set_hl(0, "CmpItemKindConstant", { fg = colors.orange, bold = true })
-
-          -- Other sources with distinctive colors
-          vim.api.nvim_set_hl(0, "CmpItemKindSnippet", { fg = colors.green, italic = true })
-          vim.api.nvim_set_hl(0, "CmpItemKindBuffer", { fg = colors.gray })
-          vim.api.nvim_set_hl(0, "CmpItemKindPath", { fg = colors.orange })
-
-          -- Enhanced highlight groups for selected items
-          vim.api.nvim_set_hl(0, "CmpItemAbbrMatch", { fg = colors.green, bold = true })
-          vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzy", { fg = colors.green, bold = true })
-
-          -- Create distinct highlighting for selected items
-          vim.api.nvim_set_hl(0, "CmpSel", { bg = colors.select_bg, fg = colors.select_fg, bold = true })
-          vim.api.nvim_set_hl(0, "CmpItemAbbrDeprecated", { fg = colors.gray, strikethrough = true })
-
-          -- Create special highlights for selected items
-          vim.api.nvim_set_hl(0, "CmpItemAbbrMatch", { fg = colors.green, bold = true })
-          vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzy", { fg = colors.green, bold = true })
-          vim.api.nvim_set_hl(0, "CmpItemAbbrMatchSelected", { fg = colors.yellow, bg = colors.select_bg, bold = true })
-          vim.api.nvim_set_hl(
-            0,
-            "CmpItemAbbrMatchFuzzySelected",
-            { fg = colors.yellow, bg = colors.select_bg, bold = true }
-          )
-
-          -- Menu appearance for selected vs non-selected items
-          vim.api.nvim_set_hl(0, "CmpItemMenu", { fg = colors.gray, italic = true })
-          vim.api.nvim_set_hl(
-            0,
-            "CmpItemMenuSelected",
-            { fg = colors.fg, bg = colors.select_bg, italic = true, bold = true }
-          )
-        end,
       })
     end,
   },

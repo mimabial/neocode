@@ -18,26 +18,7 @@ return {
   end,
 
   opts = function()
-    local fn = vim.fn
     local utils = require("utils.core")
-
-    -- Check if transparency is enabled
-    local function is_transparency_enabled()
-      local cache_dir = vim.fn.stdpath("cache")
-      local settings_file = cache_dir .. "/theme_settings.json"
-
-      if vim.fn.filereadable(settings_file) == 0 then
-        return false
-      end
-
-      local content = vim.fn.readfile(settings_file)
-      if #content == 0 then
-        return false
-      end
-
-      local ok, parsed = pcall(vim.fn.json_decode, table.concat(content, ""))
-      return ok and parsed and parsed.transparency or false
-    end
 
     local icons = {
       diagnostics = {

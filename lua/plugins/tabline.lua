@@ -58,55 +58,6 @@ return {
   config = function(_, opts)
     require("bufferline").setup(opts)
 
-    -- Check if transparency is enabled
-    local function is_transparency_enabled()
-      local cache_dir = vim.fn.stdpath("cache")
-      local settings_file = cache_dir .. "/theme_settings.json"
-
-      if vim.fn.filereadable(settings_file) == 0 then
-        return false
-      end
-
-      local content = vim.fn.readfile(settings_file)
-      if #content == 0 then
-        return false
-      end
-
-      local ok, parsed = pcall(vim.fn.json_decode, table.concat(content, ""))
-      return ok and parsed and parsed.transparency or false
-    end
-
-    -- Update bufferline highlights
-    local function update_bufferline_highlights()
-      local colors = _G.get_ui_colors()
-
-      -- Use transparent background if enabled
-      local bg_color = is_transparency_enabled() and "NONE" or colors.bg
-
-      -- Set highlight groups
-      vim.api.nvim_set_hl(0, "BufferLineBackground", { fg = colors.gray, bg = bg_color })
-      vim.api.nvim_set_hl(0, "BufferLineBufferSelected", { fg = colors.fg, bg = bg_color, bold = true })
-      vim.api.nvim_set_hl(0, "BufferLineBufferVisible", { fg = colors.fg, bg = bg_color })
-      vim.api.nvim_set_hl(0, "BufferLineModified", { fg = colors.green, bg = bg_color })
-      vim.api.nvim_set_hl(0, "BufferLineModifiedSelected", { fg = colors.green, bg = bg_color })
-      vim.api.nvim_set_hl(0, "BufferLineError", { fg = colors.red, bg = bg_color })
-      vim.api.nvim_set_hl(0, "BufferLineErrorSelected", { fg = colors.red, bg = bg_color, bold = true })
-      vim.api.nvim_set_hl(0, "BufferLineWarning", { fg = colors.yellow, bg = bg_color })
-      vim.api.nvim_set_hl(0, "BufferLineIndicatorSelected", { fg = colors.blue, bg = bg_color })
-      vim.api.nvim_set_hl(0, "BufferLineFill", { fg = colors.fg, bg = bg_color })
-    end
-
-    -- Apply highlights on colorscheme change
-    vim.api.nvim_create_autocmd("ColorScheme", {
-      callback = update_bufferline_highlights,
-    })
-
-    -- Also update when UI colors change (custom event)
-    vim.api.nvim_create_autocmd("User", {
-      pattern = "UIColorsChanged",
-      callback = update_bufferline_highlights,
-    })
-
     -- Buffer navigation keymaps
     local map = function(mode, lhs, rhs, desc)
       vim.keymap.set(mode, lhs, rhs, { noremap = true, silent = true, desc = desc })
@@ -128,8 +79,5 @@ return {
     for i = 1, 9 do
       map("n", "<leader>b" .. i, "<cmd>BufferLineGoToBuffer " .. i .. "<cr>", "Go to buffer " .. i)
     end
-
-    -- Apply initial highlights
-    update_bufferline_highlights()
   end,
 }
