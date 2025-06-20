@@ -163,9 +163,14 @@ function M.setup()
   map("n", "<leader>uV", "<cmd>ColorVariant<cr>", { desc = "Select color variant" })
   map("n", "<leader>ub", "<cmd>ToggleBackgroundTransparency<cr>", { desc = "Toggle background transparency" })
 
-  -- AI tools
-  map("n", "<leader>uc", "<cmd>lua require('copilot.command').toggle()<cr>", { desc = "Toggle Copilot" })
-  map("n", "<leader>ui", "<cmd>CodeiumToggle<cr>", { desc = "Toggle Codeium" })
+  -- ========================================
+  -- AI Provider Management
+  -- ========================================
+  map("n", "<leader>ac", "<cmd>AICycle<cr>", { desc = "Cycle AI providers" })
+  map("n", "<leader>ad", "<cmd>AIDisable<cr>", { desc = "Disable AI providers" })
+  map("n", "<leader>as", "<cmd>AIStatus<cr>", { desc = "Show active AI provider" })
+  map("n", "<leader>ap", "<cmd>AICopilot<cr>", { desc = "Toggle Copilot" })
+  map("n", "<leader>am", "<cmd>AICodeium<cr>", { desc = "Toggle Codeium" })
 
   -- ========================================
   -- Layout Presets

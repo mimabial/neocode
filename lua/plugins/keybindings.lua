@@ -35,6 +35,7 @@ return {
     -- Group definitions
     which_key.register({
       ["<leader>"] = { name = "Leader" },
+      ["<leader>a"] = { name = "AI" },
       ["<leader>b"] = { name = "Buffers" },
       ["<leader>c"] = { name = "Code/LSP" },
       ["<leader>d"] = { name = "Debug/Dashboard" },
@@ -131,8 +132,15 @@ return {
       ["<leader>uv"] = { desc = "Cycle color variant" },
       ["<leader>uV"] = { desc = "Select color variant" },
       ["<leader>ub"] = { desc = "Toggle transparency" },
-      ["<leader>uc"] = { desc = "Toggle Copilot" },
-      ["<leader>ui"] = { desc = "Toggle Codeium" },
+    })
+
+    -- AI
+    which_key.register({
+      ["<leader>ap"] = { desc = "Toggle Copilot" },
+      ["<leader>am"] = { desc = "Toggle Codeium" },
+      ["<leader>ac"] = { desc = "Cycle AI providers" },
+      ["<leader>ad"] = { desc = "Disable AI providers" },
+      ["<leader>as"] = { desc = "Show active AI provider" },
     })
 
     -- Layouts

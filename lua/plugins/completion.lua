@@ -72,13 +72,8 @@ return {
       local luasnip = require("luasnip")
       local lspkind = require("lspkind")
 
-      -- Get theme colors from central UI config if available
-      local colors = _G.get_ui_colors()
-
       -- Build sources list with improved organization
       local sources = {
-        { name = "copilot", group_index = 1, priority = 100 },
-        { name = "codeium", group_index = 1, priority = 95 },
         { name = "nvim_lsp", group_index = 1, priority = 90 },
         { name = "luasnip", group_index = 1, priority = 80 },
         { name = "nvim_lua", group_index = 1, priority = 70 },
@@ -86,6 +81,12 @@ return {
         { name = "path", group_index = 2, priority = 40 },
         { name = "emoji", group_index = 3, priority = 30 },
       }
+      local active_provider = _G.get_ai_active_provider()
+
+      if active_provider then
+        vim.notify(active_provider, vim.log.levels.INFO)
+        table.insert(sources, { name = active_provider, group_index = 1, priority = 100 })
+      end
 
       -- Get UI config if available
       local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
