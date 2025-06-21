@@ -72,20 +72,24 @@ return {
       local luasnip = require("luasnip")
       local lspkind = require("lspkind")
 
-      -- Build sources list with improved organization
-      local sources = {
-        { name = "nvim_lsp", group_index = 1, priority = 90 },
-        { name = "luasnip", group_index = 1, priority = 80 },
-        { name = "nvim_lua", group_index = 1, priority = 70 },
-        { name = "buffer", group_index = 2, priority = 50, keyword_length = 3 },
-        { name = "path", group_index = 2, priority = 40 },
-        { name = "emoji", group_index = 3, priority = 30 },
-      }
-      local active_provider = _G.get_ai_active_provider()
+      local function build_sources()
+        local sources = {}
 
-      if active_provider then
-        vim.notify(active_provider, vim.log.levels.INFO)
-        table.insert(sources, { name = active_provider, group_index = 1, priority = 100 })
+        local active_provider = _G.get_ai_active_provider()
+        if active_provider then
+          table.insert(sources, { name = active_provider, group_index = 0, priority = 100 })
+        end
+
+        vim.list_extend(sources, {
+          { name = "nvim_lsp", group_index = 1, priority = 90 },
+          { name = "luasnip", group_index = 1, priority = 80 },
+          { name = "nvim_lua", group_index = 1, priority = 70 },
+          { name = "buffer", group_index = 2, priority = 50, keyword_length = 3 },
+          { name = "path", group_index = 2, priority = 40 },
+          { name = "emoji", group_index = 3, priority = 30 },
+        })
+
+        return sources
       end
 
       -- Get UI config if available
@@ -114,7 +118,7 @@ return {
       }
 
       -- Configure with enhanced visual appearance
-      cmp.setup({
+      local cmp_config = {
         enabled = function()
           -- Disable completion in Oil buffers
           local buftype = vim.api.nvim_get_option_value("buftype", { buf = 0 })
@@ -189,7 +193,7 @@ return {
             end
           end, { "i", "s" }),
         }),
-        sources = cmp.config.sources(sources),
+        sources = cmp.config.sources(build_sources()),
         sorting = {
           priority_weight = 2,
           comparators = {
@@ -220,7 +224,7 @@ return {
             }
 
             -- Format using lspkind with improved styling
-            vim_item = lspkind.cmp_format({
+            local formatted_item = lspkind.cmp_format({
               mode = "symbol_text",
               maxwidth = 50,
               ellipsis_char = "...",
@@ -244,10 +248,25 @@ return {
               end,
             })(entry, vim_item)
 
-            return vim_item
+            return formatted_item
           end,
         },
+      }
+
+      -- Initial setup
+      cmp.setup(cmp_config)
+
+      -- Reload cmp when AI provider changes
+      vim.api.nvim_create_autocmd("User", {
+        pattern = "AIProviderChanged",
+        callback = function()
+          -- Update sources in the stored config
+          cmp_config.sources = cmp.config.sources(build_sources())
+          -- Reconfigure cmp with updated sources
+          cmp.setup(cmp_config)
+        end,
       })
+
       -- Cmdline completions with enhanced styling
       cmp.setup.cmdline(":", {
         mapping = cmp.mapping.preset.cmdline(),
