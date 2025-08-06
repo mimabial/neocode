@@ -1,6 +1,3 @@
--- lua/plugins/indentation.lua
--- Enhanced integration of rainbow delimiters with indent blankline
-
 return {
   -- Rainbow delimiters for matching pairs
   {
@@ -58,15 +55,20 @@ return {
         },
       }
 
-      -- Select color palette based on current theme
-      local colorscheme = vim.g.colors_name or "gruvbox-material"
-      local palette = colors[colorscheme] or colors["gruvbox-material"]
+      local function set_rainbow_colors()
+        -- Select color palette based on current theme
+        local colorscheme = vim.g.colors_name or "gruvbox-material"
+        local palette = colors[colorscheme] or colors["gruvbox-material"]
 
-      -- Directly set highlight groups - not just returning them
-      for i, color in ipairs(palette) do
-        local hl_group = "RainbowDelimiter" .. i
-        vim.api.nvim_set_hl(0, hl_group, { fg = color })
+        -- Directly set highlight groups - not just returning them
+        for i, color in ipairs(palette) do
+          local hl_group = "RainbowDelimiter" .. i
+          vim.api.nvim_set_hl(0, hl_group, { fg = color })
+        end
       end
+
+      -- Set initial colors
+      set_rainbow_colors()
 
       -- Now setup rainbow delimiters with the highlights
       vim.g.rainbow_delimiters = {
@@ -105,17 +107,7 @@ return {
 
       -- Update highlights on colorscheme change
       vim.api.nvim_create_autocmd("ColorScheme", {
-        callback = function()
-          -- Select color palette based on new theme
-          local colorscheme = vim.g.colors_name or "gruvbox-material"
-          local palette = colors[colorscheme] or colors["gruvbox-material"]
-
-          -- Update highlight groups
-          for i, color in ipairs(palette) do
-            local hl_group = "RainbowDelimiter" .. i
-            vim.api.nvim_set_hl(0, hl_group, { fg = color })
-          end
-        end,
+        callback = set_rainbow_colors,
       })
     end,
   },
@@ -134,6 +126,16 @@ return {
         indent = {
           char = indent_char,
           tab_char = indent_char,
+          highlight = "Comment",
+          smart_indent_cap = true,
+          priority = 100, -- lower than rainbow delimiters
+        },
+        scope = {
+          enabled = true,
+          show_start = true,
+          show_end = true,
+          injected_languages = true,
+          priority = 500, -- Higher than rainbow delimiters
           highlight = {
             "RainbowDelimiter1",
             "RainbowDelimiter2",
@@ -141,17 +143,8 @@ return {
             "RainbowDelimiter4",
             "RainbowDelimiter5",
             "RainbowDelimiter6",
+            "RainbowDelimiter7",
           },
-          smart_indent_cap = true,
-          priority = 100, -- lower than rainbow delimiters
-        },
-        scope = {
-          enabled = true,
-          show_start = true,
-          show_end = false,
-          injected_languages = true,
-          priority = 500, -- Higher than rainbow delimiters
-          highlight = { "Function", "Label" },
           char = indent_char,
         },
         exclude = {

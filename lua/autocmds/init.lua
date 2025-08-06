@@ -1,6 +1,3 @@
--- lua/config/autocmds.lua
--- Refactored autocommand definitions organized into feature-specific augroups
-
 local M = {}
 
 -- Helper to safely require optional modules
@@ -39,14 +36,14 @@ function M.setup()
     end,
     desc = "Disable relative numbers when leaving buffer or entering insert mode",
   })
-  vim.api.nvim_create_autocmd("InsertLeave", {
+  vim.api.nvim_create_autocmd({ "InsertLeave", "BufEnter", "FocusGained", "WinEnter" }, {
     group = num_grp,
     callback = function()
       if vim.wo.number and not vim.g.disable_relative_number then
         vim.wo.relativenumber = true
       end
     end,
-    desc = "Re-enable relative numbers after insert",
+    desc = "Re-enable relative numbers when entering buffer or leaving insert mode",
   })
 
   -- 2) Yank highlighting

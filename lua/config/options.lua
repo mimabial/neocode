@@ -5,6 +5,7 @@ function M.setup()
   local opt = vim.opt
   local g = vim.g
   local fn = vim.fn
+
   -- Leader keys
   g.mapleader = " "
   g.maplocalleader = " "
@@ -29,7 +30,7 @@ function M.setup()
   opt.showmode = false      -- Mode handled by statusline
   opt.showcmd = false       -- Don't show partial commands
   opt.shortmess:append("c") -- Don't show completion messages
-  opt.shortmess:remove("S") -- Allow search count in statusline
+  -- opt.shortmess:remove("S") -- Allow search count in statusline
 
   -- Indentation
   opt.expandtab = true   -- Use spaces instead of tabs
@@ -51,9 +52,9 @@ function M.setup()
 
   -- Backup & Swap: keep crash recovery, but avoid slow disk writes
 
-  -- enable traditional backups (e.g. file.txt~), but write them to a cache dir
   opt.backup = true
   opt.writebackup = true
+  -- enable traditional backups (e.g. file.txt~), but write them to a cache dir
   opt.backupdir = fn.stdpath("data") .. "/backup//"
   -- keep a swapfile for crash recovery, but in RAM (tmpfs) if available
   opt.swapfile = true
@@ -71,6 +72,7 @@ function M.setup()
   opt.undofile = true
   opt.undodir = fn.stdpath("data") .. "/undo//"
   opt.undolevels = 1000 -- plenty of undo steps
+  opt.undoreload = 10000
 
   -- Create undo directory if it doesn't exist
   if fn.isdirectory(fn.stdpath("data") .. "/undo") == 0 then
