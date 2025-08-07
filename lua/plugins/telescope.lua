@@ -280,7 +280,7 @@ return {
           ebony = {
             width = 1.0,        -- Full width
             height = 1.0,       -- Full height
-            preview_cutoff = 1, -- Always show preview
+            preview_cutoff = 0, -- Always show preview
             prompt_position = "top",
           },
         },
