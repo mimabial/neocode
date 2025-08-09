@@ -34,6 +34,9 @@ return {
     end
 
     -- Define border styles
+    -- { top, right, bottom, left,
+    -- top_left, top_right,
+    -- bottom_right, bottom_left }
     vim.g.telescope_borders = {
       ivory = {
         prompt = { " ", " ", "─", " ", " ", " ", "─", "─" },
@@ -41,9 +44,9 @@ return {
         preview = { "─", " ", " ", " ", "─", "─", " ", " " },
       },
       ebony = {
-        prompt = { " ", " ", " ", " ", " ", " ", " ", " " },
-        results = { "━", " ", " ", " ", " ", " ", " ", " " },
-        preview = { " ", " ", "━", " ", " ", " ", " ", " " },
+        prompt = { "─", " ", "─", " ", " ", " ", " ", " " },
+        results = { " ", " ", " ", " ", " ", " ", " ", " " },
+        preview = { " ", " ", "─", " ", " ", " ", " ", " " },
       },
     }
 
@@ -198,26 +201,51 @@ return {
     layout_strategies.ebony = function(picker, max_columns, max_lines)
       local layout = layout_strategies.vertical(picker, max_columns, max_lines)
 
+      -- Force preview creation if picker has a previewer
+      local has_previewer = picker.previewer ~= nil and picker.previewer ~= false
+
       -- Position preview at top with full width
-      if layout.preview then
+      if has_previewer then
+        -- Ensure preview exists in layout
+        if not layout.preview then
+          layout.preview = {}
+        end
+        -- Position preview at top with full width
         layout.preview.line = 1
-        layout.preview.height = math.floor(max_lines * 0.5)
+        layout.preview.height = math.floor(max_lines * 0.6)
         layout.preview.width = max_columns
         layout.preview.col = 0
-      end
-      -- Position prompt below preview
-      if layout.prompt and layout.preview then
-        layout.prompt.line = layout.preview.line + layout.preview.height + 1
-        layout.prompt.width = max_columns - 1
-        layout.prompt.height = 1
-        layout.prompt.col = 0
-      end
-      -- Position results below prompt
-      if layout.results and layout.prompt then
-        layout.results.line = layout.prompt.line + layout.prompt.height + 1
-        layout.results.height = math.floor(max_lines * 0.5) - layout.prompt.height
-        layout.results.width = max_columns
-        layout.results.col = 0
+        -- Position prompt below preview
+        if layout.prompt then
+          layout.prompt.line = layout.preview.height + 2
+          layout.prompt.height = 1
+          layout.prompt.width = max_columns - 2
+          layout.prompt.col = 2
+        end
+        -- Position results below prompt
+        if layout.results and layout.prompt then
+          layout.results.line = layout.prompt.line + layout.prompt.height + 2
+          layout.results.height = max_lines - layout.results.line + 1
+          layout.results.width = max_columns
+          layout.results.col = 0
+        end
+      else
+        -- No previewer - remove preview and use full space
+        layout.preview = nil
+
+        if layout.prompt then
+          layout.prompt.line = 2
+          layout.prompt.width = max_columns - 2
+          layout.prompt.height = 1
+          layout.prompt.col = 2
+        end
+
+        if layout.results and layout.prompt then
+          layout.results.line = layout.prompt.line + layout.prompt.height + 2
+          layout.results.height = max_lines - layout.results.line + 1
+          layout.results.width = max_columns
+          layout.results.col = 0
+        end
       end
       return layout
     end
@@ -225,6 +253,7 @@ return {
     -- Create the custom ivory layout (bottom pane style)
     layout_strategies.ivory = function(picker, max_columns, max_lines)
       local layout = layout_strategies.bottom_pane(picker, max_columns, max_lines)
+      local has_previewer = picker.previewer ~= nil and picker.previewer ~= false
 
       if layout.prompt then
         layout.prompt.height = 1
@@ -232,21 +261,27 @@ return {
         layout.prompt.width = max_columns - 1
       end
 
-      -- Add padding between prompt and results
-      if layout.prompt and layout.results then
-        layout.results.line = layout.prompt.line + layout.prompt.height + 1
-        layout.results.height = max_lines - layout.results.line + 1
-        layout.results.width = math.floor(max_columns * 0.4)
-      end
+      if has_previewer then
+        if layout.prompt and layout.results then
+          layout.results.line = layout.prompt.line + layout.prompt.height + 1
+          layout.results.height = max_lines - layout.results.line + 1
+          layout.results.width = math.floor(max_columns * 0.4)
+        end
 
-      -- Make preview take full remaining height
-      if layout.prompt and layout.preview then
-        layout.preview.col = layout.results.width + 1
-        layout.preview.line = layout.prompt.line + layout.prompt.height + 1
-        layout.preview.height = max_lines - layout.preview.line + 1
-        layout.preview.width = math.floor(max_columns * 0.6)
+        -- Make preview take full remaining height
+        if layout.prompt and layout.preview then
+          layout.preview.col = layout.results.width + 1
+          layout.preview.line = layout.prompt.line + layout.prompt.height + 1
+          layout.preview.height = max_lines - layout.preview.line + 1
+          layout.preview.width = max_columns - layout.results.width - 1
+        end
+      else
+        if layout.results and layout.prompt then
+          layout.results.line = layout.prompt.line + layout.prompt.height + 1
+          layout.results.height = max_lines - layout.results.line + 1
+          layout.results.width = max_columns
+        end
       end
-
       return layout
     end
 
@@ -298,6 +333,7 @@ return {
           height_padding = 1,
           hide_on_startup = false,
         },
+        previewer = true,
         color_devicons = true,
         file_ignore_patterns = {
           "%.git/",
@@ -362,53 +398,81 @@ return {
         },
         buffers = {
           prompt_prefix = " Buffers: ",
+          prompt_title = false,
+          preview_title = false,
           previewer = false,
           sort_mru = true,
           ignore_current_buffer = false,
+          mappings = {
+            i = {
+              ["<c-d>"] = "delete_buffer", -- Delete buffer with Ctrl-d
+            },
+          },
         },
         help_tags = {
+          prompt_title = false,
+          preview_title = false,
           prompt_prefix = " Help Tags: ",
           wrap_results = true,
         },
         oldfiles = {
+
           prompt_prefix = " Recent Files: ",
           cwd_only = true,
           prompt_title = false,
           preview_title = false,
         },
         grep_string = {
+          prompt_title = false,
+          preview_title = false,
           prompt_prefix = " Find Current Word: ",
           only_sort_text = true,
         },
         command_history = {
+          prompt_title = false,
+          preview_title = false,
           prompt_prefix = " Command History: ",
           max_item_count = 100,
         },
         search_history = {
+          prompt_title = false,
+          preview_title = false,
           prompt_prefix = " Search History: ",
           max_item_count = 100,
         },
         git_commits = {
+          prompt_title = false,
+          preview_title = false,
           prompt_prefix = " Git Commits: ",
           preview = true,
         },
         git_branches = {
+          prompt_title = false,
+          preview_title = false,
           prompt_prefix = " Git Branches: ",
           show_remote_tracking_branch = true,
         },
         git_status = {
+          prompt_title = false,
+          preview_title = false,
           prompt_prefix = " Git Status: ",
           show_staged = true,
         },
         diagnostics = {
+          prompt_title = false,
+          preview_title = false,
           prompt_prefix = " Workspace Diagnostics: ",
           severity_sort = true,
         },
         treesitter = {
+          prompt_title = false,
+          preview_title = false,
           prompt_prefix = " Find Symbols: ",
           symbols = { "class", "function", "method", "variable" },
         },
         keymaps = {
+          prompt_title = false,
+          preview_title = false,
           prompt_prefix = " Find Keymaps: ",
           default_text = "",
         },

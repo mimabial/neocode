@@ -13,7 +13,7 @@ return {
         minimum_width = 30,
         max_width = 80,
         max_height = 20,
-        timeout = 2000,
+        timeout = 1000,
         stages = "fade",
         render = "wrapped-compact",
         top_down = true,
@@ -151,7 +151,7 @@ return {
           },
           routes = {
             { filter = { event = "msg_show", kind = "", find = "written" }, opts = { skip = true } },
-            { filter = { event = "msg_show", kind = "search_count" }, opts = { view = "virtualtext" } },
+            { filter = { event = "msg_show", kind = "search_count" },       opts = { view = "virtualtext" } },
           },
         },
         messages = {
@@ -289,7 +289,7 @@ return {
         },
         routes = {
           { filter = { event = "msg_show", kind = "", find = "written" }, opts = { skip = true } },
-          { filter = { event = "msg_show", kind = "search_count" }, opts = { view = "virtualtext" } },
+          { filter = { event = "msg_show", kind = "search_count" },       opts = { view = "virtualtext" } },
         },
       }
     end,
