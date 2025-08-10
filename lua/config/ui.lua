@@ -16,29 +16,10 @@ M.get_colors = function()
     theme_colors = _G.get_nord_colors()
   elseif vim.g.colors_name == "rose-pine" and _G.get_rose_pine_colors then
     theme_colors = _G.get_rose_pine_colors()
-  elseif vim.g.colors_name == "solarized-osaka" then
-    -- Determine which solarized variant based on settings and background
-    local cache_dir = vim.fn.stdpath("cache")
-    local settings_file = cache_dir .. "/theme_settings.json"
-    local variant = "osaka" -- default
-    -- Try to read the saved variant
-    if vim.fn.filereadable(settings_file) == 1 then
-      local content = vim.fn.readfile(settings_file)
-      if #content > 0 then
-        local ok, parsed = pcall(vim.fn.json_decode, content[1])
-        if ok and parsed and parsed.theme == "solarized" and parsed.variant then
-          variant = parsed.variant
-        end
-      end
-    end
-    -- Use appropriate color function based on variant
-    if variant == "light" and _G.get_solarized_light_colors then
-      theme_colors = _G.get_solarized_light_colors()
-    elseif variant == "dark" and _G.get_solarized_dark_colors then
-      theme_colors = _G.get_solarized_dark_colors()
-    elseif variant == "osaka" and _G.get_solarized_osaka_colors then
-      theme_colors = _G.get_solarized_osaka_colors()
-    end
+  elseif vim.g.colors_name == "solarized" and _G.get_solarized_colors then
+    theme_colors = _G.get_solarized_colors()
+  elseif vim.g.colors_name == "solarized-osaka" and _G.get_solarized_osaka_colors then
+    theme_colors = _G.get_solarized_osaka_colors()
   end
   -- If we got valid theme colors, return them
   if theme_colors and type(theme_colors) == "table" then
