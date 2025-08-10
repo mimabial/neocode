@@ -214,9 +214,9 @@ return {
         end
 
         -- Set colorscheme
-        local success = pcall(vim.cmd, "colorscheme " .. name)
+        local success = pcall(vim.cmd, "colorscheme " .. colorscheme_name)
         if not success then
-          vim.notify("Failed to load colorscheme " .. name, vim.log.levels.ERROR)
+          vim.notify("Failed to load colorscheme " .. colorscheme_name, vim.log.levels.ERROR)
           return false
         end
 
