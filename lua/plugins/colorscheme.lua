@@ -46,7 +46,7 @@ return {
       -- Theme definitions with proper metadata
       local themes = {
         ["everforest"] = {
-          icon = "󱢗 ",
+          icon = "",
           variants = { "soft", "medium", "hard" },
           apply_variant = function(variant)
             vim.g.everforest_background = variant
@@ -58,7 +58,7 @@ return {
           end,
         },
         ["gruvbox"] = {
-          icon = " ",
+          icon = "",
           variants = { "dark", "light" },
           apply_variant = function(variant)
             vim.o.background = variant
@@ -70,7 +70,7 @@ return {
           end,
         },
         ["gruvbox-material"] = {
-          icon = "󰎄 ",
+          icon = "",
           variants = { "soft", "medium", "hard" },
           apply_variant = function(variant)
             vim.g.gruvbox_material_background = variant
@@ -82,7 +82,7 @@ return {
           end,
         },
         ["kanagawa"] = {
-          icon = "󰞍 ",
+          icon = "",
           variants = { "wave", "dragon", "lotus" },
           apply_variant = function(variant)
             pcall(require("kanagawa").setup, {
@@ -100,7 +100,7 @@ return {
           end,
         },
         ["nord"] = {
-          icon = " ",
+          icon = "",
           variants = {}, -- Nord doesn't have variants
           apply_variant = function()
             return false
@@ -111,7 +111,7 @@ return {
           end,
         },
         ["rose-pine"] = {
-          icon = "󱎂 ",
+          icon = "",
           variants = { "main", "moon", "dawn" },
           apply_variant = function(variant)
             pcall(require("rose-pine").setup, { variant = variant })
@@ -122,52 +122,8 @@ return {
             return true
           end,
         },
-        ["solarized"] = {
-          icon = " ",
-          colorscheme = "solarized-dark",
-          variants = { "dark", "light" },
-          apply_variant = function(variant)
-            local colorscheme = variant == "light" and "solarized-light" or "solarized-dark"
-            pcall(require("solarized").setup, {
-              variant = variant,
-              transparent = false,
-              palette = "solarized",
-              styles = {
-                comments = { italic = true },
-                keywords = { italic = true },
-                functions = { bold = false },
-                variables = {},
-              },
-              enables = {
-                editor = true,
-                syntax = true,
-                treesitter = true,
-              },
-            })
-            pcall(vim.cmd, "colorscheme " .. colorscheme)
-            return true
-          end,
-          set_transparency = function(enable)
-            pcall(require("solarized").setup, {
-              transparent = enable,
-              palette = "solarized",
-              styles = {
-                comments = { italic = true },
-                keywords = { italic = true },
-                functions = { bold = false },
-                variables = {},
-              },
-              enables = {
-                editor = true,
-                syntax = true,
-                treesitter = true,
-              },
-            })
-            return true
-          end,
-        },
         ["solarized-osaka"] = {
-          icon = " ",
+          icon = "",
           variants = {},
           apply_variant = function()
             return false
@@ -445,7 +401,6 @@ return {
   },
 
   -- Additional themes
-
   {
     "sainnhe/everforest",
     lazy = true,
@@ -572,7 +527,6 @@ return {
       end
     end,
   },
-
   {
     "shaunsingh/nord.nvim",
     lazy = true,
@@ -612,7 +566,6 @@ return {
       end
     end,
   },
-
   {
     "rose-pine/neovim",
     name = "rose-pine",
@@ -648,59 +601,6 @@ return {
           popup_bg = palette.base,
           selection_bg = palette.highlight_low,
           selection_fg = palette.text,
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
-    end,
-  },
-  {
-    "maxmx03/solarized.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      -- Don't setup immediately - let the theme system handle it
-      _G.get_solarized_colors = function()
-        local ok, colors = pcall(require, "solarized.colors")
-        if not ok then
-          return {
-            bg = "#002b36",
-            bg1 = "#073642",
-            red = "#dc322f",
-            orange = "#cb4b16",
-            yellow = "#b58900",
-            green = "#859900",
-            aqua = "#2aa198",
-            blue = "#268bd2",
-            purple = "#6c71c4",
-            gray = "#586e75",
-            border = "#073642",
-            fg = "#839496",
-            popup_bg = "#002b36",
-            selection_bg = "#073642",
-            selection_fg = "#839496",
-            copilot = "#6CC644",
-            codeium = "#09B6A2",
-          }
-        end
-
-        local palette = colors.get_colors()
-        return {
-          bg = palette.base03,
-          bg1 = palette.base02,
-          red = palette.red,
-          orange = palette.orange,
-          yellow = palette.yellow,
-          green = palette.green,
-          aqua = palette.cyan,
-          blue = palette.blue,
-          purple = palette.violet,
-          gray = palette.base00,
-          border = palette.base01,
-          fg = palette.base0,
-          popup_bg = palette.base03,
-          selection_bg = palette.base02,
-          selection_fg = palette.base0,
           copilot = "#6CC644",
           codeium = "#09B6A2",
         }
