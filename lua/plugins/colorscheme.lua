@@ -126,11 +126,14 @@ return {
           icon = " ",
           variants = { "dark", "light" },
           apply_variant = function(variant)
-            vim.o.background = variant
+            pcall(require("solarized").setup, {
+              variant = variant,
+              transparent = false,
+            })
             return true
           end,
           set_transparency = function(enable)
-            vim.g.solarized_termtrans = enable and 1 or 0
+            pcall(require("solarized").setup, { transparent = enable })
             return true
           end,
         },
@@ -248,10 +251,8 @@ return {
         local next_idx = idx % #names + 1
         local next_theme = names[next_idx]
         local settings = load_settings()
-        vim.notify(next_idx, next_theme)
         -- Apply theme
         apply_theme(next_theme, nil, settings.transparency)
-
         -- Show notification
         local theme = themes[next_theme]
         local icon = theme and theme.icon or ""
@@ -262,10 +263,8 @@ return {
       local function toggle_transparency()
         local settings = load_settings()
         settings.transparency = not settings.transparency
-
         -- Apply theme with new transparency
         apply_theme(settings.theme, settings.variant, settings.transparency)
-
         vim.notify("Transparency " .. (settings.transparency and "enabled" or "disabled"), vim.log.levels.INFO)
       end
 
