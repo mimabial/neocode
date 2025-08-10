@@ -45,19 +45,6 @@ return {
 
       -- Theme definitions with proper metadata
       local themes = {
-        ["gruvbox-material"] = {
-          icon = "󰎄 ",
-          variants = { "soft", "medium", "hard" },
-          apply_variant = function(variant)
-            vim.g.gruvbox_material_background = variant
-            return true
-          end,
-          set_transparency = function(enable)
-            vim.g.gruvbox_material_transparent_background = enable and 1 or 0
-            return true
-          end,
-        },
-
         ["everforest"] = {
           icon = "󱢗 ",
           variants = { "soft", "medium", "hard" },
@@ -70,7 +57,30 @@ return {
             return true
           end,
         },
-
+        ["gruvbox"] = {
+          icon = " ",
+          variants = { "dark", "light" },
+          apply_variant = function(variant)
+            vim.o.background = variant
+            return true
+          end,
+          set_transparency = function(enable)
+            pcall(require("gruvbox").setup, { transparent_mode = enable })
+            return true
+          end,
+        },
+        ["gruvbox-material"] = {
+          icon = "󰎄 ",
+          variants = { "soft", "medium", "hard" },
+          apply_variant = function(variant)
+            vim.g.gruvbox_material_background = variant
+            return true
+          end,
+          set_transparency = function(enable)
+            vim.g.gruvbox_material_transparent_background = enable and 1 or 0
+            return true
+          end,
+        },
         ["kanagawa"] = {
           icon = "󰞍 ",
           variants = { "wave", "dragon", "lotus" },
@@ -89,7 +99,6 @@ return {
             return true
           end,
         },
-
         ["nord"] = {
           icon = " ",
           variants = {}, -- Nord doesn't have variants
@@ -101,7 +110,6 @@ return {
             return true
           end,
         },
-
         ["rose-pine"] = {
           icon = "󱎂 ",
           variants = { "main", "moon", "dawn" },
@@ -111,6 +119,24 @@ return {
           end,
           set_transparency = function(enable)
             pcall(require("rose-pine").setup, { disable_background = enable })
+            return true
+          end,
+        },
+        ["solarized"] = {
+          icon = " ",
+          variants = { "dark", "light", "osaka" },
+          apply_variant = function(variant)
+            if variant == "dark" then
+              vim.o.background = "dark"
+            elseif variant == "light" then
+              vim.o.background = "light"
+            elseif variant == "osaka" then
+              vim.o.background = "dark" -- osaka is dark by default
+            end
+            return true
+          end,
+          set_transparency = function(enable)
+            pcall(require("solarized-osaka").setup, { transparent = enable })
             return true
           end,
         },
@@ -181,6 +207,12 @@ return {
           theme.set_transparency(transparency)
         end
 
+        -- Special handling for solarized variants
+        local colorscheme_name = name
+        if name == "solarized" then
+          colorscheme_name = "solarized-osaka"
+        end
+
         -- Set colorscheme
         local success = pcall(vim.cmd, "colorscheme " .. name)
         if not success then
@@ -217,7 +249,7 @@ return {
         local next_idx = idx % #names + 1
         local next_theme = names[next_idx]
         local settings = load_settings()
-
+        vim.notify(next_idx, next_theme)
         -- Apply theme
         apply_theme(next_theme, nil, settings.transparency)
 
@@ -284,7 +316,7 @@ return {
             local variant_info = theme.variants
                 and #theme.variants > 0
                 and (" (" .. table.concat(theme.variants, ", ") .. ")")
-              or ""
+                or ""
             table.insert(available, theme.icon .. " " .. name .. variant_info)
           end
           vim.notify("Available themes:\n" .. table.concat(available, "\n"), vim.log.levels.INFO)
@@ -400,7 +432,60 @@ return {
       end
     end,
   },
+  {
+    "ellisonleao/gruvbox.nvim",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("gruvbox").setup({
+        terminal_colors = true,
+        undercurl = true,
+        underline = true,
+        bold = true,
+        italic = {
+          strings = true,
+          emphasis = true,
+          comments = true,
+          operators = false,
+          folds = true,
+        },
+        strikethrough = true,
+        invert_selection = false,
+        invert_signs = false,
+        invert_tabline = false,
+        invert_intend_guides = false,
+        inverse = true,
+        contrast = "", -- can be "hard", "soft" or empty string
+        palette_overrides = {},
+        overrides = {},
+        dim_inactive = false,
+        transparent_mode = false,
+      })
 
+      -- Export colors
+      _G.get_gruvbox_colors = function()
+        return {
+          bg = "#282828",
+          bg1 = "#32302f",
+          red = "#cc241d",
+          orange = "#d65d0e",
+          yellow = "#d79921",
+          green = "#98971a",
+          aqua = "#689d6a",
+          blue = "#458588",
+          purple = "#b16286",
+          gray = "#928374",
+          border = "#665c54",
+          fg = "#ebdbb2",
+          popup_bg = "#282828",
+          selection_bg = "#45403d",
+          selection_fg = "#ebdbb2",
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
+    end,
+  },
   {
     "rebelot/kanagawa.nvim",
     lazy = true,
@@ -440,7 +525,6 @@ return {
       end
     end,
   },
-
   {
     "shaunsingh/nord.nvim",
     lazy = true,
@@ -480,7 +564,6 @@ return {
       end
     end,
   },
-
   {
     "rose-pine/neovim",
     name = "rose-pine",
@@ -516,6 +599,97 @@ return {
           popup_bg = palette.base,
           selection_bg = palette.highlight_low,
           selection_fg = palette.text,
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
+    end,
+  },
+  {
+    "craftzdog/solarized-osaka.nvim",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("solarized-osaka").setup({
+        transparent = false,
+        terminal_colors = true,
+        styles = {
+          comments = { italic = true },
+          keywords = { italic = true },
+          functions = {},
+          variables = {},
+          sidebars = "dark",
+          floats = "dark",
+        },
+        sidebars = { "qf", "help" },
+        day_brightness = 0.3,
+        hide_inactive_statusline = false,
+        dim_inactive = false,
+        lualine_bold = false,
+      })
+
+      -- Export colors for different variants
+      _G.get_solarized_dark_colors = function()
+        return {
+          bg = "#002b36",
+          bg1 = "#073642",
+          red = "#dc322f",
+          orange = "#cb4b16",
+          yellow = "#b58900",
+          green = "#859900",
+          aqua = "#2aa198",
+          blue = "#268bd2",
+          purple = "#6c71c4",
+          gray = "#586e75",
+          border = "#586e75",
+          fg = "#839496",
+          popup_bg = "#002b36",
+          selection_bg = "#073642",
+          selection_fg = "#839496",
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
+
+      _G.get_solarized_light_colors = function()
+        return {
+          bg = "#fdf6e3",
+          bg1 = "#eee8d5",
+          red = "#dc322f",
+          orange = "#cb4b16",
+          yellow = "#b58900",
+          green = "#859900",
+          aqua = "#2aa198",
+          blue = "#268bd2",
+          purple = "#6c71c4",
+          gray = "#93a1a1",
+          border = "#93a1a1",
+          fg = "#657b83",
+          popup_bg = "#fdf6e3",
+          selection_bg = "#eee8d5",
+          selection_fg = "#657b83",
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
+
+      _G.get_solarized_osaka_colors = function()
+        return {
+          bg = "#1a1b26",
+          bg1 = "#24283b",
+          red = "#f7768e",
+          orange = "#ff9e64",
+          yellow = "#e0af68",
+          green = "#9ece6a",
+          aqua = "#73daca",
+          blue = "#7aa2f7",
+          purple = "#bb9af7",
+          gray = "#565f89",
+          border = "#565f89",
+          fg = "#c0caf5",
+          popup_bg = "#1a1b26",
+          selection_bg = "#24283b",
+          selection_fg = "#c0caf5",
           copilot = "#6CC644",
           codeium = "#09B6A2",
         }

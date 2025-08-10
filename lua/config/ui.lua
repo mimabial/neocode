@@ -4,7 +4,9 @@ M.get_colors = function()
   -- Try theme-specific color functions first
   local theme_colors = nil
 
-  if vim.g.colors_name == "gruvbox-material" and _G.get_gruvbox_colors then
+  if vim.g.colors_name == "gruvbox" and _G.get_gruvbox_colors then
+    theme_colors = _G.get_gruvbox_colors()
+  elseif vim.g.colors_name == "gruvbox-material" and _G.get_gruvbox_colors then
     theme_colors = _G.get_gruvbox_colors()
   elseif vim.g.colors_name == "everforest" and _G.get_everforest_colors then
     theme_colors = _G.get_everforest_colors()
@@ -14,13 +16,34 @@ M.get_colors = function()
     theme_colors = _G.get_nord_colors()
   elseif vim.g.colors_name == "rose-pine" and _G.get_rose_pine_colors then
     theme_colors = _G.get_rose_pine_colors()
+  elseif vim.g.colors_name == "solarized-osaka" then
+    -- Determine which solarized variant based on settings and background
+    local cache_dir = vim.fn.stdpath("cache")
+    local settings_file = cache_dir .. "/theme_settings.json"
+    local variant = "osaka" -- default
+    -- Try to read the saved variant
+    if vim.fn.filereadable(settings_file) == 1 then
+      local content = vim.fn.readfile(settings_file)
+      if #content > 0 then
+        local ok, parsed = pcall(vim.fn.json_decode, content[1])
+        if ok and parsed and parsed.theme == "solarized" and parsed.variant then
+          variant = parsed.variant
+        end
+      end
+    end
+    -- Use appropriate color function based on variant
+    if variant == "light" and _G.get_solarized_light_colors then
+      theme_colors = _G.get_solarized_light_colors()
+    elseif variant == "dark" and _G.get_solarized_dark_colors then
+      theme_colors = _G.get_solarized_dark_colors()
+    elseif variant == "osaka" and _G.get_solarized_osaka_colors then
+      theme_colors = _G.get_solarized_osaka_colors()
+    end
   end
-
   -- If we got valid theme colors, return them
   if theme_colors and type(theme_colors) == "table" then
     return theme_colors
   end
-
   -- Fallback to extracting from highlight groups
   local function get_hl_color(group, attr, fallback)
     local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group })
@@ -33,7 +56,6 @@ M.get_colors = function()
     end
     return tostring(val)
   end
-
   -- Base gruvbox-compatible palette as fallback
   return {
     bg = get_hl_color("Normal", "bg", "#282828"),
@@ -79,15 +101,15 @@ end
 M.config = {
   -- Standard float window configuration - base for all UI elements
   float = {
-    border = "single", -- Consistent border style
-    padding = { 0, 1 }, -- Consistent padding
-    max_width = 80, -- Reasonable max width
-    max_height = 20, -- Reasonable max height
+    border = "single",   -- Consistent border style
+    padding = { 0, 1 },  -- Consistent padding
+    max_width = 80,      -- Reasonable max width
+    max_height = 20,     -- Reasonable max height
     win_options = {
-      winblend = 0, -- No transparency
+      winblend = 0,      -- No transparency
       cursorline = true, -- Highlight current line
       signcolumn = "no", -- No sign column in floats
-      wrap = false, -- No wrapping by default
+      wrap = false,      -- No wrapping by default
     },
   },
 }
@@ -223,20 +245,20 @@ M.setup_highlights = function()
   vim.api.nvim_set_hl(0, "TelescopePromptPrefix", { fg = colors.blue })
 
   -- Stack-specific syntax highlights
-  if vim.g.current_stack == "goth" or vim.g.current_stack == "goth+nextjs" then
+  if vim.g.current_stack == "goth" then
     vim.api.nvim_set_hl(0, "@type.go", { fg = colors.yellow, bold = true })
     vim.api.nvim_set_hl(0, "@function.go", { fg = colors.blue })
     vim.api.nvim_set_hl(0, "@attribute.htmx", { fg = colors.green, italic = true, bold = true })
     vim.api.nvim_set_hl(0, "@tag.attribute.htmx", { fg = colors.green, italic = true, bold = true })
   end
 
-  if vim.g.current_stack == "nextjs" or vim.g.current_stack == "goth+nextjs" then
+  if vim.g.current_stack == "nextjs" then
     vim.api.nvim_set_hl(0, "@tag.tsx", { fg = colors.red })
-    vim.api.nvim_set_hl(0, "@tag.jsx", { fg = colors.red }) -- Added JSX support
+    vim.api.nvim_set_hl(0, "@tag.jsx", { fg = colors.red })              -- Added JSX support
     vim.api.nvim_set_hl(0, "@tag.delimiter.tsx", { fg = colors.orange })
     vim.api.nvim_set_hl(0, "@tag.delimiter.jsx", { fg = colors.orange }) -- Added JSX support
     vim.api.nvim_set_hl(0, "@constructor.tsx", { fg = colors.purple })
-    vim.api.nvim_set_hl(0, "@constructor.jsx", { fg = colors.purple }) -- Added JSX support
+    vim.api.nvim_set_hl(0, "@constructor.jsx", { fg = colors.purple })   -- Added JSX support
   end
 
   -- Trigger refresh event for other components

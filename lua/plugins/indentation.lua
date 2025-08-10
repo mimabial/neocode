@@ -8,15 +8,6 @@ return {
 
       -- Define highlight groups immediately
       local colors = {
-        ["gruvbox-material"] = {
-          "#ea6962", -- Red
-          "#d8a657", -- Yellow
-          "#7daea3", -- Blue
-          "#e78a4e", -- Orange
-          "#89b482", -- Green
-          "#d3869b", -- Purple
-          "#a9b665", -- Light green
-        },
         ["everforest"] = {
           "#e67e80", -- Red
           "#dbbc7f", -- Yellow
@@ -25,6 +16,24 @@ return {
           "#a7c080", -- Green
           "#d699b6", -- Purple
           "#83c092", -- Aqua
+        },
+        ["gruvbox"] = {
+          "#cc241d", -- Red
+          "#d79921", -- Yellow
+          "#458588", -- Blue
+          "#d65d0e", -- Orange
+          "#98971a", -- Green
+          "#b16286", -- Purple
+          "#689d6a", -- Aqua
+        },
+        ["gruvbox-material"] = {
+          "#ea6962", -- Red
+          "#d8a657", -- Yellow
+          "#7daea3", -- Blue
+          "#e78a4e", -- Orange
+          "#89b482", -- Green
+          "#d3869b", -- Purple
+          "#a9b665", -- Light green
         },
         ["kanagawa"] = {
           "#c34043", -- Red
@@ -52,6 +61,15 @@ return {
           "#3e8fb0", -- Green
           "#c4a7e7", -- Purple
           "#31748f", -- Teal
+        },
+        ["solarized-osaka"] = {
+          "#f7768e", -- Red
+          "#e0af68", -- Yellow
+          "#7aa2f7", -- Blue
+          "#ff9e64", -- Orange
+          "#9ece6a", -- Green
+          "#bb9af7", -- Purple
+          "#73daca", -- Aqua
         },
       }
 
