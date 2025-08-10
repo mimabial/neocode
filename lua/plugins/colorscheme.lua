@@ -124,16 +124,21 @@ return {
         },
         ["solarized"] = {
           icon = " ",
-          variants = { "dark", "light", "osaka" },
+          variants = { "dark", "light" },
           apply_variant = function(variant)
-            if variant == "dark" then
-              vim.o.background = "dark"
-            elseif variant == "light" then
-              vim.o.background = "light"
-            elseif variant == "osaka" then
-              vim.o.background = "dark" -- osaka is dark by default
-            end
+            vim.o.background = variant
             return true
+          end,
+          set_transparency = function(enable)
+            vim.g.solarized_termtrans = enable and 1 or 0
+            return true
+          end,
+        },
+        ["solarized-osaka"] = {
+          icon = " ",
+          variants = {},
+          apply_variant = function()
+            return false
           end,
           set_transparency = function(enable)
             pcall(require("solarized-osaka").setup, { transparent = enable })
@@ -207,16 +212,10 @@ return {
           theme.set_transparency(transparency)
         end
 
-        -- Special handling for solarized variants
-        local colorscheme_name = name
-        if name == "solarized" then
-          colorscheme_name = "solarized-osaka"
-        end
-
         -- Set colorscheme
-        local success = pcall(vim.cmd, "colorscheme " .. colorscheme_name)
+        local success = pcall(vim.cmd, "colorscheme " .. name)
         if not success then
-          vim.notify("Failed to load colorscheme " .. colorscheme_name, vim.log.levels.ERROR)
+          vim.notify("Failed to load colorscheme " .. name, vim.log.levels.ERROR)
           return false
         end
 
@@ -293,12 +292,7 @@ return {
         end
 
         local next_variant = theme.variants[next_idx]
-
-        -- Apply next variant
         apply_theme(current, next_variant, settings.transparency)
-
-        -- Show notification
-        local icon = theme.icon or ""
         vim.notify("Changed " .. current .. " variant to " .. next_variant, vim.log.levels.INFO)
       end
 
@@ -606,6 +600,53 @@ return {
     end,
   },
   {
+    "maxmx03/solarized.nvim",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("solarized").setup({
+        transparent = false,
+        palette = "solarized",
+        styles = {
+          comments = { italic = true },
+          keywords = { italic = true },
+          functions = { bold = false },
+          variables = {},
+        },
+        enables = {
+          editor = true,
+          syntax = true,
+          treesitter = true,
+        },
+      })
+
+      _G.get_solarized_colors = function()
+        local colors = require("solarized.colors")
+        local palette = colors.get_colors()
+
+        return {
+          bg = palette.base03,
+          bg1 = palette.base02,
+          red = palette.red,
+          orange = palette.orange,
+          yellow = palette.yellow,
+          green = palette.green,
+          aqua = palette.cyan,
+          blue = palette.blue,
+          purple = palette.violet,
+          gray = palette.base00,
+          border = palette.base01,
+          fg = palette.base0,
+          popup_bg = palette.base03,
+          selection_bg = palette.base02,
+          selection_fg = palette.base0,
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
+    end,
+  },
+  {
     "craftzdog/solarized-osaka.nvim",
     lazy = true,
     priority = 950,
@@ -627,51 +668,6 @@ return {
         dim_inactive = false,
         lualine_bold = false,
       })
-
-      -- Export colors for different variants
-      _G.get_solarized_dark_colors = function()
-        return {
-          bg = "#002b36",
-          bg1 = "#073642",
-          red = "#dc322f",
-          orange = "#cb4b16",
-          yellow = "#b58900",
-          green = "#859900",
-          aqua = "#2aa198",
-          blue = "#268bd2",
-          purple = "#6c71c4",
-          gray = "#586e75",
-          border = "#586e75",
-          fg = "#839496",
-          popup_bg = "#002b36",
-          selection_bg = "#073642",
-          selection_fg = "#839496",
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
-
-      _G.get_solarized_light_colors = function()
-        return {
-          bg = "#fdf6e3",
-          bg1 = "#eee8d5",
-          red = "#dc322f",
-          orange = "#cb4b16",
-          yellow = "#b58900",
-          green = "#859900",
-          aqua = "#2aa198",
-          blue = "#268bd2",
-          purple = "#6c71c4",
-          gray = "#93a1a1",
-          border = "#93a1a1",
-          fg = "#657b83",
-          popup_bg = "#fdf6e3",
-          selection_bg = "#eee8d5",
-          selection_fg = "#657b83",
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
 
       _G.get_solarized_osaka_colors = function()
         return {
