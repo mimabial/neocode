@@ -47,8 +47,6 @@ return {
       local themes = {
         ["everforest"] = {
           icon = "󱢗 ",
-          plugin = "everforest",
-          colorscheme = "everforest",
           variants = { "soft", "medium", "hard" },
           apply_variant = function(variant)
             vim.g.everforest_background = variant
@@ -61,8 +59,6 @@ return {
         },
         ["gruvbox"] = {
           icon = " ",
-          plugin = "gruvbox.nvim",
-          colorscheme = "gruvbox",
           variants = { "dark", "light" },
           apply_variant = function(variant)
             vim.o.background = variant
@@ -75,8 +71,6 @@ return {
         },
         ["gruvbox-material"] = {
           icon = "󰎄 ",
-          plugin = "gruvbox-material",
-          colorscheme = "gruvbox-material",
           variants = { "soft", "medium", "hard" },
           apply_variant = function(variant)
             vim.g.gruvbox_material_background = variant
@@ -89,8 +83,6 @@ return {
         },
         ["kanagawa"] = {
           icon = "󰞍 ",
-          plugin = "kanagawa.nvim",
-          colorscheme = "kanagawa",
           variants = { "wave", "dragon", "lotus" },
           apply_variant = function(variant)
             pcall(require("kanagawa").setup, {
@@ -109,8 +101,6 @@ return {
         },
         ["nord"] = {
           icon = " ",
-          plugin = "nord.nvim",
-          colorscheme = "nord",
           variants = {}, -- Nord doesn't have variants
           apply_variant = function()
             return false
@@ -122,8 +112,6 @@ return {
         },
         ["rose-pine"] = {
           icon = "󱎂 ",
-          plugin = "rose-pine",
-          colorscheme = "rose-pine",
           variants = { "main", "moon", "dawn" },
           apply_variant = function(variant)
             pcall(require("rose-pine").setup, { variant = variant })
@@ -136,31 +124,72 @@ return {
         },
         ["solarized"] = {
           icon = " ",
-          plugin = "solarized.nvim",
-          colorscheme = "solarized",
+          colorscheme = "solarized-dark",
           variants = { "dark", "light" },
           apply_variant = function(variant)
+            local colorscheme = variant == "light" and "solarized-light" or "solarized-dark"
             pcall(require("solarized").setup, {
               variant = variant,
               transparent = false,
+              palette = "solarized",
+              styles = {
+                comments = { italic = true },
+                keywords = { italic = true },
+                functions = { bold = false },
+                variables = {},
+              },
+              enables = {
+                editor = true,
+                syntax = true,
+                treesitter = true,
+              },
             })
+            pcall(vim.cmd, "colorscheme " .. colorscheme)
             return true
           end,
           set_transparency = function(enable)
-            pcall(require("solarized").setup, { transparent = enable })
+            pcall(require("solarized").setup, {
+              transparent = enable,
+              palette = "solarized",
+              styles = {
+                comments = { italic = true },
+                keywords = { italic = true },
+                functions = { bold = false },
+                variables = {},
+              },
+              enables = {
+                editor = true,
+                syntax = true,
+                treesitter = true,
+              },
+            })
             return true
           end,
         },
         ["solarized-osaka"] = {
           icon = " ",
-          plugin = "solarized-osaka.nvim",
-          colorscheme = "solarized-osaka",
           variants = {},
           apply_variant = function()
             return false
           end,
           set_transparency = function(enable)
-            pcall(require("solarized-osaka").setup, { transparent = enable })
+            pcall(require("solarized-osaka").setup, {
+              transparent = enable,
+              terminal_colors = true,
+              styles = {
+                comments = { italic = true },
+                keywords = { italic = true },
+                functions = {},
+                variables = {},
+                sidebars = enable and "transparent" or "dark",
+                floats = enable and "transparent" or "dark",
+              },
+              sidebars = { "qf", "help" },
+              day_brightness = 0.3,
+              hide_inactive_statusline = false,
+              dim_inactive = false,
+              lualine_bold = false,
+            })
             return true
           end,
         },
@@ -221,14 +250,6 @@ return {
           theme = themes[name]
         end
 
-        -- Ensure plugin is loaded
-        if theme.plugin then
-          local lazy_ok, lazy = pcall(require, "lazy")
-          if lazy_ok then
-            pcall(lazy.load, { plugins = { theme.plugin } })
-          end
-        end
-
         -- Apply variant (before colorscheme)
         if variant and theme.variants and vim.tbl_contains(theme.variants, variant) then
           theme.apply_variant(variant)
@@ -239,24 +260,11 @@ return {
           theme.set_transparency(transparency)
         end
 
-        -- Set colorscheme with fallback
-        local colorscheme = theme.colorscheme or name
-        local success = pcall(vim.cmd, "colorscheme " .. colorscheme)
+        -- Set colorscheme
+        local success = pcall(vim.cmd, "colorscheme " .. name)
         if not success then
-          -- Try loading plugin first if it failed
-          if theme.plugin then
-            local lazy_ok, lazy = pcall(require, "lazy")
-            if lazy_ok then
-              pcall(lazy.load, { plugins = { theme.plugin } })
-              -- Retry colorscheme
-              success = pcall(vim.cmd, "colorscheme " .. colorscheme)
-            end
-          end
-
-          if not success then
-            vim.notify("Failed to load colorscheme " .. colorscheme, vim.log.levels.ERROR)
-            return false
-          end
+          vim.notify("Failed to load colorscheme " .. name, vim.log.levels.ERROR)
+          return false
         end
 
         -- Save settings
@@ -288,8 +296,10 @@ return {
         local next_idx = idx % #names + 1
         local next_theme = names[next_idx]
         local settings = load_settings()
+
         -- Apply theme
         apply_theme(next_theme, nil, settings.transparency)
+
         -- Show notification
         local theme = themes[next_theme]
         local icon = theme and theme.icon or ""
@@ -300,8 +310,10 @@ return {
       local function toggle_transparency()
         local settings = load_settings()
         settings.transparency = not settings.transparency
+
         -- Apply theme with new transparency
         apply_theme(settings.theme, settings.variant, settings.transparency)
+
         vim.notify("Transparency " .. (settings.transparency and "enabled" or "disabled"), vim.log.levels.INFO)
       end
 
@@ -328,7 +340,12 @@ return {
         end
 
         local next_variant = theme.variants[next_idx]
+
+        -- Apply next variant
         apply_theme(current, next_variant, settings.transparency)
+
+        -- Show notification
+        local icon = theme.icon or ""
         vim.notify("Changed " .. current .. " variant to " .. next_variant, vim.log.levels.INFO)
       end
 
@@ -555,6 +572,7 @@ return {
       end
     end,
   },
+
   {
     "shaunsingh/nord.nvim",
     lazy = true,
@@ -594,6 +612,7 @@ return {
       end
     end,
   },
+
   {
     "rose-pine/neovim",
     name = "rose-pine",
@@ -640,26 +659,32 @@ return {
     lazy = true,
     priority = 950,
     config = function()
-      require("solarized").setup({
-        transparent = false,
-        palette = "solarized",
-        styles = {
-          comments = { italic = true },
-          keywords = { italic = true },
-          functions = { bold = false },
-          variables = {},
-        },
-        enables = {
-          editor = true,
-          syntax = true,
-          treesitter = true,
-        },
-      })
-
+      -- Don't setup immediately - let the theme system handle it
       _G.get_solarized_colors = function()
-        local colors = require("solarized.colors")
-        local palette = colors.get_colors()
+        local ok, colors = pcall(require, "solarized.colors")
+        if not ok then
+          return {
+            bg = "#002b36",
+            bg1 = "#073642",
+            red = "#dc322f",
+            orange = "#cb4b16",
+            yellow = "#b58900",
+            green = "#859900",
+            aqua = "#2aa198",
+            blue = "#268bd2",
+            purple = "#6c71c4",
+            gray = "#586e75",
+            border = "#073642",
+            fg = "#839496",
+            popup_bg = "#002b36",
+            selection_bg = "#073642",
+            selection_fg = "#839496",
+            copilot = "#6CC644",
+            codeium = "#09B6A2",
+          }
+        end
 
+        local palette = colors.get_colors()
         return {
           bg = palette.base03,
           bg1 = palette.base02,
@@ -687,24 +712,7 @@ return {
     lazy = true,
     priority = 950,
     config = function()
-      require("solarized-osaka").setup({
-        transparent = false,
-        terminal_colors = true,
-        styles = {
-          comments = { italic = true },
-          keywords = { italic = true },
-          functions = {},
-          variables = {},
-          sidebars = "dark",
-          floats = "dark",
-        },
-        sidebars = { "qf", "help" },
-        day_brightness = 0.3,
-        hide_inactive_statusline = false,
-        dim_inactive = false,
-        lualine_bold = false,
-      })
-
+      -- Don't setup immediately - let the theme system handle it
       _G.get_solarized_osaka_colors = function()
         return {
           bg = "#1a1b26",
