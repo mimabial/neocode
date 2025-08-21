@@ -42,7 +42,7 @@ return {
 
       local lspconfig_defaults = require("lspconfig").util.default_config
       lspconfig_defaults.capabilities =
-        vim.tbl_deep_extend("force", lspconfig_defaults.capabilities, require("cmp_nvim_lsp").default_capabilities())
+          vim.tbl_deep_extend("force", lspconfig_defaults.capabilities, require("cmp_nvim_lsp").default_capabilities())
 
       -- Configure keymaps when LSP attaches to buffer
       local on_attach = function(client, bufnr)
@@ -127,26 +127,21 @@ return {
 
       require("mason-lspconfig").setup({
         ensure_installed = {
-          -- Core language servers for both stacks
-          "lua_ls",
-          -- GOTH stack
-          "gopls",
-          "templ",
-          "html",
-          -- Next.js stack
-          "tailwindcss",
-          "cssls",
-          "eslint",
-          "jsonls",
+          "lua_ls", -- Always available
         },
-        automatic_installation = true,
+        automatic_installation = false,
         handlers = {
-          -- Default handler for servers without custom config
+          -- Default handler
           function(server_name)
-            require("lspconfig")[server_name].setup({
-              on_attach = on_attach,
-              capabilities = capabilities,
-            })
+            local ok, lspconfig = pcall(require, "lspconfig")
+            if not ok then return end
+
+            pcall(function()
+              lspconfig[server_name].setup({
+                on_attach = on_attach,
+                capabilities = capabilities,
+              })
+            end)
           end,
 
           -- Custom handlers for specific servers
@@ -366,7 +361,7 @@ return {
       -- Set up LSP handlers with borders
       vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" })
       vim.lsp.handlers["textDocument/signatureHelp"] =
-        vim.lsp.with(vim.lsp.handlers.signature_help, { border = "single" })
+          vim.lsp.with(vim.lsp.handlers.signature_help, { border = "single" })
     end,
   },
 
