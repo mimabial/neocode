@@ -65,43 +65,11 @@ return {
           icon = "",
           variants = { "latte", "frappe", "macchiato", "mocha" },
           apply_variant = function(variant)
-            require("catppuccin").setup({
-              flavour = variant,
-              transparent_background = false,
-              term_colors = true,
-              compile_enable = true,
-              compile_path = vim.fn.stdpath("cache") .. "/catppuccin",
-              styles = { comments = { "italic" }, conditionals = { "italic" } },
-              integrations = {
-                cmp = true,
-                gitsigns = true,
-                nvimtree = true,
-                telescope = true,
-                treesitter = true,
-                which_key = true
-              },
-            })
-            vim.cmd("colorscheme catppuccin")
+            pcall(require("catppuccin").setup, { flavour = variant })
             return true
           end,
           set_transparency = function(enable)
-            require("catppuccin").setup({
-              flavour = require("catppuccin").options.flavour or "mocha", -- preserve current flavour
-              transparent_background = enable,
-              term_colors = true,
-              compile_enable = true,
-              compile_path = vim.fn.stdpath("cache") .. "/catppuccin",
-              styles = { comments = { "italic" }, conditionals = { "italic" } },
-              integrations = {
-                cmp = true,
-                gitsigns = true,
-                nvimtree = true,
-                telescope = true,
-                treesitter = true,
-                which_key = true
-              },
-            })
-            vim.cmd("colorscheme catppuccin")
+            pcall(require("catppuccin").setup, { transparent_background = enable })
             return true
           end,
         },
@@ -246,7 +214,14 @@ return {
 
       local function cycle_variant()
         local current = vim.g.colors_name or "kanagawa"
-        local theme = themes[current]
+
+        -- Handle catppuccin compiled names
+        local theme_name = current
+        if current:match("^catppuccin%-") then
+          theme_name = "catppuccin"
+        end
+
+        local theme = themes[theme_name]
 
         if not theme or not theme.variants or #theme.variants == 0 then
           vim.notify("Current theme doesn't have variants", vim.log.levels.WARN)
@@ -363,22 +338,8 @@ return {
     lazy = true,
     priority = 950,
     config = function()
-      -- Get saved settings to determine initial flavour
-      local settings_file = vim.fn.stdpath("data") .. "/theme_settings.json"
-      local default_flavour = "mocha"
-
-      if vim.fn.filereadable(settings_file) == 1 then
-        local content = vim.fn.readfile(settings_file)[1]
-        if content then
-          local ok, settings = pcall(vim.fn.json_decode, content)
-          if ok and settings and settings.theme == "catppuccin" and settings.variant then
-            default_flavour = settings.variant
-          end
-        end
-      end
-
       require("catppuccin").setup({
-        flavour = default_flavour,
+        flavour = "mocha",
         transparent_background = false,
         term_colors = true,
         compile_enable = true,
@@ -386,7 +347,6 @@ return {
         styles = { comments = { "italic" }, conditionals = { "italic" } },
         integrations = { cmp = true, gitsigns = true, nvimtree = true, telescope = true, treesitter = true, which_key = true },
       })
-
       _G.get_catppuccin_colors = function()
         local colors = require("catppuccin.palettes").get_palette()
         return {
