@@ -69,18 +69,6 @@ return {
             return true
           end,
         },
-        ["gruvbox-material"] = {
-          icon = "",
-          variants = { "soft", "medium", "hard" },
-          apply_variant = function(variant)
-            vim.g.gruvbox_material_background = variant
-            return true
-          end,
-          set_transparency = function(enable)
-            vim.g.gruvbox_material_transparent_background = enable and 1 or 0
-            return true
-          end,
-        },
         ["kanagawa"] = {
           icon = "",
           variants = { "wave", "dragon", "lotus" },
