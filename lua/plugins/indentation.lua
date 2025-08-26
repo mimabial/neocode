@@ -8,6 +8,15 @@ return {
 
       -- Define highlight groups immediately
       local colors = {
+        ["catppuccin"] = {
+          "#f38ba8", -- Red/Pink
+          "#f9e2af", -- Yellow
+          "#89b4fa", -- Blue
+          "#fab387", -- Peach
+          "#a6e3a1", -- Green
+          "#cba6f7", -- Mauve
+          "#94e2d5", -- Teal
+        },
         ["everforest"] = {
           "#e67e80", -- Red
           "#dbbc7f", -- Yellow
@@ -25,15 +34,6 @@ return {
           "#98971a", -- Green
           "#b16286", -- Purple
           "#689d6a", -- Aqua
-        },
-        ["gruvbox-material"] = {
-          "#ea6962", -- Red
-          "#d8a657", -- Yellow
-          "#7daea3", -- Blue
-          "#e78a4e", -- Orange
-          "#89b482", -- Green
-          "#d3869b", -- Purple
-          "#a9b665", -- Light green
         },
         ["kanagawa"] = {
           "#c34043", -- Red
@@ -75,8 +75,8 @@ return {
 
       local function set_rainbow_colors()
         -- Select color palette based on current theme
-        local colorscheme = vim.g.colors_name or "gruvbox-material"
-        local palette = colors[colorscheme] or colors["gruvbox-material"]
+        local colorscheme = vim.g.colors_name or "gruvbox"
+        local palette = colors[colorscheme] or colors["gruvbox"]
 
         -- Directly set highlight groups - not just returning them
         for i, color in ipairs(palette) do
@@ -86,7 +86,7 @@ return {
       end
 
       -- Set initial colors
-      set_rainbow_colors()
+      vim.defer_fn(set_rainbow_colors, 100)
 
       -- Now setup rainbow delimiters with the highlights
       vim.g.rainbow_delimiters = {

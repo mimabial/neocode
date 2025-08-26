@@ -45,6 +45,19 @@ return {
 
       -- Theme definitions with proper metadata
       local themes = {
+        ["catppuccin"] = {
+          icon = "",
+          variants = { "latte", "frappe", "macchiato", "mocha" },
+          apply_variant = function(variant)
+            pcall(require("catppuccin").setup, { flavour = variant })
+            pcall(vim.cmd, "colorscheme catppuccin")
+            return true
+          end,
+          set_transparency = function(enable)
+            pcall(require("catppuccin").setup, { transparent_background = enable })
+            return true
+          end,
+        },
         ["everforest"] = {
           icon = "",
           variants = { "soft", "medium", "hard" },
@@ -389,6 +402,57 @@ return {
   },
 
   -- Additional themes
+  {
+    "catppuccin/nvim",
+    name = "catppuccin",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("catppuccin").setup({
+        flavour = "mocha",
+        transparent_background = false,
+        term_colors = true,
+        compile_enable = true,
+        compile_path = vim.fn.stdpath("cache") .. "/catppuccin",
+        styles = {
+          comments = { "italic" },
+          conditionals = { "italic" },
+        },
+        integrations = {
+          cmp = true,
+          gitsigns = true,
+          nvimtree = true,
+          telescope = true,
+          treesitter = true,
+          which_key = true,
+        },
+      })
+
+      -- Export colors
+      _G.get_catppuccin_colors = function()
+        local colors = require("catppuccin.palettes").get_palette()
+        return {
+          bg = colors.base,
+          bg1 = colors.mantle,
+          fg = colors.text,
+          red = colors.red,
+          green = colors.green,
+          yellow = colors.yellow,
+          blue = colors.blue,
+          purple = colors.mauve,
+          aqua = colors.teal,
+          orange = colors.peach,
+          gray = colors.surface1,
+          border = colors.surface0,
+          popup_bg = colors.base,
+          selection_bg = colors.surface0,
+          selection_fg = colors.text,
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
+    end,
+  },
   {
     "sainnhe/everforest",
     lazy = true,
