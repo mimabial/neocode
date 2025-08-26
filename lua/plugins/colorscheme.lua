@@ -7,51 +7,59 @@ return {
     config = function()
       require("kanagawa").setup({
         theme = "wave",
-        background = {
-          dark = "wave",
-          light = "lotus",
-        },
+        background = { dark = "wave", light = "lotus" },
         transparent = false,
         dimInactive = false,
         terminalColors = true,
-        colors = {
-          palette = {},
-          theme = { wave = {}, lotus = {}, dragon = {}, all = {} },
-        },
-        overrides = function(colors)
-          return {}
-        end,
+        colors = { palette = {}, theme = { wave = {}, lotus = {}, dragon = {}, all = {} } },
+        overrides = function(colors) return {} end,
       })
 
       -- Export colors for other plugins
       _G.get_kanagawa_colors = function()
         local colors = require("kanagawa.colors").setup()
+        local p = colors.palette
         return {
-          bg = colors.sumiInk0,
-          bg1 = colors.sumiInk1,
-          red = colors.autumnRed,
-          orange = colors.autumnOrange,
-          yellow = colors.autumnYellow,
-          green = colors.autumnGreen,
-          aqua = colors.waveAqua1,
-          blue = colors.crystalBlue,
-          purple = colors.oniViolet,
-          gray = colors.fujiGray,
-          border = colors.sumiInk4,
-          fg = colors.fujiWhite,
-          popup_bg = colors.sumiInk0,
-          selection_bg = colors.waveBlue1,
-          selection_fg = colors.fujiWhite,
+          bg = p.sumiInk1,
+          bg1 = p.sumiInk2,
+          fg = p.fujiWhite,
+          red = p.autumnRed,
+          green = p.springGreen,
+          yellow = p.carpYellow,
+          blue = p.crystalBlue,
+          purple = p.oniViolet,
+          aqua = p.waveAqua1,
+          orange = p.surimiOrange,
+          gray = p.fujiGray,
+          border = p.sumiInk4,
+          popup_bg = p.sumiInk1,
+          selection_bg = p.sumiInk4,
+          selection_fg = p.fujiWhite,
           copilot = "#6CC644",
           codeium = "#09B6A2",
         }
       end
 
-      -- Theme management code
+      -- Theme management system
       local cache_dir = vim.fn.stdpath("cache")
       local settings_file = cache_dir .. "/theme_settings.json"
 
-      -- Theme definitions with proper metadata
+      local function load_settings()
+        local ok, content = pcall(vim.fn.readfile, settings_file)
+        if ok and content[1] then
+          local success, data = pcall(vim.json.decode, content[1])
+          if success then return data end
+        end
+        return { theme = "kanagawa", variant = nil, transparency = false }
+      end
+
+      local function save_settings(settings)
+        vim.fn.mkdir(cache_dir, "p")
+        local content = vim.json.encode(settings)
+        vim.fn.writefile({ content }, settings_file)
+      end
+
+      -- Theme definitions
       local themes = {
         ["catppuccin"] = {
           icon = "",
@@ -89,16 +97,25 @@ return {
             return true
           end,
         },
+        ["gruvbox-material"] = {
+          icon = "",
+          variants = { "soft", "medium", "hard" },
+          apply_variant = function(variant)
+            vim.g.gruvbox_material_background = variant
+            return true
+          end,
+          set_transparency = function(enable)
+            vim.g.gruvbox_material_transparent_background = enable and 1 or 0
+            return true
+          end,
+        },
         ["kanagawa"] = {
           icon = "",
           variants = { "wave", "dragon", "lotus" },
           apply_variant = function(variant)
             pcall(require("kanagawa").setup, {
               theme = variant,
-              background = {
-                dark = variant,
-                light = "lotus",
-              },
+              background = { dark = variant, light = "lotus" },
             })
             return true
           end,
@@ -109,10 +126,8 @@ return {
         },
         ["nord"] = {
           icon = "",
-          variants = {}, -- Nord doesn't have variants
-          apply_variant = function()
-            return false
-          end,
+          variants = {},
+          apply_variant = function() return false end,
           set_transparency = function(enable)
             vim.g.nord_disable_background = enable
             return true
@@ -130,83 +145,27 @@ return {
             return true
           end,
         },
+        ["solarized"] = {
+          icon = "",
+          variants = { "dark", "light" },
+          apply_variant = function(variant)
+            vim.o.background = variant
+            return true
+          end,
+          set_transparency = function() return false end,
+        },
         ["solarized-osaka"] = {
           icon = "",
           variants = {},
-          apply_variant = function()
-            return false
-          end,
+          apply_variant = function() return false end,
           set_transparency = function(enable)
-            pcall(require("solarized-osaka").setup, {
-              transparent = enable,
-              terminal_colors = true,
-              styles = {
-                comments = { italic = true },
-                keywords = { italic = true },
-                functions = {},
-                variables = {},
-                sidebars = enable and "transparent" or "dark",
-                floats = enable and "transparent" or "dark",
-              },
-              sidebars = { "qf", "help" },
-              day_brightness = 0.3,
-              hide_inactive_statusline = false,
-              dim_inactive = false,
-              lualine_bold = false,
-            })
+            pcall(require("solarized-osaka").setup, { transparent = enable })
             return true
           end,
         },
       }
 
-      -- Load theme settings
-      local function load_settings()
-        local default = { theme = "kanagawa", variant = "medium", transparency = false }
-
-        -- Check if file exists and is readable
-        if vim.fn.filereadable(settings_file) == 0 then
-          return default
-        end
-
-        -- Read file content
-        local content = vim.fn.readfile(settings_file)
-        if #content == 0 then
-          return default
-        end
-
-        -- Parse JSON safely
-        local ok, parsed = pcall(vim.fn.json_decode, table.concat(content, ""))
-        if not ok or type(parsed) ~= "table" then
-          return default
-        end
-
-        return {
-          theme = parsed.theme or default.theme,
-          variant = parsed.variant or default.variant,
-          transparency = parsed.transparency or default.transparency,
-        }
-      end
-
-      -- Save theme settings
-      local function save_settings(settings)
-        -- Ensure cache directory exists
-        vim.fn.mkdir(cache_dir, "p")
-
-        -- Convert to JSON
-        local ok, json = pcall(vim.fn.json_encode, settings)
-        if not ok then
-          vim.notify("Failed to encode theme settings", vim.log.levels.ERROR)
-          return false
-        end
-
-        -- Write to file
-        local success = pcall(vim.fn.writefile, { json }, settings_file)
-        return success
-      end
-
-      -- Apply theme
       local function apply_theme(name, variant, transparency)
-        -- Get theme info
         local theme = themes[name]
         if not theme then
           vim.notify("Theme '" .. name .. "' not found, using kanagawa", vim.log.levels.WARN)
@@ -214,12 +173,10 @@ return {
           theme = themes[name]
         end
 
-        -- Apply variant (before colorscheme)
+        -- Apply variant and transparency before colorscheme
         if variant and theme.variants and vim.tbl_contains(theme.variants, variant) then
           theme.apply_variant(variant)
         end
-
-        -- Apply transparency (before colorscheme)
         if transparency ~= nil then
           theme.set_transparency(transparency)
         end
@@ -231,70 +188,42 @@ return {
           return false
         end
 
-        -- Save settings
-        save_settings({
-          theme = name,
-          variant = variant,
-          transparency = transparency,
-        })
-
+        save_settings({ theme = name, variant = variant, transparency = transparency })
         return true
       end
 
-      -- Toggle through themes
       local function cycle_theme()
         local current = vim.g.colors_name or "kanagawa"
         local names = vim.tbl_keys(themes)
         table.sort(names)
 
-        -- Find current index
         local idx = 1
         for i, name in ipairs(names) do
           if name == current then
-            idx = i
-            break
+            idx = i; break
           end
         end
 
-        -- Get next theme
-        local next_idx = idx % #names + 1
-        local next_theme = names[next_idx]
+        local next_theme = names[idx % #names + 1]
         local settings = load_settings()
-
-        -- Apply theme
         apply_theme(next_theme, nil, settings.transparency)
 
-        -- Show notification
-        local theme = themes[next_theme]
-        local icon = theme and theme.icon or ""
+        local icon = themes[next_theme].icon or ""
         vim.notify(icon .. "Switched to " .. next_theme, vim.log.levels.INFO)
-      end
-
-      -- Toggle transparency
-      local function toggle_transparency()
-        local settings = load_settings()
-        settings.transparency = not settings.transparency
-
-        -- Apply theme with new transparency
-        apply_theme(settings.theme, settings.variant, settings.transparency)
-
-        vim.notify("Transparency " .. (settings.transparency and "enabled" or "disabled"), vim.log.levels.INFO)
       end
 
       local function cycle_variant()
         local current = vim.g.colors_name or "kanagawa"
         local theme = themes[current]
-        vim.notify("Current theme: " .. current, vim.log.levels.INFO)
+
         if not theme or not theme.variants or #theme.variants == 0 then
           vim.notify("Current theme doesn't have variants", vim.log.levels.WARN)
           return
         end
 
-        -- Load current settings
         local settings = load_settings()
         local current_variant = settings.variant or theme.variants[1]
 
-        -- Find next variant in cycle
         local next_idx = 1
         for i, variant in ipairs(theme.variants) do
           if variant == current_variant then
@@ -304,61 +233,56 @@ return {
         end
 
         local next_variant = theme.variants[next_idx]
-
-        -- Apply next variant
         apply_theme(current, next_variant, settings.transparency)
 
-        -- Show notification
         local icon = theme.icon or ""
-        vim.notify("Changed " .. current .. " variant to " .. next_variant, vim.log.levels.INFO)
+        vim.notify(icon .. "Changed " .. current .. " variant to " .. next_variant, vim.log.levels.INFO)
       end
 
-      -- Create commands
-      vim.api.nvim_create_user_command("CycleColorScheme", function()
-        cycle_theme()
-      end, { desc = "Cycle through color schemes" })
+      local function toggle_transparency()
+        local settings = load_settings()
+        settings.transparency = not settings.transparency
+        apply_theme(settings.theme, settings.variant, settings.transparency)
+        vim.notify("Transparency " .. (settings.transparency and "enabled" or "disabled"), vim.log.levels.INFO)
+      end
+
+      -- Create user commands
+      vim.api.nvim_create_user_command("CycleColorScheme", cycle_theme,
+        { desc = "Cycle through color schemes" })
+
+      vim.api.nvim_create_user_command("CycleColorVariant", cycle_variant,
+        { desc = "Cycle through color scheme variants" })
+
+      vim.api.nvim_create_user_command("ToggleBackgroundTransparency", toggle_transparency,
+        { desc = "Toggle background transparency" })
 
       vim.api.nvim_create_user_command("ColorScheme", function(opts)
         local args = opts.args
         if args == "" then
-          -- List available themes
           local available = {}
           for name, theme in pairs(themes) do
-            local variant_info = theme.variants
-                and #theme.variants > 0
-                and (" (" .. table.concat(theme.variants, ", ") .. ")")
-                or ""
+            local variant_info = theme.variants and #theme.variants > 0
+                and (" (" .. table.concat(theme.variants, ", ") .. ")") or ""
             table.insert(available, theme.icon .. " " .. name .. variant_info)
           end
           vim.notify("Available themes:\n" .. table.concat(available, "\n"), vim.log.levels.INFO)
           return
         end
 
-        -- Parse arguments
         local theme_name, variant = args:match("([%w-]+)%s*(.*)$")
-        if variant == "" then
-          variant = nil
-        end
+        if variant == "" then variant = nil end
 
-        -- Apply theme
         local settings = load_settings()
         apply_theme(theme_name, variant, settings.transparency)
 
-        -- Show notification
         local theme = themes[theme_name]
         local icon = theme and theme.icon or ""
         vim.notify(icon .. "Switched to " .. theme_name .. (variant and (" - " .. variant) or ""), vim.log.levels.INFO)
       end, {
         nargs = "?",
-        complete = function()
-          return vim.tbl_keys(themes)
-        end,
+        complete = function() return vim.tbl_keys(themes) end,
         desc = "Set colorscheme",
       })
-
-      vim.api.nvim_create_user_command("CycleColorVariant", function()
-        cycle_variant()
-      end, { desc = "Cycle through color scheme variants" })
 
       vim.api.nvim_create_user_command("ColorVariant", function(opts)
         local current = vim.g.colors_name or "kanagawa"
@@ -371,10 +295,8 @@ return {
 
         local variant = opts.args
         if variant == "" then
-          vim.notify(
-            "Available variants for " .. current .. ": " .. table.concat(theme.variants, ", "),
-            vim.log.levels.INFO
-          )
+          vim.notify("Available variants for " .. current .. ": " .. table.concat(theme.variants, ", "),
+            vim.log.levels.INFO)
           return
         end
 
@@ -383,10 +305,8 @@ return {
           return
         end
 
-        -- Apply variant
         local settings = load_settings()
         apply_theme(current, variant, settings.transparency)
-
         vim.notify("Set " .. current .. " variant to " .. variant, vim.log.levels.INFO)
       end, {
         nargs = "?",
@@ -398,17 +318,13 @@ return {
         desc = "Set colorscheme variant",
       })
 
-      vim.api.nvim_create_user_command("ToggleBackgroundTransparency", function()
-        toggle_transparency()
-      end, { desc = "Toggle background transparency" })
-
       -- Apply initial theme
       local settings = load_settings()
       apply_theme(settings.theme, settings.variant, settings.transparency)
     end,
   },
 
-  -- Additional themes
+  -- Additional themes (lazy loaded)
   {
     "catppuccin/nvim",
     name = "catppuccin",
@@ -421,21 +337,9 @@ return {
         term_colors = true,
         compile_enable = true,
         compile_path = vim.fn.stdpath("cache") .. "/catppuccin",
-        styles = {
-          comments = { "italic" },
-          conditionals = { "italic" },
-        },
-        integrations = {
-          cmp = true,
-          gitsigns = true,
-          nvimtree = true,
-          telescope = true,
-          treesitter = true,
-          which_key = true,
-        },
+        styles = { comments = { "italic" }, conditionals = { "italic" } },
+        integrations = { cmp = true, gitsigns = true, nvimtree = true, telescope = true, treesitter = true, which_key = true },
       })
-
-      -- Export colors
       _G.get_catppuccin_colors = function()
         local colors = require("catppuccin.palettes").get_palette()
         return {
@@ -467,25 +371,22 @@ return {
     config = function()
       vim.g.everforest_background = "medium"
       vim.g.everforest_better_performance = 1
-      vim.g.everforest_enable_italic = 1
-
-      -- Export colors
       _G.get_everforest_colors = function()
         return {
           bg = "#2d353b",
           bg1 = "#343f44",
+          fg = "#d3c6aa",
           red = "#e67e80",
-          orange = "#e69875",
-          yellow = "#dbbc7f",
           green = "#a7c080",
-          aqua = "#83c092",
+          yellow = "#dbbc7f",
           blue = "#7fbbb3",
           purple = "#d699b6",
+          aqua = "#83c092",
+          orange = "#e69875",
           gray = "#859289",
           border = "#4f5b58",
-          fg = "#d3c6aa",
           popup_bg = "#2d353b",
-          selection_bg = "#414b50",
+          selection_bg = "#503946",
           selection_fg = "#d3c6aa",
           copilot = "#6CC644",
           codeium = "#09B6A2",
@@ -503,41 +404,34 @@ return {
         undercurl = true,
         underline = true,
         bold = true,
-        italic = {
-          strings = true,
-          emphasis = true,
-          comments = true,
-          operators = false,
-          folds = true,
-        },
+        italic = { strings = true, emphasis = true, comments = true, operators = false, folds = true },
         strikethrough = true,
         invert_selection = false,
         invert_signs = false,
         invert_tabline = false,
         invert_intend_guides = false,
         inverse = true,
-        contrast = "", -- can be "hard", "soft" or empty string
+        contrast =
+        "",
         palette_overrides = {},
         overrides = {},
         dim_inactive = false,
-        transparent_mode = false,
+        transparent_mode = false
       })
-
-      -- Export colors
       _G.get_gruvbox_colors = function()
         return {
           bg = "#282828",
-          bg1 = "#32302f",
-          red = "#cc241d",
-          orange = "#d65d0e",
-          yellow = "#d79921",
-          green = "#98971a",
-          aqua = "#689d6a",
-          blue = "#458588",
-          purple = "#b16286",
+          bg1 = "#3c3836",
+          fg = "#ebdbb2",
+          red = "#ea6962",
+          green = "#a9b665",
+          yellow = "#d8a657",
+          blue = "#7daea3",
+          purple = "#d3869b",
+          aqua = "#89b482",
+          orange = "#e78a4e",
           gray = "#928374",
           border = "#665c54",
-          fg = "#ebdbb2",
           popup_bg = "#282828",
           selection_bg = "#45403d",
           selection_fg = "#ebdbb2",
@@ -548,42 +442,13 @@ return {
     end,
   },
   {
-    "rebelot/kanagawa.nvim",
+    "sainnhe/gruvbox-material",
     lazy = true,
     priority = 950,
     config = function()
-      require("kanagawa").setup({
-        theme = "wave",
-        transparent = false,
-        commentStyle = { italic = true },
-        keywordStyle = { italic = true },
-      })
-
-      -- Export colors
-      _G.get_kanagawa_colors = function()
-        local colors = require("kanagawa.colors").setup()
-        local p = colors.palette
-
-        return {
-          bg = p.sumiInk1,
-          bg1 = p.sumiInk2,
-          fg = p.fujiWhite,
-          red = p.autumnRed,
-          green = p.springGreen,
-          yellow = p.carpYellow,
-          blue = p.crystalBlue,
-          purple = p.oniViolet,
-          aqua = p.waveAqua1,
-          orange = p.surimiOrange,
-          gray = p.fujiGray,
-          border = p.sumiInk4,
-          popup_bg = p.sumiInk1,
-          selection_bg = p.sumiInk4,
-          selection_fg = p.fujiWhite,
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
+      vim.g.gruvbox_material_background = "medium"
+      vim.g.gruvbox_material_foreground = "material"
+      vim.g.gruvbox_material_better_performance = 1
     end,
   },
   {
@@ -595,14 +460,9 @@ return {
       vim.g.nord_borders = true
       vim.g.nord_disable_background = false
       vim.g.nord_italic = true
-
-      -- Export colors
       _G.get_nord_colors = function()
         local ok, colors = pcall(require, "nord.colors")
-        if not ok then
-          return nil
-        end
-
+        if not ok then return nil end
         return {
           bg = colors.nord0,
           bg1 = colors.nord1,
@@ -632,18 +492,11 @@ return {
     priority = 950,
     config = function()
       require("rose-pine").setup({
-        variant = "main",
-        disable_background = false,
-        disable_italics = false,
+        variant = "main", disable_background = false, disable_italics = false,
       })
-
-      -- Export colors
       _G.get_rose_pine_colors = function()
         local ok, palette = pcall(require, "rose-pine.palette")
-        if not ok then
-          return nil
-        end
-
+        if not ok then return nil end
         return {
           bg = palette.base,
           bg1 = palette.surface,
@@ -667,11 +520,18 @@ return {
     end,
   },
   {
+    "maxmx03/solarized.nvim",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("solarized").setup({ variant = "autumn", transparent = { enabled = false } })
+    end,
+  },
+  {
     "craftzdog/solarized-osaka.nvim",
     lazy = true,
     priority = 950,
     config = function()
-      -- Don't setup immediately - let the theme system handle it
       _G.get_solarized_osaka_colors = function()
         return {
           bg = "#1a1b26",
