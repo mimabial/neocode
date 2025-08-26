@@ -13,7 +13,7 @@ return {
     cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
     keys = {
       { "<C-space>", desc = "Increment selection" },
-      { "<BS>", mode = "x", desc = "Decrement selection" },
+      { "<BS>",      mode = "x",                  desc = "Decrement selection" },
     },
     opts = {
       ensure_installed = {
@@ -72,7 +72,7 @@ return {
             install_info = {
               url = "https://github.com/tree-sitter/tree-sitter-javascript",
               files = { "src/parser.c", "src/scanner.c" },
-              branch = "master",
+              branch = "main",
             },
             filetype = "javascriptreact",
           }

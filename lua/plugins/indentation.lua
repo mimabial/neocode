@@ -86,7 +86,7 @@ return {
       end
 
       -- Set initial colors
-      vim.defer_fn(set_rainbow_colors, 100)
+      set_rainbow_colors()
 
       -- Now setup rainbow delimiters with the highlights
       vim.g.rainbow_delimiters = {

@@ -1,15 +1,5 @@
 local M = {}
 
--- Helper for safe loads (avoid dependency on config.utils.safe_require)
-local function safe_require(mod)
-  local ok, m = pcall(require, mod)
-  if not ok then
-    vim.notify(string.format("[Warning] Could not load '%s'", mod), vim.log.levels.WARN)
-    return nil
-  end
-  return m
-end
-
 function M.setup()
   -- Bootstrap Lazy.nvim if missing
   local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
