@@ -331,8 +331,22 @@ return {
     lazy = true,
     priority = 950,
     config = function()
+      -- Get saved settings to determine initial flavour
+      local settings_file = vim.fn.stdpath("data") .. "/theme_settings.json"
+      local default_flavour = "mocha"
+
+      if vim.fn.filereadable(settings_file) == 1 then
+        local content = vim.fn.readfile(settings_file)[1]
+        if content then
+          local ok, settings = pcall(vim.fn.json_decode, content)
+          if ok and settings and settings.theme == "catppuccin" and settings.variant then
+            default_flavour = settings.variant
+          end
+        end
+      end
+
       require("catppuccin").setup({
-        flavour = "mocha",
+        flavour = default_flavour,
         transparent_background = false,
         term_colors = true,
         compile_enable = true,
@@ -340,6 +354,7 @@ return {
         styles = { comments = { "italic" }, conditionals = { "italic" } },
         integrations = { cmp = true, gitsigns = true, nvimtree = true, telescope = true, treesitter = true, which_key = true },
       })
+
       _G.get_catppuccin_colors = function()
         local colors = require("catppuccin.palettes").get_palette()
         return {
