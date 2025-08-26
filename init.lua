@@ -3,7 +3,7 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 -- Enable default explorer
-vim.g.default_explorer = "oil" -- Options: "oil", "nvim-tree", or "netrw"
+vim.g.default_explorer = "oil"     -- Options: "oil", "nvim-tree", or "netrw"
 vim.g.default_picker = "telescope" -- Prefer telescope over snacks
 
 -- Disable legacy plugins
@@ -105,7 +105,7 @@ load_module("utils.stacks", "setup")
 
 -- Set default colorscheme with error handling
 if not vim.g.colors_name then
-  local colorscheme_ok, _ = pcall(vim.api.nvim_command, "colorscheme gruvbox-material")
+  local colorscheme_ok, _ = pcall(vim.api.nvim_command, "colorscheme kanagawa")
   if not colorscheme_ok then
     -- Try alternate colorschemes if the primary one fails
     for _, scheme in ipairs({ "tokyonight", "nord", "habamax", "desert" }) do

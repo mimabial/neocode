@@ -1,39 +1,47 @@
--- lua/plugins/colorscheme.lua
-
 return {
-  -- Primary theme - Gruvbox Material
+  -- Primary theme - Kanagawa
   {
-    "sainnhe/gruvbox-material",
+    "rebelot/kanagawa.nvim",
     lazy = false,
     priority = 1000,
     config = function()
-      -- Basic setup
-      vim.g.gruvbox_material_background = "medium"
-      vim.g.gruvbox_material_better_performance = 1
-      vim.g.gruvbox_material_enable_italic = 1
-      vim.g.gruvbox_material_enable_bold = 1
-      vim.g.gruvbox_material_sign_column_background = "none"
-      vim.g.gruvbox_material_ui_contrast = "high"
-      vim.g.gruvbox_material_float_style = "dim"
+      require("kanagawa").setup({
+        theme = "wave",
+        background = {
+          dark = "wave",
+          light = "lotus",
+        },
+        transparent = false,
+        dimInactive = false,
+        terminalColors = true,
+        colors = {
+          palette = {},
+          theme = { wave = {}, lotus = {}, dragon = {}, all = {} },
+        },
+        overrides = function(colors)
+          return {}
+        end,
+      })
 
       -- Export colors for other plugins
-      _G.get_gruvbox_colors = function()
+      _G.get_kanagawa_colors = function()
+        local colors = require("kanagawa.colors").setup()
         return {
-          bg = "#282828",
-          bg1 = "#32302f",
-          red = "#ea6962",
-          orange = "#e78a4e",
-          yellow = "#d8a657",
-          green = "#89b482",
-          aqua = "#7daea3",
-          blue = "#7daea3",
-          purple = "#d3869b",
-          gray = "#928374",
-          border = "#665c54",
-          fg = "#d4be98",
-          popup_bg = "#282828",
-          selection_bg = "#45403d",
-          selection_fg = "#d4be98",
+          bg = colors.sumiInk0,
+          bg1 = colors.sumiInk1,
+          red = colors.autumnRed,
+          orange = colors.autumnOrange,
+          yellow = colors.autumnYellow,
+          green = colors.autumnGreen,
+          aqua = colors.waveAqua1,
+          blue = colors.crystalBlue,
+          purple = colors.oniViolet,
+          gray = colors.fujiGray,
+          border = colors.sumiInk4,
+          fg = colors.fujiWhite,
+          popup_bg = colors.sumiInk0,
+          selection_bg = colors.waveBlue1,
+          selection_fg = colors.fujiWhite,
           copilot = "#6CC644",
           codeium = "#09B6A2",
         }
@@ -50,7 +58,6 @@ return {
           variants = { "latte", "frappe", "macchiato", "mocha" },
           apply_variant = function(variant)
             pcall(require("catppuccin").setup, { flavour = variant })
-            pcall(vim.cmd, "colorscheme catppuccin")
             return true
           end,
           set_transparency = function(enable)
@@ -154,7 +161,7 @@ return {
 
       -- Load theme settings
       local function load_settings()
-        local default = { theme = "gruvbox-material", variant = "medium", transparency = false }
+        local default = { theme = "kanagawa", variant = "medium", transparency = false }
 
         -- Check if file exists and is readable
         if vim.fn.filereadable(settings_file) == 0 then
@@ -202,8 +209,8 @@ return {
         -- Get theme info
         local theme = themes[name]
         if not theme then
-          vim.notify("Theme '" .. name .. "' not found, using gruvbox-material", vim.log.levels.WARN)
-          name = "gruvbox-material"
+          vim.notify("Theme '" .. name .. "' not found, using kanagawa", vim.log.levels.WARN)
+          name = "kanagawa"
           theme = themes[name]
         end
 
@@ -236,7 +243,7 @@ return {
 
       -- Toggle through themes
       local function cycle_theme()
-        local current = vim.g.colors_name or "gruvbox-material"
+        local current = vim.g.colors_name or "kanagawa"
         local names = vim.tbl_keys(themes)
         table.sort(names)
 
@@ -275,7 +282,7 @@ return {
       end
 
       local function cycle_variant()
-        local current = vim.g.colors_name or "gruvbox-material"
+        local current = vim.g.colors_name or "kanagawa"
         local theme = themes[current]
         vim.notify("Current theme: " .. current, vim.log.levels.INFO)
         if not theme or not theme.variants or #theme.variants == 0 then
@@ -354,7 +361,7 @@ return {
       end, { desc = "Cycle through color scheme variants" })
 
       vim.api.nvim_create_user_command("ColorVariant", function(opts)
-        local current = vim.g.colors_name or "gruvbox-material"
+        local current = vim.g.colors_name or "kanagawa"
         local theme = themes[current]
 
         if not theme or not theme.variants or #theme.variants == 0 then
@@ -384,7 +391,7 @@ return {
       end, {
         nargs = "?",
         complete = function()
-          local current = vim.g.colors_name or "gruvbox-material"
+          local current = vim.g.colors_name or "kanagawa"
           local theme = themes[current]
           return theme and theme.variants or {}
         end,

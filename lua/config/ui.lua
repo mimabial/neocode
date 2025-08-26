@@ -35,11 +35,11 @@ M.get_colors = function()
     end
     return tostring(val)
   end
-  -- Base gruvbox-compatible palette as fallback
+  -- Base kanagawa-compatible palette as fallback
   return {
-    bg = get_hl_color("Normal", "bg", "#282828"),
-    bg1 = get_hl_color("CursorLine", "bg", "#32302f"),
-    fg = get_hl_color("Normal", "fg", "#d4be98"),
+    bg = get_hl_color("Normal", "bg", "#1f1f28"),
+    bg1 = get_hl_color("CursorLine", "bg", "#2a2a37"),
+    fg = get_hl_color("Normal", "fg", "#dcd7ba"),
     red = get_hl_color("DiagnosticError", "fg", "#ea6962"),
     green = get_hl_color("DiagnosticOk", "fg", "#89b482"),
     yellow = get_hl_color("DiagnosticWarn", "fg", "#d8a657"),
