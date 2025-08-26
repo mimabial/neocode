@@ -65,11 +65,43 @@ return {
           icon = "",
           variants = { "latte", "frappe", "macchiato", "mocha" },
           apply_variant = function(variant)
-            pcall(require("catppuccin").setup, { flavour = variant })
+            require("catppuccin").setup({
+              flavour = variant,
+              transparent_background = false,
+              term_colors = true,
+              compile_enable = true,
+              compile_path = vim.fn.stdpath("cache") .. "/catppuccin",
+              styles = { comments = { "italic" }, conditionals = { "italic" } },
+              integrations = {
+                cmp = true,
+                gitsigns = true,
+                nvimtree = true,
+                telescope = true,
+                treesitter = true,
+                which_key = true
+              },
+            })
+            vim.cmd("colorscheme catppuccin")
             return true
           end,
           set_transparency = function(enable)
-            pcall(require("catppuccin").setup, { transparent_background = enable })
+            require("catppuccin").setup({
+              flavour = require("catppuccin").options.flavour or "mocha", -- preserve current flavour
+              transparent_background = enable,
+              term_colors = true,
+              compile_enable = true,
+              compile_path = vim.fn.stdpath("cache") .. "/catppuccin",
+              styles = { comments = { "italic" }, conditionals = { "italic" } },
+              integrations = {
+                cmp = true,
+                gitsigns = true,
+                nvimtree = true,
+                telescope = true,
+                treesitter = true,
+                which_key = true
+              },
+            })
+            vim.cmd("colorscheme catppuccin")
             return true
           end,
         },
