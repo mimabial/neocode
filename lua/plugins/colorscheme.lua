@@ -243,7 +243,7 @@ return {
         apply_theme(theme_name, next_variant, settings.transparency)
 
         local icon = theme.icon or ""
-        vim.notify(icon .. "Changed " .. current .. " variant to " .. next_variant, vim.log.levels.INFO)
+        vim.notify(icon .. "Changed " .. theme_name .. " variant to " .. next_variant, vim.log.levels.INFO)
       end
 
       local function toggle_transparency()
