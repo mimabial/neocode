@@ -240,7 +240,7 @@ return {
         end
 
         local next_variant = theme.variants[next_idx]
-        apply_theme(current, next_variant, settings.transparency)
+        apply_theme(theme_name, next_variant, settings.transparency)
 
         local icon = theme.icon or ""
         vim.notify(icon .. "Changed " .. current .. " variant to " .. next_variant, vim.log.levels.INFO)
