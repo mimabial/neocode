@@ -165,6 +165,20 @@ return {
             return true
           end,
         },
+        ["tokyonight"] = {
+          icon = "🌃",
+          variants = { "night", "storm", "day", "moon" },
+          apply_variant = function(variant)
+            vim.g.tokyonight_style = variant
+            pcall(require("tokyonight").setup, { style = variant })
+            pcall(vim.cmd, "colorscheme tokyonight-" .. variant)
+            return true
+          end,
+          set_transparency = function(enable)
+            pcall(require("tokyonight").setup, { transparent = enable })
+            return true
+          end,
+        },
       }
 
       local function apply_theme(name, variant, transparency)
@@ -242,6 +256,8 @@ return {
         local theme_name = current
         if current:match("^catppuccin%-") then
           theme_name = "catppuccin"
+        elseif current:match("^tokyonight") then
+          theme_name = "tokyonight"
         end
 
         local theme = themes[theme_name]
@@ -579,6 +595,43 @@ return {
           popup_bg = "#1a1b26",
           selection_bg = "#24283b",
           selection_fg = "#c0caf5",
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
+    end,
+  },
+  {
+    "folke/tokyonight.nvim",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("tokyonight").setup({
+        style = "night",
+        transparent = false,
+        terminal_colors = true,
+        styles = { comments = { italic = true }, keywords = { italic = true } },
+        sidebars = { "qf", "help" },
+        day_brightness = 0.3,
+      })
+      _G.get_tokyonight_colors = function()
+        local colors = require("tokyonight.colors").setup()
+        return {
+          bg = colors.bg,
+          bg1 = colors.bg_dark,
+          fg = colors.fg,
+          red = colors.red,
+          green = colors.green,
+          yellow = colors.yellow,
+          blue = colors.blue,
+          purple = colors.purple,
+          aqua = colors.cyan,
+          orange = colors.orange,
+          gray = colors.fg_gutter,
+          border = colors.border,
+          popup_bg = colors.bg_popup,
+          selection_bg = colors.bg_visual,
+          selection_fg = colors.fg,
           copilot = "#6CC644",
           codeium = "#09B6A2",
         }

@@ -18,7 +18,10 @@ M.get_colors = function()
     theme_colors = _G.get_rose_pine_colors()
   elseif vim.g.colors_name == "solarized-osaka" and _G.get_solarized_osaka_colors then
     theme_colors = _G.get_solarized_osaka_colors()
+  elseif vim.g.colors_name == "tokyonight" and _G.get_tokyonight_colors then
+    theme_colors = _G.get_tokyonight_colors()
   end
+
   -- If we got valid theme colors, return them
   if theme_colors and type(theme_colors) == "table" then
     return theme_colors
