@@ -66,6 +66,8 @@ return {
           variants = { "latte", "frappe", "macchiato", "mocha" },
           apply_variant = function(variant)
             pcall(require("catppuccin").setup, { flavour = variant })
+            pcall(require("catppuccin").compile)
+            pcall(vim.cmd, "colorscheme catppuccin-" .. variant)
             return true
           end,
           set_transparency = function(enable)
@@ -175,17 +177,38 @@ return {
 
         -- Apply variant and transparency before colorscheme
         if variant and theme.variants and vim.tbl_contains(theme.variants, variant) then
-          theme.apply_variant(variant)
+          -- For catppuccin, apply_variant handles the colorscheme loading
+          if name == "catppuccin" then
+            theme.apply_variant(variant)
+            if transparency ~= nil then
+              theme.set_transparency(transparency)
+            end
+            save_settings({ theme = name, variant = variant, transparency = transparency })
+            return true
+          else
+            theme.apply_variant(variant)
+          end
         end
+
         if transparency ~= nil then
           theme.set_transparency(transparency)
         end
 
-        -- Set colorscheme
-        local success = pcall(vim.cmd, "colorscheme " .. name)
-        if not success then
-          vim.notify("Failed to load colorscheme " .. name, vim.log.levels.ERROR)
-          return false
+        -- Set colorscheme (skip for catppuccin as it's handled above)
+        if name ~= "catppuccin" or not variant then
+          local colorscheme_name = name
+          if name == "catppuccin" then
+            -- Get current variant or default to mocha
+            local settings = load_settings()
+            local current_variant = settings.variant or "mocha"
+            colorscheme_name = "catppuccin-" .. current_variant
+          end
+
+          local success = pcall(vim.cmd, "colorscheme " .. colorscheme_name)
+          if not success then
+            vim.notify("Failed to load colorscheme " .. colorscheme_name, vim.log.levels.ERROR)
+            return false
+          end
         end
 
         save_settings({ theme = name, variant = variant, transparency = transparency })
