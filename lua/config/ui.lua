@@ -12,6 +12,8 @@ M.get_colors = function()
     theme_colors = _G.get_gruvbox_colors()
   elseif vim.g.colors_name == "kanagawa" and _G.get_kanagawa_colors then
     theme_colors = _G.get_kanagawa_colors()
+  elseif vim.g.colors_name == "monokai-pro" and _G.get_monokai_pro_colors then
+    theme_colors = _G.get_monokai_pro_colors()
   elseif vim.g.colors_name == "nord" and _G.get_nord_colors then
     theme_colors = _G.get_nord_colors()
   elseif vim.g.colors_name == "rose-pine" and _G.get_rose_pine_colors then

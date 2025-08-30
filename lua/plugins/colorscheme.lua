@@ -126,6 +126,32 @@ return {
             return true
           end,
         },
+        ["monokai-pro"] = {
+          icon = "",
+          variants = { "pro", "classic", "machine", "octagon", "ristretto", "spectrum", "light" },
+          apply_variant = function(variant)
+            local filter = variant or "pro"
+            local success = pcall(require("monokai-pro").setup, {
+              filter = filter,
+              transparent_background = false,
+              terminal_colors = true,
+              devicons = true,
+            })
+            return success
+          end,
+          set_transparency = function(enable)
+            -- Get current settings to preserve filter
+            local current_settings = load_settings()
+            local current_filter = current_settings.variant or "pro"
+            local success = pcall(require("monokai-pro").setup, {
+              filter = current_filter,
+              transparent_background = enable,
+              terminal_colors = true,
+              devicons = true,
+            })
+            return success
+          end,
+        },
         ["nord"] = {
           icon = "",
           variants = {},
@@ -166,7 +192,7 @@ return {
           end,
         },
         ["tokyonight"] = {
-          icon = "🌃",
+          icon = "",
           variants = { "night", "storm", "day", "moon" },
           apply_variant = function(variant)
             vim.g.tokyonight_style = variant
@@ -191,42 +217,45 @@ return {
 
         -- Apply variant and transparency before colorscheme
         if variant and theme.variants and vim.tbl_contains(theme.variants, variant) then
-          -- For catppuccin, apply_variant handles the colorscheme loading
+          -- For themes that need special setup before colorscheme
           if name == "catppuccin" then
             theme.apply_variant(variant)
-            if transparency ~= nil then
-              theme.set_transparency(transparency)
-            end
-            save_settings({ theme = name, variant = variant, transparency = transparency })
-            return true
+          elseif name == "monokai-pro" then
+            theme.apply_variant(variant)
+            vim.cmd("colorscheme " .. name)
           else
             theme.apply_variant(variant)
+            vim.cmd("colorscheme " .. name)
+          end
+        else
+          -- For monokai-pro, always setup with default filter
+          if name == "monokai-pro" then
+            local success = pcall(require("monokai-pro").setup, {
+              filter = "pro",
+              transparent_background = transparency or false,
+              terminal_colors = true,
+              devicons = true,
+            })
+            if success then
+              vim.cmd("colorscheme " .. name)
+            end
+          else
+            vim.cmd("colorscheme " .. name)
           end
         end
 
-        if transparency ~= nil then
+        -- Apply transparency after colorscheme
+        if theme.set_transparency then
           theme.set_transparency(transparency)
-        end
-
-        -- Set colorscheme (skip for catppuccin as it's handled above)
-        if name ~= "catppuccin" or not variant then
-          local colorscheme_name = name
-          if name == "catppuccin" then
-            -- Get current variant or default to mocha
-            local settings = load_settings()
-            local current_variant = settings.variant or "mocha"
-            colorscheme_name = "catppuccin-" .. current_variant
-          end
-
-          local success = pcall(vim.cmd, "colorscheme " .. colorscheme_name)
-          if not success then
-            vim.notify("Failed to load colorscheme " .. colorscheme_name, vim.log.levels.ERROR)
-            return false
+          -- For monokai-pro, reapply colorscheme after transparency change
+          if name == "monokai-pro" then
+            pcall(vim.cmd, "colorscheme " .. name)
           end
         end
 
-        save_settings({ theme = name, variant = variant, transparency = transparency })
-        return true
+        -- Save settings for persistence
+        local settings = { theme = name, variant = variant, transparency = transparency }
+        save_settings(settings)
       end
 
       local function cycle_theme()
@@ -495,6 +524,44 @@ return {
       vim.g.gruvbox_material_background = "medium"
       vim.g.gruvbox_material_foreground = "material"
       vim.g.gruvbox_material_better_performance = 1
+    end,
+  },
+  {
+    "loctvl842/monokai-pro.nvim",
+    lazy = true,
+    priority = 950,
+    config = function()
+      -- Basic setup - will be overridden by theme management
+      require("monokai-pro").setup({
+        transparent_background = false,
+        terminal_colors = true,
+        devicons = true,
+        filter = "pro",
+      })
+
+      -- Color function with static fallback colors
+      _G.get_monokai_pro_colors = function()
+        -- Fallback to standard colors since monokai-pro API is unclear
+        return {
+          bg = "#2D2A2E",
+          bg1 = "#403E41",
+          fg = "#FCFCFA",
+          red = "#FF6188",
+          green = "#A9DC76",
+          yellow = "#FFD866",
+          blue = "#78DCE8",
+          purple = "#AB9DF2",
+          aqua = "#78DCE8",
+          orange = "#FC9867",
+          gray = "#727072",
+          border = "#5B595C",
+          popup_bg = "#2D2A2E",
+          selection_bg = "#403E41",
+          selection_fg = "#FCFCFA",
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
     end,
   },
   {
