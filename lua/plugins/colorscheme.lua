@@ -128,7 +128,7 @@ return {
         },
         ["monokai-pro"] = {
           icon = "",
-          variants = { "pro", "classic", "machine", "octagon", "ristretto", "spectrum", "light" },
+          variants = { "pro", "classic", "machine", "octagon", "ristretto", "spectrum" },
           apply_variant = function(variant)
             local filter = variant or "pro"
             local success = pcall(require("monokai-pro").setup, {
