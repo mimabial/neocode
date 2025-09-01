@@ -1,6 +1,3 @@
--- lua/plugins/git.lua
-
--- Git plugins and integrations
 return {
   {
     "lewis6991/gitsigns.nvim",
@@ -82,41 +79,9 @@ return {
   },
 
   {
-    "sindrets/diffview.nvim",
-    cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewToggleFiles", "DiffviewFocusFiles", "DiffviewFileHistory" },
-    keys = {
-      { "<leader>gd", "<cmd>DiffviewOpen<cr>", desc = "DiffView Open" },
-      { "<leader>gc", "<cmd>DiffviewClose<cr>", desc = "DiffView Close" },
-      { "<leader>gh", "<cmd>DiffviewFileHistory %<cr>", desc = "DiffView Current File History" },
-      { "<leader>gH", "<cmd>DiffviewFileHistory<cr>", desc = "DiffView File History" },
-      { "<leader>gf", "<cmd>DiffviewToggleFiles<cr>", desc = "DiffView Toggle Files" },
-    },
-    opts = {
-      view = { merge = { layout = "diff3_mixed" } },
-      hooks = {
-        diff_buf_read = function()
-          vim.opt_local.wrap = false
-          vim.opt_local.list = false
-        end,
-      },
-      keymaps = {
-        view = { ["q"] = "<cmd>DiffviewClose<cr>" },
-        file_panel = { ["q"] = "<cmd>DiffviewClose<cr>" },
-        file_history_panel = { ["q"] = "<cmd>DiffviewClose<cr>" },
-      },
-    },
-  },
-
-  {
-    "tpope/vim-fugitive",
-    cmd = { "Git", "Gstatus", "Gblame", "Gpush", "Gpull" },
-    keys = {
-      { "<leader>gs", "<cmd>Git<cr>", desc = "Git Status" },
-      { "<leader>gb", "<cmd>Git blame<cr>", desc = "Git Blame" },
-      { "<leader>gp", "<cmd>Git push<cr>", desc = "Git Push" },
-      { "<leader>gl", "<cmd>Git pull<cr>", desc = "Git Pull" },
-      { "<leader>gL", "<cmd>Git log<cr>", desc = "Git Log" },
-    },
+    "kdheepak/lazygit.nvim",
+    cmd = "LazyGit",
+    dependencies = { "nvim-lua/plenary.nvim" },
   },
 
   {
@@ -128,9 +93,9 @@ return {
     },
     cmd = "Octo",
     keys = {
-      { "<leader>go", "<cmd>Octo<cr>", desc = "Octo" },
-      { "<leader>gpr", "<cmd>Octo pr list<cr>", desc = "PR List" },
-      { "<leader>gi", "<cmd>Octo issue list<cr>", desc = "Issue List" },
+      { "<leader>go",  "<cmd>Octo<cr>",            desc = "Octo" },
+      { "<leader>gpr", "<cmd>Octo pr list<cr>",    desc = "PR List" },
+      { "<leader>gi",  "<cmd>Octo issue list<cr>", desc = "Issue List" },
     },
     config = function()
       require("octo").setup()

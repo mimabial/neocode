@@ -1,6 +1,3 @@
--- lua/plugins/completion.lua
--- Enhanced completion menu with improved visual appearance
-
 return {
   -- Enhanced LSP symbols with distinctive icons
   {
@@ -63,13 +60,14 @@ return {
       { "saadparwaiz1/cmp_luasnip" },
       { "onsails/lspkind.nvim" },
       { "L3MON4D3/LuaSnip" },
-      { "zbirenbaum/copilot-cmp", optional = true },
+      { "zbirenbaum/copilot-cmp",   optional = true },
       { "Exafunction/codeium.nvim", optional = true },
     },
 
     config = function()
       local cmp = require("cmp")
       local luasnip = require("luasnip")
+      require("luasnip.loaders.from_lua").load({ paths = { vim.fn.stdpath("config") .. "/snippets" } })
       local lspkind = require("lspkind")
 
       local function build_sources()
@@ -82,11 +80,11 @@ return {
 
         vim.list_extend(sources, {
           { name = "nvim_lsp", group_index = 1, priority = 90 },
-          { name = "luasnip", group_index = 1, priority = 80 },
+          { name = "luasnip",  group_index = 1, priority = 80 },
           { name = "nvim_lua", group_index = 1, priority = 70 },
-          { name = "buffer", group_index = 2, priority = 50, keyword_length = 3 },
-          { name = "path", group_index = 2, priority = 40 },
-          { name = "emoji", group_index = 3, priority = 30 },
+          { name = "buffer",   group_index = 2, priority = 50, keyword_length = 3 },
+          { name = "path",     group_index = 2, priority = 40 },
+          { name = "emoji",    group_index = 3, priority = 30 },
         })
 
         return sources

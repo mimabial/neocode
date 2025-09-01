@@ -18,7 +18,7 @@ return {
       -- Set up Mason first for server management
       require("mason").setup({
         ui = {
-          border = "rounded",
+          border = "single",
           icons = {
             package_installed = "✓",
             package_pending = "➜",
@@ -339,7 +339,7 @@ return {
           source = "if_many",
         },
         float = {
-          border = "rounded",
+          border = "single",
           source = "always",
           header = "",
           prefix = function(diagnostic)
@@ -479,7 +479,10 @@ return {
 
   -- JSON schema support
   {
-    "b0o/SchemaStore.nvim",
+    "b0o/schemastore.nvim",
     lazy = true,
   },
+
+  -- Templ support
+  { "joerdav/templ.vim", ft = "templ" },
 }

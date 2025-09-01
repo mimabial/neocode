@@ -1,6 +1,30 @@
 -- Editor UI and UX enhancements
 ---@diagnostic disable: duplicate-set-field
 return {
+  -- Tailwind color preview
+  {
+    "NvChad/nvim-colorizer.lua",
+    ft = { "css", "html", "javascript", "typescript", "javascriptreact", "typescriptreact" },
+    opts = {
+      user_default_options = {
+        tailwind = true,
+        mode = "background",
+        css = true,
+        css_fn = true,
+      }
+    },
+    config = function(_, opts)
+      require("colorizer").setup(opts)
+    end,
+  },
+
+  -- Tailwind colorizer for completion (add to your existing completion.lua dependencies)
+  {
+    "roobert/tailwindcss-colorizer-cmp.nvim",
+    config = function()
+      require("tailwindcss-colorizer-cmp").setup({ color_square_width = 2 })
+    end,
+  },
   -- Surround operations
   {
     "kylechui/nvim-surround",
@@ -77,9 +101,9 @@ return {
         end,
         desc = "Previous todo comment",
       },
-      { "<leader>xt", "<cmd>TodoTrouble<cr>", desc = "Todo (Trouble)" },
-      { "<leader>xT", "<cmd>TodoTrouble keywords=TODO,FIX,FIXME<cr>", desc = "Todo/Fix/Fixme (Trouble)" },
-      { "<leader>st", "<cmd>TodoTelescope<cr>", desc = "Todo" },
+      { "<leader>xt", "<cmd>TodoTrouble<cr>",                           desc = "Todo (Trouble)" },
+      { "<leader>xT", "<cmd>TodoTrouble keywords=TODO,FIX,FIXME<cr>",   desc = "Todo/Fix/Fixme (Trouble)" },
+      { "<leader>st", "<cmd>TodoTelescope<cr>",                         desc = "Todo" },
       { "<leader>sT", "<cmd>TodoTelescope keywords=TODO,FIX,FIXME<cr>", desc = "Todo/Fix/Fixme" },
     },
   },
