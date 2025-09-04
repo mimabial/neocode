@@ -1,19 +1,15 @@
--- Settings file path
 local settings_file = vim.fn.stdpath("data") .. "/ai_provider_settings.json"
 
 -- Load persistent settings
 local function load_settings()
   local default_settings = { active_provider = "codeium" }
-
   if vim.fn.filereadable(settings_file) == 0 then
     return default_settings
   end
-
   local content = vim.fn.readfile(settings_file)
   if #content == 0 then
     return default_settings
   end
-
   local ok, parsed = pcall(vim.fn.json_decode, table.concat(content, ""))
   return ok and parsed or default_settings
 end
@@ -35,13 +31,8 @@ local current_settings = load_settings()
 
 -- Update global variable for statusline and completion
 local function update_globals()
-  -- Set global variable
   vim.g.ai_provider_active = current_settings.active_provider
-
-  -- Trigger refresh
   vim.api.nvim_exec_autocmds("User", { pattern = "AIProviderChanged" })
-
-  -- Refresh statusline
   if package.loaded["lualine"] then
     require("lualine").refresh()
   end
@@ -49,14 +40,10 @@ end
 
 local function disable_ai_providers()
   current_settings.active_provider = nil
-  pcall(function()
-    vim.cmd("Codeium Disable")
-  end)
+  pcall(function() vim.cmd("Codeium Disable") end)
   pcall(function()
     local copilot = require("copilot.suggestion")
-    if copilot.dismiss then
-      copilot.dismiss()
-    end
+    if copilot.dismiss then copilot.dismiss() end
   end)
   vim.notify("AI assistance disabled", vim.log.levels.INFO, { title = "AI Provider" })
 end
@@ -71,7 +58,6 @@ local function set_active_provider(provider)
   save_settings(current_settings)
   update_globals()
 
-  -- Control plugin fonctionnality
   if provider == "copilot" then
     pcall(function()
       require("copilot").setup({
@@ -79,27 +65,19 @@ local function set_active_provider(provider)
         panel = { enabled = true },
       })
     end)
-    pcall(function()
-      vim.cmd("Codeium Disable")
-    end)
+    pcall(function() vim.cmd("Codeium Disable") end)
   elseif provider == "codeium" then
-    pcall(function()
-      vim.cmd("Codeium Enable")
-    end)
+    pcall(function() vim.cmd("Codeium Enable") end)
     pcall(function()
       local copilot = require("copilot.suggestion")
-      if copilot.dismiss then
-        copilot.dismiss()
-      end
+      if copilot.dismiss then copilot.dismiss() end
     end)
   else
-    -- Disable both
     disable_ai_providers()
     return true
   end
 
-  -- Notify user
-  local icons = { codeium = "󰚩", copilot = "" }
+  local icons = { codeium = "󰚩", copilot = "" }
   local message = icons[provider] .. " " .. provider .. " enabled"
   vim.notify(message, vim.log.levels.INFO, { title = "AI Provider" })
 end
@@ -112,9 +90,8 @@ local function cycle_providers()
   set_active_provider(providers_tbl[next_idx])
 end
 
--- Create commands and keymaps
+-- Setup commands
 local function setup_commands()
-  -- Individual toggle commands
   vim.api.nvim_create_user_command("AICopilot", function()
     local current = current_settings.active_provider
     set_active_provider(current == "copilot" and "none" or "copilot")
@@ -125,15 +102,13 @@ local function setup_commands()
     set_active_provider(current == "codeium" and "none" or "codeium")
   end, { desc = "Toggle Codeium" })
 
-  -- Cycle command
   vim.api.nvim_create_user_command("AICycle", cycle_providers, { desc = "Cycle AI providers" })
 
-  -- Status command
   vim.api.nvim_create_user_command("AIStatus", function()
     local active = current_settings.active_provider
     if active then
-      local provider = providers[active]
-      vim.notify(provider.icon .. " Active: " .. provider.name, vim.log.levels.INFO, { title = "AI Provider" })
+      local icons = { codeium = "󰚩", copilot = "" }
+      vim.notify(icons[active] .. " Active: " .. active, vim.log.levels.INFO, { title = "AI Provider" })
     else
       vim.notify("No AI provider active", vim.log.levels.INFO, { title = "AI Provider" })
     end
@@ -142,17 +117,22 @@ local function setup_commands()
   vim.api.nvim_create_user_command("AIDisable", disable_ai_providers, { desc = "Disable all providers" })
 end
 
--- Initialize globals on startup
+-- Initialize
 update_globals()
 setup_commands()
 
--- Export function for completion
+-- Export for completion
 _G.get_ai_active_provider = function()
   return current_settings.active_provider
 end
 
+-- Export functions for codeium.lua to use
+_G.ai_provider_settings = current_settings
+_G.set_ai_provider = set_active_provider
+_G.update_ai_globals = update_globals
+
 return {
-  -- GitHub Copilot - always loaded but conditionally active
+  -- Main Copilot plugin
   {
     "zbirenbaum/copilot.lua",
     cmd = "Copilot",
@@ -160,7 +140,7 @@ return {
     dependencies = { "zbirenbaum/copilot-cmp" },
     opts = {
       suggestion = {
-        enabled = false, -- Controlled via commands
+        enabled = false,
         auto_trigger = false,
         debounce = 75,
         keymap = {
@@ -173,7 +153,7 @@ return {
         },
       },
       panel = {
-        enabled = false, -- Controlled via commands
+        enabled = false,
         auto_refresh = true,
         layout = { position = "bottom", ratio = 0.4 },
       },
@@ -188,7 +168,7 @@ return {
     config = function(_, opts)
       require("copilot").setup(opts)
 
-      -- Enable if it's the active provider
+      -- Enable if active provider
       if current_settings.active_provider == "copilot" then
         vim.defer_fn(function()
           set_active_provider("copilot")
@@ -203,62 +183,6 @@ return {
     dependencies = { "zbirenbaum/copilot.lua", "hrsh7th/nvim-cmp" },
     config = function()
       require("copilot_cmp").setup()
-    end,
-  },
-
-  -- Codeium - always loaded but conditionally active
-  {
-    "Exafunction/codeium.nvim",
-    cmd = "Codeium",
-    event = "InsertEnter",
-    dependencies = { "nvim-lua/plenary.nvim", "hrsh7th/nvim-cmp" },
-    config = function()
-      require("codeium").setup({
-        enable_chat = true,
-      })
-
-      -- Enable if it's the active provider, otherwise disable
-      if current_settings.active_provider == "codeium" then
-        vim.defer_fn(function()
-          set_active_provider("codeium")
-        end, 100)
-      else
-        vim.defer_fn(function()
-          vim.cmd("Codeium Disable")
-        end, 100)
-      end
-
-      -- Keymaps for codeium when active
-      local keymaps = {
-        ["<C-g>"] = {
-          function()
-            return require("codeium").complete()
-          end,
-          "Accept suggestion",
-        },
-        ["<C-;>"] = {
-          function()
-            return require("codeium").cycle_completions(1)
-          end,
-          "Next completion",
-        },
-        ["<C-,>"] = {
-          function()
-            return require("codeium").cycle_completions(-1)
-          end,
-          "Prev completion",
-        },
-        ["<C-x>"] = {
-          function()
-            return require("codeium").clear()
-          end,
-          "Clear suggestions",
-        },
-      }
-
-      for key, mapping in pairs(keymaps) do
-        vim.keymap.set("i", key, mapping[1], { expr = true, desc = "Codeium: " .. mapping[2] })
-      end
     end,
   },
 }

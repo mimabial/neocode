@@ -32,6 +32,15 @@ function M.setup()
     spec = {
       -- Import all plugin specs from the plugins directory
       { import = "plugins" },
+      { import = "plugins.ai" },
+      { import = "plugins.coding" },
+      { import = "plugins.debug" },
+      { import = "plugins.editor" },
+      { import = "plugins.git" },
+      { import = "plugins.lsp" },
+      { import = "plugins.search" },
+      { import = "plugins.themes" },
+      { import = "plugins.ui" },
     },
     defaults = {
       lazy = true,     -- Don't load plugins until needed
