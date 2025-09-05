@@ -90,13 +90,16 @@ return {
           apply_variant = function(variant)
             if variant == "decayce" then
               pcall(vim.cmd, "colorscheme decayce")
-            else
+            elseif variant == "default" then
               pcall(require("decay").setup, {
-                style = variant,
+                style = "default",
                 transparent = false,
                 nvim_tree = { contrast = true },
               })
               pcall(vim.cmd, "colorscheme decay")
+            else
+              -- For "dark" and "light" variants
+              pcall(vim.cmd, "colorscheme decay-" .. variant)
             end
             return true
           end,
@@ -106,13 +109,16 @@ return {
 
             if current_variant == "decayce" then
               pcall(vim.cmd, "colorscheme decayce")
-            else
+            elseif current_variant == "default" then
               pcall(require("decay").setup, {
-                style = current_variant,
+                style = "default",
                 transparent = enable,
                 nvim_tree = { contrast = true },
               })
               pcall(vim.cmd, "colorscheme decay")
+            else
+              -- For "dark" and "light" variants, just reapply colorscheme
+              pcall(vim.cmd, "colorscheme decay-" .. current_variant)
             end
             return true
           end,
