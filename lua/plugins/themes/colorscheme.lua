@@ -308,6 +308,68 @@ return {
         return nil, nil
       end
 
+      local function apply_theme(name, variant, transparency)
+        local theme = themes[name]
+        if not theme then
+          vim.notify("Theme '" .. name .. "' not found, using kanagawa", vim.log.levels.WARN)
+          name = "kanagawa"
+          theme = themes[name]
+        end
+
+        if variant and theme.variants and vim.tbl_contains(theme.variants, variant) then
+          if name == "catppuccin" then
+            theme.apply_variant(variant)
+          elseif name == "decay" then
+            theme.apply_variant(variant)
+          elseif name == "monokai-pro" then
+            theme.apply_variant(variant)
+            vim.cmd("colorscheme " .. name)
+          else
+            theme.apply_variant(variant)
+            vim.cmd("colorscheme " .. name)
+          end
+        else
+          if name == "monokai-pro" then
+            local success = pcall(require("monokai-pro").setup, {
+              filter = "pro",
+              transparent_background = transparency or false,
+              terminal_colors = true,
+              devicons = true,
+            })
+            if success then
+              vim.cmd("colorscheme " .. name)
+            end
+          elseif name == "decay" then
+            if variant then
+              theme.apply_variant(variant)
+            else
+              pcall(require("decay").setup, {
+                style = "default",
+                transparent = transparency or false,
+                nvim_tree = { contrast = true },
+              })
+              pcall(vim.cmd, "colorscheme decay")
+            end
+          else
+            vim.cmd("colorscheme " .. name)
+          end
+        end
+
+        -- Apply transparency after colorscheme
+        if theme.set_transparency then
+          theme.set_transparency(transparency)
+          -- For monokai-pro, reapply colorscheme after transparency change
+          if name == "monokai-pro" then
+            pcall(vim.cmd, "colorscheme " .. name)
+          end
+        end
+
+        -- Save settings for persistence
+        local settings = { theme = name, variant = variant, transparency = transparency }
+        save_settings(settings)
+      end
+
+
       -- Function to apply detected theme with variant support
       local function apply_system_theme()
         local detected_scheme, detected_variant = detect_system_theme()
@@ -369,66 +431,6 @@ return {
         end
       end
 
-      local function apply_theme(name, variant, transparency)
-        local theme = themes[name]
-        if not theme then
-          vim.notify("Theme '" .. name .. "' not found, using kanagawa", vim.log.levels.WARN)
-          name = "kanagawa"
-          theme = themes[name]
-        end
-
-        if variant and theme.variants and vim.tbl_contains(theme.variants, variant) then
-          if name == "catppuccin" then
-            theme.apply_variant(variant)
-          elseif name == "decay" then
-            theme.apply_variant(variant)
-          elseif name == "monokai-pro" then
-            theme.apply_variant(variant)
-            vim.cmd("colorscheme " .. name)
-          else
-            theme.apply_variant(variant)
-            vim.cmd("colorscheme " .. name)
-          end
-        else
-          if name == "monokai-pro" then
-            local success = pcall(require("monokai-pro").setup, {
-              filter = "pro",
-              transparent_background = transparency or false,
-              terminal_colors = true,
-              devicons = true,
-            })
-            if success then
-              vim.cmd("colorscheme " .. name)
-            end
-          elseif name == "decay" then
-            if variant then
-              theme.apply_variant(variant)
-            else
-              pcall(require("decay").setup, {
-                style = "default",
-                transparent = transparency or false,
-                nvim_tree = { contrast = true },
-              })
-              pcall(vim.cmd, "colorscheme decay")
-            end
-          else
-            vim.cmd("colorscheme " .. name)
-          end
-        end
-
-        -- Apply transparency after colorscheme
-        if theme.set_transparency then
-          theme.set_transparency(transparency)
-          -- For monokai-pro, reapply colorscheme after transparency change
-          if name == "monokai-pro" then
-            pcall(vim.cmd, "colorscheme " .. name)
-          end
-        end
-
-        -- Save settings for persistence
-        local settings = { theme = name, variant = variant, transparency = transparency }
-        save_settings(settings)
-      end
 
       local function cycle_theme()
         local current = vim.g.colors_name or "kanagawa"
