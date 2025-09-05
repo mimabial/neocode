@@ -249,6 +249,104 @@ return {
         },
       }
 
+      -- Function to detect current system theme from theme.conf
+      local function detect_system_theme()
+        local theme_paths = {
+          os.getenv("HOME") .. "/.config/hypr/themes/theme.conf",
+          os.getenv("HOME") .. "/.config/hypr/theme.conf",
+          os.getenv("HOME") .. "/.config/hypr/hyprland.conf",
+        }
+
+        for _, path in ipairs(theme_paths) do
+          if vim.fn.filereadable(path) == 1 then
+            local content = table.concat(vim.fn.readfile(path), "\n")
+
+            -- Look for NVIM_SCHEME and NVIM_VARIANT variables
+            local nvim_scheme = content:match("%$NVIM_SCHEME%s*=%s*([%w%-_]+)")
+            local nvim_variant = content:match("%$NVIM_VARIANT%s*=%s*([%w%-_]+)")
+
+            if nvim_scheme then
+              -- Clean up the values
+              nvim_scheme = nvim_scheme:gsub("%s+", "")
+              nvim_variant = nvim_variant and nvim_variant:gsub("%s+", "") or nil
+
+              return nvim_scheme, nvim_variant
+            end
+          end
+        end
+
+        -- Check environment variables as final fallback
+        local env_scheme = os.getenv("NVIM_SCHEME") or os.getenv("NVIM_THEME")
+        local env_variant = os.getenv("NVIM_VARIANT")
+
+        if env_scheme then
+          return env_scheme, env_variant
+        end
+
+        return nil, nil
+      end
+
+      -- Function to apply detected theme with variant support
+      local function apply_system_theme()
+        local detected_scheme, detected_variant = detect_system_theme()
+
+        if not detected_scheme then
+          return false
+        end
+
+        -- Validate theme exists in our themes table
+        if not themes[detected_scheme] then
+          vim.notify("Scheme '" .. detected_scheme .. "' not available, using fallback", vim.log.levels.WARN)
+          return false
+        end
+
+        -- Validate variant if specified
+        if detected_variant then
+          local theme_info = themes[detected_scheme]
+          if theme_info.variants and #theme_info.variants > 0 then
+            if not vim.tbl_contains(theme_info.variants, detected_variant) then
+              vim.notify(
+                "Variant '" .. detected_variant .. "' not available for " .. detected_scheme .. ", using default",
+                vim.log.levels.WARN)
+              detected_variant = nil
+            end
+          else
+            vim.notify("Scheme '" .. detected_scheme .. "' doesn't support variants, ignoring variant",
+              vim.log.levels.WARN)
+            detected_variant = nil
+          end
+        end
+
+        -- Apply the theme
+        local settings = load_settings()
+        apply_theme(detected_scheme, detected_variant, settings.transparency)
+
+        local variant_text = detected_variant and (" - " .. detected_variant) or ""
+        vim.notify("🎨 Applied system theme: " .. detected_scheme .. variant_text, vim.log.levels.INFO)
+        return true
+      end
+
+      -- Function to set up file watcher for theme.conf changes
+      local function setup_system_theme_watcher()
+        local theme_file = os.getenv("HOME") .. "/.config/hypr/themes/theme.conf"
+
+        if vim.fn.filereadable(theme_file) == 1 then
+          -- Use Neovim's file watcher if available (nvim 0.10+)
+          if vim.uv and vim.uv.fs_event_start then
+            local handle = vim.uv.new_fs_event()
+            vim.uv.fs_event_start(handle, theme_file, {}, function(err, filename, events)
+              if not err and events.change then
+                vim.schedule(function()
+                  vim.defer_fn(function()
+                    apply_system_theme()
+                  end, 500) -- Small delay to avoid rapid-fire changes
+                end)
+              end
+            end)
+          end
+        end
+      end
+
       local function apply_theme(name, variant, transparency)
         local theme = themes[name]
         if not theme then
@@ -434,6 +532,167 @@ return {
         end,
         desc = "Set colorscheme variant",
       })
+
+      vim.api.nvim_create_user_command("SystemSync", function()
+        if not apply_system_theme() then
+          vim.notify("No system theme detected or theme not available", vim.log.levels.WARN)
+        end
+      end, { desc = "Sync colorscheme with system theme" })
+
+      vim.api.nvim_create_user_command("SystemDetect", function()
+        local scheme, variant = detect_system_theme()
+        if scheme then
+          local available = themes[scheme] and "✓ Available" or "⚠ Not available"
+          local variant_text = variant and (" + " .. variant) or ""
+          vim.notify("System theme: " .. scheme .. variant_text .. " (" .. available .. ")", vim.log.levels.INFO)
+
+          -- Show available variants if scheme exists
+          if themes[scheme] and themes[scheme].variants and #themes[scheme].variants > 0 then
+            vim.notify("Available variants: " .. table.concat(themes[scheme].variants, ", "), vim.log.levels.INFO)
+          end
+        else
+          vim.notify("No NVIM_SCHEME found in system config", vim.log.levels.WARN)
+        end
+      end, { desc = "Detect current system theme" })
+
+      vim.api.nvim_create_user_command("SystemSetTheme", function(opts)
+        local args = vim.split(opts.args, "%s+")
+        local scheme = args[1]
+        local variant = args[2]
+
+        if not scheme or scheme == "" then
+          vim.notify("Usage: SystemSetTheme <scheme> [variant]", vim.log.levels.ERROR)
+          return
+        end
+
+        if not themes[scheme] then
+          vim.notify("Scheme '" .. scheme .. "' not available", vim.log.levels.ERROR)
+          return
+        end
+
+        -- Validate variant if provided
+        if variant then
+          local theme_info = themes[scheme]
+          if not theme_info.variants or #theme_info.variants == 0 then
+            vim.notify("Scheme '" .. scheme .. "' doesn't support variants", vim.log.levels.ERROR)
+            return
+          elseif not vim.tbl_contains(theme_info.variants, variant) then
+            vim.notify("Variant '" .. variant .. "' not available for " .. scheme, vim.log.levels.ERROR)
+            vim.notify("Available variants: " .. table.concat(theme_info.variants, ", "), vim.log.levels.INFO)
+            return
+          end
+        end
+
+        -- Update theme.conf file
+        local theme_file = os.getenv("HOME") .. "/.config/hypr/themes/theme.conf"
+        if vim.fn.filereadable(theme_file) == 1 then
+          local content = vim.fn.readfile(theme_file)
+          local updated_scheme = false
+          local updated_variant = false
+
+          -- Update or add NVIM_SCHEME
+          for i, line in ipairs(content) do
+            if line:match("^%$NVIM_SCHEME") then
+              content[i] = "$NVIM_SCHEME = " .. scheme
+              updated_scheme = true
+            elseif line:match("^%$NVIM_VARIANT") then
+              if variant then
+                content[i] = "$NVIM_VARIANT = " .. variant
+              else
+                -- Remove variant line if no variant specified
+                table.remove(content, i)
+              end
+              updated_variant = true
+            end
+          end
+
+          -- Add NVIM_SCHEME if not found
+          if not updated_scheme then
+            table.insert(content, 1, "$NVIM_SCHEME = " .. scheme)
+          end
+
+          -- Add NVIM_VARIANT if variant specified and not found
+          if variant and not updated_variant then
+            -- Find NVIM_SCHEME line and insert NVIM_VARIANT after it
+            for i, line in ipairs(content) do
+              if line:match("^%$NVIM_SCHEME") then
+                table.insert(content, i + 1, "$NVIM_VARIANT = " .. variant)
+                break
+              end
+            end
+          end
+
+          vim.fn.writefile(content, theme_file)
+
+          -- Apply the theme
+          local settings = load_settings()
+          apply_theme(scheme, variant, settings.transparency)
+
+          local variant_text = variant and (" with variant " .. variant) or ""
+          vim.notify("Set system theme to: " .. scheme .. variant_text, vim.log.levels.INFO)
+        else
+          vim.notify("theme.conf not found at " .. theme_file, vim.log.levels.ERROR)
+        end
+      end, {
+        nargs = "+",
+        complete = function(arg_lead, cmd_line, cursor_pos)
+          local args = vim.split(cmd_line, "%s+")
+          if #args <= 2 then
+            -- Complete scheme names
+            return vim.tbl_keys(themes)
+          elseif #args == 3 then
+            -- Complete variant names for the specified scheme
+            local scheme = args[2]
+            if themes[scheme] and themes[scheme].variants then
+              return themes[scheme].variants
+            end
+          end
+          return {}
+        end,
+        desc = "Set NVIM_SCHEME and NVIM_VARIANT in system config"
+      })
+
+      vim.api.nvim_create_user_command("SystemListThemes", function()
+        local available_themes = {}
+
+        for name, theme in pairs(themes) do
+          local variants_text = ""
+          if theme.variants and #theme.variants > 0 then
+            variants_text = " (variants: " .. table.concat(theme.variants, ", ") .. ")"
+          end
+          table.insert(available_themes, theme.icon .. " " .. name .. variants_text)
+        end
+
+        table.sort(available_themes)
+
+        vim.notify("Available themes for system integration:\n" .. table.concat(available_themes, "\n"),
+          vim.log.levels.INFO, {
+            title = "System Themes",
+            timeout = 10000 -- Show longer for reading
+          })
+
+        -- Also show usage examples
+        vim.defer_fn(function()
+          vim.notify("Usage examples:\n" ..
+            ":SystemSetTheme kanagawa wave\n" ..
+            ":SystemSetTheme catppuccin mocha\n" ..
+            ":SystemSetTheme nord\n" ..
+            ":SystemSetTheme tokyonight storm",
+            vim.log.levels.INFO, { title = "Usage Examples" })
+        end, 2000)
+      end, { desc = "List available themes for system integration" })
+
+      -- Auto-apply system theme on startup and setup watcher
+      vim.defer_fn(function()
+        if not apply_system_theme() then
+          -- Apply initial theme if system detection fails
+          local settings = load_settings()
+          apply_theme(settings.theme, settings.variant, settings.transparency)
+        end
+
+        -- Setup file watcher for automatic theme changes
+        setup_system_theme_watcher()
+      end, 500)
 
       -- Apply initial theme
       local settings = load_settings()

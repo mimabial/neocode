@@ -162,6 +162,11 @@ function M.setup()
   map("n", "<leader>uv", "<cmd>CycleColorVariant<cr>", { desc = "Cycle color variant" })
   map("n", "<leader>uV", "<cmd>ColorVariant<cr>", { desc = "Select color variant" })
   map("n", "<leader>ub", "<cmd>ToggleBackgroundTransparency<cr>", { desc = "Toggle background transparency" })
+  -- System theme integration
+  map("n", "<leader>uy", "<cmd>SystemSync<cr>", { desc = "Sync with system theme" })
+  map("n", "<leader>uY", "<cmd>SystemDetect<cr>", { desc = "Detect system theme" })
+  map("n", "<leader>uz", "<cmd>SystemSetTheme<cr>", { desc = "Set system NVIM_SCHEME" })
+  map("n", "<leader>uL", "<cmd>SystemListThemes<cr>", { desc = "List available system themes" })
 
   -- ========================================
   -- AI Provider Management

@@ -132,6 +132,10 @@ return {
       ["<leader>uv"] = { desc = "Cycle color variant" },
       ["<leader>uV"] = { desc = "Select color variant" },
       ["<leader>ub"] = { desc = "Toggle transparency" },
+      ["<leader>uy"] = { desc = "Sync with system theme" },
+      ["<leader>uY"] = { desc = "Detect system theme" },
+      ["<leader>uz"] = { desc = "Set system NVIM_SCHEME" },
+      ["<leader>uL"] = { desc = "List available system themes" },
     })
 
     -- AI
