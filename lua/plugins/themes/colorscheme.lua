@@ -406,6 +406,8 @@ return {
           theme_name = "catppuccin"
         elseif current:match("^tokyonight") then
           theme_name = "tokyonight"
+        elseif current:match("^decay") then
+          theme_name = "decay"
         end
 
         local names = vim.tbl_keys(themes)
@@ -435,6 +437,8 @@ return {
           theme_name = "catppuccin"
         elseif current:match("^tokyonight") then
           theme_name = "tokyonight"
+        elseif current:match("^decay") then
+          theme_name = "decay"
         end
 
         local theme = themes[theme_name]
