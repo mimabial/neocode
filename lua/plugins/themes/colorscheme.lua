@@ -86,9 +86,13 @@ return {
         },
         ["decay"] = {
           icon = "",
-          variants = { "default", "dark", "darker" },
+          variants = { "default", "dark", "light", "decayce" },
           apply_variant = function(variant)
-            pcall(require("decay").setup, { style = variant })
+            if variant == "decayce" then
+              pcall(vim.cmd, "colorscheme decayce")
+            else
+              pcall(vim.cmd, "colorscheme decay-" .. variant)
+            end
             return true
           end,
           set_transparency = function(enable)
@@ -356,10 +360,10 @@ return {
           theme = themes[name]
         end
 
-        -- Apply variant and transparency before colorscheme
         if variant and theme.variants and vim.tbl_contains(theme.variants, variant) then
-          -- For themes that need special setup before colorscheme
           if name == "catppuccin" then
+            theme.apply_variant(variant)
+          elseif name == "decay" then
             theme.apply_variant(variant)
           elseif name == "monokai-pro" then
             theme.apply_variant(variant)
@@ -369,7 +373,6 @@ return {
             vim.cmd("colorscheme " .. name)
           end
         else
-          -- For monokai-pro, always setup with default filter
           if name == "monokai-pro" then
             local success = pcall(require("monokai-pro").setup, {
               filter = "pro",
@@ -380,6 +383,12 @@ return {
             if success then
               vim.cmd("colorscheme " .. name)
             end
+          elseif name == "decay" then
+            pcall(require("decay").setup, {
+              style = "default",
+              transparent = transparency or false,
+              nvim_tree = { contrast = true },
+            })
           else
             vim.cmd("colorscheme " .. name)
           end
