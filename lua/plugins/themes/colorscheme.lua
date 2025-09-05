@@ -400,12 +400,20 @@ return {
 
       local function cycle_theme()
         local current = vim.g.colors_name or "kanagawa"
+
+        local theme_name = current
+        if current:match("^catppuccin%-") then
+          theme_name = "catppuccin"
+        elseif current:match("^tokyonight") then
+          theme_name = "tokyonight"
+        end
+
         local names = vim.tbl_keys(themes)
         table.sort(names)
 
         local idx = 1
         for i, name in ipairs(names) do
-          if name == current then
+          if name == theme_name then
             idx = i; break
           end
         end
