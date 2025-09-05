@@ -86,7 +86,7 @@ return {
         },
         ["decay"] = {
           icon = "",
-          variants = { "default", "dark", "light", "decayce", "cosmic" },
+          variants = { "default", "dark", "light", "decayce" },
           apply_variant = function(variant)
             if variant == "decayce" then
               pcall(vim.cmd, "colorscheme decayce")
@@ -96,7 +96,7 @@ return {
                 transparent = false,
                 nvim_tree = { contrast = true },
               })
-              pcall(vim.cmd, "colorscheme decay")
+              pcall(vim.cmd, "colorscheme decay-" .. variant)
             end
             return true
           end,
@@ -112,7 +112,7 @@ return {
                 transparent = enable,
                 nvim_tree = { contrast = true },
               })
-              pcall(vim.cmd, "colorscheme decay")
+              pcall(vim.cmd, "colorscheme decay-" .. current_variant)
             end
             return true
           end,
@@ -401,12 +401,16 @@ return {
               vim.cmd("colorscheme " .. name)
             end
           elseif name == "decay" then
-            pcall(require("decay").setup, {
-              style = "default",
-              transparent = transparency or false,
-              nvim_tree = { contrast = true },
-            })
-            vim.cmd("colorscheme " .. name)
+            if variant then
+              theme.apply_variant(variant)
+            else
+              pcall(require("decay").setup, {
+                style = "default",
+                transparent = transparency or false,
+                nvim_tree = { contrast = true },
+              })
+              pcall(vim.cmd, "colorscheme decay-default")
+            end
           else
             vim.cmd("colorscheme " .. name)
           end
@@ -465,7 +469,7 @@ return {
           theme_name = "catppuccin"
         elseif current:match("^tokyonight") then
           theme_name = "tokyonight"
-        elseif current:match("^decay") then
+        elseif current:match("^decay") or current == "decayce" then -- Fixed: Handle both decay-* and decayce
           theme_name = "decay"
         end
 
@@ -478,6 +482,16 @@ return {
 
         local settings = load_settings()
         local current_variant = settings.variant or theme.variants[1]
+
+        if theme_name == "decay" then
+          if current == "decayce" then
+            current_variant = "decayce"
+          elseif current:match("^decay%-(.+)$") then
+            current_variant = current:match("^decay%-(.+)$")
+          else
+            current_variant = "default" -- fallback
+          end
+        end
 
         local next_idx = 1
         for i, variant in ipairs(theme.variants) do
