@@ -13,7 +13,7 @@ return {
         minimum_width = 30,
         max_width = 80,
         max_height = 20,
-        timeout = 1000,
+        timeout = 300,
         stages = "fade",
         render = "wrapped-compact",
         top_down = true,

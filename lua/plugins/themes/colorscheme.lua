@@ -61,6 +61,15 @@ return {
 
       -- Theme definitions
       local themes = {
+        ["ashen"] = {
+          icon = "",
+          variants = {},
+          apply_variant = function() return false end,
+          set_transparency = function(enable)
+            pcall(require("ashen").setup, { transparent = enable })
+            return true
+          end,
+        },
         ["catppuccin"] = {
           icon = "",
           variants = { "latte", "frappe", "macchiato", "mocha" },
@@ -72,6 +81,18 @@ return {
           end,
           set_transparency = function(enable)
             pcall(require("catppuccin").setup, { transparent_background = enable })
+            return true
+          end,
+        },
+        ["decay"] = {
+          icon = "",
+          variants = { "default", "dark", "darker" },
+          apply_variant = function(variant)
+            pcall(require("decay").setup, { style = variant })
+            return true
+          end,
+          set_transparency = function(enable)
+            pcall(require("decay").setup, { transparent = enable })
             return true
           end,
         },
@@ -158,6 +179,27 @@ return {
           apply_variant = function() return false end,
           set_transparency = function(enable)
             vim.g.nord_disable_background = enable
+            return true
+          end,
+        },
+        ["nordic"] = {
+          icon = "",
+          variants = {},
+          apply_variant = function() return false end,
+          set_transparency = function(enable)
+            pcall(require("nordic").setup, { transparent_bg = enable })
+            return true
+          end,
+        },
+        ["onedark"] = {
+          icon = "",
+          variants = { "dark", "darker", "cool", "deep", "warm", "warmer" },
+          apply_variant = function(variant)
+            pcall(require("onedark").setup, { style = variant })
+            return true
+          end,
+          set_transparency = function(enable)
+            pcall(require("onedark").setup, { transparent = enable })
             return true
           end,
         },
@@ -401,6 +443,39 @@ return {
 
   -- Additional themes (lazy loaded)
   {
+    "ficcdaf/ashen.nvim",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("ashen").setup({
+        transparent = false,
+        italic_comments = true,
+      })
+      _G.get_ashen_colors = function()
+        -- Fallback colors since ashen might not export colors
+        return {
+          bg = "#0f0f0f",
+          bg1 = "#1a1a1a",
+          fg = "#c5c5c5",
+          red = "#ff6b6b",
+          green = "#51cf66",
+          yellow = "#ffd43b",
+          blue = "#339af0",
+          purple = "#845ef7",
+          aqua = "#22b8cf",
+          orange = "#ff922b",
+          gray = "#868e96",
+          border = "#343a40",
+          popup_bg = "#0f0f0f",
+          selection_bg = "#343a40",
+          selection_fg = "#c5c5c5",
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
+    end,
+  },
+  {
     "catppuccin/nvim",
     name = "catppuccin",
     lazy = true,
@@ -433,6 +508,41 @@ return {
           popup_bg = colors.base,
           selection_bg = colors.surface0,
           selection_fg = colors.text,
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
+    end,
+  },
+  {
+    "decaycs/decay.nvim",
+    name = "decay",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("decay").setup({
+        style = "default",
+        transparent = false,
+        nvim_tree = { contrast = true },
+      })
+      _G.get_decay_colors = function()
+        -- Fallback colors since decay might not export colors API
+        return {
+          bg = "#101419",
+          bg1 = "#171B20",
+          fg = "#b6beca",
+          red = "#e05f65",
+          green = "#78dba9",
+          yellow = "#f1cf8a",
+          blue = "#70a5eb",
+          purple = "#c68aee",
+          aqua = "#74bee9",
+          orange = "#f8965e",
+          gray = "#485263",
+          border = "#1c252c",
+          popup_bg = "#101419",
+          selection_bg = "#1c252c",
+          selection_fg = "#b6beca",
           copilot = "#6CC644",
           codeium = "#09B6A2",
         }
@@ -592,6 +702,86 @@ return {
           popup_bg = colors.nord0,
           selection_bg = colors.nord2,
           selection_fg = colors.nord4,
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
+    end,
+  },
+  {
+    "AlexvZyl/nordic.nvim",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("nordic").setup({
+        bold_keywords = false,
+        italic_comments = true,
+        transparent_bg = false,
+        bright_border = false,
+        reduced_blue = true,
+        swap_backgrounds = false,
+      })
+      _G.get_nordic_colors = function()
+        local colors = require("nordic.colors")
+        return {
+          bg = colors.black0,
+          bg1 = colors.gray0,
+          fg = colors.white0,
+          red = colors.red.base,
+          green = colors.green.base,
+          yellow = colors.yellow.base,
+          blue = colors.blue1,
+          purple = colors.magenta.base,
+          aqua = colors.cyan.base,
+          orange = colors.orange.base,
+          gray = colors.gray4,
+          border = colors.gray2,
+          popup_bg = colors.black0,
+          selection_bg = colors.gray2,
+          selection_fg = colors.white0,
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
+    end,
+  },
+  {
+    "navarasu/onedark.nvim",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("onedark").setup({
+        style = "dark",
+        transparent = false,
+        term_colors = true,
+        ending_tildes = false,
+        cmp_itemkind_reverse = false,
+        code_style = {
+          comments = "italic",
+          keywords = "none",
+          functions = "none",
+          strings = "none",
+          variables = "none",
+        },
+      })
+      _G.get_onedark_colors = function()
+        local colors = require("onedark.colors")
+        return {
+          bg = colors.bg0,
+          bg1 = colors.bg1,
+          fg = colors.fg,
+          red = colors.red,
+          green = colors.green,
+          yellow = colors.yellow,
+          blue = colors.blue,
+          purple = colors.purple,
+          aqua = colors.cyan,
+          orange = colors.orange,
+          gray = colors.grey,
+          border = colors.bg3,
+          popup_bg = colors.bg0,
+          selection_bg = colors.bg3,
+          selection_fg = colors.fg,
           copilot = "#6CC644",
           codeium = "#09B6A2",
         }
