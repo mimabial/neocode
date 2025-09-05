@@ -389,6 +389,7 @@ return {
               transparent = transparency or false,
               nvim_tree = { contrast = true },
             })
+            vim.cmd("colorscheme " .. name)
           else
             vim.cmd("colorscheme " .. name)
           end
