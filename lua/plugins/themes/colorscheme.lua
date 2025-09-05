@@ -86,12 +86,18 @@ return {
         },
         ["decay"] = {
           icon = "",
-          variants = { "default", "dark", "light", "decayce" },
+          variants = { "default", "dark", "light", "decayce", "cosmic" },
           apply_variant = function(variant)
+            pcall(require("decay").setup, {
+              style = variant,
+              transparent = false,
+              nvim_tree = { contrast = true },
+            })
+
             if variant == "decayce" then
               pcall(vim.cmd, "colorscheme decayce")
             else
-              pcall(vim.cmd, "colorscheme decay-" .. variant)
+              pcall(vim.cmd, "colorscheme decay")
             end
             return true
           end,
