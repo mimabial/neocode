@@ -187,8 +187,9 @@ return {
           variants = {},
           apply_variant = function() return false end,
           set_transparency = function(enable)
-            pcall(require("nordic").setup, { transparent = enable })
-            return true
+            -- pcall(require("nordic").setup, { transparent_bg = enable })
+            -- return true
+            return false
           end,
         },
         ["onedark"] = {
@@ -987,7 +988,7 @@ return {
       require("nordic").setup({
         bold_keywords = false,
         italic_comments = true,
-        transparent = false,
+        -- transparent_bg = false,
         bright_border = false,
         reduced_blue = true,
         swap_backgrounds = false,
