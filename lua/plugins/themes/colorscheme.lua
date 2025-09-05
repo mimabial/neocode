@@ -88,21 +88,32 @@ return {
           icon = "",
           variants = { "default", "dark", "light", "decayce", "cosmic" },
           apply_variant = function(variant)
-            pcall(require("decay").setup, {
-              style = variant,
-              transparent = false,
-              nvim_tree = { contrast = true },
-            })
-
             if variant == "decayce" then
               pcall(vim.cmd, "colorscheme decayce")
             else
+              pcall(require("decay").setup, {
+                style = variant,
+                transparent = false,
+                nvim_tree = { contrast = true },
+              })
               pcall(vim.cmd, "colorscheme decay")
             end
             return true
           end,
           set_transparency = function(enable)
-            pcall(require("decay").setup, { transparent = enable })
+            local settings = load_settings()
+            local current_variant = settings.variant or "default"
+
+            if current_variant == "decayce" then
+              pcall(vim.cmd, "colorscheme decayce")
+            else
+              pcall(require("decay").setup, {
+                style = current_variant,
+                transparent = enable,
+                nvim_tree = { contrast = true },
+              })
+              pcall(vim.cmd, "colorscheme decay")
+            end
             return true
           end,
         },
