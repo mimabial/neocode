@@ -96,7 +96,7 @@ return {
                 transparent = false,
                 nvim_tree = { contrast = true },
               })
-              pcall(vim.cmd, "colorscheme decay-" .. variant)
+              pcall(vim.cmd, "colorscheme decay")
             end
             return true
           end,
@@ -112,7 +112,7 @@ return {
                 transparent = enable,
                 nvim_tree = { contrast = true },
               })
-              pcall(vim.cmd, "colorscheme decay-" .. current_variant)
+              pcall(vim.cmd, "colorscheme decay")
             end
             return true
           end,
@@ -409,7 +409,7 @@ return {
                 transparent = transparency or false,
                 nvim_tree = { contrast = true },
               })
-              pcall(vim.cmd, "colorscheme decay-default")
+              pcall(vim.cmd, "colorscheme decay")
             end
           else
             vim.cmd("colorscheme " .. name)
