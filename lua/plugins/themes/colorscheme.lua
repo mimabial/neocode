@@ -84,6 +84,33 @@ return {
             return true
           end,
         },
+        ["cyberdream"] = {
+          icon = "",
+          variants = { "default", "light" },
+          apply_variant = function(variant)
+            local success = pcall(require("cyberdream").setup, {
+              transparent = false,
+              italic_comments = true,
+              hide_fillchars = true,
+              borderless_telescope = true,
+              terminal_colors = true,
+              theme = {
+                variant = variant,
+              },
+            })
+            return success
+          end,
+          set_transparency = function(enable)
+            local success = pcall(require("cyberdream").setup, {
+              transparent = enable,
+              italic_comments = true,
+              hide_fillchars = true,
+              borderless_telescope = true,
+              terminal_colors = true,
+            })
+            return success
+          end,
+        },
         ["everforest"] = {
           icon = "",
           variants = { "soft", "medium", "hard" },
@@ -189,6 +216,22 @@ return {
           end,
           set_transparency = function(enable)
             pcall(require("onedark").setup, { transparent = enable })
+            return true
+          end,
+        },
+        ["oxocarbon"] = {
+          icon = "",
+          variants = { "dark", "light" },
+          apply_variant = function(variant)
+            vim.o.background = variant
+            return true
+          end,
+          set_transparency = function(enable)
+            if enable then
+              vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
+              vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
+              vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
+            end
             return true
           end,
         },
@@ -770,6 +813,43 @@ return {
     end,
   },
   {
+    "scottmckendry/cyberdream.nvim",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("cyberdream").setup({
+        transparent = false,
+        italic_comments = true,
+        hide_fillchars = true,
+        borderless_telescope = true,
+        terminal_colors = true,
+      })
+
+      _G.get_cyberdream_colors = function()
+        local colors = require("cyberdream.colors")
+        return {
+          bg = colors.bg,
+          bg1 = colors.bgAlt,
+          fg = colors.fg,
+          red = colors.red,
+          green = colors.green,
+          yellow = colors.yellow,
+          blue = colors.blue,
+          purple = colors.purple,
+          aqua = colors.cyan,
+          orange = colors.orange,
+          gray = colors.grey,
+          border = colors.bgHighlight,
+          popup_bg = colors.bg,
+          selection_bg = colors.bgAlt,
+          selection_fg = colors.fg,
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
+    end,
+  },
+  {
     "sainnhe/everforest",
     lazy = true,
     priority = 950,
@@ -1002,6 +1082,34 @@ return {
           popup_bg = colors.bg0,
           selection_bg = colors.bg3,
           selection_fg = colors.fg,
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
+    end,
+  },
+  {
+    "nyoom-engineering/oxocarbon.nvim",
+    lazy = true,
+    priority = 950,
+    config = function()
+      _G.get_oxocarbon_colors = function()
+        return {
+          bg = "#161616",
+          bg1 = "#262626",
+          fg = "#f2f4f8",
+          red = "#ff7eb6",
+          green = "#42be65",
+          yellow = "#ffe97b",
+          blue = "#33b1ff",
+          purple = "#be95ff",
+          aqua = "#3ddbd9",
+          orange = "#ff832b",
+          gray = "#6f6f6f",
+          border = "#393939",
+          popup_bg = "#161616",
+          selection_bg = "#262626",
+          selection_fg = "#f2f4f8",
           copilot = "#6CC644",
           codeium = "#09B6A2",
         }

@@ -8,6 +8,8 @@ M.get_colors = function()
     theme_colors = _G.get_ashen_colors()
   elseif vim.g.colors_name == "catppuccin" and _G.get_catppuccin_colors then
     theme_colors = _G.get_catppuccin_colors()
+  elseif vim.g.colors_name == "cyberdream" and _G.get_cyberdream_colors then
+    theme_colors = _G.get_cyberdream_colors()
   elseif vim.g.colors_name == "everforest" and _G.get_everforest_colors then
     theme_colors = _G.get_everforest_colors()
   elseif vim.g.colors_name == "gruvbox" and _G.get_gruvbox_colors then
@@ -22,6 +24,8 @@ M.get_colors = function()
     theme_colors = _G.get_nordic_colors()
   elseif vim.g.colors_name == "onedark" and _G.get_onedark_colors then
     theme_colors = _G.get_onedark_colors()
+  elseif vim.g.colors_name == "oxocarbon" and _G.get_oxocarbon_colors then
+    theme_colors = _G.get_oxocarbon_colors()
   elseif vim.g.colors_name == "rose-pine" and _G.get_rose_pine_colors then
     theme_colors = _G.get_rose_pine_colors()
   elseif vim.g.colors_name == "solarized-osaka" and _G.get_solarized_osaka_colors then
