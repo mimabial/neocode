@@ -1,18 +1,5 @@
--- lua/config/commands.lua
--- Centralized Neovim user commands (ReloadConfig, ExplorerToggle, HlsLensToggle, and Layout)
-
 local M = {}
 local api = vim.api
-
--- Utility to safely require modules
-local function safe_require(mod)
-  local ok, m = pcall(require, mod)
-  if not ok then
-    vim.notify(string.format("[Commands] Could not load '%s': %s", mod, m), vim.log.levels.WARN)
-    return nil
-  end
-  return m
-end
 
 function M.setup()
   -- Lazygit toggle with fallback

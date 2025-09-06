@@ -381,6 +381,27 @@ return {
           return false
         end
 
+        -- Check if theme is already active
+        local current_scheme = vim.g.colors_name or "kanagawa"
+        local settings = load_settings()
+        local current_variant = settings.variant
+
+        -- Normalize current scheme name for comparison
+        local normalized_current = current_scheme
+        if current_scheme:match("^catppuccin%-") then
+          normalized_current = "catppuccin"
+        elseif current_scheme:match("^tokyonight") then
+          normalized_current = "tokyonight"
+        end
+
+        -- Check if detected theme is already active
+        local theme_changed = normalized_current ~= detected_scheme
+        local variant_changed = detected_variant ~= current_variant
+
+        if not theme_changed and not variant_changed then
+          return true -- Theme is already active, no notification needed
+        end
+
         -- Validate variant if specified
         if detected_variant then
           local theme_info = themes[detected_scheme]
@@ -398,12 +419,10 @@ return {
           end
         end
 
-        -- Apply the theme
-        local settings = load_settings()
         apply_theme(detected_scheme, detected_variant, settings.transparency)
 
-        local variant_text = detected_variant and (" - " .. detected_variant) or ""
-        vim.notify("🎨 Applied system theme: " .. detected_scheme .. variant_text, vim.log.levels.INFO)
+        local variant_text = detected_variant and ("-" .. detected_variant) or ""
+        vim.notify("Applied system theme: " .. detected_scheme .. variant_text, vim.log.levels.INFO)
         return true
       end
 
@@ -531,7 +550,7 @@ return {
 
         local theme = themes[theme_name]
         local icon = theme and theme.icon or ""
-        vim.notify(icon .. "Switched to " .. theme_name .. (variant and (" - " .. variant) or ""), vim.log.levels.INFO)
+        vim.notify(icon .. "Switched to " .. theme_name .. (variant and ("-" .. variant) or ""), vim.log.levels.INFO)
       end, {
         nargs = "?",
         complete = function() return vim.tbl_keys(themes) end,
