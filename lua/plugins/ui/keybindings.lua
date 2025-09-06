@@ -161,7 +161,7 @@ return {
       ["<leader>cd"] = { desc = "Show Diagnostics" },
       ["<leader>cf"] = { desc = "Format" },
       ["<leader>cr"] = { desc = "Rename Symbol" },
-      ["<leader>cs"] = { desc = "Symbols Outline" },
+      ["<leader>cs"] = { desc = "Symbols (Trouble)" },
     })
 
     -- Trouble/Diagnostics

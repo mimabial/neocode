@@ -8,6 +8,5 @@ return {
   require("plugins.ui.terminal"),
   require("plugins.ui.keybindings"),
   require("plugins.ui.mini"),
-  require("plugins.ui.symbols"),
   require("plugins.ui.diagnostics"),
 }
