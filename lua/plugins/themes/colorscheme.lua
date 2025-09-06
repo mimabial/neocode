@@ -837,7 +837,7 @@ return {
     end,
   },
   {
-    "scottmckendry/cyberdream.nvim",
+    "mimabial/cyberdream.nvim",
     lazy = true,
     priority = 950,
     config = function()

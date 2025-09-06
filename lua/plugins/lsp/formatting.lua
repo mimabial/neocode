@@ -74,8 +74,29 @@ return {
         if ok and stats and stats.size > 1000000 then
           return
         end
-        local async = vim.api.nvim_buf_line_count(bufnr) > 1000
-        return { timeout_ms = 5000, lsp_fallback = true, async = async, quiet = false }
+        -- For large files (>1000 lines), skip sync formatting and use format_after_save instead
+        if vim.api.nvim_buf_line_count(bufnr) > 1000 then
+          return
+        end
+        return { timeout_ms = 1000, lsp_fallback = true, quiet = false }
+      end,
+      -- Asynchronous format after save for larger files
+      format_after_save = function(bufnr)
+        if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+          return
+        end
+        local ft = vim.bo[bufnr].filetype
+        if vim.tbl_contains({ "sql", "diff", "gitcommit", "oil" }, ft) then
+          return
+        end
+        local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(bufnr))
+        if ok and stats and stats.size > 1000000 then
+          return
+        end
+        -- Only format large files (>1000 lines) asynchronously after save
+        if vim.api.nvim_buf_line_count(bufnr) > 1000 then
+          return { lsp_fallback = true, quiet = false }
+        end
       end,
       formatters_by_ft = {
         javascript = { "prettierd", "prettier" },
@@ -175,7 +196,6 @@ return {
           end,
         },
       },
-      format_after_save = { lsp_fallback = true },
       notify_on_error = true,
     }
   end,
@@ -190,7 +210,7 @@ return {
             start = { args.line1, 0 },
             ["end"] = { args.line2, 999999 },
           }
-        or nil
+          or nil
       conform.format({ async = true, lsp_fallback = true, range = range })
     end, { range = true, desc = "Format buffer or range" })
 
