@@ -95,8 +95,11 @@ return {
               hide_fillchars = true,
               borderless_pickers = true,
               terminal_colors = true,
+              cache = false,
             })
-            vim.cmd("colorscheme cyberdream")
+            -- Include variant in colorscheme name (like catppuccin and tokyonight)
+            local colorscheme_name = variant == "default" and "cyberdream" or "cyberdream-" .. variant
+            vim.cmd("colorscheme " .. colorscheme_name)
             return true
           end,
           set_transparency = function(enable)
@@ -107,6 +110,7 @@ return {
               hide_fillchars = true,
               borderless_pickers = true,
               terminal_colors = true,
+              cache = false,
             })
             vim.cmd("colorscheme cyberdream")
             return true
