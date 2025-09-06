@@ -88,7 +88,7 @@ return {
           icon = "",
           variants = { "default", "light" },
           apply_variant = function(variant)
-            local success = pcall(require("cyberdream").setup, {
+            require("cyberdream").setup({
               variant = variant,
               transparent = false,
               italic_comments = true,
@@ -96,23 +96,20 @@ return {
               borderless_pickers = true,
               terminal_colors = true,
             })
-            if success then
-              vim.cmd("colorscheme cyberdream")
-            end
-            return success
+            vim.cmd("colorscheme cyberdream")
+            return true
           end,
           set_transparency = function(enable)
-            local success = pcall(require("cyberdream").setup, {
+            require("cyberdream").setup({
+              variant = vim.g.cyberdream_variant or "default",
               transparent = enable,
               italic_comments = true,
               hide_fillchars = true,
               borderless_pickers = true,
               terminal_colors = true,
             })
-            if success then
-              vim.cmd("colorscheme cyberdream")
-            end
-            return success
+            vim.cmd("colorscheme cyberdream")
+            return true
           end,
         },
         ["everforest"] = {
@@ -841,94 +838,37 @@ return {
     priority = 950,
     config = function()
       require("cyberdream").setup({
-        variant = "default",
         transparent = false,
-        saturation = 1,
         italic_comments = true,
         hide_fillchars = true,
         borderless_pickers = true,
         terminal_colors = true,
         cache = false,
-
-        -- Use overrides function to access cyberdream colors properly
-        overrides = function(colors)
-          -- Store colors globally for UI components
-          _G.cyberdream_colors = colors
-          return {}
-        end,
       })
 
       _G.get_cyberdream_colors = function()
-        -- Try to get colors from cyberdream's overrides function
-        if _G.cyberdream_colors then
-          local c = _G.cyberdream_colors
-          return {
-            bg = c.bg,
-            bg1 = c.bg_alt or c.bgAlt, -- Handle potential API differences
-            fg = c.fg,
-            red = c.red,
-            green = c.green,
-            yellow = c.yellow,
-            blue = c.blue,
-            purple = c.purple,
-            aqua = c.cyan,
-            orange = c.orange,
-            gray = c.grey,
-            border = c.bg_highlight or c.bgHighlight,
-            popup_bg = c.bg,
-            selection_bg = c.bg_alt or c.bgAlt,
-            selection_fg = c.fg,
-            copilot = "#6CC644",
-            codeium = "#09B6A2",
-          }
-        end
+        local colors = require("cyberdream.colors")
+        local c = colors.default
 
-        -- Fallback: hardcoded colors based on official palette
-        local opts = vim.g.cyberdream_opts or { variant = "default" }
-        local is_light = opts.variant == "light"
-
-        if is_light then
-          return {
-            bg = "#ffffff",
-            bg1 = "#eaeaea",
-            fg = "#16181a",
-            red = "#d11500",
-            green = "#008b0c",
-            yellow = "#997b00",
-            blue = "#0057d1",
-            purple = "#a018ff",
-            aqua = "#008c99",
-            orange = "#d17c00",
-            gray = "#7b8496",
-            border = "#acacac",
-            popup_bg = "#ffffff",
-            selection_bg = "#eaeaea",
-            selection_fg = "#16181a",
-            copilot = "#6CC644",
-            codeium = "#09B6A2",
-          }
-        else
-          -- Dark variant (default)
-          return {
-            bg = "#16181a",
-            bg1 = "#1e2124",
-            fg = "#ffffff",
-            red = "#ff6e5e",
-            green = "#5eff6c",
-            yellow = "#f1ff5e",
-            blue = "#5ea1ff",
-            purple = "#bd5eff",
-            aqua = "#5ef1ff",
-            orange = "#ffbd5e",
-            gray = "#7b8496",
-            border = "#3c4048",
-            popup_bg = "#16181a",
-            selection_bg = "#1e2124",
-            selection_fg = "#ffffff",
-            copilot = "#6CC644",
-            codeium = "#09B6A2",
-          }
-        end
+        return {
+          bg = c.bg,
+          bg1 = c.bgAlt,
+          fg = c.fg,
+          red = c.red,
+          green = c.green,
+          yellow = c.yellow,
+          blue = c.blue,
+          purple = c.purple,
+          aqua = c.cyan,
+          orange = c.orange,
+          gray = c.grey,
+          border = c.bgHighlight,
+          popup_bg = c.bg,
+          selection_bg = c.bgAlt,
+          selection_fg = c.fg,
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
       end
     end,
   },
