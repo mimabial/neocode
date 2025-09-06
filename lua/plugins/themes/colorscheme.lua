@@ -86,31 +86,13 @@ return {
         },
         ["cyberdream"] = {
           icon = "",
-          variants = { "default", "light" },
-          apply_variant = function(variant)
-            require("cyberdream").setup({
-              variant = variant,
-              transparent = false,
-              italic_comments = true,
-              hide_fillchars = true,
-              borderless_pickers = true,
-              terminal_colors = true,
-              cache = false,
-            })
-            -- Include variant in colorscheme name (like catppuccin and tokyonight)
-            local colorscheme_name = variant == "default" and "cyberdream" or "cyberdream-" .. variant
-            vim.cmd("colorscheme " .. colorscheme_name)
-            return true
-          end,
           set_transparency = function(enable)
             require("cyberdream").setup({
-              variant = vim.g.cyberdream_variant or "default",
               transparent = enable,
               italic_comments = true,
               hide_fillchars = true,
               borderless_pickers = true,
               terminal_colors = true,
-              cache = false,
             })
             vim.cmd("colorscheme cyberdream")
             return true
@@ -847,7 +829,6 @@ return {
         hide_fillchars = true,
         borderless_pickers = true,
         terminal_colors = true,
-        cache = false,
       })
 
       _G.get_cyberdream_colors = function()
@@ -856,7 +837,7 @@ return {
 
         return {
           bg = c.bg,
-          bg1 = c.bgAlt,
+          bg1 = c.bg_alt,
           fg = c.fg,
           red = c.red,
           green = c.green,
@@ -866,9 +847,9 @@ return {
           aqua = c.cyan,
           orange = c.orange,
           gray = c.grey,
-          border = c.bgHighlight,
+          border = c.bg_highlight,
           popup_bg = c.bg,
-          selection_bg = c.bgAlt,
+          selection_bg = c.bg_alt,
           selection_fg = c.fg,
           copilot = "#6CC644",
           codeium = "#09B6A2",
