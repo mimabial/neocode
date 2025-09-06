@@ -8,8 +8,6 @@ M.get_colors = function()
     theme_colors = _G.get_ashen_colors()
   elseif vim.g.colors_name == "catppuccin" and _G.get_catppuccin_colors then
     theme_colors = _G.get_catppuccin_colors()
-  elseif vim.g.colors_name and (vim.g.colors_name == "decay" or vim.g.colors_name:match("^decay%-") or vim.g.colors_name == "decayce") and _G.get_decay_colors then
-    theme_colors = _G.get_decay_colors()
   elseif vim.g.colors_name == "everforest" and _G.get_everforest_colors then
     theme_colors = _G.get_everforest_colors()
   elseif vim.g.colors_name == "gruvbox" and _G.get_gruvbox_colors then

@@ -84,30 +84,6 @@ return {
             return true
           end,
         },
-        ["decay"] = {
-          icon = "",
-          variants = { "default", "dark", "light", "decayce" },
-          apply_variant = function(variant)
-            if variant == "decayce" then
-              pcall(vim.cmd, "colorscheme decayce")
-            else
-              pcall(vim.cmd, "colorscheme decay-" .. variant)
-            end
-            return true
-          end,
-          set_transparency = function(enable)
-            local settings = load_settings()
-            local current_variant = settings.variant or "default"
-
-            if current_variant == "decayce" then
-              pcall(vim.cmd, "colorscheme decayce")
-            else
-              -- For "dark" and "light" variants, just reapply colorscheme
-              pcall(vim.cmd, "colorscheme decay-" .. current_variant)
-            end
-            return true
-          end,
-        },
         ["everforest"] = {
           icon = "",
           variants = { "soft", "medium", "hard" },
@@ -310,8 +286,6 @@ return {
         if variant and theme.variants and vim.tbl_contains(theme.variants, variant) then
           if name == "catppuccin" then
             theme.apply_variant(variant)
-          elseif name == "decay" then
-            theme.apply_variant(variant)
           elseif name == "monokai-pro" then
             theme.apply_variant(variant)
             vim.cmd("colorscheme " .. name)
@@ -329,17 +303,6 @@ return {
             })
             if success then
               vim.cmd("colorscheme " .. name)
-            end
-          elseif name == "decay" then
-            if variant then
-              theme.apply_variant(variant)
-            else
-              pcall(require("decay").setup, {
-                style = "default",
-                transparent = transparency or false,
-                nvim_tree = { contrast = true },
-              })
-              pcall(vim.cmd, "colorscheme decay")
             end
           else
             vim.cmd("colorscheme " .. name)
@@ -431,8 +394,6 @@ return {
           theme_name = "catppuccin"
         elseif current:match("^tokyonight") then
           theme_name = "tokyonight"
-        elseif current:match("^decay") then
-          theme_name = "decay"
         end
 
         local names = vim.tbl_keys(themes)
@@ -462,8 +423,6 @@ return {
           theme_name = "catppuccin"
         elseif current:match("^tokyonight") then
           theme_name = "tokyonight"
-        elseif current:match("^decay") or current == "decayce" then -- Fixed: Handle both decay-* and decayce
-          theme_name = "decay"
         end
 
         local theme = themes[theme_name]
@@ -475,16 +434,6 @@ return {
 
         local settings = load_settings()
         local current_variant = settings.variant or theme.variants[1]
-
-        if theme_name == "decay" then
-          if current == "decayce" then
-            current_variant = "decayce"
-          elseif current:match("^decay%-(.+)$") then
-            current_variant = current:match("^decay%-(.+)$")
-          else
-            current_variant = "default" -- fallback
-          end
-        end
 
         local next_idx = 1
         for i, variant in ipairs(theme.variants) do
@@ -814,41 +763,6 @@ return {
           popup_bg = colors.base,
           selection_bg = colors.surface0,
           selection_fg = colors.text,
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
-    end,
-  },
-  {
-    "decaycs/decay.nvim",
-    name = "decay",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("decay").setup({
-        style = "default",
-        transparent = false,
-        nvim_tree = { contrast = true },
-      })
-      _G.get_decay_colors = function()
-        -- Fallback colors since decay might not export colors API
-        return {
-          bg = "#101419",
-          bg1 = "#171B20",
-          fg = "#b6beca",
-          red = "#e05f65",
-          green = "#78dba9",
-          yellow = "#f1cf8a",
-          blue = "#70a5eb",
-          purple = "#c68aee",
-          aqua = "#74bee9",
-          orange = "#f8965e",
-          gray = "#485263",
-          border = "#1c252c",
-          popup_bg = "#101419",
-          selection_bg = "#1c252c",
-          selection_fg = "#b6beca",
           copilot = "#6CC644",
           codeium = "#09B6A2",
         }
