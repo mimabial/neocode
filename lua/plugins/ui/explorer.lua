@@ -1,4 +1,3 @@
--- lua/plugins/explorer.lua
 return {
   {
     "stevearc/oil.nvim",
@@ -12,6 +11,26 @@ return {
           return name == ".." or name == ".git"
         end,
       },
+      -- Buffer-local options to disable global confirm for oil buffers
+      buf_options = {
+        buflisted = false,
+        bufhidden = "hide",
+      },
+      -- Window-local options
+      win_options = {
+        wrap = false,
+        signcolumn = "no",
+        cursorcolumn = false,
+        foldcolumn = "0",
+        spell = false,
+        list = false,
+        conceallevel = 3,
+        concealcursor = "nvic",
+      },
+      -- Skip confirmation for simple edits to avoid double confirmation
+      skip_confirm_for_simple_edits = true,
+      -- Don't prompt to save when selecting new entries
+      prompt_save_on_select_new_entry = false,
       float = {
         border = "single",
         max_width = 120,
@@ -36,6 +55,17 @@ return {
       },
       use_default_keymaps = true,
     },
+    config = function(_, opts)
+      require("oil").setup(opts)
+
+      -- Disable global confirm for oil buffers specifically
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "oil",
+        callback = function()
+          vim.opt_local.confirm = false
+        end,
+      })
+    end,
   },
   {
     "nvim-tree/nvim-tree.lua",
