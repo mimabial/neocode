@@ -15,7 +15,56 @@ return {
         })
       end,
       mode = { "n", "v" },
-      desc = "Search and Replace (Grug Far)",
+      desc = "Search and Replace",
+    },
+    {
+      "<leader>sR",
+      function()
+        require("grug-far").open({
+          prefills = { paths = vim.fn.expand("%") }
+        })
+      end,
+      desc = "Search and Replace (Current File)",
+    },
+    {
+      "<leader>sw",
+      function()
+        require("grug-far").open({
+          prefills = { search = vim.fn.expand("<cword>") }
+        })
+      end,
+      desc = "Search Word Under Cursor",
+    },
+    {
+      "<leader>sW",
+      function()
+        require("grug-far").open({
+          prefills = {
+            search = vim.fn.expand("<cword>"),
+            paths = vim.fn.expand("%")
+          }
+        })
+      end,
+      desc = "Search Word (Current File)",
+    },
+    {
+      "<leader>si",
+      function()
+        require("grug-far").open({ visualSelectionUsage = "operate-within-range" })
+      end,
+      mode = { "n", "x" },
+      desc = "Search Within Range",
+    },
+    {
+      "<leader>sb",
+      function()
+        local search = vim.fn.getreg("/")
+        if search and vim.startswith(search, "\\<") and vim.endswith(search, "\\>") then
+          search = "\\b" .. search:sub(3, -3) .. "\\b"
+        end
+        require("grug-far").open({ prefills = { search = search } })
+      end,
+      desc = "Search Last Pattern",
     },
   },
   config = function()

@@ -39,7 +39,7 @@ return {
     -- bottom_right, bottom_left }
     vim.g.telescope_borders = {
       ivory = {
-        prompt = { " ", " ", "─", " ", " ", " ", "─", "─" },
+        prompt = { "─", " ", "─", " ", " ", " ", "─", "─" },
         results = { "─", "│", " ", " ", " ", " ", "│", " " },
         preview = { "─", " ", " ", " ", "─", "─", " ", " " },
       },
