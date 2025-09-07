@@ -3,12 +3,12 @@ return {
   "akinsho/toggleterm.nvim",
   version = "*",
   keys = {
-    { "<leader>tf", "<cmd>ToggleTerm direction=float<cr>", desc = "Terminal (float)" },
+    { "<leader>tf", "<cmd>ToggleTerm direction=float<cr>",      desc = "Terminal (float)" },
     { "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", desc = "Terminal (horizontal)" },
-    { "<leader>tv", "<cmd>ToggleTerm direction=vertical<cr>", desc = "Terminal (vertical)" },
-    { "<leader>tt", "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
-    { "<C-/>", "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
-    { "<C-_>", "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
+    { "<leader>tv", "<cmd>ToggleTerm direction=vertical<cr>",   desc = "Terminal (vertical)" },
+    { "<leader>tt", "<cmd>ToggleTerm<cr>",                      desc = "Toggle terminal" },
+    { "<C-/>",      "<cmd>ToggleTerm<cr>",                      desc = "Toggle terminal" },
+    { "<C-_>",      "<cmd>ToggleTerm<cr>",                      desc = "Toggle terminal" },
   },
   opts = {
     size = function(term)
@@ -32,7 +32,7 @@ return {
     auto_scroll = true,
     -- Float options
     float_opts = {
-      border = "curved",
+      border = "single",
       winblend = 0,
       highlights = {
         border = "FloatBorder",
@@ -82,7 +82,8 @@ return {
 
     -- Terminal mode keymaps
     local function set_terminal_keymaps()
-      local map_opts = { buffer = 0, noremap = true, silent = true }
+      local buf = vim.api.nvim_get_current_buf()
+      local map_opts = { buffer = buf, noremap = true, silent = true }
       vim.keymap.set("t", "<esc>", [[<C-\><C-n>]], map_opts)
       vim.keymap.set("t", "jk", [[<C-\><C-n>]], map_opts)
       vim.keymap.set("t", "<C-h>", [[<Cmd>wincmd h<CR>]], map_opts)
@@ -90,6 +91,16 @@ return {
       vim.keymap.set("t", "<C-k>", [[<Cmd>wincmd k<CR>]], map_opts)
       vim.keymap.set("t", "<C-l>", [[<Cmd>wincmd l<CR>]], map_opts)
       vim.keymap.set("t", "<C-w>", [[<C-\><C-n><C-w>]], map_opts)
+
+      -- Normal mode mapping for q to close
+      vim.keymap.set("n", "q", function()
+        local term = require("toggleterm.terminal").get_focused_id()
+        if term then
+          require("toggleterm").toggle(term)
+        else
+          vim.cmd("close")
+        end
+      end, map_opts)
     end
 
     vim.api.nvim_create_autocmd("TermOpen", {
@@ -111,7 +122,6 @@ return {
         },
         on_open = function(term)
           vim.cmd("startinsert!")
-          vim.api.nvim_buf_set_keymap(term.bufnr, "n", "q", "<cmd>close<CR>", { noremap = true, silent = true })
         end,
         on_exit = function(_)
           -- Refresh git status if this was a git command
