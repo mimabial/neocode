@@ -84,20 +84,6 @@ return {
             return true
           end,
         },
-        ["cyberdream"] = {
-          icon = "",
-          set_transparency = function(enable)
-            require("cyberdream").setup({
-              transparent = enable,
-              italic_comments = true,
-              hide_fillchars = true,
-              borderless_pickers = true,
-              terminal_colors = true,
-            })
-            vim.cmd("colorscheme cyberdream")
-            return true
-          end,
-        },
         ["everforest"] = {
           icon = "",
           variants = { "soft", "medium", "hard" },
@@ -812,45 +798,6 @@ return {
           popup_bg = colors.base,
           selection_bg = colors.surface0,
           selection_fg = colors.text,
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
-    end,
-  },
-  {
-    "mimabial/cyberdream.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("cyberdream").setup({
-        transparent = false,
-        italic_comments = true,
-        hide_fillchars = true,
-        borderless_pickers = true,
-        terminal_colors = true,
-      })
-
-      _G.get_cyberdream_colors = function()
-        local colors = require("cyberdream.colors")
-        local c = colors.default
-
-        return {
-          bg = c.bg,
-          bg1 = c.bg_alt,
-          fg = c.fg,
-          red = c.red,
-          green = c.green,
-          yellow = c.yellow,
-          blue = c.blue,
-          purple = c.purple,
-          aqua = c.cyan,
-          orange = c.orange,
-          gray = c.grey,
-          border = c.bg_highlight,
-          popup_bg = c.bg,
-          selection_bg = c.bg_alt,
-          selection_fg = c.fg,
           copilot = "#6CC644",
           codeium = "#09B6A2",
         }

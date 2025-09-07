@@ -338,39 +338,99 @@ return {
     },
   },
 
-  -- Next.js/TypeScript tools
+  -- TypeScript tools with package manager detection
   {
     "pmizio/typescript-tools.nvim",
     ft = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
     dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
+    enabled = function()
+      -- Check for Node.js (required for tsserver)
+      if vim.fn.executable("node") == 0 then
+        return false
+      end
+
+      -- Check for typescript installation
+      local has_typescript = vim.fn.executable("tsc") == 1 or
+          vim.fn.executable("npx") == 1 and vim.fn.system("npx tsc --version 2>/dev/null"):match("Version")
+
+      return has_typescript
+    end,
     opts = {
-      tsserver_plugins = { "@styled/typescript-styled-plugin" },
-      expose_as_code_action = { "fix_all", "add_missing_imports", "remove_unused" },
-      tsserver_file_preferences = {
-        includeInlayParameterNameHints = "all",
-        includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-        includeInlayFunctionParameterTypeHints = true,
-        includeInlayVariableTypeHints = true,
-        includeInlayPropertyDeclarationTypeHints = true,
-        includeInlayFunctionLikeReturnTypeHints = true,
-        includeInlayEnumMemberValueHints = true,
+      settings = {
+        -- Use custom tsserver path if needed
+        tsserver_path = function()
+          -- Try different package managers
+          local paths = {
+            -- Global typescript via different managers
+            vim.fn.system("npm root -g 2>/dev/null"):gsub("\n", "") .. "/typescript/bin/tsserver",
+            vim.fn.system("pnpm root -g 2>/dev/null"):gsub("\n", "") .. "/typescript/bin/tsserver",
+            vim.fn.system("yarn global dir 2>/dev/null"):gsub("\n", "") .. "/node_modules/typescript/bin/tsserver",
+            -- Local typescript
+            vim.fn.getcwd() .. "/node_modules/typescript/bin/tsserver",
+            -- Bun global
+            os.getenv("HOME") .. "/.bun/install/global/node_modules/typescript/bin/tsserver",
+          }
+
+          for _, path in ipairs(paths) do
+            if vim.fn.filereadable(path) == 1 then
+              return path
+            end
+          end
+
+          return nil -- Let typescript-tools find it
+        end,
+        tsserver_plugins = { "@styled/typescript-styled-plugin" },
+        expose_as_code_action = { "fix_all", "add_missing_imports", "remove_unused" },
+        tsserver_file_preferences = {
+          includeInlayParameterNameHints = "all",
+          includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+          includeInlayFunctionParameterTypeHints = true,
+          includeInlayVariableTypeHints = true,
+          includeInlayPropertyDeclarationTypeHints = true,
+          includeInlayFunctionLikeReturnTypeHints = true,
+          includeInlayEnumMemberValueHints = true,
+        },
       },
     },
     config = function(_, opts)
-      if not vim.g.current_stack or vim.g.current_stack == "nextjs" or vim.g.current_stack == "goth+nextjs" then
-        require("typescript-tools").setup(opts)
-
-        local api = require("typescript-tools.api")
-        for cmd, fn in pairs({
-          TypescriptOrganizeImports = api.organize_imports,
-          TypescriptRenameFile = api.rename_file,
-          TypescriptAddMissingImports = api.add_missing_imports,
-          TypescriptRemoveUnused = api.remove_unused,
-          TypescriptFixAll = api.fix_all,
-        }) do
-          vim.api.nvim_create_user_command(cmd, fn, { desc = cmd })
-        end
+      -- Detect available package manager
+      local package_manager = "npm" -- default
+      if vim.fn.executable("pnpm") == 1 then
+        package_manager = "pnpm"
+      elseif vim.fn.executable("bun") == 1 then
+        package_manager = "bun"
+      elseif vim.fn.executable("yarn") == 1 then
+        package_manager = "yarn"
       end
+
+      require("typescript-tools").setup(opts)
+
+      -- Create package manager specific commands
+      local api = require("typescript-tools.api")
+      for cmd, fn in pairs({
+        TypescriptOrganizeImports = api.organize_imports,
+        TypescriptRenameFile = api.rename_file,
+        TypescriptAddMissingImports = api.add_missing_imports,
+        TypescriptRemoveUnused = api.remove_unused,
+        TypescriptFixAll = api.fix_all,
+      }) do
+        vim.api.nvim_create_user_command(cmd, fn, { desc = cmd })
+      end
+
+      -- Add package manager specific install command
+      vim.api.nvim_create_user_command("TypescriptInstallTypes", function()
+        local install_cmd = {
+          npm = "npm install --save-dev @types/node",
+          pnpm = "pnpm add -D @types/node",
+          yarn = "yarn add -D @types/node",
+          bun = "bun add -d @types/node"
+        }
+
+        vim.fn.system(install_cmd[package_manager])
+        vim.notify("Installing types with " .. package_manager, vim.log.levels.INFO)
+      end, { desc = "Install TypeScript types using detected package manager" })
+
+      vim.notify("Using " .. package_manager .. " for TypeScript tools", vim.log.levels.INFO)
     end,
   },
 
