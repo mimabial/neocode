@@ -27,7 +27,7 @@ return {
       show_help = false,
       show_keys = false,
       disable = {
-        bt = { "terminal", "nofile" },
+        bt = {}, -- options: terminal, nofile,...
         ft = { "TelescopePrompt", "TelescopeResults", "neo-tree", "lazy", "starter" },
       },
     })
