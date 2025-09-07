@@ -11,7 +11,7 @@ return {
     },
   },
   opts = {
-    open_cmd = "noswapfile vnew",
+    open_cmd = "noswapfile tabvnew",
   },
   config = function(_, opts)
     require("spectre").setup(opts)
