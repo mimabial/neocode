@@ -306,19 +306,6 @@ return {
         capabilities = capabilities,
       })
 
-      -- Tailwind CSS LSP
-      require("lspconfig").tailwindcss.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        filetypes = {
-          "html", "css", "scss", "javascript", "javascriptreact",
-          "typescript", "typescriptreact", "templ"
-        },
-        init_options = {
-          userLanguages = { templ = "html" }
-        },
-      })
-
       -- ESLint LSP
       require("lspconfig").eslint.setup({
         on_attach = on_attach,
