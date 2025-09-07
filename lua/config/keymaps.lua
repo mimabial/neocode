@@ -112,37 +112,24 @@ function M.setup()
   -- ========================================
   -- Stack-Specific Commands
   -- ========================================
-  -- GOTH stack
-  map("n", "<leader>sg", function()
-    local ok, stacks = pcall(require, "utils.stacks")
-    if ok and stacks.configure_stack then
-      stacks.configure_stack("goth")
-      -- Try to open alpha dashboard if available
-      pcall(function()
-        if package.loaded["alpha"] then
-          vim.cmd("Alpha")
-        end
-      end)
-    else
-      vim.notify("Stack configuration module not available", vim.log.levels.WARN)
-    end
-  end, { desc = "Focus GOTH Stack" })
 
-  -- Next.js stack
-  map("n", "<leader>sn", function()
-    local ok, stacks = pcall(require, "utils.stacks")
-    if ok and stacks.configure_stack then
-      stacks.configure_stack("nextjs")
-      -- Try to open alpha dashboard if available
-      pcall(function()
-        if package.loaded["alpha"] then
-          vim.cmd("Alpha")
-        end
-      end)
+  map("n", "<leader>sg", function()
+    local has_go = vim.fn.glob("*.go") ~= ""
+    if has_go then
+      vim.cmd("GoTest")
     else
-      vim.notify("Stack configuration module not available", vim.log.levels.WARN)
+      vim.notify("No Go files detected", vim.log.levels.WARN)
     end
-  end, { desc = "Focus Next.js Stack" })
+  end, { desc = "Go: Run tests" })
+
+  map("n", "<leader>sn", function()
+    local has_package = vim.fn.glob("package.json") ~= ""
+    if has_package then
+      vim.cmd("terminal npm run dev")
+    else
+      vim.notify("No package.json detected", vim.log.levels.WARN)
+    end
+  end, { desc = "Next.js: Start dev server" })
 
   -- ========================================
   -- Git Integration

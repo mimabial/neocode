@@ -1,5 +1,4 @@
 return {
-  -- Core LSP functionality
   {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
@@ -9,21 +8,25 @@ return {
       "hrsh7th/cmp-nvim-lsp",
       "b0o/SchemaStore.nvim",
     },
+
     config = function()
       local inlay_hints_supported = vim.fn.has("nvim-0.10") == 1
 
-      -- Shared capabilities
+      -- Shared capabilities with nvim-cmp
       local capabilities = vim.lsp.protocol.make_client_capabilities()
-      capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
-      capabilities.textDocument.foldingRange = {
-        dynamicRegistration = false,
-        lineFoldingOnly = true,
-      }
+      local cmp_ok, cmp_lsp = pcall(require, "cmp_nvim_lsp")
+      if cmp_ok then
+        capabilities = cmp_lsp.default_capabilities(capabilities)
+      end
 
-      -- On attach function
       local on_attach = function(client, bufnr)
+        -- Skip setup for certain clients
         if client.name == "copilot" or client.name == "null-ls" then return end
 
+        -- Enable completion triggered by <c-x><c-o>
+        vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
+
+        -- Buffer-local keymaps
         local function buf_set_keymap(mode, lhs, rhs, opts)
           opts = opts or {}
           opts.buffer = bufnr
@@ -39,7 +42,13 @@ return {
 
         -- LSP information
         buf_set_keymap("n", "K", vim.lsp.buf.hover, { desc = "Show hover information" })
-        buf_set_keymap("n", "<C-k>", vim.lsp.buf.signature_help, { desc = "Show signature help" })
+        buf_set_keymap("n", "<C-k>", vim.lsp.buf.signature_help, { desc = "Signature help" })
+
+        buf_set_keymap("n", "<leader>wa", vim.lsp.buf.add_workspace_folder, { desc = "Add workspace folder" })
+        buf_set_keymap("n", "<leader>wr", vim.lsp.buf.remove_workspace_folder, { desc = "Remove workspace folder" })
+        buf_set_keymap("n", "<leader>wl", function()
+          print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+        end, { desc = "List workspace folders" })
 
         -- LSP actions
         buf_set_keymap("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "Code actions" })
@@ -50,6 +59,9 @@ return {
         buf_set_keymap("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous diagnostic" })
         buf_set_keymap("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
         buf_set_keymap("n", "<leader>cq", vim.diagnostic.setloclist, { desc = "Diagnostics to loclist" })
+        buf_set_keymap("n", "<leader>cf", function()
+          vim.lsp.buf.format({ async = true })
+        end, { desc = "Format" })
 
         -- Enable inlay hints
         if inlay_hints_supported and client.server_capabilities.inlayHintProvider then
@@ -141,6 +153,17 @@ return {
                   gofumpt = true,
                   usePlaceholders = true,
                   completeUnimported = true,
+                  directoryFilters = { "-.git", "-.vscode", "-.idea", "-node_modules" },
+                  semanticTokens = true,
+                  codelenses = {
+                    gc_details = true,
+                    generate = true,
+                    regenerate_cgo = true,
+                    test = true,
+                    tidy = true,
+                    upgrade_dependency = true,
+                    vendor = true,
+                  },
                   matcher = "fuzzy",
                   symbolMatcher = "fuzzy",
                   buildFlags = { "-tags=integration,e2e" },
@@ -199,6 +222,9 @@ return {
                     includeInlayFunctionLikeReturnTypeHints = true,
                     includeInlayEnumMemberValueHints = true,
                   } or nil,
+                  suggest = {
+                    completeFunctionCalls = true,
+                  },
                 },
                 javascript = {
                   inlayHints = inlay_hints_supported and {
@@ -210,6 +236,9 @@ return {
                     includeInlayFunctionLikeReturnTypeHints = true,
                     includeInlayEnumMemberValueHints = true,
                   } or nil,
+                  suggest = {
+                    completeFunctionCalls = true,
+                  },
                 },
               },
             })
@@ -271,6 +300,31 @@ return {
         vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
       end
 
+      -- Templ LSP
+      require("lspconfig").templ.setup({
+        on_attach = on_attach,
+        capabilities = capabilities,
+      })
+
+      -- Tailwind CSS LSP
+      require("lspconfig").tailwindcss.setup({
+        on_attach = on_attach,
+        capabilities = capabilities,
+        filetypes = {
+          "html", "css", "scss", "javascript", "javascriptreact",
+          "typescript", "typescriptreact", "templ"
+        },
+        init_options = {
+          userLanguages = { templ = "html" }
+        },
+      })
+
+      -- ESLint LSP
+      require("lspconfig").eslint.setup({
+        on_attach = on_attach,
+        capabilities = capabilities,
+      })
+
       vim.diagnostic.config({
         virtual_text = {
           prefix = " ",
@@ -298,9 +352,17 @@ return {
       })
 
       -- LSP handlers with borders
-      vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" })
+      vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "single" })
       vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help,
         { border = "single" })
+
+
+      local orig_util_open_floating_preview = vim.lsp.util.open_floating_preview
+      function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
+        opts = opts or {}
+        opts.border = "single"
+        return orig_util_open_floating_preview(contents, syntax, opts, ...)
+      end
     end,
   },
 

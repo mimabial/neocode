@@ -100,9 +100,6 @@ load_module("commands.lazy", "setup")
 -- Utilities and specialized features
 load_module("utils.core", "setup")
 
--- Stack detection and configuration - should be loaded last
-load_module("utils.stacks", "setup")
-
 -- Set default colorscheme with error handling
 if not vim.g.colors_name then
   local colorscheme_ok, _ = pcall(vim.api.nvim_command, "colorscheme kanagawa")
