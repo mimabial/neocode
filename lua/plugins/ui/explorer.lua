@@ -27,9 +27,8 @@ return {
         conceallevel = 3,
         concealcursor = "nvic",
       },
-      -- Skip confirmation for simple edits to avoid double confirmation
+      cleanup_delay_ms = 2000,
       skip_confirm_for_simple_edits = true,
-      -- Don't prompt to save when selecting new entries
       prompt_save_on_select_new_entry = false,
       float = {
         border = "single",
