@@ -150,6 +150,7 @@ return {
           vim.keymap.set("n", "a", api.fs.create, opts("Create"))
           vim.keymap.set("n", "R", api.tree.reload, opts("Refresh"))
           vim.keymap.set("n", "?", api.tree.toggle_help, opts("Help"))
+          vim.keymap.set("n", "q", api.tree.close, opts("Close"))
         end,
       }
     end,
