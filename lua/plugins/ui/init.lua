@@ -3,7 +3,6 @@ return {
   require("plugins.ui.statusline"),
   require("plugins.ui.tabline"),
   require("plugins.ui.notifications"),
-  require("plugins.ui.dashboard"),
   require("plugins.ui.explorer"),
   require("plugins.ui.terminal"),
   require("plugins.ui.keybindings"),

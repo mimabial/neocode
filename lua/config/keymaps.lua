@@ -183,11 +183,6 @@ function M.setup()
   map("n", "<leader>L4", "<cmd>Layout debug<cr>", { desc = "Debug Layout" })
 
   -- ========================================
-  -- Dashboard
-  -- ========================================
-  map("n", "<leader>d", "<cmd>Alpha<cr>", { desc = "Open Dashboard" })
-
-  -- ========================================
   -- Diagnostics
   -- ========================================
   map("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", { desc = "Diagnostics (Trouble)" })

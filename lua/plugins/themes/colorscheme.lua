@@ -85,11 +85,34 @@ return {
           end,
         },
         ["cyberdream"] = {
-          icon = "🤖",
-          variants = {},
-          apply_variant = function() return false end,
+          icon = "",
+          variants = { "default", "light" },
+          apply_variant = function(variant)
+            require("cyberdream").setup({
+              variant = variant,
+              transparent = false,
+              italic_comments = true,
+              hide_fillchars = true,
+              borderless_pickers = true,
+              terminal_colors = true,
+              cache = false,
+            })
+            -- Include variant in colorscheme name (like catppuccin and tokyonight)
+            local colorscheme_name = variant == "default" and "cyberdream" or "cyberdream-" .. variant
+            vim.cmd("colorscheme " .. colorscheme_name)
+            return true
+          end,
           set_transparency = function(enable)
-            pcall(require("cyberdream").setup, { transparent = enable })
+            require("cyberdream").setup({
+              variant = vim.g.cyberdream_variant or "default",
+              transparent = enable,
+              italic_comments = true,
+              hide_fillchars = true,
+              borderless_pickers = true,
+              terminal_colors = true,
+              cache = false,
+            })
+            vim.cmd("colorscheme cyberdream")
             return true
           end,
         },
@@ -783,28 +806,33 @@ return {
     config = function()
       require("cyberdream").setup({
         transparent = false,
+        italic_comments = true,
+        hide_fillchars = true,
+        borderless_pickers = true,
+        terminal_colors = true,
         cache = false,
       })
 
-      -- Export colors for other plugins
       _G.get_cyberdream_colors = function()
         local colors = require("cyberdream.colors")
+        local c = colors.default
+
         return {
-          bg = colors.bg,
-          bg1 = colors.bg_dark,
-          fg = colors.fg,
-          red = colors.red,
-          green = colors.green,
-          yellow = colors.yellow,
-          blue = colors.blue,
-          purple = colors.purple,
-          aqua = colors.cyan,
-          orange = colors.orange,
-          gray = colors.grey,
-          border = colors.bg_highlight,
-          popup_bg = colors.bg,
-          selection_bg = colors.bg_highlight,
-          selection_fg = colors.fg,
+          bg = c.bg,
+          bg1 = c.bgAlt,
+          fg = c.fg,
+          red = c.red,
+          green = c.green,
+          yellow = c.yellow,
+          blue = c.blue,
+          purple = c.purple,
+          aqua = c.cyan,
+          orange = c.orange,
+          gray = c.grey,
+          border = c.bgHighlight,
+          popup_bg = c.bg,
+          selection_bg = c.bgAlt,
+          selection_fg = c.fg,
           copilot = "#6CC644",
           codeium = "#09B6A2",
         }

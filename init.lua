@@ -113,16 +113,3 @@ if not vim.g.colors_name then
     end
   end
 end
-
--- Open alpha dashboard if available
-if vim.fn.argc() == 0 then
-  vim.defer_fn(function()
-    -- Only open Alpha if we're still in the startup buffer
-    local current_buf = vim.api.nvim_get_current_buf()
-    local current_buftype = vim.bo[current_buf].buftype
-    local current_name = vim.api.nvim_buf_get_name(current_buf)
-    if package.loaded["alpha"] and current_name == "" and current_buftype == "" then
-      vim.cmd("Alpha")
-    end
-  end, 100)
-end

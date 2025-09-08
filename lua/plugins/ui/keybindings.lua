@@ -28,7 +28,7 @@ return {
       show_keys = false,
       disable = {
         bt = {}, -- options: terminal, nofile,...
-        ft = { "TelescopePrompt", "TelescopeResults", "neo-tree", "lazy", "starter" },
+        ft = { "TelescopePrompt", "TelescopeResults", "neo-tree", "lazy" },
       },
     })
 
@@ -38,7 +38,7 @@ return {
       ["<leader>a"] = { name = "AI" },
       ["<leader>b"] = { name = "Buffers" },
       ["<leader>c"] = { name = "Code/LSP" },
-      ["<leader>d"] = { name = "Debug/Dashboard" },
+      ["<leader>d"] = { name = "Debug" },
       ["<leader>f"] = { name = "Find/Telescope" },
       ["<leader>fG"] = { name = "Find Git" },
       ["<leader>g"] = { name = "Git" },

@@ -332,7 +332,7 @@ return {
       -- Hide Noice for certain filetypes
       vim.api.nvim_create_autocmd("FileType", {
         group = vim.api.nvim_create_augroup("NoiceDisable", { clear = true }),
-        pattern = { "neo-tree", "dashboard", "alpha", "lazy" },
+        pattern = { "neo-tree", "lazy" },
         callback = function()
           vim.b.noice_disable = true
         end,

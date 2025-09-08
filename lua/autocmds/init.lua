@@ -17,7 +17,7 @@ function M.setup()
     group = num_grp,
     callback = function()
       local ft = vim.bo.filetype
-      if ft:match("^(oil|terminal|starter|help|lazy)$") then
+      if ft:match("^(oil|terminal|help|lazy)$") then
         return
       end
       vim.wo.number = true

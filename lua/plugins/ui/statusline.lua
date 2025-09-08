@@ -290,8 +290,8 @@ return {
         theme = "auto",
         globalstatus = vim.o.laststatus == 3,
         disabled_filetypes = {
-          statusline = { "starter", "neo-tree", "oil", "Trouble", "lazy", "NvimTree" },
-          winbar = { "starter", "neo-tree", "oil", "Trouble", "lazy", "NvimTree" },
+          statusline = { "neo-tree", "oil", "Trouble", "lazy", "NvimTree" },
+          winbar = { "neo-tree", "oil", "Trouble", "lazy", "NvimTree" },
         },
       },
       sections = {
