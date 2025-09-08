@@ -84,6 +84,15 @@ return {
             return true
           end,
         },
+        ["cyberdream"] = {
+          icon = "🤖",
+          variants = {},
+          apply_variant = function() return false end,
+          set_transparency = function(enable)
+            pcall(require("cyberdream").setup, { transparent = enable })
+            return true
+          end,
+        },
         ["everforest"] = {
           icon = "",
           variants = { "soft", "medium", "hard" },
@@ -761,6 +770,41 @@ return {
           popup_bg = colors.base,
           selection_bg = colors.surface0,
           selection_fg = colors.text,
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
+    end,
+  },
+  {
+    "mimabial/cyberdream.nvim",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("cyberdream").setup({
+        transparent = false,
+        cache = false,
+      })
+
+      -- Export colors for other plugins
+      _G.get_cyberdream_colors = function()
+        local colors = require("cyberdream.colors")
+        return {
+          bg = colors.bg,
+          bg1 = colors.bg_dark,
+          fg = colors.fg,
+          red = colors.red,
+          green = colors.green,
+          yellow = colors.yellow,
+          blue = colors.blue,
+          purple = colors.purple,
+          aqua = colors.cyan,
+          orange = colors.orange,
+          gray = colors.grey,
+          border = colors.bg_highlight,
+          popup_bg = colors.bg,
+          selection_bg = colors.bg_highlight,
+          selection_fg = colors.fg,
           copilot = "#6CC644",
           codeium = "#09B6A2",
         }
