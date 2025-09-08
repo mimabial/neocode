@@ -108,18 +108,6 @@ return {
             return true
           end,
         },
-        ["gruvbox-material"] = {
-          icon = "",
-          variants = { "soft", "medium", "hard" },
-          apply_variant = function(variant)
-            vim.g.gruvbox_material_background = variant
-            return true
-          end,
-          set_transparency = function(enable)
-            vim.g.gruvbox_material_transparent_background = enable and 1 or 0
-            return true
-          end,
-        },
         ["kanagawa"] = {
           icon = "",
           variants = { "wave", "dragon", "lotus" },
@@ -192,22 +180,6 @@ return {
             return true
           end,
         },
-        ["oxocarbon"] = {
-          icon = "",
-          variants = { "dark", "light" },
-          apply_variant = function(variant)
-            vim.o.background = variant
-            return true
-          end,
-          set_transparency = function(enable)
-            if enable then
-              vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
-              vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
-              vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
-            end
-            return true
-          end,
-        },
         ["rose-pine"] = {
           icon = "",
           variants = { "main", "moon", "dawn" },
@@ -219,15 +191,6 @@ return {
             pcall(require("rose-pine").setup, { disable_background = enable })
             return true
           end,
-        },
-        ["solarized"] = {
-          icon = "",
-          variants = { "dark", "light" },
-          apply_variant = function(variant)
-            vim.o.background = variant
-            return true
-          end,
-          set_transparency = function() return false end,
         },
         ["solarized-osaka"] = {
           icon = "",
@@ -882,16 +845,6 @@ return {
     end,
   },
   {
-    "sainnhe/gruvbox-material",
-    lazy = true,
-    priority = 950,
-    config = function()
-      vim.g.gruvbox_material_background = "medium"
-      vim.g.gruvbox_material_foreground = "material"
-      vim.g.gruvbox_material_better_performance = 1
-    end,
-  },
-  {
     "loctvl842/monokai-pro.nvim",
     lazy = true,
     priority = 950,
@@ -1044,34 +997,6 @@ return {
     end,
   },
   {
-    "nyoom-engineering/oxocarbon.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      _G.get_oxocarbon_colors = function()
-        return {
-          bg = "#161616",
-          bg1 = "#262626",
-          fg = "#f2f4f8",
-          red = "#ff7eb6",
-          green = "#42be65",
-          yellow = "#ffe97b",
-          blue = "#33b1ff",
-          purple = "#be95ff",
-          aqua = "#3ddbd9",
-          orange = "#ff832b",
-          gray = "#6f6f6f",
-          border = "#393939",
-          popup_bg = "#161616",
-          selection_bg = "#262626",
-          selection_fg = "#f2f4f8",
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
-    end,
-  },
-  {
     "rose-pine/neovim",
     name = "rose-pine",
     lazy = true,
@@ -1103,14 +1028,6 @@ return {
           codeium = "#09B6A2",
         }
       end
-    end,
-  },
-  {
-    "maxmx03/solarized.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("solarized").setup({ variant = "autumn", transparent = { enabled = false } })
     end,
   },
   {

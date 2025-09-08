@@ -37,21 +37,21 @@ return {
 
       -- Telescope items
       local telescope_items = {
-        { action = "Telescope find_files", name = "Find Files", section = "Telescope" },
-        { action = "Telescope live_grep", name = "Find Text", section = "Telescope" },
-        { action = "Telescope oldfiles", name = "Recent Files", section = "Telescope" },
-        { action = "Telescope buffers", name = "Buffers", section = "Telescope" },
-        { action = "Telescope help_tags", name = "Help Tags", section = "Telescope" },
-        { action = "Telescope commands", name = "Commands", section = "Telescope" },
-        { action = "Telescope keymaps", name = "Keymaps", section = "Telescope" },
+        { action = "Telescope find_files", name = "Find Files",   section = "Telescope" },
+        { action = "Telescope live_grep",  name = "Find Text",    section = "Telescope" },
+        { action = "Telescope oldfiles",   name = "Recent Files", section = "Telescope" },
+        { action = "Telescope buffers",    name = "Buffers",      section = "Telescope" },
+        { action = "Telescope help_tags",  name = "Help Tags",    section = "Telescope" },
+        { action = "Telescope commands",   name = "Commands",     section = "Telescope" },
+        { action = "Telescope keymaps",    name = "Keymaps",      section = "Telescope" },
       }
       vim.list_extend(all_items, telescope_items)
 
       -- File items
       local file_items = {
-        { action = "ene | startinsert", name = "New File", section = "Files" },
-        { action = "Oil", name = "File Explorer", section = "Files" },
-        { action = "e $MYVIMRC", name = "Edit Config", section = "Files" },
+        { action = "ene | startinsert", name = "New File",      section = "Files" },
+        { action = "Oil",               name = "File Explorer", section = "Files" },
+        { action = "e $MYVIMRC",        name = "Edit Config",   section = "Files" },
       }
       vim.list_extend(all_items, file_items)
 
@@ -76,18 +76,17 @@ return {
 
       -- Git items
       local git_items = {
-        { action = "LazyGit", name = "LazyGit", section = "Git" },
+        { action = "LazyGit",    name = "LazyGit",    section = "Git" },
         { action = "Git status", name = "Git Status", section = "Git" },
-        { action = "DiffviewOpen", name = "Diff View", section = "Git" },
       }
       vim.list_extend(all_items, git_items)
 
       -- System items
       local system_items = {
-        { action = "Lazy", name = "Lazy Plugins", section = "System" },
-        { action = "Mason", name = "Mason Packages", section = "System" },
-        { action = "checkhealth", name = "Check Health", section = "System" },
-        { action = "qa", name = "Quit Neovim", section = "System" },
+        { action = "Lazy",        name = "Lazy Plugins",   section = "System" },
+        { action = "Mason",       name = "Mason Packages", section = "System" },
+        { action = "checkhealth", name = "Check Health",   section = "System" },
+        { action = "qa",          name = "Quit Neovim",    section = "System" },
       }
       vim.list_extend(all_items, system_items)
 

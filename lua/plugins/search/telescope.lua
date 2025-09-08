@@ -134,62 +134,43 @@ return {
 
     -- Return keymaps
     return {
-      -- Core finder functions - using our layout wrapper
-      { "<leader>ff", with_layout("find_files"), desc = "Find Files" },
-      { "<leader>fg", with_layout("live_grep"),  desc = "Find Text (Grep)" },
-      { "<leader>fb", with_layout("buffers"),    desc = "Find Buffers" },
-      { "<leader>fh", with_layout("help_tags"),  desc = "Find Help" },
-      { "<leader>fr", with_layout("oldfiles"),   desc = "Recent Files" },
-
-      -- Layout toggle with persistence
+      -- Layout toggle
       {
         "<leader>fl",
         function()
           -- Toggle between ivory and ebony
           vim.g.telescope_layout = (vim.g.telescope_layout == "ivory") and "ebony" or "ivory"
           local layout = vim.g.telescope_layout
-
           -- Save preference to file
           save_layout(layout)
-
           vim.notify("Telescope layout: " .. (layout == "ivory" and "ivory" or "ebony") .. " (saved)")
         end,
         desc = "Toggle Layout",
       },
-
+      -- Core finder functions - using our layout wrapper
+      { "<leader>ff",  with_layout("find_files"),                desc = "Find Files" },
+      { "<leader>fg",  with_layout("live_grep"),                 desc = "Find Text (Grep)" },
+      { "<leader>fb",  with_layout("buffers"),                   desc = "Find Buffers" },
+      { "<leader>fh",  with_layout("help_tags"),                 desc = "Find Help" },
+      { "<leader>fr",  with_layout("oldfiles"),                  desc = "Recent Files" },
       -- Extended search functionality
-      { "<leader>fs", with_layout("grep_string"),     desc = "Find Current Word" },
-      { "<leader>fc", with_layout("command_history"), desc = "Command History" },
-      { "<leader>f/", with_layout("search_history"),  desc = "Search History" },
-
+      { "<leader>fs",  with_layout("grep_string"),               desc = "Find Current Word" },
+      { "<leader>fc",  with_layout("command_history"),           desc = "Command History" },
+      { "<leader>f/",  with_layout("search_history"),            desc = "Search History" },
       -- Git integration
-      { "<leader>gc", with_layout("git_commits"),     desc = "Git Commits" },
-      { "<leader>gb", with_layout("git_branches"),    desc = "Git Branches" },
-      { "<leader>gs", with_layout("git_status"),      desc = "Git Status" },
-
+      { "<leader>fGc", "<cmd>Telescope git_commits<cr>",         desc = "Find Git Commits" },
+      { "<leader>fGb", "<cmd>Telescope git_branches<cr>",        desc = "Find Git Branches" },
+      { "<leader>fGs", "<cmd>Telescope git_status<cr>",          desc = "Find Git Status" },
+      { "<leader>fGf", "<cmd>Telescope git_files<cr>",           desc = "Find Git Files" },
       -- LSP integration
-      {
-        "<leader>fd",
-        function()
-          local layout = vim.g.telescope_layout or "ivory"
-          local borders = vim.g.telescope_borders[layout] or vim.g.telescope_borders.ivory
-          require("telescope.builtin").diagnostics({
-            bufnr = 0,
-            layout_strategy = layout,
-            borderchars = borders,
-          })
-        end,
-        desc = "Document Diagnostics",
-      },
-      { "<leader>fD", with_layout("diagnostics"), desc = "Workspace Diagnostics" },
-
+      { "<leader>fd",  "<cmd>Telescope diagnostics bufnr=0<cr>", desc = "Document Diagnostics" },
+      { "<leader>fD",  with_layout("diagnostics"),               desc = "Workspace Diagnostics" },
       -- Other useful pickers
-      { "<leader>ft", with_layout("treesitter"),  desc = "Find Symbols (Treesitter)" },
-      { "<leader>fk", with_layout("keymaps"),     desc = "Find Keymaps" },
-
+      { "<leader>ft",  with_layout("treesitter"),                desc = "Find Symbols (Treesitter)" },
+      { "<leader>fk",  with_layout("keymaps"),                   desc = "Find Keymaps" },
       -- Stack-specific finders (uses separate functions)
-      { "<leader>sg", find_goth_files,            desc = "Find GOTH files" },
-      { "<leader>sn", find_nextjs_files,          desc = "Find Next.js files" },
+      { "<leader>sg",  find_goth_files,                          desc = "Find GOTH files" },
+      { "<leader>sn",  find_nextjs_files,                        desc = "Find Next.js files" },
     }
   end,
 
@@ -286,6 +267,7 @@ return {
     end
 
     local telescope = require("telescope")
+    local actions = require("telescope.actions")
 
     -- Basic configuration with both layout options predefined
     telescope.setup({
@@ -345,7 +327,59 @@ return {
         },
       },
       set_env = { ["COLORTERM"] = "truecolor" },
-
+      file_previewer = require("telescope.previewers").vim_buffer_cat.new,
+      grep_previewer = require("telescope.previewers").vim_buffer_vimgrep.new,
+      qflist_previewer = require("telescope.previewers").vim_buffer_qflist.new,
+      mappings = {
+        i = {
+          ["<C-n>"] = actions.cycle_history_next,
+          ["<C-p>"] = actions.cycle_history_prev,
+          ["<C-j>"] = actions.move_selection_next,
+          ["<C-k>"] = actions.move_selection_previous,
+          ["<C-c>"] = actions.close,
+          ["<Down>"] = actions.move_selection_next,
+          ["<Up>"] = actions.move_selection_previous,
+          ["<CR>"] = actions.select_default,
+          ["<C-x>"] = actions.select_horizontal,
+          ["<C-v>"] = actions.select_vertical,
+          ["<C-t>"] = actions.select_tab,
+          ["<C-u>"] = actions.preview_scrolling_up,
+          ["<C-d>"] = actions.preview_scrolling_down,
+          ["<PageUp>"] = actions.results_scrolling_up,
+          ["<PageDown>"] = actions.results_scrolling_down,
+          ["<Tab>"] = actions.toggle_selection + actions.move_selection_worse,
+          ["<S-Tab>"] = actions.toggle_selection + actions.move_selection_better,
+          ["<C-q>"] = actions.send_to_qflist + actions.open_qflist,
+          ["<M-q>"] = actions.send_selected_to_qflist + actions.open_qflist,
+          ["<C-l>"] = actions.complete_tag,
+          ["<C-_>"] = actions.which_key,
+        },
+        n = {
+          ["<esc>"] = actions.close,
+          ["<CR>"] = actions.select_default,
+          ["<C-x>"] = actions.select_horizontal,
+          ["<C-v>"] = actions.select_vertical,
+          ["<C-t>"] = actions.select_tab,
+          ["<Tab>"] = actions.toggle_selection + actions.move_selection_worse,
+          ["<S-Tab>"] = actions.toggle_selection + actions.move_selection_better,
+          ["<C-q>"] = actions.send_to_qflist + actions.open_qflist,
+          ["<M-q>"] = actions.send_selected_to_qflist + actions.open_qflist,
+          ["j"] = actions.move_selection_next,
+          ["k"] = actions.move_selection_previous,
+          ["H"] = actions.move_to_top,
+          ["M"] = actions.move_to_middle,
+          ["L"] = actions.move_to_bottom,
+          ["<Down>"] = actions.move_selection_next,
+          ["<Up>"] = actions.move_selection_previous,
+          ["gg"] = actions.move_to_top,
+          ["G"] = actions.move_to_bottom,
+          ["<C-u>"] = actions.preview_scrolling_up,
+          ["<C-d>"] = actions.preview_scrolling_down,
+          ["<PageUp>"] = actions.results_scrolling_up,
+          ["<PageDown>"] = actions.results_scrolling_down,
+          ["?"] = actions.which_key,
+        },
+      },
       cycle_layout_list = { "ivory", "ebony" },
       file_ignore_patterns = {
         "%.git/",

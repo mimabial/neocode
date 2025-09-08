@@ -24,8 +24,6 @@ M.get_colors = function()
     theme_colors = _G.get_nordic_colors()
   elseif vim.g.colors_name == "onedark" and _G.get_onedark_colors then
     theme_colors = _G.get_onedark_colors()
-  elseif vim.g.colors_name == "oxocarbon" and _G.get_oxocarbon_colors then
-    theme_colors = _G.get_oxocarbon_colors()
   elseif vim.g.colors_name == "rose-pine" and _G.get_rose_pine_colors then
     theme_colors = _G.get_rose_pine_colors()
   elseif vim.g.colors_name == "solarized-osaka" and _G.get_solarized_osaka_colors then
@@ -66,8 +64,8 @@ M.get_colors = function()
     border = get_hl_color("FloatBorder", "fg", "#45403d"),
     -- Special UI colors
     popup_bg = get_hl_color("Pmenu", "bg", "#282828"),
-    selection_bg = get_hl_color("PmenuSel", "bg", "#45403d"),
-    selection_fg = get_hl_color("PmenuSel", "fg", "#d4be98"),
+    select_bg = get_hl_color("PmenuSel", "bg", "#45403d"),
+    select_fg = get_hl_color("PmenuSel", "fg", "#d4be98"),
     -- Special AI colors
     copilot = "#6CC644",
     codeium = "#09B6A2",
@@ -118,7 +116,7 @@ M.setup_highlights = function()
   vim.api.nvim_set_hl(0, "NormalFloat", { bg = colors.popup_bg })
 
   -- Menu highlights
-  vim.api.nvim_set_hl(0, "PmenuSel", { bg = colors.selection_bg, fg = colors.selection_fg, bold = true })
+  vim.api.nvim_set_hl(0, "PmenuSel", { bg = colors.select_bg, fg = colors.select_fg, bold = true })
   vim.api.nvim_set_hl(0, "Pmenu", { bg = colors.popup_bg })
   vim.api.nvim_set_hl(0, "PmenuThumb", { bg = colors.border })
 
@@ -164,16 +162,9 @@ M.setup_highlights = function()
   -- Enhanced highlight groups for selected items
   vim.api.nvim_set_hl(0, "CmpItemAbbrMatch", { fg = colors.green, bold = true })
   vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzy", { fg = colors.green, bold = true })
-
-  -- Create distinct highlighting for selected items
-  vim.api.nvim_set_hl(0, "CmpSel", { bg = colors.select_bg, fg = colors.select_fg, bold = true })
-  vim.api.nvim_set_hl(0, "CmpItemAbbrDeprecated", { fg = colors.gray, strikethrough = true })
-
-  -- Create special highlights for selected items
-  vim.api.nvim_set_hl(0, "CmpItemAbbrMatch", { fg = colors.green, bold = true })
-  vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzy", { fg = colors.green, bold = true })
   vim.api.nvim_set_hl(0, "CmpItemAbbrMatchSelected", { fg = colors.yellow, bg = colors.select_bg, bold = true })
   vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzySelected", { fg = colors.yellow, bg = colors.select_bg, bold = true })
+  vim.api.nvim_set_hl(0, "CmpItemAbbrDeprecated", { fg = colors.gray, strikethrough = true })
 
   -- Menu appearance for selected vs non-selected items
   vim.api.nvim_set_hl(0, "CmpItemMenu", { fg = colors.gray, italic = true })

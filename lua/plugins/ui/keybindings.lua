@@ -40,7 +40,9 @@ return {
       ["<leader>c"] = { name = "Code/LSP" },
       ["<leader>d"] = { name = "Debug/Dashboard" },
       ["<leader>f"] = { name = "Find/Telescope" },
+      ["<leader>fG"] = { name = "Find Git" },
       ["<leader>g"] = { name = "Git" },
+      ["<leader>go"] = { name = "Git Operations (Octo)" },
       ["<leader>L"] = { name = "Layouts" },
       ["<leader>n"] = { name = "Notifications" },
       ["<leader>r"] = { name = "Refactoring" },
@@ -86,19 +88,43 @@ return {
       ["<leader>fb"] = { desc = "Find Buffers" },
       ["<leader>fr"] = { desc = "Recent Files" },
       ["<leader>fh"] = { desc = "Find Help" },
+      ["<leader>fs"] = { desc = "Find Current Word" },
+      ["<leader>fc"] = { desc = "Command History" },
+      ["<leader>f/"] = { desc = "Search History" },
+      ["<leader>fk"] = { desc = "Find Keymaps" },
       ["<leader>fd"] = { desc = "Document Diagnostics" },
       ["<leader>fD"] = { desc = "Workspace Diagnostics" },
+      ["<leader>ft"] = { desc = "Find Symbols" },
     })
 
-    -- Git
+    -- Telescope Git (moved to fG namespace)
+    which_key.register({
+      ["<leader>fGc"] = { desc = "Find Git Commits" },
+      ["<leader>fGb"] = { desc = "Find Git Branches" },
+      ["<leader>fGs"] = { desc = "Find Git Status" },
+      ["<leader>fGf"] = { desc = "Find Git Files" },
+    })
+
+    -- Core Git (no conflicts)
     which_key.register({
       ["<leader>gg"] = { desc = "LazyGit" },
-      ["<leader>gd"] = { desc = "DiffView Open" },
       ["<leader>gs"] = { desc = "Git Status" },
-      ["<leader>gb"] = { desc = "Git Branches" },
-      ["<leader>gc"] = { desc = "Git Commits" },
+      ["<leader>gc"] = { desc = "Git Commit" },
+      ["<leader>gb"] = { desc = "Git Branch" },
+      ["<leader>gm"] = { desc = "Git Merge" },
+      ["<leader>gr"] = { desc = "Git Rebase" },
+      ["<leader>gl"] = { desc = "Git Log" },
       ["<leader>gp"] = { desc = "Git Pull" },
       ["<leader>gP"] = { desc = "Git Push" },
+      ["<leader>gf"] = { desc = "Git Fetch" },
+      ["<leader>ga"] = { desc = "Git Add All" },
+    })
+
+    -- Octo (go namespace)
+    which_key.register({
+      ["<leader>go"] = { desc = "Octo" },
+      ["<leader>gpr"] = { desc = "PR List" },
+      ["<leader>gi"] = { desc = "Issue List" },
     })
 
     -- Refactoring

@@ -1,190 +1,269 @@
-# Advanced Neovim Configuration
+# Modern Neovim Configuration
 
-This is a fully-featured Neovim configuration designed for full-stack development with the GOTH (Go/Templ/HTMX) stack and Next.js. It's built with lazy.nvim for plugin management and uses Gruvbox Material as the primary theme with Tokyo Night as an alternative.
+A highly modular, performance-focused Neovim configuration designed for full-stack development. Built with lazy.nvim for optimal startup time and organized into logical plugin categories for easy maintenance and scalability.
 
-## Features
+## ✨ Features
 
-- 🚀 Modern plugin management with lazy.nvim
-- 🎨 Beautiful Gruvbox Material theme with Tokyo Night as alternative
-- 🌈 Full LSP integration with automatic setup
-- 🔍 Syntax highlighting with Treesitter
-- 📁 File navigation with Neo-tree
-- 🔎 Fuzzy finding with Telescope
-- ⚡ Autocompletion with nvim-cmp
-- 🌿 Git integration with gitsigns and diffview
-- 📊 Status line with lualine
-- 💻 Terminal integration with toggleterm
-- 🧹 Formatting and linting
-- 🐞 Code debugging with nvim-dap
-- 📢 Advanced notification system with nvim-notify and noice
-- 🚦 Stack-specific tools for GOTH and Next.js development
+- 🚀 **Lightning fast startup** with lazy.nvim plugin management
+- 🎨 **Comprehensive theme support** - 15+ themes with variants and transparency
+- 🤖 **AI-powered development** - Copilot and Codeium integration
+- 🔧 **Full LSP ecosystem** - Mason, formatting, linting, and diagnostics
+- 📁 **Modern file navigation** - Oil.nvim as primary explorer with Telescope
+- 🎯 **Advanced search** - Telescope with live grep and fuzzy finding
+- 🌿 **Git integration** - Multiple Git tools and workflow support
+- 🐞 **Debugging support** - nvim-dap with language-specific configurations
+- ⌨️ **Smart keybindings** - which-key v3 with contextual descriptions
+- 🎭 **System theme integration** - Automatic theme synchronization
+- 🔄 **Modular architecture** - Easy to extend and customize
 
-## Stack-Specific Features
+## 🎨 Supported Themes
 
-### GOTH Stack (Go/Templ/HTMX)
+All themes include variant support and transparency options:
 
-- Full Go language support with gopls
-- Templ file syntax highlighting and LSP support
-- Automatic HTMX attribute highlighting
-- Go-specific development tools and commands
-- Automatic formatting for Go and Templ files
+- **ashen** - Minimalist dark theme
+- **catppuccin** - Latte, Frappé, Macchiato, Mocha variants
+- **cyberdream** - Cyberpunk-inspired theme
+- **everforest** - Soft, Medium, Hard variants
+- **gruvbox** - Classic retro groove theme
+- **gruvbox-material** - Improved Gruvbox with variants
+- **kanagawa** - Wave, Dragon, Lotus variants
+- **monokai-pro** - Professional Monokai theme
+- **nord** - Arctic-inspired theme
+- **nordic** - Nord-based theme with improvements
+- **onedark** - Atom One Dark inspired
+- **oxocarbon** - IBM Carbon design system
+- **rose-pine** - Main, Moon, Dawn variants
+- **solarized** - Classic Solarized theme
+- **solarized-osaka** - Modern Solarized variant
+- **tokyonight** - Night, Storm, Day, Moon variants
 
-### Next.js
+## 📋 Requirements
 
-- TypeScript/JavaScript support with tsserver
-- JSX/TSX syntax highlighting
-- React component snippets
-- Next.js specific commands and utilities
-- Tailwind CSS integration
+- **Neovim 0.8+** (0.9+ recommended)
+- **Git** for plugin management
+- **Node.js** for LSP servers
+- **ripgrep** for live grep search
+- **fd** for file finding
+- **lazygit** for Git integration
+- **A Nerd Font** for icons (JetBrains Mono recommended)
 
-## Installation
+### Language-Specific Requirements
 
-1. Make sure you have Neovim 0.9.0 or later installed.
-2. Install the dependencies:
-   - [ripgrep](https://github.com/BurntSushi/ripgrep) for live grep search
-   - [fd](https://github.com/sharkdp/fd) for file finding
-   - [lazygit](https://github.com/jesseduffield/lazygit) for git integration
-   - [Node.js](https://nodejs.org) for LSP servers
-   - [Go](https://golang.org) for GOTH stack
-   - A [Nerd Font](https://www.nerdfonts.com/) for icons
+- **Go** for GOTH stack development
+- **Python** for Python development
+- **Rust** for system tools and formatters
 
-3. Clone this repository to your Neovim config directory:
+## 🚀 Installation
 
 ```bash
-# Backup your existing config if needed
+# Backup existing configuration
 mv ~/.config/nvim ~/.config/nvim.bak
 
-# Clone this repository
-git clone https://github.com/yourusername/nvim-config.git ~/.config/nvim
+# Clone this configuration
+git clone <your-repo-url> ~/.config/nvim
+
+# Start Neovim (plugins will auto-install)
+nvim
 ```
 
-4. Start Neovim, and lazy.nvim will automatically install all plugins.
-
-## Directory Structure
+## 📂 Directory Structure
 
 ```
 ~/.config/nvim/
-├── init.lua                # Main configuration file
-├── lua/
-│   └── config/             # Configuration files
-│       ├── autocmds.lua    # Auto commands
-│       ├── keymaps.lua     # Key mappings
-│       ├── lazy.lua        # Lazy.nvim setup
-│       ├── options.lua     # Neovim options
-│       └── utils.lua       # Utility functions
-│   └── plugins/            # Plugin configurations
-│       ├── colorscheme.lua # Theme configuration
-│       ├── completion.lua  # Autocompletion setup
-│       ├── dap.lua         # Debugging setup
-│       ├── editor.lua      # Editing enhancements
-│       ├── formatter.lua   # Code formatting
-│       ├── git.lua         # Git integration
-│       ├── goth.lua        # GOTH stack specific plugins
-│       ├── lsp.lua         # LSP configuration
-│       ├── lualine.lua     # Statusline
-│       ├── neo-tree.lua    # File explorer
-│       ├── nextjs.lua      # Next.js specific plugins
-│       ├── notify.lua      # Notification system
-│       ├── telescope.lua   # Fuzzy finder
-│       ├── toggleterm.lua  # Terminal integration
-│       ├── tokyonight.lua  # Tokyo Night theme
-│       └── treesitter.lua  # Syntax highlighting
+├── init.lua                 # Main entry point
+├── lazy-lock.json          # Plugin version lock file
+└── lua/
+    ├── config/             # Core configuration
+    │   ├── autocmds.lua    # Auto commands
+    │   ├── commands.lua    # Custom commands
+    │   ├── keymaps.lua     # Key mappings
+    │   ├── lazy.lua        # Plugin manager setup
+    │   ├── options.lua     # Neovim options
+    │   └── ui.lua          # UI configuration
+    ├── autocmds/           # Extended auto commands
+    ├── commands/           # Extended commands
+    ├── utils/              # Utility functions
+    └── plugins/            # Modular plugin configuration
+        ├── ai/             # AI tools (Copilot, Codeium)
+        ├── coding/         # Completion, snippets, treesitter
+        ├── debug/          # Debugging tools
+        ├── editor/         # Editor enhancements
+        ├── git/            # Git integration
+        ├── lsp/            # LSP ecosystem
+        ├── search/         # Search and navigation
+        ├── themes/         # Theme configuration
+        └── ui/             # UI components
 ```
 
-## Key Features
+## ⌨️ Key Mappings
+
+> **Note**: `<leader>` is mapped to `<Space>`
 
 ### File Navigation
+| Key | Action |
+|-----|--------|
+| `<leader>e` | Toggle Oil file explorer |
+| `-` | Open Oil in parent directory |
+| `<leader>E` | Fallback to nvim-tree |
+| `<leader>ff` | Find files (Telescope) |
+| `<leader>fg` | Live grep (Telescope) |
+| `<leader>fb` | Browse buffers (Telescope) |
+| `<leader>fr` | Recent files (Telescope) |
 
-- `<leader>e` - Toggle Neo-tree file explorer
-- `<leader>ff` - Find files with Telescope
-- `<leader>fg` - Live grep with Telescope
-- `<leader>fb` - Browse buffers with Telescope
+### Buffer Management
+| Key | Action |
+|-----|--------|
+| `<leader>bb` | Switch to other buffer |
+| `<leader>bd` | Delete buffer |
+| `<leader>bn`/`<leader>bp` | Next/Previous buffer |
+| `<S-h>`/`<S-l>` | Navigate buffers |
+| `<leader>b1-9` | Go to buffer 1-9 |
 
-### LSP
+### LSP & Code
+| Key | Action |
+|-----|--------|
+| `gd` | Go to definition |
+| `gr` | Show references |
+| `gi` | Go to implementation |
+| `K` | Hover documentation |
+| `<leader>ca` | Code actions |
+| `<leader>cr` | Rename symbol |
+| `<leader>cf` | Format code |
+| `<leader>cd` | Show diagnostics |
+| `[d`/`]d` | Previous/Next diagnostic |
 
-- `gd` - Go to definition
-- `gr` - Show references
-- `K` - Show hover documentation
-- `<leader>ca` - Code actions
-- `<leader>cr` - Rename
-- `<leader>cf` - Format code
+### Git Integration
+| Key | Action |
+|-----|--------|
+| `<leader>gg` | Open LazyGit |
+| `<leader>gd` | Open DiffView |
+| `<leader>gs` | Git status |
+| `<leader>gb` | Git branches |
+| `<leader>gc` | Git commits |
 
-### Git
+### AI Tools
+| Key | Action |
+|-----|--------|
+| `<leader>ap` | Toggle Copilot |
+| `<leader>am` | Toggle Codeium |
+| `<leader>ac` | Cycle AI providers |
+| `<leader>ad` | Disable AI providers |
 
-- `<leader>gg` - Open Lazygit
-- `<leader>gd` - Open Diffview
-- `]c` / `[c` - Jump between hunks
-- `<leader>hs` - Stage hunk
-- `<leader>hr` - Reset hunk
-
-### Debugging
-
-- `<F5>` - Start/continue debugging
-- `<F10>` - Step over
-- `<F11>` - Step into
-- `<F12>` - Step out
-- `<leader>db` - Toggle breakpoint
+### Theme Management
+| Key | Action |
+|-----|--------|
+| `<leader>us` | Cycle color scheme |
+| `<leader>uS` | Select color scheme |
+| `<leader>uv` | Cycle color variant |
+| `<leader>ub` | Toggle transparency |
+| `<leader>uy` | Sync with system theme |
 
 ### Terminal
+| Key | Action |
+|-----|--------|
+| `<leader>tf` | Float terminal |
+| `<leader>th` | Horizontal terminal |
+| `<leader>tv` | Vertical terminal |
+| `<leader>tt` | Toggle terminal |
 
-- `<leader>tf` - Open floating terminal
-- `<leader>th` - Open horizontal terminal
-- `<leader>tv` - Open vertical terminal
+### Debugging
+| Key | Action |
+|-----|--------|
+| `<F5>` | Start/Continue debugging |
+| `<F10>` | Step over |
+| `<F11>` | Step into |
+| `<F12>` | Step out |
+| `<leader>db` | Toggle breakpoint |
 
-### GOTH Stack Specific
+### Refactoring
+| Key | Action |
+|-----|--------|
+| `<leader>rr` | Refactoring menu |
+| `<leader>re` | Extract function |
+| `<leader>rv` | Extract variable |
+| `<leader>ri` | Inline variable |
+| `<leader>rp` | Debug print |
+| `<leader>rc` | Clean debug prints |
 
-- `<leader>cgt` - Run Go tests
-- `<leader>cgm` - Run Go mod tidy
-- `<leader>csc` - Create new Templ component
+## 🛠️ Customization
 
-### Next.js Specific
+### Adding New Plugins
 
-- `<leader>cnc` - Create new Client component
-- `<leader>cns` - Create new Server component
-- `<leader>cnp` - Create new Page
-- `<leader>cnl` - Create new Layout
+1. Create a new file in the appropriate `lua/plugins/` subdirectory
+2. Follow the existing plugin structure
+3. Add keymaps in the plugin file itself
+4. Add which-key descriptions in `lua/plugins/ui/keybindings.lua`
 
-### UI and Themes
+### Theme Configuration
 
-- `<leader>ut` - Toggle colorscheme between Gruvbox Material and Tokyo Night
-- `<leader>uT` - Toggle background transparency
+Themes are managed in `lua/plugins/themes/colorscheme.lua`. To add a new theme:
 
-### Layouts
+1. Add the plugin specification
+2. Add theme configuration to the themes table
+3. Include color extraction function if needed
 
-- `<leader>L1` - Coding layout (NeoTree + main editor)
-- `<leader>L2` - Terminal layout (editor + terminal)
-- `<leader>L3` - Writing layout (distraction-free)
-- `<leader>L4` - Debug layout (with DAP UI)
+### System Theme Integration
 
-## Customization
+The configuration can automatically sync with your system theme by reading from:
+- `~/.config/hypr/themes/theme.conf`
+- `~/.config/hypr/theme.conf`
+- Environment variables `NVIM_SCHEME` and `NVIM_VARIANT`
 
-This configuration is designed to be easy to customize:
+## 🚦 Commands
 
-1. To add new plugins, create a new file in `lua/plugins/` with your plugin configuration.
-2. To modify existing plugins, edit the corresponding file in `lua/plugins/`.
-3. For basic settings, modify `init.lua` or the files in `lua/config/`.
+| Command | Description |
+|---------|-------------|
+| `:SystemSyncTheme` | Sync with system theme |
+| `:SystemSetTheme <theme> [variant]` | Set system theme |
+| `:SystemListThemes` | List available themes |
+| `:DiagnosticsToggle` | Toggle diagnostic display |
+| `:ConfigReload` | Reload Neovim configuration |
+| `:PluginSync` | Sync and update plugins |
 
-## Stack Selection
+## 🧪 Language Support
 
-You can focus on a specific tech stack with:
+### Supported Languages
+- **Go** - Full LSP, debugging, testing
+- **TypeScript/JavaScript** - Modern tooling
+- **Python** - Complete development environment
+- **Lua** - Neovim configuration development
+- **Rust** - Systems programming
+- **HTML/CSS** - Web development
+- **JSON/YAML** - Configuration files
+- **Markdown** - Documentation
 
-```
-:StackFocus goth    # Focus on Go/Templ/HTMX development
-:StackFocus nextjs  # Focus on Next.js development
-```
+### LSP Servers (Auto-installed via Mason)
+- `gopls` - Go
+- `typescript-language-server` - TypeScript/JavaScript
+- `pyright` - Python
+- `lua-language-server` - Lua
+- `rust-analyzer` - Rust
+- `html` - HTML
+- `cssls` - CSS
+- `jsonls` - JSON
+- `yamlls` - YAML
 
-This will adjust settings, linters, and formatters for the selected stack.
+## ⚡ Performance
 
-## Local Project Configuration
+- **Fast startup** - Lazy loading and optimized plugin management
+- **Minimal resource usage** - Disabled unnecessary default plugins
+- **Cached modules** - Improved require() performance
+- **Fail-safe loading** - Graceful degradation if plugins fail
 
-For project-specific settings, create a `.nvim` directory in your project root:
+## 🤝 Contributing
 
-```
-project_root/
-└── .nvim/
-    └── autocmds.lua  # Project-specific auto commands
-```
+This configuration follows strict principles:
 
-## Credits
+1. **Modular design** - Each plugin in its appropriate category
+2. **Minimal complexity** - Avoid unnecessary abstractions
+3. **Performance first** - Lazy loading and efficient startup
+4. **Fail-safe** - Graceful degradation and error handling
+5. **Scalable** - Easy to extend and maintain
 
-This configuration is designed for full-stack developers working with Go/Templ/HTMX and Next.js. Thanks to all the plugin authors for their amazing work!
+## 📜 License
+
+This configuration is provided as-is for educational and personal use.
+
+---
+
+**Happy coding!** 🎉
