@@ -1,44 +1,7 @@
 local M = {}
 
+-- Universal color extraction from highlight groups
 M.get_colors = function()
-  -- Try theme-specific color functions first
-  local theme_colors = nil
-
-  if vim.g.colors_name == "ashen" and _G.get_ashen_colors then
-    theme_colors = _G.get_ashen_colors()
-  elseif vim.g.colors_name == "catppuccin" and _G.get_catppuccin_colors then
-    theme_colors = _G.get_catppuccin_colors()
-  elseif vim.g.colors_name == "bamboo" and _G.get_bamboo_colors then
-    theme_colors = _G.get_bamboo_colors()
-  elseif vim.g.colors_name == "cyberdream" and _G.get_cyberdream_colors then
-    theme_colors = _G.get_cyberdream_colors()
-  elseif vim.g.colors_name == "everforest" and _G.get_everforest_colors then
-    theme_colors = _G.get_everforest_colors()
-  elseif vim.g.colors_name == "gruvbox" and _G.get_gruvbox_colors then
-    theme_colors = _G.get_gruvbox_colors()
-  elseif vim.g.colors_name == "kanagawa" and _G.get_kanagawa_colors then
-    theme_colors = _G.get_kanagawa_colors()
-  elseif vim.g.colors_name == "monokai-pro" and _G.get_monokai_pro_colors then
-    theme_colors = _G.get_monokai_pro_colors()
-  elseif vim.g.colors_name == "nord" and _G.get_nord_colors then
-    theme_colors = _G.get_nord_colors()
-  elseif vim.g.colors_name == "nordic" and _G.get_nordic_colors then
-    theme_colors = _G.get_nordic_colors()
-  elseif vim.g.colors_name == "onedark" and _G.get_onedark_colors then
-    theme_colors = _G.get_onedark_colors()
-  elseif vim.g.colors_name == "rose-pine" and _G.get_rose_pine_colors then
-    theme_colors = _G.get_rose_pine_colors()
-  elseif vim.g.colors_name == "solarized-osaka" and _G.get_solarized_osaka_colors then
-    theme_colors = _G.get_solarized_osaka_colors()
-  elseif vim.g.colors_name == "tokyonight" and _G.get_tokyonight_colors then
-    theme_colors = _G.get_tokyonight_colors()
-  end
-
-  -- If we got valid theme colors, return them
-  if theme_colors and type(theme_colors) == "table" then
-    return theme_colors
-  end
-  -- Fallback to extracting from highlight groups
   local function get_hl_color(group, attr, fallback)
     local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group })
     local val = ok and hl[attr]
@@ -50,7 +13,8 @@ M.get_colors = function()
     end
     return tostring(val)
   end
-  -- Base kanagawa-compatible palette as fallback
+
+  -- Extract colors from highlight groups
   return {
     bg = get_hl_color("Normal", "bg", "#1f1f28"),
     bg1 = get_hl_color("CursorLine", "bg", "#2a2a37"),

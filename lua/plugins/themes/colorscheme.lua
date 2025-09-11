@@ -15,31 +15,6 @@ return {
         overrides = function(colors) return {} end,
       })
 
-      -- Export colors for other plugins
-      _G.get_kanagawa_colors = function()
-        local colors = require("kanagawa.colors").setup()
-        local p = colors.palette
-        return {
-          bg = p.sumiInk1,
-          bg1 = p.sumiInk2,
-          fg = p.fujiWhite,
-          red = p.autumnRed,
-          green = p.springGreen,
-          yellow = p.carpYellow,
-          blue = p.crystalBlue,
-          purple = p.oniViolet,
-          aqua = p.waveAqua1,
-          orange = p.surimiOrange,
-          gray = p.fujiGray,
-          border = p.sumiInk4,
-          popup_bg = p.sumiInk1,
-          selection_bg = p.sumiInk4,
-          selection_fg = p.fujiWhite,
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
-
       -- Theme management system
       local cache_dir = vim.fn.stdpath("cache")
       local settings_file = cache_dir .. "/theme_settings.json"
@@ -761,28 +736,6 @@ return {
         transparent = false,
         italic_comments = true,
       })
-      _G.get_ashen_colors = function()
-        -- Fallback colors since ashen might not export colors
-        return {
-          bg = "#0f0f0f",
-          bg1 = "#1a1a1a",
-          fg = "#c5c5c5",
-          red = "#ff6b6b",
-          green = "#51cf66",
-          yellow = "#ffd43b",
-          blue = "#339af0",
-          purple = "#845ef7",
-          aqua = "#22b8cf",
-          orange = "#ff922b",
-          gray = "#868e96",
-          border = "#343a40",
-          popup_bg = "#0f0f0f",
-          selection_bg = "#343a40",
-          selection_fg = "#c5c5c5",
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
     end,
   },
   {
@@ -811,28 +764,6 @@ return {
           background = true,
         },
       })
-
-      _G.get_bamboo_colors = function()
-        return {
-          bg = "#252623",
-          bg1 = "#2e2e2a",
-          fg = "#c9c7cd",
-          red = "#e8b4b8",
-          green = "#87c095",
-          yellow = "#e8cc88",
-          blue = "#91a3b0",
-          purple = "#d2a6ff",
-          aqua = "#86e1fc",
-          orange = "#ff8f40",
-          gray = "#666662",
-          border = "#3e3e3a",
-          popup_bg = "#252623",
-          selection_bg = "#3e3e3a",
-          selection_fg = "#c9c7cd",
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
     end,
   },
   {
@@ -850,28 +781,6 @@ return {
         styles = { comments = { "italic" }, conditionals = { "italic" } },
         integrations = { cmp = true, gitsigns = true, nvimtree = true, telescope = true, treesitter = true, which_key = true },
       })
-      _G.get_catppuccin_colors = function()
-        local colors = require("catppuccin.palettes").get_palette()
-        return {
-          bg = colors.base,
-          bg1 = colors.mantle,
-          fg = colors.text,
-          red = colors.red,
-          green = colors.green,
-          yellow = colors.yellow,
-          blue = colors.blue,
-          purple = colors.mauve,
-          aqua = colors.teal,
-          orange = colors.peach,
-          gray = colors.surface1,
-          border = colors.surface0,
-          popup_bg = colors.base,
-          selection_bg = colors.surface0,
-          selection_fg = colors.text,
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
     end,
   },
   {
@@ -887,31 +796,6 @@ return {
         terminal_colors = true,
         cache = false,
       })
-
-      _G.get_cyberdream_colors = function()
-        local colors = require("cyberdream.colors")
-        local c = colors.default
-
-        return {
-          bg = c.bg,
-          bg1 = c.bgAlt,
-          fg = c.fg,
-          red = c.red,
-          green = c.green,
-          yellow = c.yellow,
-          blue = c.blue,
-          purple = c.purple,
-          aqua = c.cyan,
-          orange = c.orange,
-          gray = c.grey,
-          border = c.bgHighlight,
-          popup_bg = c.bg,
-          selection_bg = c.bgAlt,
-          selection_fg = c.fg,
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
     end,
   },
   {
@@ -921,27 +805,6 @@ return {
     config = function()
       vim.g.everforest_background = "medium"
       vim.g.everforest_better_performance = 1
-      _G.get_everforest_colors = function()
-        return {
-          bg = "#2d353b",
-          bg1 = "#343f44",
-          fg = "#d3c6aa",
-          red = "#e67e80",
-          green = "#a7c080",
-          yellow = "#dbbc7f",
-          blue = "#7fbbb3",
-          purple = "#d699b6",
-          aqua = "#83c092",
-          orange = "#e69875",
-          gray = "#859289",
-          border = "#4f5b58",
-          popup_bg = "#2d353b",
-          selection_bg = "#503946",
-          selection_fg = "#d3c6aa",
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
     end,
   },
   {
@@ -968,27 +831,6 @@ return {
         dim_inactive = false,
         transparent_mode = false
       })
-      _G.get_gruvbox_colors = function()
-        return {
-          bg = "#282828",
-          bg1 = "#3c3836",
-          fg = "#ebdbb2",
-          red = "#ea6962",
-          green = "#a9b665",
-          yellow = "#d8a657",
-          blue = "#7daea3",
-          purple = "#d3869b",
-          aqua = "#89b482",
-          orange = "#e78a4e",
-          gray = "#928374",
-          border = "#665c54",
-          popup_bg = "#282828",
-          selection_bg = "#45403d",
-          selection_fg = "#ebdbb2",
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
     end,
   },
   {
@@ -1003,30 +845,6 @@ return {
         devicons = true,
         filter = "pro",
       })
-
-      -- Color function with static fallback colors
-      _G.get_monokai_pro_colors = function()
-        -- Fallback to standard colors since monokai-pro API is unclear
-        return {
-          bg = "#2D2A2E",
-          bg1 = "#403E41",
-          fg = "#FCFCFA",
-          red = "#FF6188",
-          green = "#A9DC76",
-          yellow = "#FFD866",
-          blue = "#78DCE8",
-          purple = "#AB9DF2",
-          aqua = "#78DCE8",
-          orange = "#FC9867",
-          gray = "#727072",
-          border = "#5B595C",
-          popup_bg = "#2D2A2E",
-          selection_bg = "#403E41",
-          selection_fg = "#FCFCFA",
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
     end,
   },
   {
@@ -1038,29 +856,6 @@ return {
       vim.g.nord_borders = true
       vim.g.nord_disable_background = false
       vim.g.nord_italic = true
-      _G.get_nord_colors = function()
-        local ok, colors = pcall(require, "nord.colors")
-        if not ok then return nil end
-        return {
-          bg = colors.nord0,
-          bg1 = colors.nord1,
-          fg = colors.nord4,
-          red = colors.nord11,
-          green = colors.nord14,
-          yellow = colors.nord13,
-          blue = colors.nord9,
-          purple = colors.nord15,
-          aqua = colors.nord8,
-          orange = colors.nord12,
-          gray = colors.nord3,
-          border = colors.nord3,
-          popup_bg = colors.nord0,
-          selection_bg = colors.nord2,
-          selection_fg = colors.nord4,
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
     end,
   },
   {
@@ -1076,28 +871,6 @@ return {
         reduced_blue = true,
         swap_backgrounds = false,
       })
-      _G.get_nordic_colors = function()
-        local colors = require("nordic.colors")
-        return {
-          bg = colors.black0,
-          bg1 = colors.gray0,
-          fg = colors.white0,
-          red = colors.red.base,
-          green = colors.green.base,
-          yellow = colors.yellow.base,
-          blue = colors.blue1,
-          purple = colors.magenta.base,
-          aqua = colors.cyan.base,
-          orange = colors.orange.base,
-          gray = colors.gray4,
-          border = colors.gray2,
-          popup_bg = colors.black0,
-          selection_bg = colors.gray2,
-          selection_fg = colors.white0,
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
     end,
   },
   {
@@ -1119,28 +892,6 @@ return {
           variables = "none",
         },
       })
-      _G.get_onedark_colors = function()
-        local colors = require("onedark.colors")
-        return {
-          bg = colors.bg0,
-          bg1 = colors.bg1,
-          fg = colors.fg,
-          red = colors.red,
-          green = colors.green,
-          yellow = colors.yellow,
-          blue = colors.blue,
-          purple = colors.purple,
-          aqua = colors.cyan,
-          orange = colors.orange,
-          gray = colors.grey,
-          border = colors.bg3,
-          popup_bg = colors.bg0,
-          selection_bg = colors.bg3,
-          selection_fg = colors.fg,
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
     end,
   },
   {
@@ -1152,29 +903,6 @@ return {
       require("rose-pine").setup({
         variant = "main", disable_background = false, disable_italics = false,
       })
-      _G.get_rose_pine_colors = function()
-        local ok, palette = pcall(require, "rose-pine.palette")
-        if not ok then return nil end
-        return {
-          bg = palette.base,
-          bg1 = palette.surface,
-          fg = palette.text,
-          red = palette.love,
-          green = palette.pine,
-          yellow = palette.gold,
-          blue = palette.foam,
-          purple = palette.iris,
-          aqua = palette.foam,
-          orange = palette.rose,
-          gray = palette.muted,
-          border = palette.highlight_low,
-          popup_bg = palette.base,
-          selection_bg = palette.highlight_low,
-          selection_fg = palette.text,
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
     end,
   },
   {
@@ -1182,27 +910,6 @@ return {
     lazy = true,
     priority = 950,
     config = function()
-      _G.get_solarized_osaka_colors = function()
-        return {
-          bg = "#1a1b26",
-          bg1 = "#24283b",
-          red = "#f7768e",
-          orange = "#ff9e64",
-          yellow = "#e0af68",
-          green = "#9ece6a",
-          aqua = "#73daca",
-          blue = "#7aa2f7",
-          purple = "#bb9af7",
-          gray = "#565f89",
-          border = "#565f89",
-          fg = "#c0caf5",
-          popup_bg = "#1a1b26",
-          selection_bg = "#24283b",
-          selection_fg = "#c0caf5",
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
     end,
   },
   {
@@ -1218,28 +925,6 @@ return {
         sidebars = { "qf", "help" },
         day_brightness = 0.3,
       })
-      _G.get_tokyonight_colors = function()
-        local colors = require("tokyonight.colors").setup()
-        return {
-          bg = colors.bg,
-          bg1 = colors.bg_dark,
-          fg = colors.fg,
-          red = colors.red,
-          green = colors.green,
-          yellow = colors.yellow,
-          blue = colors.blue,
-          purple = colors.purple,
-          aqua = colors.cyan,
-          orange = colors.orange,
-          gray = colors.fg_gutter,
-          border = colors.border,
-          popup_bg = colors.bg_popup,
-          selection_bg = colors.bg_visual,
-          selection_fg = colors.fg,
-          copilot = "#6CC644",
-          codeium = "#09B6A2",
-        }
-      end
     end,
   },
 }
