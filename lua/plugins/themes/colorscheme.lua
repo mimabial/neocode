@@ -88,31 +88,13 @@ return {
           icon = "",
           variants = { "default", "light" },
           apply_variant = function(variant)
-            require("cyberdream").setup({
-              variant = variant,
-              transparent = false,
-              italic_comments = true,
-              hide_fillchars = true,
-              borderless_pickers = true,
-              terminal_colors = true,
-              cache = false,
-            })
-            -- Include variant in colorscheme name (like catppuccin and tokyonight)
-            local colorscheme_name = variant == "default" and "cyberdream" or "cyberdream-" .. variant
-            vim.cmd("colorscheme " .. colorscheme_name)
+            local opts = { variant = variant }
+            pcall(require("cyberdream").setup, opts)
             return true
           end,
           set_transparency = function(enable)
-            require("cyberdream").setup({
-              variant = vim.g.cyberdream_variant or "default",
-              transparent = enable,
-              italic_comments = true,
-              hide_fillchars = true,
-              borderless_pickers = true,
-              terminal_colors = true,
-              cache = false,
-            })
-            vim.cmd("colorscheme cyberdream")
+            local opts = { transparent = enable }
+            pcall(require("cyberdream").setup, opts)
             return true
           end,
         },
@@ -453,6 +435,8 @@ return {
           theme_name = "catppuccin"
         elseif current:match("^tokyonight") then
           theme_name = "tokyonight"
+        elseif current:match("^cyberdream%-") then
+          theme_name = "cyberdream"
         end
 
         local theme = themes[theme_name]
