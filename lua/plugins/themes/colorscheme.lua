@@ -84,6 +84,47 @@ return {
             return true
           end,
         },
+        ["bamboo"] = {
+          icon = "",
+          variants = { "vulgaris", "multiplex", "light" },
+          apply_variant = function(variant)
+            pcall(require("bamboo").setup, {
+              style = variant,
+              transparent = false,
+              dim_inactive = false,
+              term_colors = true,
+              code_style = {
+                comments = { italic = true },
+                conditionals = { italic = true },
+                keywords = {},
+                functions = {},
+                namespaces = { italic = true },
+                parameters = { italic = true },
+                strings = {},
+                variables = {},
+              },
+              diagnostics = {
+                darker = false,
+                undercurl = true,
+                background = true,
+              },
+            })
+            require("bamboo").load()
+            return true
+          end,
+          set_transparency = function(enable)
+            pcall(require("bamboo").setup, {
+              transparent = enable,
+              term_colors = true,
+              code_style = {
+                comments = { italic = true },
+                conditionals = { italic = true },
+              },
+            })
+            require("bamboo").load()
+            return true
+          end,
+        },
         ["cyberdream"] = {
           icon = "",
           variants = { "default", "light" },
@@ -738,6 +779,56 @@ return {
           popup_bg = "#0f0f0f",
           selection_bg = "#343a40",
           selection_fg = "#c5c5c5",
+          copilot = "#6CC644",
+          codeium = "#09B6A2",
+        }
+      end
+    end,
+  },
+  {
+    "ribru17/bamboo.nvim",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("bamboo").setup({
+        style = "vulgaris",
+        transparent = false,
+        dim_inactive = false,
+        term_colors = true,
+        code_style = {
+          comments = { italic = true },
+          conditionals = { italic = true },
+          keywords = {},
+          functions = {},
+          namespaces = { italic = true },
+          parameters = { italic = true },
+          strings = {},
+          variables = {},
+        },
+        diagnostics = {
+          darker = false,
+          undercurl = true,
+          background = true,
+        },
+      })
+
+      _G.get_bamboo_colors = function()
+        return {
+          bg = "#252623",
+          bg1 = "#2e2e2a",
+          fg = "#c9c7cd",
+          red = "#e8b4b8",
+          green = "#87c095",
+          yellow = "#e8cc88",
+          blue = "#91a3b0",
+          purple = "#d2a6ff",
+          aqua = "#86e1fc",
+          orange = "#ff8f40",
+          gray = "#666662",
+          border = "#3e3e3a",
+          popup_bg = "#252623",
+          selection_bg = "#3e3e3a",
+          selection_fg = "#c9c7cd",
           copilot = "#6CC644",
           codeium = "#09B6A2",
         }
