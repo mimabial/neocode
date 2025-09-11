@@ -484,7 +484,7 @@ return {
         local settings = load_settings()
         settings.transparency = not settings.transparency
         apply_theme(settings.theme, settings.variant, settings.transparency)
-        vim.notify("Transparency " .. (settings.transparency and "enabled" or "disabled"), vim.log.levels.INFO)
+        vim.notify("Transparency " .. (settings.transparency and "disabled" or "enabled"), vim.log.levels.INFO)
       end
 
       -- Create user commands
