@@ -188,16 +188,6 @@ return {
             return true
           end,
         },
-        ["nordic"] = {
-          icon = "",
-          variants = {},
-          apply_variant = function() return false end,
-          set_transparency = function(enable)
-            -- pcall(require("nordic").setup, { transparent_bg = enable })
-            -- return true
-            return false
-          end,
-        },
         ["onedark"] = {
           icon = "",
           variants = { "dark", "darker", "cool", "deep", "warm", "warmer" },
@@ -1023,21 +1013,6 @@ return {
       vim.g.nord_borders = true
       vim.g.nord_disable_background = false
       vim.g.nord_italic = true
-    end,
-  },
-  {
-    "AlexvZyl/nordic.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("nordic").setup({
-        bold_keywords = false,
-        italic_comments = true,
-        -- transparent_bg = false,
-        bright_border = false,
-        reduced_blue = true,
-        swap_backgrounds = false,
-      })
     end,
   },
   {
