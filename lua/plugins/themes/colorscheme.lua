@@ -59,47 +59,6 @@ return {
             return true
           end,
         },
-        ["bamboo"] = {
-          icon = "",
-          variants = { "vulgaris", "multiplex", "light" },
-          apply_variant = function(variant)
-            pcall(require("bamboo").setup, {
-              style = variant,
-              transparent = false,
-              dim_inactive = false,
-              term_colors = true,
-              code_style = {
-                comments = { italic = true },
-                conditionals = { italic = true },
-                keywords = {},
-                functions = {},
-                namespaces = { italic = true },
-                parameters = { italic = true },
-                strings = {},
-                variables = {},
-              },
-              diagnostics = {
-                darker = false,
-                undercurl = true,
-                background = true,
-              },
-            })
-            require("bamboo").load()
-            return true
-          end,
-          set_transparency = function(enable)
-            pcall(require("bamboo").setup, {
-              transparent = enable,
-              term_colors = true,
-              code_style = {
-                comments = { italic = true },
-                conditionals = { italic = true },
-              },
-            })
-            require("bamboo").load()
-            return true
-          end,
-        },
         ["cyberdream"] = {
           icon = "",
           variants = { "default", "light" },
@@ -138,6 +97,18 @@ return {
             return true
           end,
         },
+        ["gruvbox-material"] = {
+          icon = "",
+          variants = { "hard", "medium", "soft" },
+          apply_variant = function(variant)
+            vim.g.gruvbox_material_background = variant
+            return true
+          end,
+          set_transparency = function(enable)
+            vim.g.gruvbox_material_transparent_background = enable and 1 or 0
+            return true
+          end,
+        },
         ["kanagawa"] = {
           icon = "",
           variants = { "wave", "dragon", "lotus" },
@@ -150,6 +121,18 @@ return {
           end,
           set_transparency = function(enable)
             pcall(require("kanagawa").setup, { transparent = enable })
+            return true
+          end,
+        },
+        ["lackluster"] = {
+          icon = "",
+          variants = { "lackluster", "lackluster-hack", "lackluster-mint" },
+          apply_variant = function(variant)
+            pcall(vim.cmd, "colorscheme " .. variant)
+            return true
+          end,
+          set_transparency = function(enable)
+            pcall(require("lackluster").setup, { disable_background = enable })
             return true
           end,
         },
@@ -325,7 +308,7 @@ return {
 
         -- Apply transparency after colorscheme
         if theme.set_transparency then
-          theme.set_transparency(transparency)
+          theme.set_transparency(not transparency)
           -- For monokai-pro, reapply colorscheme after transparency change
           if name == "monokai-pro" then
             pcall(vim.cmd, "colorscheme " .. name)
@@ -896,34 +879,6 @@ return {
     end,
   },
   {
-    "ribru17/bamboo.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("bamboo").setup({
-        style = "vulgaris",
-        transparent = false,
-        dim_inactive = false,
-        term_colors = true,
-        code_style = {
-          comments = { italic = true },
-          conditionals = { italic = true },
-          keywords = {},
-          functions = {},
-          namespaces = { italic = true },
-          parameters = { italic = true },
-          strings = {},
-          variables = {},
-        },
-        diagnostics = {
-          darker = false,
-          undercurl = true,
-          background = true,
-        },
-      })
-    end,
-  },
-  {
     "catppuccin/nvim",
     name = "catppuccin",
     lazy = true,
@@ -987,6 +942,54 @@ return {
         overrides = {},
         dim_inactive = false,
         transparent_mode = false
+      })
+    end,
+  },
+  {
+    "sainnhe/gruvbox-material",
+    lazy = true,
+    priority = 950,
+    config = function()
+      vim.g.gruvbox_material_background = "medium"
+      vim.g.gruvbox_material_better_performance = 1
+      vim.g.gruvbox_material_enable_italic = 1
+      vim.g.gruvbox_material_transparent_background = 0
+    end,
+  },
+  {
+    "slugbyte/lackluster.nvim",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("lackluster").setup({
+        -- Disable plugin highlights to maintain monochrome aesthetic
+        disable_plugin = {
+          bufferline = false,
+          cmp = false,
+          dashboard = false,
+          flash = false,
+          git_gutter = false,
+          git_signs = false,
+          headline = false,
+          indentmini = false,
+          lazy = false,
+          lightbulb = false,
+          lsp_config = false,
+          mason = false,
+          mini_diff = false,
+          navic = false,
+          noice = false,
+          notify = false,
+          oil = false,
+          rainbow_delimiter = false,
+          scollbar = false,
+          telescope = false,
+          todo_comments = false,
+          tree = false,
+          trouble = false,
+          which_key = false,
+          yanky = false,
+        },
       })
     end,
   },
