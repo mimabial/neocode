@@ -262,13 +262,21 @@ return {
             -- Look for NVIM_SCHEME and NVIM_VARIANT variables
             local nvim_scheme = content:match("%$NVIM_SCHEME%s*=%s*([%w%-_]+)")
             local nvim_variant = content:match("%$NVIM_VARIANT%s*=%s*([%w%-_]+)")
+            local nvim_transparency = content:match("%$NVIM_TRANSPARENCY%s*=%s*([%w%-_]+)")
 
             if nvim_scheme then
               -- Clean up the values
               nvim_scheme = nvim_scheme:gsub("%s+", "")
               nvim_variant = nvim_variant and nvim_variant:gsub("%s+", "") or nil
 
-              return nvim_scheme, nvim_variant
+              -- Parse transparency (true/false/1/0)
+              local transparency = nil
+              if nvim_transparency then
+                nvim_transparency = nvim_transparency:gsub("%s+", ""):lower()
+                transparency = nvim_transparency == "true" or nvim_transparency == "1"
+              end
+
+              return nvim_scheme, nvim_variant, transparency
             end
           end
         end
@@ -276,12 +284,19 @@ return {
         -- Check environment variables as final fallback
         local env_scheme = os.getenv("NVIM_SCHEME") or os.getenv("NVIM_THEME")
         local env_variant = os.getenv("NVIM_VARIANT")
+        local env_transparency = os.getenv("NVIM_TRANSPARENCY")
 
-        if env_scheme then
-          return env_scheme, env_variant
+        local transparency = nil
+        if env_transparency then
+          env_transparency = env_transparency:lower()
+          transparency = env_transparency == "true" or env_transparency == "1"
         end
 
-        return nil, nil
+        if env_scheme then
+          return env_scheme, env_variant, transparency
+        end
+
+        return nil, nil, nil
       end
 
       local function apply_theme(name, variant, transparency)
@@ -335,7 +350,7 @@ return {
 
       -- Function to apply detected theme with variant support
       local function apply_system_theme()
-        local detected_scheme, detected_variant = detect_system_theme()
+        local detected_scheme, detected_variant, detected_transparency = detect_system_theme()
 
         if not detected_scheme then
           return false
@@ -351,6 +366,7 @@ return {
         local current_scheme = vim.g.colors_name or "kanagawa"
         local settings = load_settings()
         local current_variant = settings.variant
+        local current_transparency = settings.transparency
 
         -- Normalize current scheme name for comparison
         local normalized_current = current_scheme
@@ -363,9 +379,10 @@ return {
         -- Check if detected theme is already active
         local theme_changed = normalized_current ~= detected_scheme
         local variant_changed = detected_variant ~= current_variant
+        local transparency_changed = detected_transparency ~= nil and detected_transparency ~= current_transparency
 
-        if not theme_changed and not variant_changed then
-          return true -- Theme is already active, no notification needed
+        if not theme_changed and not variant_changed and not transparency_changed then
+          return true -- Settings are already active, no notification needed
         end
 
         -- Validate variant if specified
@@ -385,10 +402,15 @@ return {
           end
         end
 
-        apply_theme(detected_scheme, detected_variant, settings.transparency)
+        -- Use detected transparency if specified, otherwise keep current setting
+        local final_transparency = detected_transparency ~= nil and detected_transparency or settings.transparency
+
+        apply_theme(detected_scheme, detected_variant, final_transparency)
 
         local variant_text = detected_variant and ("-" .. detected_variant) or ""
-        vim.notify("Applied system theme: " .. detected_scheme .. variant_text, vim.log.levels.INFO)
+        local transparency_text = detected_transparency ~= nil and
+            (", transparency " .. (detected_transparency and "on" or "off")) or ""
+        vim.notify("Applied system theme: " .. detected_scheme .. variant_text .. transparency_text, vim.log.levels.INFO)
         return true
       end
 
@@ -412,7 +434,6 @@ return {
           end
         end
       end
-
 
       local function cycle_theme()
         local current = vim.g.colors_name or "kanagawa"
@@ -484,7 +505,38 @@ return {
         local settings = load_settings()
         settings.transparency = not settings.transparency
         apply_theme(settings.theme, settings.variant, settings.transparency)
-        vim.notify("Transparency " .. (settings.transparency and "disabled" or "enabled"), vim.log.levels.INFO)
+
+        -- Update system config if theme.conf exists
+        local theme_file = os.getenv("HOME") .. "/.config/hypr/themes/theme.conf"
+        if vim.fn.filereadable(theme_file) == 1 then
+          local content = vim.fn.readfile(theme_file)
+          local updated = false
+
+          -- Update or add NVIM_TRANSPARENCY
+          for i, line in ipairs(content) do
+            if line:match("^%$NVIM_TRANSPARENCY") then
+              content[i] = "$NVIM_TRANSPARENCY = " .. (settings.transparency and "true" or "false")
+              updated = true
+              break
+            end
+          end
+
+          -- Add NVIM_TRANSPARENCY if not found
+          if not updated then
+            -- Find NVIM_SCHEME line and insert NVIM_TRANSPARENCY after it
+            for i, line in ipairs(content) do
+              if line:match("^%$NVIM_SCHEME") then
+                table.insert(content, i + (line:match("^%$NVIM_VARIANT") and 2 or 1),
+                  "$NVIM_TRANSPARENCY = " .. (settings.transparency and "true" or "false"))
+                break
+              end
+            end
+          end
+
+          pcall(vim.fn.writefile, content, theme_file)
+        end
+
+        vim.notify("Transparency " .. (settings.transparency and "enabled" or "disabled"), vim.log.levels.INFO)
       end
 
       -- Create user commands
@@ -566,11 +618,13 @@ return {
       end, { desc = "Sync colorscheme with system theme" })
 
       vim.api.nvim_create_user_command("SystemDetect", function()
-        local scheme, variant = detect_system_theme()
+        local scheme, variant, transparency = detect_system_theme()
         if scheme then
           local available = themes[scheme] and "✓ Available" or "⚠ Not available"
           local variant_text = variant and (" + " .. variant) or ""
-          vim.notify("System theme: " .. scheme .. variant_text .. " (" .. available .. ")", vim.log.levels.INFO)
+          local transparency_text = transparency ~= nil and (", transparency " .. (transparency and "on" or "off")) or ""
+          vim.notify("System theme: " .. scheme .. variant_text .. transparency_text .. " (" .. available .. ")",
+            vim.log.levels.INFO)
 
           -- Show available variants if scheme exists
           if themes[scheme] and themes[scheme].variants and #themes[scheme].variants > 0 then
@@ -585,9 +639,10 @@ return {
         local args = vim.split(opts.args, "%s+")
         local scheme = args[1]
         local variant = args[2]
+        local transparency_arg = args[3]
 
         if not scheme or scheme == "" then
-          vim.notify("Usage: SystemSetTheme <scheme> [variant]", vim.log.levels.ERROR)
+          vim.notify("Usage: SystemSetTheme <scheme> [variant] [transparency:true/false]", vim.log.levels.ERROR)
           return
         end
 
@@ -609,12 +664,24 @@ return {
           end
         end
 
+        -- Handle transparency argument (can be 3rd arg if no variant, or 3rd arg after variant)
+        local transparency = nil
+        if transparency_arg then
+          transparency_arg = transparency_arg:lower()
+          transparency = transparency_arg == "true"
+        elseif variant and (variant:lower() == "true" or variant:lower() == "false") then
+          -- variant is actually transparency argument
+          transparency = variant:lower() == "true"
+          variant = nil
+        end
+
         -- Update theme.conf file
         local theme_file = os.getenv("HOME") .. "/.config/hypr/themes/theme.conf"
         if vim.fn.filereadable(theme_file) == 1 then
           local content = vim.fn.readfile(theme_file)
           local updated_scheme = false
           local updated_variant = false
+          local updated_transparency = false
 
           -- Update or add NVIM_SCHEME
           for i, line in ipairs(content) do
@@ -629,15 +696,22 @@ return {
                 table.remove(content, i)
               end
               updated_variant = true
+            elseif line:match("^%$NVIM_TRANSPARENCY") then
+              if transparency ~= nil then
+                content[i] = "$NVIM_TRANSPARENCY = " .. (transparency and "true" or "false")
+              else
+                -- Remove transparency line if not specified
+                table.remove(content, i)
+              end
+              updated_transparency = true
             end
           end
 
-          -- Add NVIM_SCHEME if not found
+          -- Add missing variables
           if not updated_scheme then
             table.insert(content, 1, "$NVIM_SCHEME = " .. scheme)
           end
 
-          -- Add NVIM_VARIANT if variant specified and not found
           if variant and not updated_variant then
             -- Find NVIM_SCHEME line and insert NVIM_VARIANT after it
             for i, line in ipairs(content) do
@@ -648,14 +722,30 @@ return {
             end
           end
 
+          if transparency ~= nil and not updated_transparency then
+            -- Find appropriate insertion point
+            local insert_pos = #content + 1
+            for i, line in ipairs(content) do
+              if line:match("^%$NVIM_VARIANT") then
+                insert_pos = i + 1
+                break
+              elseif line:match("^%$NVIM_SCHEME") then
+                insert_pos = i + 1
+              end
+            end
+            table.insert(content, insert_pos, "$NVIM_TRANSPARENCY = " .. (transparency and "true" or "false"))
+          end
+
           vim.fn.writefile(content, theme_file)
 
           -- Apply the theme
           local settings = load_settings()
-          apply_theme(scheme, variant, settings.transparency)
+          local final_transparency = transparency ~= nil and transparency or settings.transparency
+          apply_theme(scheme, variant, final_transparency)
 
           local variant_text = variant and (" with variant " .. variant) or ""
-          vim.notify("Set system theme to: " .. scheme .. variant_text, vim.log.levels.INFO)
+          local transparency_text = transparency ~= nil and (", transparency " .. (transparency and "on" or "off")) or ""
+          vim.notify("Set system theme to: " .. scheme .. variant_text .. transparency_text, vim.log.levels.INFO)
         else
           vim.notify("theme.conf not found at " .. theme_file, vim.log.levels.ERROR)
         end
@@ -667,15 +757,92 @@ return {
             -- Complete scheme names
             return vim.tbl_keys(themes)
           elseif #args == 3 then
-            -- Complete variant names for the specified scheme
+            -- Complete variant names for the specified scheme or transparency values
             local scheme = args[2]
-            if themes[scheme] and themes[scheme].variants then
-              return themes[scheme].variants
+            if themes[scheme] and themes[scheme].variants and #themes[scheme].variants > 0 then
+              local completions = {}
+              vim.list_extend(completions, themes[scheme].variants)
+              vim.list_extend(completions, { "true", "false" })
+              return completions
+            else
+              return { "true", "false" }
             end
+          elseif #args == 4 then
+            -- Complete transparency values
+            return { "true", "false" }
           end
           return {}
         end,
-        desc = "Set NVIM_SCHEME and NVIM_VARIANT in system config"
+        desc = "Set NVIM_SCHEME, NVIM_VARIANT, and NVIM_TRANSPARENCY in system config"
+      })
+
+      vim.api.nvim_create_user_command("SystemSetTransparency", function(opts)
+        local transparency_arg = opts.args:lower()
+
+        if transparency_arg == "" then
+          vim.notify("Usage: SystemSetTransparency <true|false|toggle>", vim.log.levels.ERROR)
+          return
+        end
+
+        local transparency
+        if transparency_arg == "toggle" then
+          local settings = load_settings()
+          transparency = not settings.transparency
+        elseif transparency_arg == "true" or transparency_arg == "1" then
+          transparency = true
+        elseif transparency_arg == "false" or transparency_arg == "0" then
+          transparency = false
+        else
+          vim.notify("Invalid transparency value. Use: true, false, or toggle", vim.log.levels.ERROR)
+          return
+        end
+
+        -- Update theme.conf file
+        local theme_file = os.getenv("HOME") .. "/.config/hypr/themes/theme.conf"
+        if vim.fn.filereadable(theme_file) == 1 then
+          local content = vim.fn.readfile(theme_file)
+          local updated = false
+
+          -- Update or add NVIM_TRANSPARENCY
+          for i, line in ipairs(content) do
+            if line:match("^%$NVIM_TRANSPARENCY") then
+              content[i] = "$NVIM_TRANSPARENCY = " .. (transparency and "true" or "false")
+              updated = true
+              break
+            end
+          end
+
+          -- Add NVIM_TRANSPARENCY if not found
+          if not updated then
+            -- Find appropriate insertion point
+            local insert_pos = #content + 1
+            for i, line in ipairs(content) do
+              if line:match("^%$NVIM_VARIANT") then
+                insert_pos = i + 1
+                break
+              elseif line:match("^%$NVIM_SCHEME") then
+                insert_pos = i + 1
+              end
+            end
+            table.insert(content, insert_pos, "$NVIM_TRANSPARENCY = " .. (transparency and "true" or "false"))
+          end
+
+          vim.fn.writefile(content, theme_file)
+
+          -- Apply transparency to current theme
+          local settings = load_settings()
+          apply_theme(settings.theme, settings.variant, transparency)
+
+          vim.notify("Set system transparency to: " .. (transparency and "enabled" or "disabled"), vim.log.levels.INFO)
+        else
+          vim.notify("theme.conf not found at " .. theme_file, vim.log.levels.ERROR)
+        end
+      end, {
+        nargs = 1,
+        complete = function()
+          return { "true", "false", "toggle" }
+        end,
+        desc = "Set NVIM_TRANSPARENCY in system config"
       })
 
       vim.api.nvim_create_user_command("SystemListThemes", function()
@@ -700,10 +867,10 @@ return {
         -- Also show usage examples
         vim.defer_fn(function()
           vim.notify("Usage examples:\n" ..
-            ":SystemSetTheme kanagawa wave\n" ..
-            ":SystemSetTheme catppuccin mocha\n" ..
             ":SystemSetTheme nord\n" ..
-            ":SystemSetTheme tokyonight storm",
+            ":SystemSetTheme tokyonight storm\n" ..
+            ":SystemSetTransparency true\n" ..
+            ":SystemSetTheme kanagawa wave true",
             vim.log.levels.INFO, { title = "Usage Examples" })
         end, 2000)
       end, { desc = "List available themes for system integration" })
