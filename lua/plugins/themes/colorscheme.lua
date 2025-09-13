@@ -45,6 +45,47 @@ return {
             return true
           end,
         },
+        ["bamboo"] = {
+          icon = "",
+          variants = { "vulgaris", "multiplex", "light" },
+          apply_variant = function(variant)
+            pcall(require("bamboo").setup, {
+              style = variant,
+              transparent = false,
+              dim_inactive = false,
+              term_colors = true,
+              code_style = {
+                comments = { italic = true },
+                conditionals = { italic = true },
+                keywords = {},
+                functions = {},
+                namespaces = { italic = true },
+                parameters = { italic = true },
+                strings = {},
+                variables = {},
+              },
+              diagnostics = {
+                darker = false,
+                undercurl = true,
+                background = true,
+              },
+            })
+            require("bamboo").load()
+            return true
+          end,
+          set_transparency = function(enable)
+            pcall(require("bamboo").setup, {
+              transparent = enable,
+              term_colors = true,
+              code_style = {
+                comments = { italic = true },
+                conditionals = { italic = true },
+              },
+            })
+            require("bamboo").load()
+            return true
+          end,
+        },
         ["catppuccin"] = {
           icon = "",
           variants = { "latte", "frappe", "macchiato", "mocha" },
@@ -70,6 +111,30 @@ return {
           set_transparency = function(enable)
             local opts = { transparent = enable }
             pcall(require("cyberdream").setup, opts)
+            return true
+          end,
+        },
+        ["decay"] = {
+          icon = "",
+          variants = { "default", "dark", "light", "decayce" },
+          apply_variant = function(variant)
+            if variant == "decayce" then
+              pcall(vim.cmd, "colorscheme decayce")
+            else
+              pcall(vim.cmd, "colorscheme decay-" .. variant)
+            end
+            return true
+          end,
+          set_transparency = function(enable)
+            local settings = load_settings()
+            local current_variant = settings.variant or "default"
+
+            if current_variant == "decayce" then
+              pcall(vim.cmd, "colorscheme decayce")
+            else
+              -- For "dark" and "light" variants, just reapply colorscheme
+              pcall(vim.cmd, "colorscheme decay-" .. current_variant)
+            end
             return true
           end,
         },
@@ -121,18 +186,6 @@ return {
           end,
           set_transparency = function(enable)
             pcall(require("kanagawa").setup, { transparent = enable })
-            return true
-          end,
-        },
-        ["lackluster"] = {
-          icon = "",
-          variants = { "lackluster", "lackluster-hack", "lackluster-mint" },
-          apply_variant = function(variant)
-            pcall(vim.cmd, "colorscheme " .. variant)
-            return true
-          end,
-          set_transparency = function(enable)
-            pcall(require("lackluster").setup, { disable_background = enable })
             return true
           end,
         },
@@ -283,6 +336,8 @@ return {
         if variant and theme.variants and vim.tbl_contains(theme.variants, variant) then
           if name == "catppuccin" then
             theme.apply_variant(variant)
+          elseif name == "decay" then
+            theme.apply_variant(variant)
           elseif name == "monokai-pro" then
             theme.apply_variant(variant)
             vim.cmd("colorscheme " .. name)
@@ -291,7 +346,18 @@ return {
             vim.cmd("colorscheme " .. name)
           end
         else
-          if name == "monokai-pro" then
+          if name == "decay" then
+            if variant then
+              theme.apply_variant(variant)
+            else
+              pcall(require("decay").setup, {
+                style = "default",
+                transparent = transparency or false,
+                nvim_tree = { contrast = true },
+              })
+              pcall(vim.cmd, "colorscheme decay")
+            end
+          elseif name == "monokai-pro" then
             local success = pcall(require("monokai-pro").setup, {
               filter = "pro",
               transparent_background = transparency or false,
@@ -414,6 +480,8 @@ return {
         local theme_name = current
         if current:match("^catppuccin%-") then
           theme_name = "catppuccin"
+        elseif current:match("^decay") then
+          theme_name = "decay"
         elseif current:match("^tokyonight") then
           theme_name = "tokyonight"
         end
@@ -443,10 +511,12 @@ return {
         local theme_name = current
         if current:match("^catppuccin%-") then
           theme_name = "catppuccin"
-        elseif current:match("^tokyonight") then
-          theme_name = "tokyonight"
         elseif current:match("^cyberdream%-") then
           theme_name = "cyberdream"
+        elseif current:match("^decay") or current == "decayce" then
+          theme_name = "decay"
+        elseif current:match("^tokyonight") then
+          theme_name = "tokyonight"
         end
 
         local theme = themes[theme_name]
@@ -458,6 +528,16 @@ return {
 
         local settings = load_settings()
         local current_variant = settings.variant or theme.variants[1]
+
+        if theme_name == "decay" then
+          if current == "decayce" then
+            current_variant = "decayce"
+          elseif current:match("^decay%-(.+)$") then
+            current_variant = current:match("^decay%-(.+)$")
+          else
+            current_variant = "default" -- fallback
+          end
+        end
 
         local next_idx = 1
         for i, variant in ipairs(theme.variants) do
@@ -879,6 +959,34 @@ return {
     end,
   },
   {
+    "ribru17/bamboo.nvim",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("bamboo").setup({
+        style = "vulgaris",
+        transparent = false,
+        dim_inactive = false,
+        term_colors = true,
+        code_style = {
+          comments = { italic = true },
+          conditionals = { italic = true },
+          keywords = {},
+          functions = {},
+          namespaces = { italic = true },
+          parameters = { italic = true },
+          strings = {},
+          variables = {},
+        },
+        diagnostics = {
+          darker = false,
+          undercurl = true,
+          background = true,
+        },
+      })
+    end,
+  },
+  {
     "catppuccin/nvim",
     name = "catppuccin",
     lazy = true,
@@ -911,6 +1019,19 @@ return {
     end,
   },
   {
+    "decaycs/decay.nvim",
+    name = "decay",
+    lazy = true,
+    priority = 950,
+    config = function()
+      require("decay").setup({
+        style = "default",
+        transparent = false,
+        nvim_tree = { contrast = true },
+      })
+    end,
+  },
+  {
     "sainnhe/everforest",
     lazy = true,
     priority = 950,
@@ -936,8 +1057,7 @@ return {
         invert_tabline = false,
         invert_intend_guides = false,
         inverse = true,
-        contrast =
-        "",
+        contrast = "",
         palette_overrides = {},
         overrides = {},
         dim_inactive = false,
@@ -954,43 +1074,6 @@ return {
       vim.g.gruvbox_material_better_performance = 1
       vim.g.gruvbox_material_enable_italic = 1
       vim.g.gruvbox_material_transparent_background = 0
-    end,
-  },
-  {
-    "slugbyte/lackluster.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("lackluster").setup({
-        -- Disable plugin highlights to maintain monochrome aesthetic
-        disable_plugin = {
-          bufferline = false,
-          cmp = false,
-          dashboard = false,
-          flash = false,
-          git_gutter = false,
-          git_signs = false,
-          headline = false,
-          indentmini = false,
-          lazy = false,
-          lightbulb = false,
-          lsp_config = false,
-          mason = false,
-          mini_diff = false,
-          navic = false,
-          noice = false,
-          notify = false,
-          oil = false,
-          rainbow_delimiter = false,
-          scollbar = false,
-          telescope = false,
-          todo_comments = false,
-          tree = false,
-          trouble = false,
-          which_key = false,
-          yanky = false,
-        },
-      })
     end,
   },
   {
