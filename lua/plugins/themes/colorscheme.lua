@@ -118,10 +118,17 @@ return {
           icon = "",
           variants = { "default", "dark", "light", "decayce" },
           apply_variant = function(variant)
+            variant = variant or "default"
             if variant == "decayce" then
               pcall(vim.cmd, "colorscheme decayce")
             else
-              pcall(vim.cmd, "colorscheme decay-" .. variant)
+              pcall(require("decay").setup, {
+                style = variant,
+                transparent = load_settings().transparency or false,
+                nvim_tree = { contrast = true },
+                italics = { code = true, comments = true },
+              })
+              pcall(vim.cmd, "colorscheme decay")
             end
             return true
           end,
@@ -132,8 +139,13 @@ return {
             if current_variant == "decayce" then
               pcall(vim.cmd, "colorscheme decayce")
             else
-              -- For "dark" and "light" variants, just reapply colorscheme
-              pcall(vim.cmd, "colorscheme decay-" .. current_variant)
+              pcall(require("decay").setup, {
+                style = current_variant,
+                transparent = enable,
+                nvim_tree = { contrast = true },
+                italics = { code = true, comments = true },
+              })
+              pcall(vim.cmd, "colorscheme decay")
             end
             return true
           end,
@@ -346,18 +358,7 @@ return {
             vim.cmd("colorscheme " .. name)
           end
         else
-          if name == "decay" then
-            if variant then
-              theme.apply_variant(variant)
-            else
-              pcall(require("decay").setup, {
-                style = "default",
-                transparent = transparency or false,
-                nvim_tree = { contrast = true },
-              })
-              pcall(vim.cmd, "colorscheme decay")
-            end
-          elseif name == "monokai-pro" then
+          if name == "monokai-pro" then
             local success = pcall(require("monokai-pro").setup, {
               filter = "pro",
               transparent_background = transparency or false,
