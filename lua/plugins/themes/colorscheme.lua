@@ -119,17 +119,20 @@ return {
           variants = { "default", "dark", "light", "decayce" },
           apply_variant = function(variant)
             variant = variant or "default"
+
+            pcall(require("decay").setup, {
+              style = variant,
+              transparent = load_settings().transparency or false,
+              nvim_tree = { contrast = true },
+              italics = { code = true, comments = true },
+            })
             if variant == "decayce" then
               pcall(vim.cmd, "colorscheme decayce")
             else
-              pcall(require("decay").setup, {
-                style = variant,
-                transparent = load_settings().transparency or false,
-                nvim_tree = { contrast = true },
-                italics = { code = true, comments = true },
-              })
               pcall(vim.cmd, "colorscheme decay-" .. variant)
             end
+            -- FIX: decay colorschemes don't properly set g:colors_name
+            vim.g.colors_name = "decay"
             return true
           end,
           set_transparency = function(enable)
@@ -365,6 +368,7 @@ return {
               nvim_tree = { contrast = true },
             })
             pcall(vim.cmd, "colorscheme decay")
+            vim.g.colors_name = "decay"
           elseif name == "monokai-pro" then
             local success = pcall(require("monokai-pro").setup, {
               filter = "pro",
