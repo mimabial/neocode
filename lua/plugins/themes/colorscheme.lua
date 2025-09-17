@@ -128,7 +128,7 @@ return {
                 nvim_tree = { contrast = true },
                 italics = { code = true, comments = true },
               })
-              pcall(vim.cmd, "colorscheme decay")
+              pcall(vim.cmd, "colorscheme decay-" .. variant)
             end
             return true
           end,
@@ -145,7 +145,7 @@ return {
                 nvim_tree = { contrast = true },
                 italics = { code = true, comments = true },
               })
-              pcall(vim.cmd, "colorscheme decay")
+              pcall(vim.cmd, "colorscheme decay-" .. current_variant)
             end
             return true
           end,
@@ -358,7 +358,14 @@ return {
             vim.cmd("colorscheme " .. name)
           end
         else
-          if name == "monokai-pro" then
+          if name == "decay" then
+            pcall(require("decay").setup, {
+              style = "default",
+              transparent = transparency or false,
+              nvim_tree = { contrast = true },
+            })
+            pcall(vim.cmd, "colorscheme decay")
+          elseif name == "monokai-pro" then
             local success = pcall(require("monokai-pro").setup, {
               filter = "pro",
               transparent_background = transparency or false,
@@ -514,7 +521,7 @@ return {
           theme_name = "catppuccin"
         elseif current:match("^cyberdream%-") then
           theme_name = "cyberdream"
-        elseif current:match("^decay") or current == "decayce" then
+        elseif current:match("^decay") then
           theme_name = "decay"
         elseif current:match("^tokyonight") then
           theme_name = "tokyonight"
