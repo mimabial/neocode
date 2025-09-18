@@ -5,16 +5,6 @@ return {
     lazy = false,
     priority = 1000,
     config = function()
-      require("kanagawa").setup({
-        theme = "wave",
-        background = { dark = "wave", light = "lotus" },
-        transparent = false,
-        dimInactive = false,
-        terminalColors = true,
-        colors = { palette = {}, theme = { wave = {}, lotus = {}, dragon = {}, all = {} } },
-        overrides = function(colors) return {} end,
-      })
-
       -- Theme management system
       local cache_dir = vim.fn.stdpath("cache")
       local settings_file = cache_dir .. "/theme_settings.json"
@@ -39,256 +29,192 @@ return {
         ["ashen"] = {
           icon = "",
           variants = {},
-          apply_variant = function() return false end,
-          set_transparency = function(enable)
-            pcall(require("ashen").setup, { transparent = enable })
-            return true
+          setup = function(variant, transparency)
+            require("ashen").setup({ transparent = transparency })
+            vim.cmd("colorscheme ashen")
           end,
         },
         ["bamboo"] = {
           icon = "",
           variants = { "vulgaris", "multiplex", "light" },
-          apply_variant = function(variant)
-            pcall(require("bamboo").setup, {
+          setup = function(variant, transparency)
+            require("bamboo").setup({
               style = variant,
-              transparent = false,
-              dim_inactive = false,
-              term_colors = true,
-              code_style = {
-                comments = { italic = true },
-                conditionals = { italic = true },
-                keywords = {},
-                functions = {},
-                namespaces = { italic = true },
-                parameters = { italic = true },
-                strings = {},
-                variables = {},
-              },
-              diagnostics = {
-                darker = false,
-                undercurl = true,
-                background = true,
-              },
+              transparent = transparency,
             })
             require("bamboo").load()
-            return true
-          end,
-          set_transparency = function(enable)
-            pcall(require("bamboo").setup, {
-              transparent = enable,
-              term_colors = true,
-              code_style = {
-                comments = { italic = true },
-                conditionals = { italic = true },
-              },
-            })
-            require("bamboo").load()
-            return true
           end,
         },
         ["catppuccin"] = {
           icon = "",
           variants = { "latte", "frappe", "macchiato", "mocha" },
-          apply_variant = function(variant)
-            pcall(require("catppuccin").setup, { flavour = variant })
-            pcall(require("catppuccin").compile)
-            pcall(vim.cmd, "colorscheme catppuccin-" .. variant)
-            return true
-          end,
-          set_transparency = function(enable)
-            pcall(require("catppuccin").setup, { transparent_background = enable })
-            return true
+          setup = function(variant, transparency)
+            require("catppuccin").setup({
+              flavour = variant,
+              transparent_background = transparency,
+            })
+            require("catppuccin").compile()
+            vim.cmd("colorscheme catppuccin" .. (variant and "-" .. variant or ""))
           end,
         },
         ["cyberdream"] = {
           icon = "",
-          variants = { "default", "light" },
-          apply_variant = function(variant)
-            local opts = { variant = variant }
-            pcall(require("cyberdream").setup, opts)
-            return true
-          end,
-          set_transparency = function(enable)
-            local opts = { transparent = enable }
-            pcall(require("cyberdream").setup, opts)
-            return true
+          variants = { "default", "bauhaus", "bluesky" },
+          setup = function(variant, transparency)
+            require("cyberdream").setup({
+              variant = variant,
+              transparent = transparency,
+            })
+            vim.cmd("colorscheme cyberdream")
           end,
         },
         ["decay"] = {
           icon = "",
           variants = { "default", "dark", "light", "decayce" },
-          apply_variant = function(variant)
-            variant = variant or "default"
+          setup = function(variant, transparency)
+            if variant == "light" then
+              vim.o.background = "light"
+            else
+              vim.o.background = "dark"
+            end
 
-            pcall(require("decay").setup, {
-              style = variant,
-              transparent = load_settings().transparency or false,
-              nvim_tree = { contrast = true },
-              italics = { code = true, comments = true },
+            require("decay").setup({
+              style = variant ~= "light" and variant or "default",
+              transparent = transparency,
             })
-            if variant == "decayce" then
-              pcall(vim.cmd, "colorscheme decayce")
-            else
-              pcall(vim.cmd, "colorscheme decay-" .. variant)
-            end
-            -- FIX: decay colorschemes don't properly set g:colors_name
-            vim.g.colors_name = "decay"
-            return true
-          end,
-          set_transparency = function(enable)
-            local settings = load_settings()
-            local current_variant = settings.variant or "default"
 
-            if current_variant == "decayce" then
-              pcall(vim.cmd, "colorscheme decayce")
+            if variant == "decayce" then
+              vim.cmd("colorscheme decayce")
+              vim.g.colors_name = "decayce"
             else
-              pcall(require("decay").setup, {
-                style = current_variant,
-                transparent = enable,
-                nvim_tree = { contrast = true },
-                italics = { code = true, comments = true },
-              })
-              pcall(vim.cmd, "colorscheme decay-" .. current_variant)
+              vim.cmd("colorscheme decay" .. (variant and "-" .. variant or ""))
+              vim.g.colors_name = "decay" .. (variant and "-" .. variant or "")
             end
-            return true
           end,
         },
         ["everforest"] = {
           icon = "",
           variants = { "soft", "medium", "hard" },
-          apply_variant = function(variant)
-            vim.g.everforest_background = variant
-            return true
-          end,
-          set_transparency = function(enable)
-            vim.g.everforest_transparent_background = enable and 1 or 0
-            return true
+          setup = function(variant, transparency)
+            if variant then vim.g.everforest_background = variant end
+            if transparency then vim.g.everforest_transparent_background = 1 end
+            vim.cmd("colorscheme everforest")
           end,
         },
         ["gruvbox"] = {
           icon = "",
           variants = { "dark", "light" },
-          apply_variant = function(variant)
-            vim.o.background = variant
-            return true
-          end,
-          set_transparency = function(enable)
-            pcall(require("gruvbox").setup, { transparent_mode = enable })
-            return true
+          setup = function(variant, transparency)
+            if variant then vim.o.background = variant end
+            if transparency then require("gruvbox").setup({ transparent_mode = true }) end
+            vim.cmd("colorscheme gruvbox")
           end,
         },
         ["gruvbox-material"] = {
           icon = "",
           variants = { "hard", "medium", "soft" },
-          apply_variant = function(variant)
-            vim.g.gruvbox_material_background = variant
-            return true
-          end,
-          set_transparency = function(enable)
-            vim.g.gruvbox_material_transparent_background = enable and 1 or 0
-            return true
+          setup = function(variant, transparency)
+            if variant then vim.g.gruvbox_material_background = variant end
+            if transparency then vim.g.gruvbox_material_transparent_background = 1 end
+            vim.cmd("colorscheme gruvbox-material")
           end,
         },
         ["kanagawa"] = {
           icon = "",
           variants = { "wave", "dragon", "lotus" },
-          apply_variant = function(variant)
-            pcall(require("kanagawa").setup, {
+          setup = function(variant, transparency)
+            require("kanagawa").setup({
               theme = variant,
-              background = { dark = variant, light = "lotus" },
+              transparent = transparency,
             })
-            return true
-          end,
-          set_transparency = function(enable)
-            pcall(require("kanagawa").setup, { transparent = enable })
-            return true
+            vim.cmd("colorscheme kanagawa")
           end,
         },
         ["monokai-pro"] = {
           icon = "",
           variants = { "pro", "classic", "machine", "octagon", "ristretto", "spectrum" },
-          apply_variant = function(variant)
-            local filter = variant or "pro"
-            local success = pcall(require("monokai-pro").setup, {
-              filter = filter,
-              transparent_background = false,
-              terminal_colors = true,
-              devicons = true,
+          setup = function(variant, transparency)
+            require("monokai-pro").setup({
+              filter = variant,
+              transparent_background = transparency,
             })
-            return success
-          end,
-          set_transparency = function(enable)
-            -- Get current settings to preserve filter
-            local current_settings = load_settings()
-            local current_filter = current_settings.variant or "pro"
-            local success = pcall(require("monokai-pro").setup, {
-              filter = current_filter,
-              transparent_background = enable,
-              terminal_colors = true,
-              devicons = true,
-            })
-            return success
+            vim.cmd("colorscheme monokai-pro")
           end,
         },
         ["nord"] = {
           icon = "",
           variants = {},
-          apply_variant = function() return false end,
-          set_transparency = function(enable)
-            vim.g.nord_disable_background = enable
-            return true
+          setup = function(variant, transparency)
+            if transparency then vim.g.nord_disable_background = true end
+            vim.cmd("colorscheme nord")
           end,
         },
         ["onedark"] = {
           icon = "",
           variants = { "dark", "darker", "cool", "deep", "warm", "warmer" },
-          apply_variant = function(variant)
-            pcall(require("onedark").setup, { style = variant })
-            return true
-          end,
-          set_transparency = function(enable)
-            pcall(require("onedark").setup, { transparent = enable })
-            return true
+          setup = function(variant, transparency)
+            require("onedark").setup({
+              style = variant,
+              transparent = transparency,
+            })
+            vim.cmd("colorscheme onedark")
           end,
         },
         ["rose-pine"] = {
           icon = "",
           variants = { "main", "moon", "dawn" },
-          apply_variant = function(variant)
-            pcall(require("rose-pine").setup, { variant = variant })
-            return true
-          end,
-          set_transparency = function(enable)
-            pcall(require("rose-pine").setup, { disable_background = enable })
-            return true
+          setup = function(variant, transparency)
+            require("rose-pine").setup({
+              variant = variant,
+              disable_background = transparency,
+            })
+            vim.cmd("colorscheme rose-pine")
           end,
         },
         ["solarized-osaka"] = {
           icon = "",
           variants = {},
-          apply_variant = function() return false end,
-          set_transparency = function(enable)
-            pcall(require("solarized-osaka").setup, { transparent = enable })
-            return true
+          setup = function(variant, transparency)
+            if transparency then require("solarized-osaka").setup({ transparent = true }) end
+            vim.cmd("colorscheme solarized-osaka")
           end,
         },
         ["tokyonight"] = {
           icon = "",
           variants = { "night", "storm", "day", "moon" },
-          apply_variant = function(variant)
-            vim.g.tokyonight_style = variant
-            pcall(require("tokyonight").setup, { style = variant })
-            pcall(vim.cmd, "colorscheme tokyonight-" .. variant)
-            return true
-          end,
-          set_transparency = function(enable)
-            pcall(require("tokyonight").setup, { transparent = enable })
-            return true
+          setup = function(variant, transparency)
+            require("tokyonight").setup({
+              style = variant,
+              transparent = transparency,
+            })
+            vim.cmd("colorscheme tokyonight" .. (variant and "-" .. variant or ""))
           end,
         },
       }
 
-      -- Function to detect current system theme from theme.conf
+      local function apply_theme(name, variant, transparency)
+        local theme = themes[name]
+        if not theme then
+          vim.notify("Theme '" .. name .. "' not found, using kanagawa", vim.log.levels.WARN)
+          name = "kanagawa"
+          theme = themes[name]
+        end
+
+        if variant and theme.variants and #theme.variants > 0 then
+          if not vim.tbl_contains(theme.variants, variant) then
+            vim.notify("Variant '" .. variant .. "' not available for " .. name .. ", using default",
+              vim.log.levels.WARN)
+            variant = nil
+          end
+        end
+
+        if theme.setup then
+          theme.setup(variant, transparency or false)
+        end
+
+        save_settings({ theme = name, variant = variant, transparency = transparency })
+      end
+
       local function detect_system_theme()
         local theme_paths = {
           os.getenv("HOME") .. "/.config/hypr/themes/theme.conf",
@@ -299,8 +225,6 @@ return {
         for _, path in ipairs(theme_paths) do
           if vim.fn.filereadable(path) == 1 then
             local content = table.concat(vim.fn.readfile(path), "\n")
-
-            -- Look for NVIM_SCHEME and NVIM_VARIANT variables
             local nvim_scheme = content:match("%$NVIM_SCHEME%s*=%s*([%w%-_]+)")
             local nvim_variant = content:match("%$NVIM_VARIANT%s*=%s*([%w%-_]+)")
             local nvim_transparency = content:match("%$NVIM_TRANSPARENCY%s*=%s*([%w%-_]+)")
@@ -340,122 +264,32 @@ return {
         return nil, nil, nil
       end
 
-      local function apply_theme(name, variant, transparency)
-        local theme = themes[name]
-        if not theme then
-          vim.notify("Theme '" .. name .. "' not found, using kanagawa", vim.log.levels.WARN)
-          name = "kanagawa"
-          theme = themes[name]
-        end
-
-        if variant and theme.variants and vim.tbl_contains(theme.variants, variant) then
-          if name == "catppuccin" then
-            theme.apply_variant(variant)
-          elseif name == "decay" then
-            theme.apply_variant(variant)
-          elseif name == "monokai-pro" then
-            theme.apply_variant(variant)
-            vim.cmd("colorscheme " .. name)
-          else
-            theme.apply_variant(variant)
-            vim.cmd("colorscheme " .. name)
-          end
-        else
-          if name == "decay" then
-            pcall(require("decay").setup, {
-              style = "default",
-              transparent = transparency or false,
-              nvim_tree = { contrast = true },
-            })
-            pcall(vim.cmd, "colorscheme decay")
-            vim.g.colors_name = "decay"
-          elseif name == "monokai-pro" then
-            local success = pcall(require("monokai-pro").setup, {
-              filter = "pro",
-              transparent_background = transparency or false,
-              terminal_colors = true,
-              devicons = true,
-            })
-            if success then
-              vim.cmd("colorscheme " .. name)
-            end
-          else
-            vim.cmd("colorscheme " .. name)
-          end
-        end
-
-        -- Apply transparency after colorscheme
-        if theme.set_transparency then
-          theme.set_transparency(not transparency)
-          -- For monokai-pro, reapply colorscheme after transparency change
-          if name == "monokai-pro" then
-            pcall(vim.cmd, "colorscheme " .. name)
-          end
-        end
-
-        -- Save settings for persistence
-        local settings = { theme = name, variant = variant, transparency = transparency }
-        save_settings(settings)
-      end
-
-
-      -- Function to apply detected theme with variant support
       local function apply_system_theme()
         local detected_scheme, detected_variant, detected_transparency = detect_system_theme()
-
-        if not detected_scheme then
+        if not detected_scheme or not themes[detected_scheme] then
           return false
         end
 
-        -- Validate theme exists in our themes table
-        if not themes[detected_scheme] then
-          vim.notify("Scheme '" .. detected_scheme .. "' not available, using fallback", vim.log.levels.WARN)
-          return false
-        end
-
-        -- Check if theme is already active
-        local current_scheme = vim.g.colors_name or "kanagawa"
         local settings = load_settings()
-        local current_variant = settings.variant
-        local current_transparency = settings.transparency
+        local current_scheme = vim.g.colors_name or "kanagawa"
 
-        -- Normalize current scheme name for comparison
-        local normalized_current = current_scheme
         if current_scheme:match("^catppuccin%-") then
-          normalized_current = "catppuccin"
+          current_scheme = "catppuccin"
+        elseif current_scheme:match("^decay") then
+          current_scheme = "decay"
         elseif current_scheme:match("^tokyonight") then
-          normalized_current = "tokyonight"
+          current_scheme = "tokyonight"
         end
 
-        -- Check if detected theme is already active
-        local theme_changed = normalized_current ~= detected_scheme
-        local variant_changed = detected_variant ~= current_variant
-        local transparency_changed = detected_transparency ~= nil and detected_transparency ~= current_transparency
+        local theme_changed = current_scheme ~= detected_scheme
+        local variant_changed = detected_variant ~= settings.variant
+        local transparency_changed = detected_transparency ~= nil and detected_transparency ~= settings.transparency
 
         if not theme_changed and not variant_changed and not transparency_changed then
-          return true -- Settings are already active, no notification needed
+          return true
         end
 
-        -- Validate variant if specified
-        if detected_variant then
-          local theme_info = themes[detected_scheme]
-          if theme_info.variants and #theme_info.variants > 0 then
-            if not vim.tbl_contains(theme_info.variants, detected_variant) then
-              vim.notify(
-                "Variant '" .. detected_variant .. "' not available for " .. detected_scheme .. ", using default",
-                vim.log.levels.WARN)
-              detected_variant = nil
-            end
-          else
-            vim.notify("Scheme '" .. detected_scheme .. "' doesn't support variants, ignoring variant",
-              vim.log.levels.WARN)
-            detected_variant = nil
-          end
-        end
-
-        -- Use detected transparency if specified, otherwise keep current setting
         local final_transparency = detected_transparency ~= nil and detected_transparency or settings.transparency
-
         apply_theme(detected_scheme, detected_variant, final_transparency)
 
         local variant_text = detected_variant and ("-" .. detected_variant) or ""
@@ -465,30 +299,22 @@ return {
         return true
       end
 
-      -- Function to set up file watcher for theme.conf changes
       local function setup_system_theme_watcher()
         local theme_file = os.getenv("HOME") .. "/.config/hypr/themes/theme.conf"
-
-        if vim.fn.filereadable(theme_file) == 1 then
-          -- Use Neovim's file watcher if available (nvim 0.10+)
-          if vim.uv and vim.uv.fs_event_start then
-            local handle = vim.uv.new_fs_event()
-            vim.uv.fs_event_start(handle, theme_file, {}, function(err, filename, events)
-              if not err and events.change then
-                vim.schedule(function()
-                  vim.defer_fn(function()
-                    apply_system_theme()
-                  end, 500) -- Small delay to avoid rapid-fire changes
-                end)
-              end
-            end)
-          end
+        if vim.fn.filereadable(theme_file) == 1 and vim.uv and vim.uv.fs_event_start then
+          local handle = vim.uv.new_fs_event()
+          vim.uv.fs_event_start(handle, theme_file, {}, function(err, filename, events)
+            if not err and events.change then
+              vim.schedule(function()
+                vim.defer_fn(apply_system_theme, 500)
+              end)
+            end
+          end)
         end
       end
 
       local function cycle_theme()
         local current = vim.g.colors_name or "kanagawa"
-
         local theme_name = current
         if current:match("^catppuccin%-") then
           theme_name = "catppuccin"
@@ -523,8 +349,6 @@ return {
         local theme_name = current
         if current:match("^catppuccin%-") then
           theme_name = "catppuccin"
-        elseif current:match("^cyberdream%-") then
-          theme_name = "cyberdream"
         elseif current:match("^decay") then
           theme_name = "decay"
         elseif current:match("^tokyonight") then
@@ -532,7 +356,6 @@ return {
         end
 
         local theme = themes[theme_name]
-
         if not theme or not theme.variants or #theme.variants == 0 then
           vim.notify("Current theme doesn't have variants", vim.log.levels.WARN)
           return
@@ -546,8 +369,6 @@ return {
             current_variant = "decayce"
           elseif current:match("^decay%-(.+)$") then
             current_variant = current:match("^decay%-(.+)$")
-          else
-            current_variant = "default" -- fallback
           end
         end
 
@@ -604,13 +425,9 @@ return {
         vim.notify("Transparency " .. (settings.transparency and "enabled" or "disabled"), vim.log.levels.INFO)
       end
 
-      -- Create user commands
-      vim.api.nvim_create_user_command("CycleColorScheme", cycle_theme,
-        { desc = "Cycle through color schemes" })
-
+      vim.api.nvim_create_user_command("CycleColorScheme", cycle_theme, { desc = "Cycle through color schemes" })
       vim.api.nvim_create_user_command("CycleColorVariant", cycle_variant,
         { desc = "Cycle through color scheme variants" })
-
       vim.api.nvim_create_user_command("ToggleBackgroundTransparency", toggle_transparency,
         { desc = "Toggle background transparency" })
 
@@ -676,270 +493,6 @@ return {
         desc = "Set colorscheme variant",
       })
 
-      vim.api.nvim_create_user_command("SystemSync", function()
-        if not apply_system_theme() then
-          vim.notify("No system theme detected or theme not available", vim.log.levels.WARN)
-        end
-      end, { desc = "Sync colorscheme with system theme" })
-
-      vim.api.nvim_create_user_command("SystemDetect", function()
-        local scheme, variant, transparency = detect_system_theme()
-        if scheme then
-          local available = themes[scheme] and "✓ Available" or "⚠ Not available"
-          local variant_text = variant and (" + " .. variant) or ""
-          local transparency_text = transparency ~= nil and (", transparency " .. (transparency and "on" or "off")) or ""
-          vim.notify("System theme: " .. scheme .. variant_text .. transparency_text .. " (" .. available .. ")",
-            vim.log.levels.INFO)
-
-          -- Show available variants if scheme exists
-          if themes[scheme] and themes[scheme].variants and #themes[scheme].variants > 0 then
-            vim.notify("Available variants: " .. table.concat(themes[scheme].variants, ", "), vim.log.levels.INFO)
-          end
-        else
-          vim.notify("No NVIM_SCHEME found in system config", vim.log.levels.WARN)
-        end
-      end, { desc = "Detect current system theme" })
-
-      vim.api.nvim_create_user_command("SystemSetTheme", function(opts)
-        local args = vim.split(opts.args, "%s+")
-        local scheme = args[1]
-        local variant = args[2]
-        local transparency_arg = args[3]
-
-        if not scheme or scheme == "" then
-          vim.notify("Usage: SystemSetTheme <scheme> [variant] [transparency:true/false]", vim.log.levels.ERROR)
-          return
-        end
-
-        if not themes[scheme] then
-          vim.notify("Scheme '" .. scheme .. "' not available", vim.log.levels.ERROR)
-          return
-        end
-
-        -- Validate variant if provided
-        if variant then
-          local theme_info = themes[scheme]
-          if not theme_info.variants or #theme_info.variants == 0 then
-            vim.notify("Scheme '" .. scheme .. "' doesn't support variants", vim.log.levels.ERROR)
-            return
-          elseif not vim.tbl_contains(theme_info.variants, variant) then
-            vim.notify("Variant '" .. variant .. "' not available for " .. scheme, vim.log.levels.ERROR)
-            vim.notify("Available variants: " .. table.concat(theme_info.variants, ", "), vim.log.levels.INFO)
-            return
-          end
-        end
-
-        -- Handle transparency argument (can be 3rd arg if no variant, or 3rd arg after variant)
-        local transparency = nil
-        if transparency_arg then
-          transparency_arg = transparency_arg:lower()
-          transparency = transparency_arg == "true"
-        elseif variant and (variant:lower() == "true" or variant:lower() == "false") then
-          -- variant is actually transparency argument
-          transparency = variant:lower() == "true"
-          variant = nil
-        end
-
-        -- Update theme.conf file
-        local theme_file = os.getenv("HOME") .. "/.config/hypr/themes/theme.conf"
-        if vim.fn.filereadable(theme_file) == 1 then
-          local content = vim.fn.readfile(theme_file)
-          local updated_scheme = false
-          local updated_variant = false
-          local updated_transparency = false
-
-          -- Update or add NVIM_SCHEME
-          for i, line in ipairs(content) do
-            if line:match("^%$NVIM_SCHEME") then
-              content[i] = "$NVIM_SCHEME = " .. scheme
-              updated_scheme = true
-            elseif line:match("^%$NVIM_VARIANT") then
-              if variant then
-                content[i] = "$NVIM_VARIANT = " .. variant
-              else
-                -- Remove variant line if no variant specified
-                table.remove(content, i)
-              end
-              updated_variant = true
-            elseif line:match("^%$NVIM_TRANSPARENCY") then
-              if transparency ~= nil then
-                content[i] = "$NVIM_TRANSPARENCY = " .. (transparency and "true" or "false")
-              else
-                -- Remove transparency line if not specified
-                table.remove(content, i)
-              end
-              updated_transparency = true
-            end
-          end
-
-          -- Add missing variables
-          if not updated_scheme then
-            table.insert(content, 1, "$NVIM_SCHEME = " .. scheme)
-          end
-
-          if variant and not updated_variant then
-            -- Find NVIM_SCHEME line and insert NVIM_VARIANT after it
-            for i, line in ipairs(content) do
-              if line:match("^%$NVIM_SCHEME") then
-                table.insert(content, i + 1, "$NVIM_VARIANT = " .. variant)
-                break
-              end
-            end
-          end
-
-          if transparency ~= nil and not updated_transparency then
-            -- Find appropriate insertion point
-            local insert_pos = #content + 1
-            for i, line in ipairs(content) do
-              if line:match("^%$NVIM_VARIANT") then
-                insert_pos = i + 1
-                break
-              elseif line:match("^%$NVIM_SCHEME") then
-                insert_pos = i + 1
-              end
-            end
-            table.insert(content, insert_pos, "$NVIM_TRANSPARENCY = " .. (transparency and "true" or "false"))
-          end
-
-          vim.fn.writefile(content, theme_file)
-
-          -- Apply the theme
-          local settings = load_settings()
-          local final_transparency = transparency ~= nil and transparency or settings.transparency
-          apply_theme(scheme, variant, final_transparency)
-
-          local variant_text = variant and (" with variant " .. variant) or ""
-          local transparency_text = transparency ~= nil and (", transparency " .. (transparency and "on" or "off")) or ""
-          vim.notify("Set system theme to: " .. scheme .. variant_text .. transparency_text, vim.log.levels.INFO)
-        else
-          vim.notify("theme.conf not found at " .. theme_file, vim.log.levels.ERROR)
-        end
-      end, {
-        nargs = "+",
-        complete = function(arg_lead, cmd_line, cursor_pos)
-          local args = vim.split(cmd_line, "%s+")
-          if #args <= 2 then
-            -- Complete scheme names
-            return vim.tbl_keys(themes)
-          elseif #args == 3 then
-            -- Complete variant names for the specified scheme or transparency values
-            local scheme = args[2]
-            if themes[scheme] and themes[scheme].variants and #themes[scheme].variants > 0 then
-              local completions = {}
-              vim.list_extend(completions, themes[scheme].variants)
-              vim.list_extend(completions, { "true", "false" })
-              return completions
-            else
-              return { "true", "false" }
-            end
-          elseif #args == 4 then
-            -- Complete transparency values
-            return { "true", "false" }
-          end
-          return {}
-        end,
-        desc = "Set NVIM_SCHEME, NVIM_VARIANT, and NVIM_TRANSPARENCY in system config"
-      })
-
-      vim.api.nvim_create_user_command("SystemSetTransparency", function(opts)
-        local transparency_arg = opts.args:lower()
-
-        if transparency_arg == "" then
-          vim.notify("Usage: SystemSetTransparency <true|false|toggle>", vim.log.levels.ERROR)
-          return
-        end
-
-        local transparency
-        if transparency_arg == "toggle" then
-          local settings = load_settings()
-          transparency = not settings.transparency
-        elseif transparency_arg == "true" or transparency_arg == "1" then
-          transparency = true
-        elseif transparency_arg == "false" or transparency_arg == "0" then
-          transparency = false
-        else
-          vim.notify("Invalid transparency value. Use: true, false, or toggle", vim.log.levels.ERROR)
-          return
-        end
-
-        -- Update theme.conf file
-        local theme_file = os.getenv("HOME") .. "/.config/hypr/themes/theme.conf"
-        if vim.fn.filereadable(theme_file) == 1 then
-          local content = vim.fn.readfile(theme_file)
-          local updated = false
-
-          -- Update or add NVIM_TRANSPARENCY
-          for i, line in ipairs(content) do
-            if line:match("^%$NVIM_TRANSPARENCY") then
-              content[i] = "$NVIM_TRANSPARENCY = " .. (transparency and "true" or "false")
-              updated = true
-              break
-            end
-          end
-
-          -- Add NVIM_TRANSPARENCY if not found
-          if not updated then
-            -- Find appropriate insertion point
-            local insert_pos = #content + 1
-            for i, line in ipairs(content) do
-              if line:match("^%$NVIM_VARIANT") then
-                insert_pos = i + 1
-                break
-              elseif line:match("^%$NVIM_SCHEME") then
-                insert_pos = i + 1
-              end
-            end
-            table.insert(content, insert_pos, "$NVIM_TRANSPARENCY = " .. (transparency and "true" or "false"))
-          end
-
-          vim.fn.writefile(content, theme_file)
-
-          -- Apply transparency to current theme
-          local settings = load_settings()
-          apply_theme(settings.theme, settings.variant, transparency)
-
-          vim.notify("Set system transparency to: " .. (transparency and "enabled" or "disabled"), vim.log.levels.INFO)
-        else
-          vim.notify("theme.conf not found at " .. theme_file, vim.log.levels.ERROR)
-        end
-      end, {
-        nargs = 1,
-        complete = function()
-          return { "true", "false", "toggle" }
-        end,
-        desc = "Set NVIM_TRANSPARENCY in system config"
-      })
-
-      vim.api.nvim_create_user_command("SystemListThemes", function()
-        local available_themes = {}
-
-        for name, theme in pairs(themes) do
-          local variants_text = ""
-          if theme.variants and #theme.variants > 0 then
-            variants_text = " (variants: " .. table.concat(theme.variants, ", ") .. ")"
-          end
-          table.insert(available_themes, theme.icon .. " " .. name .. variants_text)
-        end
-
-        table.sort(available_themes)
-
-        vim.notify("Available themes for system integration:\n" .. table.concat(available_themes, "\n"),
-          vim.log.levels.INFO, {
-            title = "System Themes",
-            timeout = 10000 -- Show longer for reading
-          })
-
-        -- Also show usage examples
-        vim.defer_fn(function()
-          vim.notify("Usage examples:\n" ..
-            ":SystemSetTheme nord\n" ..
-            ":SystemSetTheme tokyonight storm\n" ..
-            ":SystemSetTransparency true\n" ..
-            ":SystemSetTheme kanagawa wave true",
-            vim.log.levels.INFO, { title = "Usage Examples" })
-        end, 2000)
-      end, { desc = "List available themes for system integration" })
-
       -- Auto-apply system theme on startup and setup watcher
       vim.defer_fn(function()
         if not apply_system_theme() then
@@ -959,212 +512,18 @@ return {
   },
 
   -- Additional themes (lazy loaded)
-  {
-    "ficcdaf/ashen.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("ashen").setup({
-        transparent = false,
-        italic_comments = true,
-      })
-    end,
-  },
-  {
-    "ribru17/bamboo.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("bamboo").setup({
-        style = "vulgaris",
-        transparent = false,
-        dim_inactive = false,
-        term_colors = true,
-        code_style = {
-          comments = { italic = true },
-          conditionals = { italic = true },
-          keywords = {},
-          functions = {},
-          namespaces = { italic = true },
-          parameters = { italic = true },
-          strings = {},
-          variables = {},
-        },
-        diagnostics = {
-          darker = false,
-          undercurl = true,
-          background = true,
-        },
-      })
-    end,
-  },
-  {
-    "catppuccin/nvim",
-    name = "catppuccin",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("catppuccin").setup({
-        flavour = "mocha",
-        transparent_background = false,
-        term_colors = true,
-        compile_enable = true,
-        compile_path = vim.fn.stdpath("cache") .. "/catppuccin",
-        styles = { comments = { "italic" }, conditionals = { "italic" } },
-        integrations = { cmp = true, gitsigns = true, nvimtree = true, telescope = true, treesitter = true, which_key = true },
-      })
-    end,
-  },
-  {
-    "mimabial/cyberdream.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("cyberdream").setup({
-        transparent = false,
-        italic_comments = true,
-        hide_fillchars = true,
-        borderless_pickers = true,
-        terminal_colors = true,
-        cache = false,
-      })
-    end,
-  },
-  {
-    "decaycs/decay.nvim",
-    name = "decay",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("decay").setup({
-        style = "default",
-        transparent = false,
-        nvim_tree = { contrast = true },
-      })
-    end,
-  },
-  {
-    "sainnhe/everforest",
-    lazy = true,
-    priority = 950,
-    config = function()
-      vim.g.everforest_background = "medium"
-      vim.g.everforest_better_performance = 1
-    end,
-  },
-  {
-    "ellisonleao/gruvbox.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("gruvbox").setup({
-        terminal_colors = true,
-        undercurl = true,
-        underline = true,
-        bold = true,
-        italic = { strings = true, emphasis = true, comments = true, operators = false, folds = true },
-        strikethrough = true,
-        invert_selection = false,
-        invert_signs = false,
-        invert_tabline = false,
-        invert_intend_guides = false,
-        inverse = true,
-        contrast = "",
-        palette_overrides = {},
-        overrides = {},
-        dim_inactive = false,
-        transparent_mode = false
-      })
-    end,
-  },
-  {
-    "sainnhe/gruvbox-material",
-    lazy = true,
-    priority = 950,
-    config = function()
-      vim.g.gruvbox_material_background = "medium"
-      vim.g.gruvbox_material_better_performance = 1
-      vim.g.gruvbox_material_enable_italic = 1
-      vim.g.gruvbox_material_transparent_background = 0
-    end,
-  },
-  {
-    "loctvl842/monokai-pro.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      -- Basic setup - will be overridden by theme management
-      require("monokai-pro").setup({
-        transparent_background = false,
-        terminal_colors = true,
-        devicons = true,
-        filter = "pro",
-      })
-    end,
-  },
-  {
-    "shaunsingh/nord.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      vim.g.nord_contrast = true
-      vim.g.nord_borders = true
-      vim.g.nord_disable_background = false
-      vim.g.nord_italic = true
-    end,
-  },
-  {
-    "navarasu/onedark.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("onedark").setup({
-        style = "dark",
-        transparent = false,
-        term_colors = true,
-        ending_tildes = false,
-        cmp_itemkind_reverse = false,
-        code_style = {
-          comments = "italic",
-          keywords = "none",
-          functions = "none",
-          strings = "none",
-          variables = "none",
-        },
-      })
-    end,
-  },
-  {
-    "rose-pine/neovim",
-    name = "rose-pine",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("rose-pine").setup({
-        variant = "main", disable_background = false, disable_italics = false,
-      })
-    end,
-  },
-  {
-    "craftzdog/solarized-osaka.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-    end,
-  },
-  {
-    "folke/tokyonight.nvim",
-    lazy = true,
-    priority = 950,
-    config = function()
-      require("tokyonight").setup({
-        style = "night",
-        transparent = false,
-        terminal_colors = true,
-        styles = { comments = { italic = true }, keywords = { italic = true } },
-        sidebars = { "qf", "help" },
-        day_brightness = 0.3,
-      })
-    end,
-  },
+  { "ficcdaf/ashen.nvim",             lazy = true,         priority = 950 },
+  { "ribru17/bamboo.nvim",            lazy = true,         priority = 950 },
+  { "catppuccin/nvim",                name = "catppuccin", lazy = true,   priority = 950 },
+  { "mimabial/cyberdream.nvim",       lazy = true,         priority = 950 },
+  { "decaycs/decay.nvim",             name = "decay",      lazy = true,   priority = 950 },
+  { "sainnhe/everforest",             lazy = true,         priority = 950 },
+  { "ellisonleao/gruvbox.nvim",       lazy = true,         priority = 950 },
+  { "sainnhe/gruvbox-material",       lazy = true,         priority = 950 },
+  { "loctvl842/monokai-pro.nvim",     lazy = true,         priority = 950 },
+  { "shaunsingh/nord.nvim",           lazy = true,         priority = 950 },
+  { "navarasu/onedark.nvim",          lazy = true,         priority = 950 },
+  { "rose-pine/neovim",               name = "rose-pine",  lazy = true,   priority = 950 },
+  { "craftzdog/solarized-osaka.nvim", lazy = true,         priority = 950 },
+  { "folke/tokyonight.nvim",          lazy = true,         priority = 950 },
 }
