@@ -169,14 +169,15 @@ return {
             vim.cmd("colorscheme kanagawa")
           end,
         },
-        ["lackluster"] = {
+        ["darkvoid"] = {
           icon = "",
-          variants = { "lackluster", "lackluster-hack", "lackluster-mint" },
+          variants = { "glow" },
           setup = function(variant, transparency)
-            require("lackluster").setup({
-              disable_background = transparency
+            require("darkvoid").setup({
+              transparent = transparency,
+              glow = (variant == "glow"),
             })
-            vim.cmd("colorscheme " .. (variant or "lackluster"))
+            vim.cmd("colorscheme darkvoid")
           end,
         },
         ["monokai-pro"] = {
@@ -578,29 +579,21 @@ return {
   },
 
   -- Additional themes (lazy loaded)
-  { "ficcdaf/ashen.nvim",       lazy = true, priority = 950 },
-  { "Shatur/neovim-ayu",        lazy = true, priority = 950 },
-  { "ribru17/bamboo.nvim",      lazy = true, priority = 950 },
-  { "catppuccin/nvim",          lazy = true, priority = 950 },
-  { "mimabial/cyberdream.nvim", lazy = true, priority = 950 },
-  { "decaycs/decay.nvim",       lazy = true, priority = 950 },
-  { "sainnhe/everforest",       lazy = true, priority = 950 },
-  { "ellisonleao/gruvbox.nvim", lazy = true, priority = 950 },
-  { "sainnhe/gruvbox-material", lazy = true, priority = 950 },
-  {
-    "slugbyte/lackluster.nvim",
-    lazy = true,
-    priority = 950,
-  },
-  { "loctvl842/monokai-pro.nvim", lazy = true, priority = 950 },
-  { "shaunsingh/nord.nvim",       lazy = true, priority = 950 },
-  { "navarasu/onedark.nvim",      lazy = true, priority = 950 },
-  {
-    "nyoom-engineering/oxocarbon.nvim",
-    lazy = true,
-    priority = 950,
-  },
-  { "rose-pine/neovim",               lazy = true, priority = 950 },
-  { "craftzdog/solarized-osaka.nvim", lazy = true, priority = 950 },
-  { "folke/tokyonight.nvim",          lazy = true, priority = 950 },
+  { "ficcdaf/ashen.nvim",               lazy = true, priority = 950 },
+  { "Shatur/neovim-ayu",                lazy = true, priority = 950 },
+  { "ribru17/bamboo.nvim",              lazy = true, priority = 950 },
+  { "catppuccin/nvim",                  lazy = true, priority = 950 },
+  { "mimabial/cyberdream.nvim",         lazy = true, priority = 950 },
+  { "aliqyan-21/darkvoid.nvim",         lazy = true, priority = 950 },
+  { "decaycs/decay.nvim",               lazy = true, priority = 950 },
+  { "sainnhe/everforest",               lazy = true, priority = 950 },
+  { "ellisonleao/gruvbox.nvim",         lazy = true, priority = 950 },
+  { "sainnhe/gruvbox-material",         lazy = true, priority = 950 },
+  { "loctvl842/monokai-pro.nvim",       lazy = true, priority = 950 },
+  { "shaunsingh/nord.nvim",             lazy = true, priority = 950 },
+  { "navarasu/onedark.nvim",            lazy = true, priority = 950 },
+  { "nyoom-engineering/oxocarbon.nvim", lazy = true, priority = 950 },
+  { "rose-pine/neovim",                 lazy = true, priority = 950 },
+  { "craftzdog/solarized-osaka.nvim",   lazy = true, priority = 950 },
+  { "folke/tokyonight.nvim",            lazy = true, priority = 950 },
 }
