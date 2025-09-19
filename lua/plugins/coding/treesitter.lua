@@ -26,18 +26,12 @@ return {
         "markdown",
         "vim",
         "vimdoc",
-        -- Web languages with explicit JSX support
-        "jsx", -- Explicitly included for JSX support
-        "tsx",
+        -- Web languages with JSX support
+        "tsx", -- TypeScript JSX
         "typescript",
-        -- GOTH stack
-        "go",
-        "gomod",
-        "templ",
       },
       highlight = {
         enable = true,
-        additional_vim_regex_highlighting = { "templ" },
       },
       indent = { enable = true },
       incremental_selection = {
@@ -65,23 +59,10 @@ return {
 
         -- Setup parsers with error handling
         pcall(function()
-          local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
-
-          -- Configure JSX parser explicitly
-          parser_config.jsx = {
-            install_info = {
-              url = "https://github.com/tree-sitter/tree-sitter-javascript",
-              files = { "src/parser.c", "src/scanner.c" },
-              branch = "main",
-            },
-            filetype = "javascriptreact",
-          }
-
           -- Register filetypes to parsers mapping
           local ft_to_parser = require("nvim-treesitter.parsers").filetype_to_parsername
           ft_to_parser.javascriptreact = "jsx"
           ft_to_parser.typescriptreact = "tsx"
-          ft_to_parser.templ = "templ"
         end)
 
         -- Main TS setup with error handling

@@ -71,21 +71,6 @@ return {
             end
           end)
         end
-
-        -- Stack-specific keymaps
-        if client.name == "gopls" then
-          buf_set_keymap("n", "<leader>goi", "<cmd>lua require('utils.go_utils').organize_imports()<CR>",
-            { desc = "Organize imports" })
-          buf_set_keymap("n", "<leader>gie", "<cmd>GoIfErr<CR>", { desc = "Add if err" })
-          buf_set_keymap("n", "<leader>gfs", "<cmd>GoFillStruct<CR>", { desc = "Fill struct" })
-        end
-
-        if client.name == "tsserver" or client.name == "typescript-tools" then
-          buf_set_keymap("n", "<leader>toi", "<cmd>TypescriptOrganizeImports<CR>", { desc = "Organize imports" })
-          buf_set_keymap("n", "<leader>tru", "<cmd>TypescriptRemoveUnused<CR>", { desc = "Remove unused" })
-          buf_set_keymap("n", "<leader>tfa", "<cmd>TypescriptFixAll<CR>", { desc = "Fix all" })
-          buf_set_keymap("n", "<leader>tai", "<cmd>TypescriptAddMissingImports<CR>", { desc = "Add missing imports" })
-        end
       end
 
       -- Mason-lspconfig setup
@@ -95,14 +80,10 @@ return {
         handlers = {
           -- Default handler
           function(server_name)
-            local ok, lspconfig = pcall(require, "lspconfig")
-            if not ok then return end
-            pcall(function()
-              lspconfig[server_name].setup({
-                on_attach = on_attach,
-                capabilities = capabilities,
-              })
-            end)
+            vim.lsp.config[server_name] = {
+              on_attach = on_attach,
+              capabilities = capabilities,
+            }
           end,
 
           -- Custom server configurations
@@ -300,12 +281,6 @@ return {
         vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
       end
 
-      -- Templ LSP
-      require("lspconfig").templ.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-      })
-
       -- ESLint LSP
       require("lspconfig").eslint.setup({
         on_attach = on_attach,
@@ -366,27 +341,6 @@ return {
     lazy = true,
   },
 
-  -- GOTH stack tools
-  {
-    "ray-x/go.nvim",
-    dependencies = { "ray-x/guihua.lua", "neovim/nvim-lspconfig" },
-    ft = { "go", "gomod", "gowork", "gotmpl" },
-    opts = {
-      lsp_cfg = false,
-      lsp_gofumpt = true,
-      lsp_on_attach = function(_, bufnr)
-        local map = function(mode, l, r, desc)
-          vim.keymap.set(mode, l, r, { buffer = bufnr, desc = desc })
-        end
-        map("n", "<leader>gi", "<cmd>GoImpl<CR>", "Go Implement Interface")
-        map("n", "<leader>gfs", "<cmd>GoFillStruct<CR>", "Go Fill Struct")
-        map("n", "<leader>ge", "<cmd>GoIfErr<CR>", "Go If Err")
-      end,
-      trouble = true,
-      luasnip = true,
-    },
-  },
-
   {
     "pmizio/typescript-tools.nvim",
     ft = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
@@ -434,9 +388,6 @@ return {
       end
     end,
   },
-
-  -- Templ support
-  { "joerdav/templ.vim", ft = "templ" },
 
   -- Inlay hints for older Neovim
   {

@@ -107,6 +107,29 @@ return {
             vim.cmd("colorscheme cyberdream")
           end,
         },
+        ["darkvoid"] = {
+          icon = "",
+          variants = { "glow" },
+          setup = function(variant, transparency)
+            require("darkvoid").setup({
+              transparent = transparency,
+              glow = (variant == "glow"),
+              plugins = {
+                gitsigns = true,
+                nvim_cmp = true,
+                treesitter = true,
+                nvimtree = true,
+                telescope = true,
+                lualine = true,
+                bufferline = true,
+                oil = true,
+                whichkey = true,
+                nvim_notify = true,
+              },
+            })
+            vim.cmd("colorscheme darkvoid")
+          end,
+        },
         ["decay"] = {
           icon = "",
           variants = { "default", "dark", "light", "decayce" },
@@ -169,17 +192,7 @@ return {
             vim.cmd("colorscheme kanagawa")
           end,
         },
-        ["darkvoid"] = {
-          icon = "",
-          variants = { "glow" },
-          setup = function(variant, transparency)
-            require("darkvoid").setup({
-              transparent = transparency,
-              glow = (variant == "glow"),
-            })
-            vim.cmd("colorscheme darkvoid")
-          end,
-        },
+
         ["monokai-pro"] = {
           icon = "",
           variants = { "pro", "classic", "machine", "octagon", "ristretto", "spectrum" },
