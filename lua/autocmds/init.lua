@@ -51,7 +51,7 @@ function M.setup()
   vim.api.nvim_create_autocmd("TextYankPost", {
     group = "YankHighlight",
     callback = function()
-      vim.highlight.on_yank({ timeout = 300 })
+      vim.highlight.on_yank({ timeout = 600 })
     end,
     desc = "Highlight yanked text",
   })
@@ -92,10 +92,8 @@ function M.setup()
       "css",
       "yaml",
       "markdown",
-      "svelte",
       "tsx",
       "jsx",
-      "templ",
     },
     callback = function()
       vim.bo.tabstop = 2
@@ -169,46 +167,6 @@ function M.setup()
     desc = "Reload file if changed outside Neovim",
   })
 
-  -- 10) HTMX attributes highlighting
-  vim.api.nvim_create_augroup("HTMXHighlight", { clear = true })
-  vim.api.nvim_create_autocmd("FileType", {
-    group = "HTMXHighlight",
-    pattern = { "html", "templ" },
-    callback = function()
-      vim.cmd([[syntax match htmlArg contained "\<hx-[a-zA-Z\-]\+" ]])
-      vim.cmd([[syntax match htmlArg contained "\<data-hx-[a-zA-Z\-]\+" ]])
-      vim.cmd([[highlight link htmlArg Keyword]])
-    end,
-    desc = "Highlight HTMX attributes",
-  })
-
-  -- 11) Templ indentation
-  vim.api.nvim_create_augroup("TemplIndent", { clear = true })
-  vim.api.nvim_create_autocmd("FileType", {
-    group = "TemplIndent",
-    pattern = "templ",
-    callback = function()
-      vim.bo.indentexpr = "GetTemplIndent()"
-      if vim.fn.exists("*GetTemplIndent") == 0 then
-        vim.cmd([[
-          function! GetTemplIndent()
-            let cl = getline(v:lnum)
-            if cl =~ '^\s*}'
-              return indent(v:lnum-1) - &shiftwidth
-            endif
-            let pl = getline(v:lnum-1)
-            let pi = indent(v:lnum-1)
-            if pl =~ '{$'
-              return pi + &shiftwidth
-            endif
-            return pi
-          endfunction
-        ]])
-      end
-    end,
-    desc = "Configure Templ indentation",
-  })
-
   -- 12) Terminal mode settings
   vim.api.nvim_create_augroup("TerminalMode", { clear = true })
   vim.api.nvim_create_autocmd("TermOpen", {
@@ -233,7 +191,7 @@ function M.setup()
     desc = "Configure terminal keymaps",
   })
 
-  -- 13) Refresh gitsigns after lazygit after lazygit
+  -- 13) Refresh gitsigns after lazygit
   local git_grp = vim.api.nvim_create_augroup("GitSignsRefresh", { clear = true })
   vim.api.nvim_create_autocmd("TermClose", {
     group = git_grp,
@@ -247,7 +205,7 @@ function M.setup()
     end,
   })
 
-  -- 15) Update window title) Update window title
+  -- 15) Update window title
   vim.api.nvim_create_augroup("WinTitle", { clear = true })
   vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost", "VimResume" }, {
     group = "WinTitle",
@@ -262,12 +220,6 @@ function M.setup()
     desc = "Set window title",
   })
 
-  -- 16) Project-specific autocmds
-  local proj = vim.fn.getcwd() .. "/.nvim/autocmds.lua"
-  if vim.fn.filereadable(proj) == 1 then
-    pcall(dofile, proj)
-  end
-
   -- 17) Disable auto comment continuation
   vim.api.nvim_create_augroup("NoCommentCont", { clear = true })
   vim.api.nvim_create_autocmd("FileType", {
@@ -278,16 +230,6 @@ function M.setup()
     end,
     desc = "Disable auto comment continuation",
   })
-
-  -- 18) Try to load project-specific configuration if it exists
-  local project_init = vim.fn.getcwd() .. "/.nvim/init.lua"
-  if vim.fn.filereadable(project_init) == 1 then
-    vim.notify("📝 Loading project-specific configuration", vim.log.levels.INFO)
-    local ok, err = pcall(dofile, project_init)
-    if not ok then
-      vim.notify("❌ Error in project config: " .. err, vim.log.levels.ERROR)
-    end
-  end
 end
 
 return M
