@@ -34,6 +34,45 @@ return {
             vim.cmd("colorscheme ashen")
           end,
         },
+        ["ayu"] = {
+          icon = "",
+          variants = { "dark", "light", "mirage" },
+          setup = function(variant, transparency)
+            local ayu_config = {
+              mirage = variant == "mirage",
+              terminal = true,
+            }
+
+            -- Handle transparency via overrides
+            if transparency then
+              ayu_config.overrides = {
+                Normal = { bg = "None" },
+                NormalFloat = { bg = "None" },
+                ColorColumn = { bg = "None" },
+                SignColumn = { bg = "None" },
+                Folded = { bg = "None" },
+                FoldColumn = { bg = "None" },
+                CursorLine = { bg = "None" },
+                CursorColumn = { bg = "None" },
+                VertSplit = { bg = "None" },
+              }
+            end
+
+            require("ayu").setup(ayu_config)
+
+            -- Set background and apply colorscheme
+            if variant == "light" then
+              vim.o.background = "light"
+              vim.cmd("colorscheme ayu-light")
+            elseif variant == "mirage" then
+              vim.o.background = "dark"
+              vim.cmd("colorscheme ayu-mirage")
+            else
+              vim.o.background = "dark"
+              vim.cmd("colorscheme ayu-dark")
+            end
+          end,
+        },
         ["bamboo"] = {
           icon = "",
           variants = { "vulgaris", "multiplex", "light" },
@@ -130,6 +169,15 @@ return {
             vim.cmd("colorscheme kanagawa")
           end,
         },
+        ["lackluster"] = {
+          icon = "",
+          setup = function(variant, transparency)
+            require("lackluster").setup({
+              disable_background = transparency
+            })
+            vim.cmd("colorscheme " .. variant)
+          end,
+        },
         ["monokai-pro"] = {
           icon = "",
           variants = { "pro", "classic", "machine", "octagon", "ristretto", "spectrum" },
@@ -160,6 +208,23 @@ return {
             vim.cmd("colorscheme onedark")
           end,
         },
+        ["oxocarbon"] = {
+          icon = "",
+          variants = { "dark", "light" },
+          setup = function(variant, transparency)
+            vim.opt.background = variant
+            if transparency then
+              vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
+              vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
+              vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
+            else
+              vim.api.nvim_set_hl(0, "Normal", {})
+              vim.api.nvim_set_hl(0, "NormalFloat", {})
+              vim.api.nvim_set_hl(0, "NormalNC", {})
+            end
+            vim.cmd("colorscheme oxocarbon")
+          end,
+        },
         ["rose-pine"] = {
           icon = "",
           variants = { "main", "moon", "dawn" },
@@ -188,6 +253,20 @@ return {
               transparent = transparency,
             })
             vim.cmd("colorscheme tokyonight" .. (variant and "-" .. variant or ""))
+          end,
+        },
+        ["zenbones"] = {
+          icon = "",
+          variants = { "zenbones", "zenwritten", "neobones", "vimbones", "rosebones", "forestbones", "nordbones", "tokyobones", "seoulbones", "duckbones", "zenburned", "kanagawabones" },
+          setup = function(variant, transparency)
+            -- Set compatibility mode for better performance
+            vim.g.zenbones_compat = 1
+            -- Configure transparency if needed
+            if transparency then
+              vim.g.zenbones_transparent_background = true
+            end
+            -- Apply the variant or default
+            vim.cmd("colorscheme " .. (variant or "zenbones"))
           end,
         },
       }
@@ -512,17 +591,28 @@ return {
   },
 
   -- Additional themes (lazy loaded)
-  { "ficcdaf/ashen.nvim",             lazy = true, priority = 950 },
-  { "ribru17/bamboo.nvim",            lazy = true, priority = 950 },
-  { "catppuccin/nvim",                lazy = true, priority = 950 },
-  { "mimabial/cyberdream.nvim",       lazy = true, priority = 950 },
-  { "decaycs/decay.nvim",             lazy = true, priority = 950 },
-  { "sainnhe/everforest",             lazy = true, priority = 950 },
-  { "ellisonleao/gruvbox.nvim",       lazy = true, priority = 950 },
-  { "sainnhe/gruvbox-material",       lazy = true, priority = 950 },
-  { "loctvl842/monokai-pro.nvim",     lazy = true, priority = 950 },
-  { "shaunsingh/nord.nvim",           lazy = true, priority = 950 },
-  { "navarasu/onedark.nvim",          lazy = true, priority = 950 },
+  { "ficcdaf/ashen.nvim",       lazy = true, priority = 950 },
+  { "Shatur/neovim-ayu",        lazy = true, priority = 950 },
+  { "ribru17/bamboo.nvim",      lazy = true, priority = 950 },
+  { "catppuccin/nvim",          lazy = true, priority = 950 },
+  { "mimabial/cyberdream.nvim", lazy = true, priority = 950 },
+  { "decaycs/decay.nvim",       lazy = true, priority = 950 },
+  { "sainnhe/everforest",       lazy = true, priority = 950 },
+  { "ellisonleao/gruvbox.nvim", lazy = true, priority = 950 },
+  { "sainnhe/gruvbox-material", lazy = true, priority = 950 },
+  {
+    "slugbyte/lackluster.nvim",
+    lazy = true,
+    priority = 950,
+  },
+  { "loctvl842/monokai-pro.nvim", lazy = true, priority = 950 },
+  { "shaunsingh/nord.nvim",       lazy = true, priority = 950 },
+  { "navarasu/onedark.nvim",      lazy = true, priority = 950 },
+  {
+    "nyoom-engineering/oxocarbon.nvim",
+    lazy = true,
+    priority = 950,
+  },
   { "rose-pine/neovim",               lazy = true, priority = 950 },
   { "craftzdog/solarized-osaka.nvim", lazy = true, priority = 950 },
   { "folke/tokyonight.nvim",          lazy = true, priority = 950 },
