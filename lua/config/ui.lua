@@ -81,24 +81,6 @@ M.setup_highlights = function()
   vim.api.nvim_set_hl(0, "FloatBorder", { fg = colors.border })
   vim.api.nvim_set_hl(0, "NormalFloat", { bg = colors.popup_bg })
 
-  -- Menu highlights
-  vim.api.nvim_set_hl(0, "PmenuSel", { bg = colors.select_bg, fg = colors.select_fg, bold = true })
-  vim.api.nvim_set_hl(0, "Pmenu", { bg = colors.popup_bg })
-  vim.api.nvim_set_hl(0, "PmenuThumb", { bg = colors.border })
-
-  -- Bufferline highlights
-  vim.api.nvim_set_hl(0, "BufferLineBackground", { fg = colors.gray, bg = bg_color })
-  vim.api.nvim_set_hl(0, "BufferLineBufferSelected", { fg = colors.fg, bg = bg_color, bold = true })
-  vim.api.nvim_set_hl(0, "BufferLineBufferVisible", { fg = colors.fg, bg = bg_color })
-  vim.api.nvim_set_hl(0, "BufferLineModified", { fg = colors.green, bg = bg_color })
-  vim.api.nvim_set_hl(0, "BufferLineModifiedSelected", { fg = colors.green, bg = bg_color })
-
-  vim.api.nvim_set_hl(0, "BufferLineError", { fg = colors.red, bg = bg_color })
-  vim.api.nvim_set_hl(0, "BufferLineErrorSelected", { fg = colors.red, bg = bg_color, bold = true })
-  vim.api.nvim_set_hl(0, "BufferLineWarning", { fg = colors.yellow, bg = bg_color })
-  vim.api.nvim_set_hl(0, "BufferLineIndicatorSelected", { fg = colors.blue, bg = bg_color })
-  vim.api.nvim_set_hl(0, "BufferLineFill", { fg = colors.fg, bg = bg_color })
-
   -- Completion menu
   -- Basic UI elements
   vim.api.nvim_set_hl(0, "CmpNormal", { bg = colors.bg })
@@ -109,59 +91,14 @@ M.setup_highlights = function()
   -- AI source highlighting
   vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = colors.copilot })
   vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = colors.codeium })
-
-  -- LSP kinds with subtle color variations
-  vim.api.nvim_set_hl(0, "CmpItemKindFunction", { fg = colors.blue, bold = true })
-  vim.api.nvim_set_hl(0, "CmpItemKindMethod", { fg = colors.blue })
-  vim.api.nvim_set_hl(0, "CmpItemKindVariable", { fg = colors.orange })
-  vim.api.nvim_set_hl(0, "CmpItemKindField", { fg = colors.green })
-  vim.api.nvim_set_hl(0, "CmpItemKindClass", { fg = colors.yellow, bold = true })
-  vim.api.nvim_set_hl(0, "CmpItemKindInterface", { fg = colors.yellow })
-  vim.api.nvim_set_hl(0, "CmpItemKindStruct", { fg = colors.purple })
-  vim.api.nvim_set_hl(0, "CmpItemKindConstant", { fg = colors.orange, bold = true })
-
-  -- Other sources with distinctive colors
-  vim.api.nvim_set_hl(0, "CmpItemKindSnippet", { fg = colors.green, italic = true })
-  vim.api.nvim_set_hl(0, "CmpItemKindBuffer", { fg = colors.gray })
-  vim.api.nvim_set_hl(0, "CmpItemKindPath", { fg = colors.orange })
-
-  -- Enhanced highlight groups for selected items
-  vim.api.nvim_set_hl(0, "CmpItemAbbrMatch", { fg = colors.green, bold = true })
-  vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzy", { fg = colors.green, bold = true })
-  vim.api.nvim_set_hl(0, "CmpItemAbbrMatchSelected", { fg = colors.yellow, bg = colors.select_bg, bold = true })
-  vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzySelected", { fg = colors.yellow, bg = colors.select_bg, bold = true })
-  vim.api.nvim_set_hl(0, "CmpItemAbbrDeprecated", { fg = colors.gray, strikethrough = true })
-
-  -- Menu appearance for selected vs non-selected items
-  vim.api.nvim_set_hl(0, "CmpItemMenu", { fg = colors.gray, italic = true })
-  vim.api.nvim_set_hl(0, "CmpItemMenuSelected", { fg = colors.fg, bg = colors.select_bg, italic = true, bold = true })
+  vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = colors.gray, italic = true })
+  vim.api.nvim_set_hl(0, "CodeiumSuggestion", { fg = colors.gray, italic = true })
 
   -- Diagnostic highlights
   vim.api.nvim_set_hl(0, "DiagnosticSignError", { fg = colors.red, bg = "NONE" })
   vim.api.nvim_set_hl(0, "DiagnosticSignWarn", { fg = colors.yellow, bg = "NONE" })
   vim.api.nvim_set_hl(0, "DiagnosticSignInfo", { fg = colors.blue, bg = "NONE" })
   vim.api.nvim_set_hl(0, "DiagnosticSignHint", { fg = colors.green, bg = "NONE" })
-
-  vim.api.nvim_set_hl(0, "DiagnosticVirtualTextError", { fg = colors.red })
-  vim.api.nvim_set_hl(0, "DiagnosticVirtualTextWarn", { fg = colors.yellow })
-  vim.api.nvim_set_hl(0, "DiagnosticVirtualTextInfo", { fg = colors.blue })
-  vim.api.nvim_set_hl(0, "DiagnosticVirtualTextHint", { fg = colors.green })
-
-  vim.api.nvim_set_hl(0, "DiagnosticFloatingError", { fg = colors.red })
-  vim.api.nvim_set_hl(0, "DiagnosticFloatingWarn", { fg = colors.yellow })
-  vim.api.nvim_set_hl(0, "DiagnosticFloatingInfo", { fg = colors.blue })
-  vim.api.nvim_set_hl(0, "DiagnosticFloatingHint", { fg = colors.green })
-
-  vim.api.nvim_set_hl(0, "DiagnosticError", { fg = colors.red })
-  vim.api.nvim_set_hl(0, "DiagnosticWarn", { fg = colors.yellow })
-  vim.api.nvim_set_hl(0, "DiagnosticInfo", { fg = colors.blue })
-  vim.api.nvim_set_hl(0, "DiagnosticHint", { fg = colors.green })
-
-  -- AI integration highlights
-  vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = colors.copilot, bold = false })
-  vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = colors.codeium, bold = false })
-  vim.api.nvim_set_hl(0, "CopilotSuggestion", { fg = colors.gray, italic = true })
-  vim.api.nvim_set_hl(0, "CodeiumSuggestion", { fg = colors.gray, italic = true })
 
   -- Notification highlights
   -- Set notification highlights to match theme
@@ -172,28 +109,6 @@ M.setup_highlights = function()
   vim.api.nvim_set_hl(0, "NotifyTRACE", { fg = colors.purple })
   vim.api.nvim_set_hl(0, "NotifyBorder", { fg = colors.border })
   vim.api.nvim_set_hl(0, "NotifyBackground", { bg = colors.bg })
-
-  -- Make sure notification title and background match theme too
-  vim.api.nvim_set_hl(0, "NotifyERRORTitle", { fg = colors.red, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "NotifyWARNTitle", { fg = colors.yellow, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "NotifyINFOTitle", { fg = colors.blue, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "NotifyDEBUGTitle", { fg = colors.gray, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "NotifyTRACETitle", { fg = colors.purple, bg = colors.bg })
-
-  -- Set notification content background
-  vim.api.nvim_set_hl(0, "NotifyERRORBody", { bg = colors.bg })
-  vim.api.nvim_set_hl(0, "NotifyWARNBody", { bg = colors.bg })
-  vim.api.nvim_set_hl(0, "NotifyINFOBody", { bg = colors.bg })
-  vim.api.nvim_set_hl(0, "NotifyDEBUGBody", { bg = colors.bg })
-  vim.api.nvim_set_hl(0, "NotifyTRACEBody", { bg = colors.bg })
-
-  -- Telescope highlights
-  vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = colors.orange })
-  vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = colors.border })
-  vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { fg = colors.orange })
-  vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = colors.blue, bold = true })
-  vim.api.nvim_set_hl(0, "TelescopeSelection", { fg = colors.blue })
-  vim.api.nvim_set_hl(0, "TelescopePromptPrefix", { fg = colors.blue })
 
   -- Trigger refresh event for other components
   vim.api.nvim_exec_autocmds("User", { pattern = "UIColorsChanged" })
@@ -208,18 +123,21 @@ M.setup = function()
   vim.api.nvim_create_autocmd("ColorScheme", {
     pattern = "*",
     callback = function()
-      M.setup_highlights()
+      -- Delay to ensure theme is fully loaded
+      vim.defer_fn(function()
+        M.setup_highlights()
 
-      -- Refresh UI components that need to update with theme
-      pcall(function()
-        if package.loaded["lualine"] then
-          require("lualine").refresh()
-        end
+        -- Refresh UI components that need to update with theme
+        pcall(function()
+          if package.loaded["lualine"] then
+            require("lualine").refresh()
+          end
 
-        if package.loaded["bufferline"] then
-          require("bufferline").setup()
-        end
-      end)
+          if package.loaded["bufferline"] then
+            require("bufferline").setup()
+          end
+        end)
+      end, 100)
     end,
   })
 
