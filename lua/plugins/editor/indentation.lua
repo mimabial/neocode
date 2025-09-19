@@ -6,79 +6,44 @@ return {
     config = function()
       local rainbow_delimiters = require("rainbow-delimiters")
 
-      -- Define highlight groups immediately
-      local colors = {
-        ["catppuccin"] = {
-          "#f38ba8", -- Red/Pink
-          "#f9e2af", -- Yellow
-          "#89b4fa", -- Blue
-          "#fab387", -- Peach
-          "#a6e3a1", -- Green
-          "#cba6f7", -- Mauve
-          "#94e2d5", -- Teal
-        },
-        ["everforest"] = {
-          "#e67e80", -- Red
-          "#dbbc7f", -- Yellow
-          "#7fbbb3", -- Blue
-          "#e69875", -- Orange
-          "#a7c080", -- Green
-          "#d699b6", -- Purple
-          "#83c092", -- Aqua
-        },
-        ["gruvbox"] = {
-          "#cc241d", -- Red
-          "#d79921", -- Yellow
-          "#458588", -- Blue
-          "#d65d0e", -- Orange
-          "#98971a", -- Green
-          "#b16286", -- Purple
-          "#689d6a", -- Aqua
-        },
-        ["kanagawa"] = {
-          "#c34043", -- Red
-          "#dca561", -- Yellow
-          "#7e9cd8", -- Blue
-          "#ffa066", -- Orange
-          "#76946a", -- Green
-          "#957fb8", -- Purple
-          "#6a9589", -- Teal
-        },
-        ["nord"] = {
-          "#bf616a", -- Red
-          "#ebcb8b", -- Yellow
-          "#81a1c1", -- Blue
-          "#d08770", -- Orange
-          "#a3be8c", -- Green
-          "#b48ead", -- Purple
-          "#88c0d0", -- Teal
-        },
-        ["rose-pine"] = {
-          "#eb6f92", -- Red
-          "#f6c177", -- Yellow
-          "#9ccfd8", -- Blue
-          "#ea9a97", -- Orange
-          "#3e8fb0", -- Green
-          "#c4a7e7", -- Purple
-          "#31748f", -- Teal
-        },
-        ["solarized-osaka"] = {
-          "#f7768e", -- Red
-          "#e0af68", -- Yellow
-          "#7aa2f7", -- Blue
-          "#ff9e64", -- Orange
-          "#9ece6a", -- Green
-          "#bb9af7", -- Purple
-          "#73daca", -- Aqua
-        },
-      }
+      local function get_rainbow_colors()
+        if _G.get_ui_colors then
+          local ok, colors = pcall(_G.get_ui_colors)
+          if ok and colors then
+            return {
+              colors.red,
+              colors.yellow,
+              colors.blue,
+              colors.orange,
+              colors.green,
+              colors.purple,
+              colors.aqua or colors.blue,
+            }
+          end
+        end
+
+        local function get_hl_color(group, fallback)
+          local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group })
+          if ok and hl.fg then
+            return string.format("#%06x", hl.fg)
+          end
+          return fallback
+        end
+
+        return {
+          get_hl_color("DiagnosticError", "#cc241d"), -- Red
+          get_hl_color("DiagnosticWarn", "#d79921"),  -- Yellow
+          get_hl_color("Function", "#458588"),        -- Blue
+          get_hl_color("Number", "#d65d0e"),          -- Orange
+          get_hl_color("String", "#98971a"),          -- Green
+          get_hl_color("Keyword", "#b16286"),         -- Purple
+          get_hl_color("Type", "#689d6a"),            -- Aqua
+        }
+      end
 
       local function set_rainbow_colors()
-        -- Select color palette based on current theme
-        local colorscheme = vim.g.colors_name or "gruvbox"
-        local palette = colors[colorscheme] or colors["gruvbox"]
+        local palette = get_rainbow_colors()
 
-        -- Directly set highlight groups - not just returning them
         for i, color in ipairs(palette) do
           local hl_group = "RainbowDelimiter" .. i
           vim.api.nvim_set_hl(0, hl_group, { fg = color })
@@ -129,8 +94,6 @@ return {
       })
     end,
   },
-
-  -- Enhanced indent guides
   {
     "lukas-reineke/indent-blankline.nvim",
     main = "ibl",
@@ -194,28 +157,31 @@ return {
       }
     end,
     config = function(_, opts)
-      -- Safe loading of ibl
       local ok, ibl = pcall(require, "ibl")
       if not ok then
         vim.notify("Failed to load indent-blankline.nvim", vim.log.levels.ERROR)
         return
       end
 
-      -- Make sure rainbow delimiters highlights exist before configuring ibl
       local function ensure_rainbow_highlights()
-        local colors = _G.get_ui_colors()
-
-        -- Directly set highlight groups before ibl uses them
-        for i, color in ipairs(colors) do
+        -- Get colors from rainbow delimiter system
+        for i = 1, 7 do
           local hl_group = "RainbowDelimiter" .. i
-          vim.api.nvim_set_hl(0, hl_group, { fg = color })
+          local existing = vim.api.nvim_get_hl(0, { name = hl_group })
+
+          -- Only set if not already defined
+          if not existing.fg then
+            -- Fallback colors if rainbow delimiters not loaded yet
+            local fallback_colors = {
+              "#cc241d", "#d79921", "#458588", "#d65d0e", "#98971a", "#b16286", "#689d6a"
+            }
+            vim.api.nvim_set_hl(0, hl_group, { fg = fallback_colors[i] })
+          end
         end
       end
 
-      -- Call this before setting up ibl
       ensure_rainbow_highlights()
 
-      -- Setup with options
       ibl.setup(opts)
 
       -- Handle colorscheme changes
@@ -239,26 +205,6 @@ return {
 
           -- Reload ibl to apply highlight changes
           ibl.setup(opts)
-        end,
-      })
-
-      -- Special configuration for Go files with slightly different indentation
-      vim.api.nvim_create_autocmd("FileType", {
-        pattern = { "go", "templ" },
-        callback = function()
-          -- Load current config safely
-          local config_ok, config = pcall(require, "ibl.config")
-          if not config_ok then
-            return
-          end
-
-          local buf_config = config.get_config(0)
-          if buf_config then
-            -- Adjust settings for Go/Templ files
-            buf_config.indent.tab_char = "┊"
-            -- Apply updated config safely
-            pcall(ibl.setup_buffer, 0, buf_config)
-          end
         end,
       })
     end,

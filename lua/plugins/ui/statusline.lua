@@ -32,11 +32,6 @@ return {
         modified = "",
         removed = "",
       },
-      stack = {
-        goth = " ",
-        nextjs = " ",
-        [""] = "",
-      },
       file = {
         modified = "●",
         readonly = "",
@@ -49,8 +44,55 @@ return {
       },
     }
 
-    -- Get current theme colors
-    local colors = get_ui_colors()
+    -- Safe color extraction with fallbacks
+    local function get_safe_colors()
+      -- Try to get colors from UI system with error handling
+      if _G.get_ui_colors then
+        local ok, colors = pcall(_G.get_ui_colors)
+        if ok and colors then
+          return colors
+        end
+      end
+
+      -- Fallback to manual color extraction
+      local function get_hl_color(group, attr, fallback)
+        local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group })
+        local val = ok and hl[attr]
+        if not val then
+          return fallback
+        end
+        if type(val) == "number" then
+          return string.format("#%06x", val)
+        end
+        return tostring(val)
+      end
+
+      -- Extract colors from highlight groups with fallbacks
+      return {
+        bg = get_hl_color("Normal", "bg", "#1f1f28"),
+        bg1 = get_hl_color("CursorLine", "bg", "#2a2a37"),
+        fg = get_hl_color("Normal", "fg", "#dcd7ba"),
+        red = get_hl_color("DiagnosticError", "fg", "#ea6962"),
+        green = get_hl_color("DiagnosticOk", "fg", "#89b482"),
+        yellow = get_hl_color("DiagnosticWarn", "fg", "#d8a657"),
+        blue = get_hl_color("Function", "fg", "#7daea3"),
+        purple = get_hl_color("Keyword", "fg", "#d3869b"),
+        aqua = get_hl_color("Type", "fg", "#7daea3"),
+        orange = get_hl_color("Number", "fg", "#e78a4e"),
+        gray = get_hl_color("Comment", "fg", "#928374"),
+        border = get_hl_color("FloatBorder", "fg", "#45403d"),
+        -- Special UI colors
+        popup_bg = get_hl_color("Pmenu", "bg", "#282828"),
+        select_bg = get_hl_color("PmenuSel", "bg", "#45403d"),
+        select_fg = get_hl_color("PmenuSel", "fg", "#d4be98"),
+        -- Special AI colors
+        copilot = "#6CC644",
+        codeium = "#09B6A2",
+      }
+    end
+
+    -- Get colors safely
+    local colors = get_safe_colors()
 
     -- Mode color mapping using dynamic colors
     local mode_color = {
@@ -110,29 +152,6 @@ return {
         end,
         cond = function()
           return vim.fn.expand("%:t") ~= ""
-        end,
-      }
-    end
-
-    -- Stack badge
-    local function stack_badge()
-      return {
-        function()
-          return icons.stack[vim.g.current_stack] or ""
-        end,
-        color = function()
-          if vim.g.current_stack == "goth" then
-            return { fg = colors.green, bold = true }
-          elseif vim.g.current_stack == "nextjs" then
-            return { fg = colors.blue, bold = true }
-          elseif vim.g.current_stack == "goth+nextjs" then
-            return { fg = colors.orange, bold = true }
-          else
-            return { fg = colors.gray, bold = true }
-          end
-        end,
-        cond = function()
-          return true
         end,
       }
     end
@@ -316,7 +335,6 @@ return {
         lualine_c = {
           root_dir(),
           pretty_path(),
-          stack_badge(),
         },
         lualine_x = {
           ai_indicators(),

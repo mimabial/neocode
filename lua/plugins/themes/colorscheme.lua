@@ -171,11 +171,12 @@ return {
         },
         ["lackluster"] = {
           icon = "",
+          variants = { "lackluster", "lackluster-hack", "lackluster-mint" },
           setup = function(variant, transparency)
             require("lackluster").setup({
               disable_background = transparency
             })
-            vim.cmd("colorscheme " .. variant)
+            vim.cmd("colorscheme " .. (variant or "lackluster"))
           end,
         },
         ["monokai-pro"] = {
@@ -253,20 +254,6 @@ return {
               transparent = transparency,
             })
             vim.cmd("colorscheme tokyonight" .. (variant and "-" .. variant or ""))
-          end,
-        },
-        ["zenbones"] = {
-          icon = "",
-          variants = { "zenbones", "zenwritten", "neobones", "vimbones", "rosebones", "forestbones", "nordbones", "tokyobones", "seoulbones", "duckbones", "zenburned", "kanagawabones" },
-          setup = function(variant, transparency)
-            -- Set compatibility mode for better performance
-            vim.g.zenbones_compat = 1
-            -- Configure transparency if needed
-            if transparency then
-              vim.g.zenbones_transparent_background = true
-            end
-            -- Apply the variant or default
-            vim.cmd("colorscheme " .. (variant or "zenbones"))
           end,
         },
       }

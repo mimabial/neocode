@@ -195,23 +195,6 @@ M.setup_highlights = function()
   vim.api.nvim_set_hl(0, "TelescopeSelection", { fg = colors.blue })
   vim.api.nvim_set_hl(0, "TelescopePromptPrefix", { fg = colors.blue })
 
-  -- Stack-specific syntax highlights
-  if vim.g.current_stack == "goth" then
-    vim.api.nvim_set_hl(0, "@type.go", { fg = colors.yellow, bold = true })
-    vim.api.nvim_set_hl(0, "@function.go", { fg = colors.blue })
-    vim.api.nvim_set_hl(0, "@attribute.htmx", { fg = colors.green, italic = true, bold = true })
-    vim.api.nvim_set_hl(0, "@tag.attribute.htmx", { fg = colors.green, italic = true, bold = true })
-  end
-
-  if vim.g.current_stack == "nextjs" then
-    vim.api.nvim_set_hl(0, "@tag.tsx", { fg = colors.red })
-    vim.api.nvim_set_hl(0, "@tag.jsx", { fg = colors.red })              -- Added JSX support
-    vim.api.nvim_set_hl(0, "@tag.delimiter.tsx", { fg = colors.orange })
-    vim.api.nvim_set_hl(0, "@tag.delimiter.jsx", { fg = colors.orange }) -- Added JSX support
-    vim.api.nvim_set_hl(0, "@constructor.tsx", { fg = colors.purple })
-    vim.api.nvim_set_hl(0, "@constructor.jsx", { fg = colors.purple })   -- Added JSX support
-  end
-
   -- Trigger refresh event for other components
   vim.api.nvim_exec_autocmds("User", { pattern = "UIColorsChanged" })
 end
