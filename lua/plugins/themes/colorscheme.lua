@@ -192,7 +192,6 @@ return {
             vim.cmd("colorscheme kanagawa")
           end,
         },
-
         ["monokai-pro"] = {
           icon = "",
           variants = { "pro", "classic", "machine", "octagon", "ristretto", "spectrum" },
