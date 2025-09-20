@@ -113,7 +113,7 @@ return {
         },
         scope = {
           enabled = true,
-          show_start = true,
+          show_start = false,
           show_end = true,
           injected_languages = true,
           priority = 500, -- Higher than rainbow delimiters
@@ -155,57 +155,7 @@ return {
         return
       end
 
-      local function ensure_scope_highlight()
-        -- Get border color from UI system or fallback
-        local border_color
-        if _G.get_ui_colors then
-          local ok, colors = pcall(_G.get_ui_colors)
-          border_color = ok and colors and colors.border
-        end
-
-        -- Fallback to FloatBorder highlight
-        if not border_color then
-          local hl = vim.api.nvim_get_hl(0, { name = "FloatBorder" })
-          if hl.fg then
-            border_color = string.format("#%06x", hl.fg)
-          else
-            border_color = "#45403d" -- Ultimate fallback
-          end
-        end
-
-        vim.api.nvim_set_hl(0, "IblScopeBorder", { fg = border_color })
-      end
-
-      local function ensure_rainbow_highlights()
-        -- Get colors from rainbow delimiter system
-        for i = 1, 7 do
-          local hl_group = "RainbowDelimiter" .. i
-          local existing = vim.api.nvim_get_hl(0, { name = hl_group })
-
-          -- Only set if not already defined
-          if not existing.fg then
-            -- Fallback colors if rainbow delimiters not loaded yet
-            local fallback_colors = {
-              "#cc241d", "#d79921", "#458588", "#d65d0e", "#98971a", "#b16286", "#689d6a"
-            }
-            vim.api.nvim_set_hl(0, hl_group, { fg = fallback_colors[i] })
-          end
-        end
-      end
-
-      ensure_scope_highlight()
-      ensure_rainbow_highlights()
-
       ibl.setup(opts)
-
-      -- Handle colorscheme changes
-      vim.api.nvim_create_autocmd("ColorScheme", {
-        callback = function()
-          ensure_rainbow_highlights()
-          ensure_scope_highlight()
-          ibl.setup(opts)
-        end,
-      })
     end,
   },
 }

@@ -110,6 +110,9 @@ M.setup_highlights = function()
   vim.api.nvim_set_hl(0, "NotifyBorder", { fg = colors.border })
   vim.api.nvim_set_hl(0, "NotifyBackground", { bg = colors.bg })
 
+  -- Indent-blankline scope highlight
+  vim.api.nvim_set_hl(0, "IblScopeBorder", { fg = colors.border })
+
   -- Trigger refresh event for other components
   vim.api.nvim_exec_autocmds("User", { pattern = "UIColorsChanged" })
 end
