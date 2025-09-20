@@ -26,8 +26,7 @@ return {
         "markdown",
         "vim",
         "vimdoc",
-        -- Web languages with JSX support
-        "tsx", -- TypeScript JSX
+        "tsx",
         "typescript",
       },
       highlight = {
@@ -95,17 +94,40 @@ return {
     config = function(_, opts)
       require("treesitter-context").setup(opts)
 
-      -- Set background to match colorscheme
+      -- Function to properly extract and set treesitter context colors
       local function update_context_highlights()
-        if _G.get_ui_colors then
-          local colors = _G.get_ui_colors()
-          vim.api.nvim_set_hl(0, "TreesitterContext", { bg = colors.bg })
-          vim.api.nvim_set_hl(0, "TreesitterContextSeparator", { fg = colors.border })
+        -- Direct color extraction from highlight groups
+        local function get_hl_color(group, attr, fallback)
+          local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group })
+          local val = ok and hl[attr]
+          if not val then
+            return fallback
+          end
+          if type(val) == "number" then
+            return string.format("#%06x", val)
+          end
+          return tostring(val)
         end
+
+        -- Get background from Normal highlight group (works for all themes)
+        local bg_color = get_hl_color("Normal", "bg", "NONE")
+        local border_color = get_hl_color("FloatBorder", "fg", get_hl_color("Comment", "fg", "#666666"))
+
+        -- Set treesitter context highlights
+        vim.api.nvim_set_hl(0, "TreesitterContext", { bg = bg_color })
+        vim.api.nvim_set_hl(0, "TreesitterContextSeparator", { fg = border_color })
       end
 
-      update_context_highlights()
-      vim.api.nvim_create_autocmd("ColorScheme", { callback = update_context_highlights })
+      -- Initial setup with slight delay to ensure colorscheme is fully loaded
+      vim.defer_fn(update_context_highlights, 50)
+
+      -- Update highlights when colorscheme changes
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = function()
+          -- Delay to ensure theme is fully applied
+          vim.defer_fn(update_context_highlights, 100)
+        end,
+      })
     end,
   },
 }
