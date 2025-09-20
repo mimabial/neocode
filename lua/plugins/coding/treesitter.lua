@@ -85,4 +85,27 @@ return {
       end)
     end,
   },
+  {
+    "nvim-treesitter/nvim-treesitter-context",
+    event = "BufReadPost",
+    opts = {
+      max_lines = 8,
+      separator = "─",
+    },
+    config = function(_, opts)
+      require("treesitter-context").setup(opts)
+
+      -- Set background to match colorscheme
+      local function update_context_highlights()
+        if _G.get_ui_colors then
+          local colors = _G.get_ui_colors()
+          vim.api.nvim_set_hl(0, "TreesitterContext", { bg = colors.bg })
+          vim.api.nvim_set_hl(0, "TreesitterContextSeparator", { fg = colors.border })
+        end
+      end
+
+      update_context_highlights()
+      vim.api.nvim_create_autocmd("ColorScheme", { callback = update_context_highlights })
+    end,
+  },
 }

@@ -65,7 +65,7 @@ return {
         },
         query = {
           [""] = "rainbow-delimiters",
-          lua = "rainbow-blocks",
+          lua = "rainbow-delimiters",
           html = "rainbow-tags",
           tsx = "rainbow-tags",
           jsx = "rainbow-tags",

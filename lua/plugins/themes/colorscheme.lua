@@ -114,6 +114,9 @@ return {
             require("darkvoid").setup({
               transparent = transparency,
               glow = (variant == "glow"),
+              colors = {
+                bg = "262626",
+              },
               plugins = {
                 gitsigns = true,
                 nvim_cmp = true,
