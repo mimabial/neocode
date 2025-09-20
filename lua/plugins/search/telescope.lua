@@ -264,6 +264,8 @@ return {
           "--glob=!.git/",
           "--glob=!node_modules/",
           "--glob=!vendor/",
+          "--glob=!README.md",
+          "--glob=!lazy-lock.json",
         },
       },
       pickers = {

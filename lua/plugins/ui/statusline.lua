@@ -18,7 +18,7 @@ return {
   end,
 
   opts = function()
-    local utils = require("utils.core")
+    local colors = _G.get_ui_colors()
 
     local icons = {
       diagnostics = {
@@ -34,9 +34,6 @@ return {
       },
       file = {
         modified = "",
-        readonly = "",
-        unnamed = "[No Name]",
-        newfile = "[New]",
       },
       ai = {
         copilot = "",
@@ -44,88 +41,15 @@ return {
       },
     }
 
-    -- Safe color extraction with fallbacks
-    local function get_safe_colors()
-      -- Try to get colors from UI system with error handling
-      if _G.get_ui_colors then
-        local ok, colors = pcall(_G.get_ui_colors)
-        if ok and colors then
-          return colors
-        end
-      end
-
-      -- Fallback to manual color extraction
-      local function get_hl_color(group, attr, fallback)
-        local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group })
-        local val = ok and hl[attr]
-        if not val then
-          return fallback
-        end
-        if type(val) == "number" then
-          return string.format("#%06x", val)
-        end
-        return tostring(val)
-      end
-
-      -- Extract colors from highlight groups with fallbacks
-      return {
-        bg = get_hl_color("Normal", "bg", "#1f1f28"),
-        bg1 = get_hl_color("CursorLine", "bg", "#2a2a37"),
-        fg = get_hl_color("Normal", "fg", "#dcd7ba"),
-        red = get_hl_color("DiagnosticError", "fg", "#ea6962"),
-        green = get_hl_color("DiagnosticOk", "fg", "#89b482"),
-        yellow = get_hl_color("DiagnosticWarn", "fg", "#d8a657"),
-        blue = get_hl_color("Function", "fg", "#7daea3"),
-        purple = get_hl_color("Keyword", "fg", "#d3869b"),
-        aqua = get_hl_color("Type", "fg", "#7daea3"),
-        orange = get_hl_color("Number", "fg", "#e78a4e"),
-        gray = get_hl_color("Comment", "fg", "#928374"),
-      }
-    end
-
-    -- Get colors safely
-    local colors = get_safe_colors()
-
-    -- Mode color mapping using dynamic colors
     local mode_color = {
       n = colors.green,
       i = colors.blue,
       v = colors.purple,
-      [""] = colors.purple,
-      V = colors.purple,
       c = colors.orange,
       no = colors.red,
       s = colors.yellow,
-      S = colors.yellow,
-      ic = colors.blue,
-      R = colors.red,
-      Rv = colors.red,
-      cv = colors.orange,
-      ce = colors.orange,
-      r = colors.red,
-      rm = colors.red,
-      ["r?"] = colors.red,
-      ["!"] = colors.red,
       t = colors.green,
     }
-
-    -- Root directory function
-    local function root_dir()
-      return {
-        function()
-          local cwd = vim.fn.getcwd()
-          local home = os.getenv("HOME") or ""
-          local disp = cwd:sub(1, #home) == home and "~" .. cwd:sub(#home + 1) or cwd
-          return "󰉋 " .. vim.fn.fnamemodify(disp, ":t")
-        end,
-        color = function()
-          return { fg = utils.get_hl_color("Directory", "fg", colors.blue), bold = true }
-        end,
-        cond = function()
-          return not vim.b.no_root_dir
-        end,
-      }
-    end
 
     local function pretty_path()
       return {
@@ -173,7 +97,6 @@ return {
       }
     end
 
-    -- AI assistant indicators (fixed)
     local function ai_indicators()
       return {
         function()
@@ -201,9 +124,13 @@ return {
       }
     end
 
-    -- File size
     local function file_size()
-      local function format_size(size)
+      return function()
+        local f = vim.fn.expand("%:p")
+        if f == "" or vim.bo.buftype ~= "" then return "" end
+        local size = vim.fn.getfsize(f)
+        if size <= 0 then return "" end
+
         local units = { "B", "K", "M", "G" }
         local idx = 1
         while size > 1024 and idx < #units do
@@ -212,62 +139,6 @@ return {
         end
         return string.format("%.1f%s", size, units[idx])
       end
-
-      return function()
-        local f = vim.fn.expand("%:p")
-        if f == "" or vim.bo.buftype ~= "" then
-          return ""
-        end
-        local size = vim.fn.getfsize(f)
-        if size <= 0 then
-          return ""
-        end
-        return format_size(size)
-      end
-    end
-
-    -- File encoding
-    local function file_encoding()
-      return {
-        "encoding",
-        fmt = string.upper,
-        color = { fg = colors.green },
-        cond = function()
-          return vim.bo.fileencoding ~= "utf-8"
-        end,
-      }
-    end
-
-    -- File format
-    local function file_format()
-      return {
-        "fileformat",
-        symbols = {
-          unix = " ",
-          dos = " ",
-          mac = " ",
-        },
-        color = { fg = colors.green },
-        cond = function()
-          return vim.bo.fileformat ~= "unix"
-        end,
-      }
-    end
-
-    -- Progress
-    local function progress()
-      return {
-        "progress",
-        color = { fg = colors.fg, gui = "bold" },
-      }
-    end
-
-    -- Location
-    local function location()
-      return {
-        "location",
-        color = { fg = colors.fg, gui = "bold" },
-      }
     end
 
     return {
@@ -301,7 +172,6 @@ return {
           },
         },
         lualine_c = {
-          -- root_dir(),
           pretty_path(),
         },
         lualine_x = {
@@ -309,21 +179,34 @@ return {
           lsp_status(),
           file_size(),
           { "filetype", icon_only = true },
-          file_encoding(),
-          file_format(),
+          {
+            "encoding",
+            fmt = string.upper,
+            color = { fg = colors.green },
+            cond = function() return vim.bo.fileencoding ~= "utf-8" end,
+          },
+          {
+            "fileformat",
+            symbols = { unix = " ", dos = " ", mac = " " },
+            color = { fg = colors.green },
+            cond = function() return vim.bo.fileformat ~= "unix" end,
+          },
         },
-        lualine_y = { progress() },
-        lualine_z = { location() },
+        lualine_y = {
+          { "progress", color = { fg = colors.fg, gui = "bold" } }
+        },
+        lualine_z = {
+          { "location", color = { fg = colors.fg, gui = "bold" } }
+        },
       },
       inactive_sections = {
         lualine_a = {},
         lualine_b = {},
         lualine_c = { pretty_path() },
-        lualine_x = { location() },
+        lualine_x = { "location" },
         lualine_y = {},
         lualine_z = {},
       },
-      tabline = {},
       extensions = {
         "neo-tree",
         "lazy",

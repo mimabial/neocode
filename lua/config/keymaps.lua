@@ -7,16 +7,6 @@ function M.setup()
     vim.keymap.set(mode, lhs, rhs, opts)
   end
 
-  -- Safe require that falls back gracefully
-  local function safe_require(mod)
-    local ok, module = pcall(require, mod)
-    if not ok then
-      vim.notify(string.format("Error loading module '%s': %s", mod, module), vim.log.levels.WARN)
-      return nil
-    end
-    return module
-  end
-
   -- ========================================
   -- Leader key
   -- ========================================
@@ -79,60 +69,15 @@ function M.setup()
 
   -- File explorer
   map("n", "<leader>e", function()
-    -- Try to use oil first, fallback to nvim-tree, then built-in explorer
-    local ok, oil = pcall(require, "oil")
-    if ok then
-      oil.open()
-    else
-      -- Try nvim-tree next
-      local tree_ok, _ = pcall(require, "nvim-tree.api")
-      if tree_ok then
-        vim.cmd("NvimTreeToggle")
-      else
-        -- Ultimate fallback to built-in
-        vim.cmd("Ex")
-      end
-    end
+    require("oil").open()
   end, { desc = "Open File Explorer" })
 
   map("n", "-", function()
-    local ok, oil = pcall(require, "oil")
-    if ok then
-      oil.open()
-    else
-      vim.cmd("Ex")
-    end
+    require("oil").open()
   end, { desc = "File Explorer (parent dir)" })
 
   -- ========================================
-  -- Symbols Outline
-  -- ========================================
-  map("n", "<leader>cs", "<cmd>SymbolsOutline<cr>", { desc = "Symbols Outline" })
-
-  -- ========================================
-  -- Stack-Specific Commands
-  -- ========================================
-
-  map("n", "<leader>sg", function()
-    local has_go = vim.fn.glob("*.go") ~= ""
-    if has_go then
-      vim.cmd("GoTest")
-    else
-      vim.notify("No Go files detected", vim.log.levels.WARN)
-    end
-  end, { desc = "Go: Run tests" })
-
-  map("n", "<leader>sn", function()
-    local has_package = vim.fn.glob("package.json") ~= ""
-    if has_package then
-      vim.cmd("terminal npm run dev")
-    else
-      vim.notify("No package.json detected", vim.log.levels.WARN)
-    end
-  end, { desc = "Next.js: Start dev server" })
-
-  -- ========================================
-  -- Git Integration (Core Commands Only)
+  -- Git Integration
   -- ========================================
   map("n", "<leader>gg", "<cmd>LazyGit<cr>", { desc = "LazyGit" })
   map("n", "<leader>gs", "<cmd>Git<cr>", { desc = "Git Status" })
@@ -151,9 +96,8 @@ function M.setup()
   -- <leader>fG* - Telescope git operations (handled by telescope keys)
 
   -- ========================================
-  -- UI & Theme
+  -- heme Management
   -- ========================================
-  -- Theme toggling
   map("n", "<leader>us", "<cmd>CycleColorScheme<cr>", { desc = "Cycle color scheme" })
   map("n", "<leader>uS", "<cmd>ColorScheme<cr>", { desc = "Select color scheme" })
   map("n", "<leader>uv", "<cmd>CycleColorVariant<cr>", { desc = "Cycle color variant" })
