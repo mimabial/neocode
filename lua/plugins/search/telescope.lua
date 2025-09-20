@@ -56,83 +56,13 @@ return {
         -- Get the current layout and borders
         local layout = vim.g.telescope_layout or "ivory"
         local borders = vim.g.telescope_borders[layout] or vim.g.telescope_borders.ivory
-
-        -- Get the picker function
-        local builtin = require("telescope.builtin")
-        local picker_fn = builtin[picker_name]
-
-        -- Call the picker with the current layout and borders
-        picker_fn({
+        require("telescope.builtin")[picker_name]({
           layout_strategy = layout,
           borderchars = borders,
         })
       end
     end
 
-    -- Stack-specific finder functions (separate from with_layout)
-    local function find_goth_files()
-      local layout = vim.g.telescope_layout or "ivory"
-      local borders = vim.g.telescope_borders[layout] or vim.g.telescope_borders.ivory
-
-      require("telescope.builtin").find_files({
-        layout_strategy = layout,
-        borderchars = borders,
-        find_command = {
-          "find",
-          ".",
-          "-type",
-          "f",
-          "-name",
-          "*.go",
-          "-o",
-          "-name",
-          "*.templ",
-          "-not",
-          "-path",
-          "*/vendor/*",
-          "-not",
-          "-path",
-          "*/node_modules/*",
-        },
-      })
-    end
-
-    local function find_nextjs_files()
-      local layout = vim.g.telescope_layout or "ivory"
-      local borders = vim.g.telescope_borders[layout] or vim.g.telescope_borders.ivory
-
-      require("telescope.builtin").find_files({
-        layout_strategy = layout,
-        borderchars = borders,
-        find_command = {
-          "find",
-          ".",
-          "-type",
-          "f",
-          "\\(",
-          "-name",
-          "*.tsx",
-          "-o",
-          "-name",
-          "*.jsx",
-          "-o",
-          "-name",
-          "*.ts",
-          "-o",
-          "-name",
-          "*.js",
-          "\\)",
-          "-not",
-          "-path",
-          "*/node_modules/*",
-          "-not",
-          "-path",
-          "*/.next/*",
-        },
-      })
-    end
-
-    -- Return keymaps
     return {
       -- Layout toggle
       {
@@ -143,7 +73,7 @@ return {
           local layout = vim.g.telescope_layout
           -- Save preference to file
           save_layout(layout)
-          vim.notify("Telescope layout: " .. (layout == "ivory" and "ivory" or "ebony") .. " (saved)")
+          vim.notify("Telescope layout: " .. layout .. " (saved)")
         end,
         desc = "Toggle Layout",
       },
@@ -168,9 +98,6 @@ return {
       -- Other useful pickers
       { "<leader>ft",  with_layout("treesitter"),                desc = "Find Symbols (Treesitter)" },
       { "<leader>fk",  with_layout("keymaps"),                   desc = "Find Keymaps" },
-      -- Stack-specific finders (uses separate functions)
-      { "<leader>sg",  find_goth_files,                          desc = "Find GOTH files" },
-      { "<leader>sn",  find_nextjs_files,                        desc = "Find Next.js files" },
     }
   end,
 
@@ -178,16 +105,12 @@ return {
     -- IMPORTANT: Register custom layout strategies FIRST before any setup
     local layout_strategies = require("telescope.pickers.layout_strategies")
 
-    -- Create custom vertical layout with full screen usage and proper spacing
+    -- Custom vertical layout with full screen usage and preview on top
     layout_strategies.ebony = function(picker, max_columns, max_lines)
       local layout = layout_strategies.vertical(picker, max_columns, max_lines)
-
-      -- Force preview creation if picker has a previewer
       local has_previewer = picker.previewer ~= nil and picker.previewer ~= false
 
-      -- Position preview at top with full width
       if has_previewer then
-        -- Ensure preview exists in layout
         if not layout.preview then
           layout.preview = {}
         end
@@ -231,7 +154,7 @@ return {
       return layout
     end
 
-    -- Create the custom ivory layout (bottom pane style)
+    -- Custom ivory layout (bottom pane style)
     layout_strategies.ivory = function(picker, max_columns, max_lines)
       local layout = layout_strategies.bottom_pane(picker, max_columns, max_lines)
       local has_previewer = picker.previewer ~= nil and picker.previewer ~= false
@@ -282,17 +205,13 @@ return {
         path_display = { "filename_first" },
         selection_strategy = "reset",
         sorting_strategy = "ascending",
-
-        -- Use global layout setting
         layout_strategy = vim.g.telescope_layout or "ivory",
-
-        -- Layouts configuration
         layout_config = {
           ivory = {
             height = 1,
             width = 1.0,
             prompt_position = "top",
-            preview_cutoff = 0, -- Always show preview
+            preview_cutoff = 120,
           },
           ebony = {
             width = 1.0,        -- Full width
@@ -311,12 +230,20 @@ return {
         -- Preview configuration with line numbers
         preview = {
           timeout = 500,
-          width_padding = 3,
-          height_padding = 1,
           hide_on_startup = false,
         },
-        previewer = true,
-        color_devicons = true,
+
+        mappings = {
+          i = {
+            ["<C-c>"] = actions.close,
+            ["<C-u>"] = actions.preview_scrolling_up,
+            ["<C-d>"] = actions.preview_scrolling_down,
+            ["<C-_>"] = actions.which_key,
+          },
+          n = {
+            ["?"] = actions.which_key,
+          },
+        },
         file_ignore_patterns = {
           "%.git/",
           "node_modules/",
@@ -325,82 +252,19 @@ return {
           "dist/",
           "build/",
         },
-      },
-      set_env = { ["COLORTERM"] = "truecolor" },
-      file_previewer = require("telescope.previewers").vim_buffer_cat.new,
-      grep_previewer = require("telescope.previewers").vim_buffer_vimgrep.new,
-      qflist_previewer = require("telescope.previewers").vim_buffer_qflist.new,
-      mappings = {
-        i = {
-          ["<C-n>"] = actions.cycle_history_next,
-          ["<C-p>"] = actions.cycle_history_prev,
-          ["<C-j>"] = actions.move_selection_next,
-          ["<C-k>"] = actions.move_selection_previous,
-          ["<C-c>"] = actions.close,
-          ["<Down>"] = actions.move_selection_next,
-          ["<Up>"] = actions.move_selection_previous,
-          ["<CR>"] = actions.select_default,
-          ["<C-x>"] = actions.select_horizontal,
-          ["<C-v>"] = actions.select_vertical,
-          ["<C-t>"] = actions.select_tab,
-          ["<C-u>"] = actions.preview_scrolling_up,
-          ["<C-d>"] = actions.preview_scrolling_down,
-          ["<PageUp>"] = actions.results_scrolling_up,
-          ["<PageDown>"] = actions.results_scrolling_down,
-          ["<Tab>"] = actions.toggle_selection + actions.move_selection_worse,
-          ["<S-Tab>"] = actions.toggle_selection + actions.move_selection_better,
-          ["<C-q>"] = actions.send_to_qflist + actions.open_qflist,
-          ["<M-q>"] = actions.send_selected_to_qflist + actions.open_qflist,
-          ["<C-l>"] = actions.complete_tag,
-          ["<C-_>"] = actions.which_key,
+        vimgrep_arguments = {
+          "rg",
+          "--color=never",
+          "--no-heading",
+          "--with-filename",
+          "--line-number",
+          "--column",
+          "--smart-case",
+          "--hidden",
+          "--glob=!.git/",
+          "--glob=!node_modules/",
+          "--glob=!vendor/",
         },
-        n = {
-          ["<esc>"] = actions.close,
-          ["<CR>"] = actions.select_default,
-          ["<C-x>"] = actions.select_horizontal,
-          ["<C-v>"] = actions.select_vertical,
-          ["<C-t>"] = actions.select_tab,
-          ["<Tab>"] = actions.toggle_selection + actions.move_selection_worse,
-          ["<S-Tab>"] = actions.toggle_selection + actions.move_selection_better,
-          ["<C-q>"] = actions.send_to_qflist + actions.open_qflist,
-          ["<M-q>"] = actions.send_selected_to_qflist + actions.open_qflist,
-          ["j"] = actions.move_selection_next,
-          ["k"] = actions.move_selection_previous,
-          ["H"] = actions.move_to_top,
-          ["M"] = actions.move_to_middle,
-          ["L"] = actions.move_to_bottom,
-          ["<Down>"] = actions.move_selection_next,
-          ["<Up>"] = actions.move_selection_previous,
-          ["gg"] = actions.move_to_top,
-          ["G"] = actions.move_to_bottom,
-          ["<C-u>"] = actions.preview_scrolling_up,
-          ["<C-d>"] = actions.preview_scrolling_down,
-          ["<PageUp>"] = actions.results_scrolling_up,
-          ["<PageDown>"] = actions.results_scrolling_down,
-          ["?"] = actions.which_key,
-        },
-      },
-      cycle_layout_list = { "ivory", "ebony" },
-      file_ignore_patterns = {
-        "%.git/",
-        "node_modules/",
-        "vendor/",
-        ".next/",
-        "dist/",
-        "build/",
-      },
-      vimgrep_arguments = {
-        "rg",
-        "--color=never",
-        "--no-heading",
-        "--with-filename",
-        "--line-number",
-        "--column",
-        "--smart-case",
-        "--hidden",
-        "--glob=!.git/",
-        "--glob=!node_modules/",
-        "--glob=!vendor/",
       },
       pickers = {
         find_files = {
@@ -527,19 +391,16 @@ return {
         local max_columns = vim.o.columns
         local current_layout = vim.g.telescope_layout or "ivory"
         local target_layout = nil
-        local should_switch = false
 
         -- Determine target layout based on screen width
         if max_columns < 120 and current_layout ~= "ebony" then
           target_layout = "ebony"
-          should_switch = true
         elseif max_columns >= 120 and current_layout ~= "ivory" then
           target_layout = "ivory"
-          should_switch = true
         end
 
         -- Auto-switch layout if needed
-        if should_switch then
+        if target_layout then
           vim.g.telescope_layout = target_layout
           local layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
           local data = vim.fn.json_encode({ layout = target_layout })

@@ -1,12 +1,11 @@
 return {
-  -- Enhanced LSP symbols with distinctive icons
   {
     "onsails/lspkind.nvim",
     lazy = true,
     priority = 75,
-    opts = function()
-      local icons = {
-        -- LSP kinds
+    opts = {
+      mode = "symbol_text",
+      symbol_map = {
         Text = "󰉿",
         Method = "󰆧",
         Function = "󰊕",
@@ -32,17 +31,10 @@ return {
         Event = "󰉁",
         Operator = "󰆕",
         TypeParameter = "󰅲",
-        -- AI completion sources
         Copilot = "",
         Codeium = "󰚩",
-      }
-
-      return {
-        preset = "codicons",
-        mode = "symbol_text",
-        symbol_map = icons,
-      }
-    end,
+      },
+    },
   },
 
   -- Core completion engine
@@ -93,56 +85,31 @@ return {
       -- Get UI config if available
       local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
 
-      -- Always use single border style
-      local border = "single"
-
       local float_config = vim.tbl_deep_extend("force", {
-        border = border,
+        border = "single",
         padding = { 0, 1 },
         max_width = 80,
         max_height = 20,
       }, ui_config.float or {})
 
-      -- Force single border
-      float_config.border = border
-
-      -- Enhanced window styling with better borders and highlights
       local win_opts = {
         winhighlight = "Normal:CmpNormal,FloatBorder:CmpBorder,CursorLine:CmpSel",
-        scrollbar = true,
         border = float_config.border,
-        col_offset = 0,
-        side_padding = float_config.padding and float_config.padding[1] or 1,
       }
 
-      -- Configure with enhanced visual appearance
       local cmp_config = {
         enabled = function()
-          -- Disable completion in Oil buffers
           local buftype = vim.api.nvim_get_option_value("buftype", { buf = 0 })
           local filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 })
-
-          if filetype == "oil" then
-            return false
-          end
-
-          -- Also disable for other file explorer/special buffers
-          if buftype == "prompt" or filetype == "TelescopePrompt" then
-            return false
-          end
-
-          return true
+          return filetype ~= "oil" and buftype ~= "prompt" and filetype ~= "TelescopePrompt"
         end,
-        completion = { completeopt = "menu,menuone,noinsert" },
         snippet = {
           expand = function(args)
             luasnip.lsp_expand(args.body)
           end,
         },
         window = {
-          completion = cmp.config.window.bordered(vim.tbl_extend("force", win_opts, {
-            winhighlight = "Normal:CmpNormal,FloatBorder:CmpBorder,CursorLine:CmpSel,Search:None",
-          })),
+          completion = cmp.config.window.bordered(win_opts),
           documentation = cmp.config.window.bordered(vim.tbl_extend("force", win_opts, {
             max_height = float_config.max_height or 15,
             max_width = float_config.max_width or 60,
@@ -192,22 +159,7 @@ return {
           end, { "i", "s" }),
         }),
         sources = cmp.config.sources(build_sources()),
-        sorting = {
-          priority_weight = 2,
-          comparators = {
-            cmp.config.compare.offset,
-            cmp.config.compare.exact,
-            cmp.config.compare.score,
-            cmp.config.compare.recently_used,
-            cmp.config.compare.locality,
-            cmp.config.compare.kind,
-            cmp.config.compare.sort_text,
-            cmp.config.compare.length,
-            cmp.config.compare.order,
-          },
-        },
         formatting = {
-          -- Enhanced formatting with better visual distinction
           format = function(entry, vim_item)
             -- Get menu icons for different sources
             local menu_icons = {
@@ -236,12 +188,6 @@ return {
                   vim_item.kind = "Codeium"
                   vim_item.kind_hl_group = "CmpItemKindCodeium"
                 end
-
-                -- Set kind highlights based on source
-                if entry.source.name == "nvim_lsp" then
-                  vim_item.kind_hl_group = "CmpItemKind" .. vim_item.kind
-                end
-
                 return vim_item
               end,
             })(entry, vim_item)
@@ -269,12 +215,6 @@ return {
       cmp.setup.cmdline(":", {
         mapping = cmp.mapping.preset.cmdline(),
         sources = cmp.config.sources({ { name = "path" } }, { { name = "cmdline" } }),
-        formatting = {
-          format = function(entry, vim_item)
-            vim_item.kind = lspkind.symbolic(vim_item.kind, { mode = "symbol" })
-            return vim_item
-          end,
-        },
         window = {
           completion = cmp.config.window.bordered(win_opts),
         },
@@ -283,12 +223,6 @@ return {
       cmp.setup.cmdline("/", {
         mapping = cmp.mapping.preset.cmdline(),
         sources = { { name = "buffer" } },
-        formatting = {
-          format = function(entry, vim_item)
-            vim_item.kind = lspkind.symbolic(vim_item.kind, { mode = "symbol" })
-            return vim_item
-          end,
-        },
         window = {
           completion = cmp.config.window.bordered(win_opts),
         },

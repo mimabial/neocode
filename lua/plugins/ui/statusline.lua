@@ -33,7 +33,7 @@ return {
         removed = "",
       },
       file = {
-        modified = "●",
+        modified = "",
         readonly = "",
         unnamed = "[No Name]",
         newfile = "[New]",
@@ -80,14 +80,6 @@ return {
         aqua = get_hl_color("Type", "fg", "#7daea3"),
         orange = get_hl_color("Number", "fg", "#e78a4e"),
         gray = get_hl_color("Comment", "fg", "#928374"),
-        border = get_hl_color("FloatBorder", "fg", "#45403d"),
-        -- Special UI colors
-        popup_bg = get_hl_color("Pmenu", "bg", "#282828"),
-        select_bg = get_hl_color("PmenuSel", "bg", "#45403d"),
-        select_fg = get_hl_color("PmenuSel", "fg", "#d4be98"),
-        -- Special AI colors
-        copilot = "#6CC644",
-        codeium = "#09B6A2",
       }
     end
 
@@ -135,7 +127,6 @@ return {
       }
     end
 
-    -- Pretty file path
     local function pretty_path()
       return {
         function()
@@ -156,13 +147,12 @@ return {
       }
     end
 
-    -- Enhanced LSP indicator with icons
     local function lsp_status()
       return {
         function()
           local buf_clients = vim.lsp.get_clients({ bufnr = 0 })
           if #buf_clients == 0 then
-            return "󰅠 no lsp"
+            return "no lsp"
           end
 
           local lsp_names = {}
@@ -236,27 +226,6 @@ return {
       end
     end
 
-    -- Search count
-    local function search_count()
-      return function()
-        local hlslens_ok, hlslens = pcall(require, "hlslens")
-        if hlslens_ok and not vim.g.hlslens_disabled then
-          if hlslens.exportData then
-            local data = hlslens.exportData()
-            if data and data.total_count > 0 then
-              return string.format(" %d/%d", data.nearest_index or 1, data.total_count)
-            end
-          end
-        end
-
-        local sc = vim.fn.searchcount({ maxcount = 999, timeout = 500 })
-        if vim.v.hlsearch == 1 and sc.total > 0 then
-          return string.format(" %d/%d", sc.current, sc.total)
-        end
-        return ""
-      end
-    end
-
     -- File encoding
     local function file_encoding()
       return {
@@ -301,7 +270,6 @@ return {
       }
     end
 
-    -- Return the lualine configuration
     return {
       options = {
         component_separators = { left = "", right = "" },
@@ -333,14 +301,13 @@ return {
           },
         },
         lualine_c = {
-          root_dir(),
+          -- root_dir(),
           pretty_path(),
         },
         lualine_x = {
           ai_indicators(),
           lsp_status(),
           file_size(),
-          search_count(),
           { "filetype", icon_only = true },
           file_encoding(),
           file_format(),
@@ -373,7 +340,7 @@ return {
   config = function(_, opts)
     require("lualine").setup(opts)
 
-    -- Add reload on colorscheme change and AI provider changes
+    -- Update on colorscheme changes
     vim.api.nvim_create_autocmd("ColorScheme", {
       callback = function()
         vim.defer_fn(function()
