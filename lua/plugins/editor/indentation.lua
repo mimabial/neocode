@@ -117,15 +117,7 @@ return {
           show_end = true,
           injected_languages = true,
           priority = 500, -- Higher than rainbow delimiters
-          highlight = {
-            "RainbowDelimiter1",
-            "RainbowDelimiter2",
-            "RainbowDelimiter3",
-            "RainbowDelimiter4",
-            "RainbowDelimiter5",
-            "RainbowDelimiter6",
-            "RainbowDelimiter7",
-          },
+          highlight = "IblScopeBorder",
           char = indent_char,
         },
         exclude = {
@@ -163,6 +155,27 @@ return {
         return
       end
 
+      local function ensure_scope_highlight()
+        -- Get border color from UI system or fallback
+        local border_color
+        if _G.get_ui_colors then
+          local ok, colors = pcall(_G.get_ui_colors)
+          border_color = ok and colors and colors.border
+        end
+
+        -- Fallback to FloatBorder highlight
+        if not border_color then
+          local hl = vim.api.nvim_get_hl(0, { name = "FloatBorder" })
+          if hl.fg then
+            border_color = string.format("#%06x", hl.fg)
+          else
+            border_color = "#45403d" -- Ultimate fallback
+          end
+        end
+
+        vim.api.nvim_set_hl(0, "IblScopeBorder", { fg = border_color })
+      end
+
       local function ensure_rainbow_highlights()
         -- Get colors from rainbow delimiter system
         for i = 1, 7 do
@@ -180,6 +193,7 @@ return {
         end
       end
 
+      ensure_scope_highlight()
       ensure_rainbow_highlights()
 
       ibl.setup(opts)
@@ -187,23 +201,8 @@ return {
       -- Handle colorscheme changes
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
-          -- Update scope highlights
-          -- Define the get_highlight_value function within this callback too
-          local function get_highlight_value(name)
-            local hl = vim.api.nvim_get_hl(0, { name = name })
-            local fg = hl.fg
-            return fg and string.format("#%06x", fg) or nil
-          end
-
-          local scope_hl = get_highlight_value("Function") or get_highlight_value("Label")
-          if scope_hl then
-            vim.api.nvim_set_hl(0, "IblScope", { fg = scope_hl, bold = true })
-          end
-
-          -- Ensure rainbow highlights still exist
           ensure_rainbow_highlights()
-
-          -- Reload ibl to apply highlight changes
+          ensure_scope_highlight()
           ibl.setup(opts)
         end,
       })

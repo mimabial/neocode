@@ -388,7 +388,7 @@ return {
           vim.uv.fs_event_start(handle, theme_file, {}, function(err, filename, events)
             if not err and events.change then
               vim.schedule(function()
-                vim.defer_fn(apply_system_theme, 500)
+                apply_system_theme()
               end)
             end
           end)

@@ -118,8 +118,8 @@ return {
         vim.api.nvim_set_hl(0, "TreesitterContextSeparator", { fg = border_color })
       end
 
-      -- Initial setup with slight delay to ensure colorscheme is fully loaded
-      vim.defer_fn(update_context_highlights, 50)
+      -- Initial setup
+      update_context_highlights()
 
       -- Update highlights when colorscheme changes
       vim.api.nvim_create_autocmd("ColorScheme", {

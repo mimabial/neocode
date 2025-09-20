@@ -343,9 +343,7 @@ return {
     -- Update on colorscheme changes
     vim.api.nvim_create_autocmd("ColorScheme", {
       callback = function()
-        vim.defer_fn(function()
-          require("lualine").refresh()
-        end, 50)
+        require("lualine").refresh()
       end,
     })
 

@@ -114,30 +114,49 @@ M.setup_highlights = function()
   vim.api.nvim_exec_autocmds("User", { pattern = "UIColorsChanged" })
 end
 
+-- Debounced update system to prevent excessive redraws
+local update_timer = nil
+local function debounced_update(fn, delay)
+  if update_timer then
+    update_timer:stop()
+  end
+  update_timer = vim.defer_fn(function()
+    fn()
+    update_timer = nil
+  end, delay or 50)
+end
+
+-- Central highlight update that coordinates all UI components
+M.update_all_highlights = function()
+  M.setup_highlights()
+
+  -- Refresh UI components
+  pcall(function()
+    if package.loaded["lualine"] then
+      require("lualine").refresh()
+    end
+  end)
+
+  pcall(function()
+    if package.loaded["bufferline"] then
+      require("bufferline").setup()
+    end
+  end)
+
+  -- Trigger refresh event for other components
+  vim.api.nvim_exec_autocmds("User", { pattern = "UIColorsChanged" })
+end
+
 -- Initialize module
 M.setup = function()
   -- Set up colorscheme-sensitive highlight groups
   M.setup_highlights()
 
-  -- Update highlights when colorscheme changes
   vim.api.nvim_create_autocmd("ColorScheme", {
     pattern = "*",
     callback = function()
-      -- Delay to ensure theme is fully loaded
-      vim.defer_fn(function()
-        M.setup_highlights()
-
-        -- Refresh UI components that need to update with theme
-        pcall(function()
-          if package.loaded["lualine"] then
-            require("lualine").refresh()
-          end
-
-          if package.loaded["bufferline"] then
-            require("bufferline").setup()
-          end
-        end)
-      end, 100)
+      -- Single 50ms delay for all UI updates
+      debounced_update(M.update_all_highlights, 50)
     end,
   })
 

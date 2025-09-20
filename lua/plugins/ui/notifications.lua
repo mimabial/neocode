@@ -340,12 +340,6 @@ return {
 
       -- Update highlights for Noice elements
       local function update_noice_highlights()
-        -- Wait for colorscheme to be ready
-        if not vim.g.colors_name then
-          vim.defer_fn(update_noice_highlights, 50)
-          return
-        end
-
         -- Get colors from central UI config if available
         local colors = _G.get_ui_colors()
 
@@ -371,14 +365,13 @@ return {
         vim.api.nvim_set_hl(0, "NoicePopupTitle", { fg = colors.blue, bold = true })
       end
 
-      -- Delay initial highlight setup to ensure colorscheme is loaded
-      vim.defer_fn(update_noice_highlights, 75)
+      update_noice_highlights()
 
       -- Update highlights when colorscheme changes
       vim.api.nvim_create_autocmd("ColorScheme", {
         pattern = "*",
         callback = function()
-          vim.defer_fn(update_noice_highlights, 10)
+          update_noice_highlights()
         end,
       })
     end,
