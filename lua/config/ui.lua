@@ -1,6 +1,5 @@
 local M = {}
 
--- Universal color extraction from highlight groups
 M.get_colors = function()
   local function get_hl_color(group, attr, fallback)
     local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group })
@@ -14,7 +13,6 @@ M.get_colors = function()
     return tostring(val)
   end
 
-  -- Extract colors from highlight groups
   return {
     bg = get_hl_color("Normal", "bg", "#1f1f28"),
     bg1 = get_hl_color("CursorLine", "bg", "#2a2a37"),
@@ -55,9 +53,7 @@ local function is_transparency_enabled()
   return ok and parsed and parsed.transparency or false
 end
 
--- Global UI configuration
 M.config = {
-  -- Standard float window configuration - base for all UI elements
   float = {
     border = "single",   -- Consistent border style
     padding = { 0, 1 },  -- Consistent padding
@@ -72,7 +68,6 @@ M.config = {
   },
 }
 
--- Setup consistent highlights across all menus
 M.setup_highlights = function()
   local colors = M.get_colors()
   local bg_color = is_transparency_enabled() and "NONE" or colors.bg
@@ -109,9 +104,6 @@ M.setup_highlights = function()
   vim.api.nvim_set_hl(0, "NotifyTRACE", { fg = colors.purple })
   vim.api.nvim_set_hl(0, "NotifyBorder", { fg = colors.border })
   vim.api.nvim_set_hl(0, "NotifyBackground", { bg = colors.bg })
-
-  -- Indent-blankline scope highlight
-  vim.api.nvim_set_hl(0, "IblScopeBorder", { fg = colors.border })
 
   -- Trigger refresh event for other components
   vim.api.nvim_exec_autocmds("User", { pattern = "UIColorsChanged" })

@@ -117,7 +117,7 @@ return {
           show_end = true,
           injected_languages = true,
           priority = 500, -- Higher than rainbow delimiters
-          highlight = "IblScopeBorder",
+          highlight = "IblScope",
           char = indent_char,
         },
         exclude = {
@@ -154,6 +154,31 @@ return {
         vim.notify("Failed to load indent-blankline.nvim", vim.log.levels.ERROR)
         return
       end
+
+      -- Set up custom highlight using the hooks system
+      local hooks = require("ibl.hooks")
+      
+      -- Create custom highlight group using the hooks system
+      hooks.register(hooks.type.HIGHLIGHT_SETUP, function()
+        -- Get colors from UI system if available
+        local colors = _G.get_ui_colors and _G.get_ui_colors() or {}
+        
+        -- Fallback color extraction
+        local function get_hl_color(group, attr, fallback)
+          local hl_ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group })
+          local val = hl_ok and hl[attr]
+          if not val then return fallback end
+          if type(val) == "number" then
+            return string.format("#%06x", val)
+          end
+          return tostring(val)
+        end
+        
+        local border_color = colors.border or get_hl_color("FloatBorder", "fg", "#45403d")
+        
+        -- Set the scope highlight to use a border-like color
+        vim.api.nvim_set_hl(0, "IblScope", { fg = border_color })
+      end)
 
       ibl.setup(opts)
     end,
