@@ -71,6 +71,21 @@ return {
       }
     end
 
+    local function root_dir()
+      return {
+        function()
+          local cwd = vim.fn.getcwd()
+          local home = os.getenv("HOME") or ""
+          local disp = cwd:sub(1, #home) == home and "~" .. cwd:sub(#home + 1) or cwd
+          return "" .. vim.fn.fnamemodify(disp, ":t")
+        end,
+        color = { fg = colors.green },
+        cond = function()
+          return not vim.b.no_root_dir
+        end,
+      }
+    end
+
     local function lsp_status()
       return {
         function()
@@ -93,7 +108,7 @@ return {
 
           return " " .. names_str
         end,
-        color = { fg = colors.green, gui = "bold" },
+        color = { fg = colors.green },
       }
     end
 
@@ -167,36 +182,36 @@ return {
           {
             "branch",
             icon = "",
-            color = { fg = colors.orange, gui = "bold" },
-            padding = { right = 1 },
+            color = { fg = colors.orange },
           },
+          root_dir(),
         },
         lualine_c = {
           pretty_path(),
+          file_size(),
         },
         lualine_x = {
-          ai_indicators(),
           lsp_status(),
-          file_size(),
-          { "filetype", icon_only = true },
-          {
-            "encoding",
-            fmt = string.upper,
-            color = { fg = colors.green },
-            cond = function() return vim.bo.fileencoding ~= "utf-8" end,
-          },
-          {
-            "fileformat",
-            symbols = { unix = " ", dos = " ", mac = " " },
-            color = { fg = colors.green },
-            cond = function() return vim.bo.fileformat ~= "unix" end,
-          },
+          -- { "filetype", icon_only = true },
+          -- {
+          --   "encoding",
+          --   fmt = string.upper,
+          --   color = { fg = colors.green },
+          --   cond = function() return vim.bo.fileencoding ~= "utf-8" end,
+          -- },
+          -- {
+          --   "fileformat",
+          --   symbols = { unix = " ", dos = " ", mac = " " },
+          --   color = { fg = colors.green },
+          --   cond = function() return vim.bo.fileformat ~= "unix" end,
+          -- },
         },
         lualine_y = {
-          { "progress", color = { fg = colors.fg, gui = "bold" } }
+          -- { "progress", color = { fg = colors.fg, gui = "bold" } }
+          ai_indicators(),
         },
         lualine_z = {
-          { "location", color = { fg = colors.fg, gui = "bold" } }
+          { "location", color = { fg = colors.white, gui = "bold" } }
         },
       },
       inactive_sections = {
