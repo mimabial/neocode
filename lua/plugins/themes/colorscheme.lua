@@ -192,7 +192,7 @@ return {
               theme = variant,
               transparent = transparency,
             })
-            vim.cmd("colorscheme kanagawa")
+            vim.cmd("colorscheme kanagawa" .. "-" .. variant)
           end,
         },
         ["monokai-pro"] = {
@@ -433,6 +433,8 @@ return {
           theme_name = "catppuccin"
         elseif current:match("^decay") then
           theme_name = "decay"
+        elseif current:match("^kanagawa%-") then
+          theme_name = "kanagawa"
         elseif current:match("^tokyonight") then
           theme_name = "tokyonight"
         end
@@ -451,6 +453,10 @@ return {
             current_variant = "decayce"
           elseif current:match("^decay%-(.+)$") then
             current_variant = current:match("^decay%-(.+)$")
+          end
+        elseif theme_name == "kanagawa" then
+          if current:match("^kanagawa%-(.+)$") then
+            current_variant = current:match("^kanagawa%-(.+)$")
           end
         end
 
