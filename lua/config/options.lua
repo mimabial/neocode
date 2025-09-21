@@ -46,9 +46,8 @@ function M.setup()
   opt.incsearch = true  -- Incremental search
 
   -- Performance tweaks
-  opt.lazyredraw = true -- Don't redraw when executing macros
-  opt.updatetime = 300  -- Faster completion
-  opt.timeoutlen = 200  -- Faster timeout for mapped sequences
+  opt.updatetime = 300 -- Faster completion
+  opt.timeoutlen = 200 -- Faster timeout for mapped sequences
 
   -- Backup & Swap: keep crash recovery, but avoid slow disk writes
 
