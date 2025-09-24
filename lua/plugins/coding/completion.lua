@@ -63,23 +63,15 @@ return {
       local lspkind = require("lspkind")
 
       local function build_sources()
-        local sources = {}
-
-        local active_provider = _G.get_ai_active_provider()
-        if active_provider then
-          table.insert(sources, { name = active_provider, group_index = 0, priority = 100 })
-        end
-
-        vim.list_extend(sources, {
+        return {
+          { name = "codeium",  group_index = 0, priority = 100 }, -- Windsurf Plugins
           { name = "nvim_lsp", group_index = 1, priority = 90 },
           { name = "luasnip",  group_index = 1, priority = 80 },
           { name = "nvim_lua", group_index = 1, priority = 70 },
           { name = "buffer",   group_index = 2, priority = 50, keyword_length = 3 },
           { name = "path",     group_index = 2, priority = 40 },
           { name = "emoji",    group_index = 3, priority = 30 },
-        })
-
-        return sources
+        }
       end
 
       -- Get UI config if available

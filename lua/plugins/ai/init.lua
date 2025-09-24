@@ -1,4 +1,3 @@
 return {
-  require("plugins.ai.copilot"),
-  require("plugins.ai.codeium"),
+  require("plugins.ai.windsurf"),
 }

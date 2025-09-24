@@ -28,7 +28,6 @@ return {
 
     -- Group definitions using v3 API
     which_key.add({
-      { "<leader>a",  group = "AI" },
       { "<leader>b",  group = "Buffers" },
       { "<leader>c",  group = "Code/LSP" },
       { "<leader>d",  group = "Debug" },
@@ -156,15 +155,6 @@ return {
       { "<leader>uY", desc = "Detect system theme" },
       { "<leader>uz", desc = "Set system NVIM_SCHEME" },
       { "<leader>uL", desc = "List available system themes" },
-    })
-
-    -- AI
-    which_key.add({
-      { "<leader>ap", desc = "Toggle Copilot" },
-      { "<leader>am", desc = "Toggle Codeium" },
-      { "<leader>ac", desc = "Cycle AI providers" },
-      { "<leader>ad", desc = "Disable AI providers" },
-      { "<leader>as", desc = "Show active AI provider" },
     })
 
     -- Layouts

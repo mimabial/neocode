@@ -115,27 +115,13 @@ return {
     local function ai_indicators()
       return {
         function()
-          local active_provider = vim.g.ai_provider_active
-          if not active_provider then
-            return ""
+          -- Simple check if Codeium is loaded
+          if package.loaded["codeium"] then
+            return "󰚩" -- Windsurf icon
           end
-
-          local icon = icons.ai[active_provider] or ""
-          return icon
+          return ""
         end,
-        color = function()
-          local active_provider = vim.g.ai_provider_active
-          if active_provider == "copilot" then
-            return { fg = "#6CC644" }
-          elseif active_provider == "codeium" then
-            return { fg = "#09B6A2" }
-          else
-            return { fg = colors.purple }
-          end
-        end,
-        cond = function()
-          return vim.g.ai_provider_active ~= nil
-        end,
+        color = { fg = "#09B6A2" }, -- Windsurf green
       }
     end
 
