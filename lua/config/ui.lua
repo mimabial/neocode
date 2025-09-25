@@ -50,7 +50,6 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "CmpSel", { bg = colors.select_bg, fg = colors.select_fg, bold = true })
 
   -- AI source highlighting
-  vim.api.nvim_set_hl(0, "CmpItemKindCopilot", { fg = colors.copilot })
   vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = colors.codeium })
 
   -- Diagnostic highlights
@@ -62,6 +61,14 @@ local function setup_highlights()
   -- Notification highlights
   vim.api.nvim_set_hl(0, "NotifyBorder", { fg = colors.border })
   vim.api.nvim_set_hl(0, "NotifyBackground", { bg = colors.bg })
+
+  -- Telescope highlights
+  vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = colors.orange })
+  vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = colors.border })
+  vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { fg = colors.orange })
+  vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = colors.blue, bold = true })
+  vim.api.nvim_set_hl(0, "TelescopeSelection", { fg = colors.blue })
+  vim.api.nvim_set_hl(0, "TelescopePromptPrefix", { fg = colors.blue })
 end
 
 function M.setup()

@@ -117,7 +117,7 @@ return {
         function()
           -- Simple check if Codeium is loaded
           if package.loaded["codeium"] then
-            return "󰚩" -- Windsurf icon
+            return "󰚩 " -- Windsurf icon
           end
           return ""
         end,

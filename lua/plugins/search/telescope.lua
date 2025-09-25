@@ -123,7 +123,7 @@ return {
         if layout.prompt then
           layout.prompt.line = layout.preview.height + 2
           layout.prompt.height = 1
-          layout.prompt.width = max_columns - 2
+          layout.prompt.width = max_columns
           layout.prompt.col = 2
         end
         -- Position results below prompt
@@ -139,7 +139,7 @@ return {
 
         if layout.prompt then
           layout.prompt.line = 2
-          layout.prompt.width = max_columns - 2
+          layout.prompt.width = max_columns
           layout.prompt.height = 1
           layout.prompt.col = 2
         end
@@ -162,7 +162,7 @@ return {
       if layout.prompt then
         layout.prompt.height = 1
         layout.prompt.line = math.floor(max_lines * 0.55)
-        layout.prompt.width = max_columns - 1
+        layout.prompt.width = max_columns
       end
 
       if has_previewer then
