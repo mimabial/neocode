@@ -28,6 +28,7 @@ return {
 
     -- Group definitions using v3 API
     which_key.add({
+      { "<leader>a",  group = "Avante" },
       { "<leader>b",  group = "Buffers" },
       { "<leader>c",  group = "Code/LSP" },
       { "<leader>d",  group = "Debug" },
@@ -44,6 +45,13 @@ return {
       { "<leader>w",  group = "Windows" },
       { "<leader>x",  group = "Diagnostics/Trouble" },
       { "<leader>z",  group = "Folds" },
+    })
+
+    -- Avante
+    which_key.add({
+      { "<leader>aa", desc = "Ask Avante" },
+      { "<leader>ae", desc = "Edit with Avante" },
+      { "<leader>ar", desc = "Refresh Avante" },
     })
 
     -- Buffer mappings
