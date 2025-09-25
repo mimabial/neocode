@@ -14,6 +14,39 @@ function M.setup()
   vim.g.maplocalleader = " "
 
   -- ========================================
+  -- LSP Keymaps (set up via autocmd)
+  -- ========================================
+  vim.api.nvim_create_autocmd("LspAttach", {
+    callback = function(args)
+      local opts = { buffer = args.buf, silent = true }
+
+      -- Navigation
+      map("n", "gd", vim.lsp.buf.definition, vim.tbl_extend("force", opts, { desc = "Go to definition" }))
+      map("n", "gD", vim.lsp.buf.declaration, vim.tbl_extend("force", opts, { desc = "Go to declaration" }))
+      map("n", "gr", vim.lsp.buf.references, vim.tbl_extend("force", opts, { desc = "Find references" }))
+      map("n", "gi", vim.lsp.buf.implementation, vim.tbl_extend("force", opts, { desc = "Go to implementation" }))
+      map("n", "gt", vim.lsp.buf.type_definition, vim.tbl_extend("force", opts, { desc = "Go to type definition" }))
+
+      -- Information
+      map("n", "K", vim.lsp.buf.hover, vim.tbl_extend("force", opts, { desc = "Show hover information" }))
+      map("n", "<C-k>", vim.lsp.buf.signature_help, vim.tbl_extend("force", opts, { desc = "Signature help" }))
+
+      -- Actions
+      map("n", "<leader>ca", vim.lsp.buf.code_action, vim.tbl_extend("force", opts, { desc = "Code actions" }))
+      map("n", "<leader>cr", vim.lsp.buf.rename, vim.tbl_extend("force", opts, { desc = "Rename symbol" }))
+      map("n", "<leader>cf", function() vim.lsp.buf.format({ async = true }) end,
+        vim.tbl_extend("force", opts, { desc = "Format" }))
+
+      -- Diagnostics
+      map("n", "<leader>cd", vim.diagnostic.open_float, vim.tbl_extend("force", opts, { desc = "Show diagnostics" }))
+      map("n", "[d", vim.diagnostic.goto_prev, vim.tbl_extend("force", opts, { desc = "Previous diagnostic" }))
+      map("n", "]d", vim.diagnostic.goto_next, vim.tbl_extend("force", opts, { desc = "Next diagnostic" }))
+      map("n", "<leader>cq", vim.diagnostic.setloclist,
+        vim.tbl_extend("force", opts, { desc = "Diagnostics to loclist" }))
+    end,
+  })
+
+  -- ========================================
   -- General/Plugin Management
   -- ========================================
   map("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy Plugin Manager" })
@@ -112,11 +145,8 @@ function M.setup()
   -- ========================================
   -- AI Provider Management
   -- ========================================
-  map("n", "<leader>ac", "<cmd>AICycle<cr>", { desc = "Cycle AI providers" })
-  map("n", "<leader>ad", "<cmd>AIDisable<cr>", { desc = "Disable AI providers" })
   map("n", "<leader>as", "<cmd>AIStatus<cr>", { desc = "Show active AI provider" })
-  map("n", "<leader>ap", "<cmd>AICopilot<cr>", { desc = "Toggle Copilot" })
-  map("n", "<leader>am", "<cmd>AICodeium<cr>", { desc = "Toggle Codeium" })
+  map("n", "<leader>at", "<cmd>AIToggle<cr>", { desc = "Toggle AI provider" })
 
 
   -- ========================================

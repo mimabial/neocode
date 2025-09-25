@@ -10,107 +10,50 @@ return {
     },
 
     config = function()
-      local inlay_hints_supported = vim.fn.has("nvim-0.10") == 1
+      local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-      -- Shared capabilities with nvim-cmp
-      local capabilities = vim.lsp.protocol.make_client_capabilities()
-      local cmp_ok, cmp_lsp = pcall(require, "cmp_nvim_lsp")
-      if cmp_ok then
-        capabilities = cmp_lsp.default_capabilities(capabilities)
-      end
+      local function on_attach(client, bufnr)
+        if client.name == "null-ls" then return end
 
-      local on_attach = function(client, bufnr)
-        -- Skip setup for certain clients
-        if client.name == "copilot" or client.name == "null-ls" then return end
-
-        -- Enable completion triggered by <c-x><c-o>
-        vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
-
-        -- Buffer-local keymaps
-        local function buf_set_keymap(mode, lhs, rhs, opts)
-          opts = opts or {}
-          opts.buffer = bufnr
-          vim.keymap.set(mode, lhs, rhs, opts)
+        -- Enable inlay hints if supported
+        if vim.fn.has("nvim-0.10") == 1 and client.server_capabilities.inlayHintProvider then
+          vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
         end
 
-        -- LSP navigation
-        buf_set_keymap("n", "gd", vim.lsp.buf.definition, { desc = "Go to definition" })
-        buf_set_keymap("n", "gD", vim.lsp.buf.declaration, { desc = "Go to declaration" })
-        buf_set_keymap("n", "gr", vim.lsp.buf.references, { desc = "Find references" })
-        buf_set_keymap("n", "gi", vim.lsp.buf.implementation, { desc = "Go to implementation" })
-        buf_set_keymap("n", "gt", vim.lsp.buf.type_definition, { desc = "Go to type definition" })
-
-        -- LSP information
-        buf_set_keymap("n", "K", vim.lsp.buf.hover, { desc = "Show hover information" })
-        buf_set_keymap("n", "<C-k>", vim.lsp.buf.signature_help, { desc = "Signature help" })
-
-        buf_set_keymap("n", "<leader>wa", vim.lsp.buf.add_workspace_folder, { desc = "Add workspace folder" })
-        buf_set_keymap("n", "<leader>wr", vim.lsp.buf.remove_workspace_folder, { desc = "Remove workspace folder" })
-        buf_set_keymap("n", "<leader>wl", function()
-          print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-        end, { desc = "List workspace folders" })
-
-        -- LSP actions
-        buf_set_keymap("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "Code actions" })
-        buf_set_keymap("n", "<leader>cr", vim.lsp.buf.rename, { desc = "Rename symbol" })
-
-        -- Diagnostics
-        buf_set_keymap("n", "<leader>cd", vim.diagnostic.open_float, { desc = "Show diagnostics" })
-        buf_set_keymap("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous diagnostic" })
-        buf_set_keymap("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
-        buf_set_keymap("n", "<leader>cq", vim.diagnostic.setloclist, { desc = "Diagnostics to loclist" })
-        buf_set_keymap("n", "<leader>cf", function()
-          vim.lsp.buf.format({ async = true })
-        end, { desc = "Format" })
-
-        -- Enable inlay hints
-        if inlay_hints_supported and client.server_capabilities.inlayHintProvider then
-          pcall(function()
-            if vim.lsp.inlay_hint and type(vim.lsp.inlay_hint.enable) == "function" then
-              vim.lsp.inlay_hint.enable(bufnr, true)
-            end
-          end)
+        -- Attach navic if available
+        if client.server_capabilities.documentSymbolProvider then
+          local ok, navic = pcall(require, "nvim-navic")
+          if ok then navic.attach(client, bufnr) end
         end
       end
 
-      -- Mason-lspconfig setup
       require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls" },
+        ensure_installed = { "lua_ls", "gopls", "ts_ls", "html", "jsonls" },
         automatic_installation = false,
         handlers = {
-          -- Default handler
+          -- Default handler for all servers
           function(server_name)
-            vim.lsp.config[server_name] = {
-              on_attach = on_attach,
+            require("lspconfig")[server_name].setup({
               capabilities = capabilities,
-            }
+              on_attach = on_attach,
+            })
           end,
 
-          -- Custom server configurations
+          -- Custom configurations
           ["lua_ls"] = function()
             require("lspconfig").lua_ls.setup({
-              on_attach = on_attach,
               capabilities = capabilities,
+              on_attach = on_attach,
               settings = {
                 Lua = {
                   runtime = { version = "LuaJIT" },
-                  diagnostics = {
-                    globals = { "vim", "require" },
-                    disable = { "missing-fields", "no-unknown" },
-                  },
+                  diagnostics = { globals = { "vim" } },
                   workspace = {
                     library = vim.api.nvim_get_runtime_file("", true),
                     checkThirdParty = false,
                   },
                   telemetry = { enable = false },
-                  hint = inlay_hints_supported and {
-                    enable = true,
-                    setType = true,
-                    paramType = true,
-                    paramName = "All",
-                    semicolon = "All",
-                    arrayIndex = "All",
-                  } or nil,
+                  hint = { enable = true },
                 },
               },
             })
@@ -118,66 +61,23 @@ return {
 
           ["gopls"] = function()
             require("lspconfig").gopls.setup({
-              on_attach = on_attach,
               capabilities = capabilities,
+              on_attach = on_attach,
               settings = {
                 gopls = {
                   analyses = {
                     unusedparams = true,
                     shadow = true,
-                    fieldalignment = true,
-                    nilness = true,
-                    unusedwrite = true,
-                    useany = true,
                   },
                   staticcheck = true,
                   gofumpt = true,
                   usePlaceholders = true,
                   completeUnimported = true,
-                  directoryFilters = { "-.git", "-.vscode", "-.idea", "-node_modules" },
-                  semanticTokens = true,
-                  codelenses = {
-                    gc_details = true,
-                    generate = true,
-                    regenerate_cgo = true,
-                    test = true,
-                    tidy = true,
-                    upgrade_dependency = true,
-                    vendor = true,
-                  },
-                  matcher = "fuzzy",
-                  symbolMatcher = "fuzzy",
-                  buildFlags = { "-tags=integration,e2e" },
-                  experimentalPostfixCompletions = true,
-                  hints = inlay_hints_supported and {
+                  hints = {
                     assignVariableTypes = true,
                     compositeLiteralFields = true,
-                    compositeLiteralTypes = true,
                     constantValues = true,
-                    functionTypeParameters = true,
                     parameterNames = true,
-                    rangeVariableTypes = true,
-                  } or nil,
-                },
-              },
-            })
-          end,
-
-          ["html"] = function()
-            require("lspconfig").html.setup({
-              on_attach = on_attach,
-              capabilities = capabilities,
-              filetypes = { "html", "templ" },
-              settings = {
-                html = {
-                  format = {
-                    indentInnerHtml = true,
-                    wrapLineLength = 100,
-                    wrapAttributes = "auto",
-                  },
-                  hover = {
-                    documentation = true,
-                    references = true,
                   },
                 },
               },
@@ -186,149 +86,73 @@ return {
 
           ["ts_ls"] = function()
             require("lspconfig").ts_ls.setup({
+              capabilities = capabilities,
               on_attach = function(client, bufnr)
+                -- Disable formatting (use prettier)
                 client.server_capabilities.documentFormattingProvider = false
                 client.server_capabilities.documentRangeFormattingProvider = false
                 on_attach(client, bufnr)
               end,
-              capabilities = capabilities,
               settings = {
                 typescript = {
-                  inlayHints = inlay_hints_supported and {
+                  inlayHints = {
                     includeInlayParameterNameHints = "all",
-                    includeInlayParameterNameHintsWhenArgumentMatchesName = false,
                     includeInlayFunctionParameterTypeHints = true,
                     includeInlayVariableTypeHints = true,
-                    includeInlayPropertyDeclarationTypeHints = true,
-                    includeInlayFunctionLikeReturnTypeHints = true,
-                    includeInlayEnumMemberValueHints = true,
-                  } or nil,
-                  suggest = {
-                    completeFunctionCalls = true,
-                  },
-                },
-                javascript = {
-                  inlayHints = inlay_hints_supported and {
-                    includeInlayParameterNameHints = "all",
-                    includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-                    includeInlayFunctionParameterTypeHints = true,
-                    includeInlayVariableTypeHints = true,
-                    includeInlayPropertyDeclarationTypeHints = true,
-                    includeInlayFunctionLikeReturnTypeHints = true,
-                    includeInlayEnumMemberValueHints = true,
-                  } or nil,
-                  suggest = {
-                    completeFunctionCalls = true,
                   },
                 },
               },
+            })
+          end,
+
+          ["html"] = function()
+            require("lspconfig").html.setup({
+              capabilities = capabilities,
+              on_attach = on_attach,
+              filetypes = { "html", "templ" },
             })
           end,
 
           ["tailwindcss"] = function()
             require("lspconfig").tailwindcss.setup({
-              on_attach = on_attach,
               capabilities = capabilities,
+              on_attach = on_attach,
               filetypes = {
-                "html", "css", "scss", "javascript", "javascriptreact",
+                "html", "css", "javascript", "javascriptreact",
                 "typescript", "typescriptreact", "templ",
               },
-              init_options = {
-                userLanguages = { templ = "html" },
-              },
+              init_options = { userLanguages = { templ = "html" } },
             })
           end,
 
           ["jsonls"] = function()
             require("lspconfig").jsonls.setup({
-              on_attach = on_attach,
               capabilities = capabilities,
-              settings = {
-                json = {
-                  schemas = require("schemastore").json.schemas(),
-                  validate = { enable = true },
-                },
-              },
-            })
-          end,
-
-          ["pyright"] = function()
-            require("lspconfig").pyright.setup({
               on_attach = on_attach,
-              capabilities = capabilities,
               settings = {
-                python = {
-                  analysis = {
-                    typeCheckingMode = "basic",
-                    diagnosticMode = "workspace",
-                    inlayHints = {
-                      variableTypes = true,
-                      functionReturnTypes = true,
-                    },
-                  },
-                  venvPath = vim.fn.exists("$VIRTUAL_ENV") == 1 and vim.fn.expand("$VIRTUAL_ENV") or "",
-                },
+                json = { schemas = require("schemastore").json.schemas() },
               },
             })
           end,
         },
-      })
-
-      -- Diagnostic configuration
-      local signs = { Error = "", Warn = "", Info = "", Hint = "" }
-      for type, icon in pairs(signs) do
-        local hl = "DiagnosticSign" .. type
-        vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
-      end
-
-      -- ESLint LSP
-      require("lspconfig").eslint.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
       })
 
       vim.diagnostic.config({
-        virtual_text = {
-          prefix = " ",
-          spacing = 4,
-          source = "if_many",
-        },
-        float = {
-          border = "single",
-          source = "always",
-          header = "",
-          prefix = function(diagnostic)
-            local icons = {
-              [vim.diagnostic.severity.ERROR] = " ",
-              [vim.diagnostic.severity.WARN] = " ",
-              [vim.diagnostic.severity.INFO] = " ",
-              [vim.diagnostic.severity.HINT] = " ",
-            }
-            return icons[diagnostic.severity] or ""
-          end,
-        },
+        virtual_text = { prefix = " ", spacing = 4 },
+        float = { border = "single", source = "always" },
         signs = true,
         underline = true,
         update_in_insert = false,
         severity_sort = true,
       })
 
-      -- LSP handlers with borders
       vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "single" })
       vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help,
         { border = "single" })
-
-
-      local orig_util_open_floating_preview = vim.lsp.util.open_floating_preview
-      function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
-        opts = opts or {}
-        opts.border = "single"
-        return orig_util_open_floating_preview(contents, syntax, opts, ...)
-      end
     end,
   },
 
-  -- JSON schema support
+  -- Schema support
   {
     "b0o/schemastore.nvim",
     lazy = true,
@@ -341,52 +165,23 @@ return {
     lazy = true,
   },
 
+  -- TypeScript tools (optional enhancement)
   {
     "pmizio/typescript-tools.nvim",
     ft = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
     dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
     enabled = function()
-      -- Check for Node.js (required for tsserver)
-      if vim.fn.executable("node") == 0 then
-        return false
-      end
-
-      -- Check for typescript installation
-      local has_typescript = vim.fn.executable("tsc") == 1 or
-          vim.fn.executable("npx") == 1 and vim.fn.system("npx tsc --version 2>/dev/null"):match("Version")
-
-      return has_typescript
+      return vim.fn.executable("node") == 1
     end,
     opts = {
       settings = {
-        tsserver_plugins = { "@styled/typescript-styled-plugin" },
         expose_as_code_action = { "fix_all", "add_missing_imports", "remove_unused" },
         tsserver_file_preferences = {
           includeInlayParameterNameHints = "all",
-          includeInlayParameterNameHintsWhenArgumentMatchesName = false,
           includeInlayFunctionParameterTypeHints = true,
-          includeInlayVariableTypeHints = true,
-          includeInlayPropertyDeclarationTypeHints = true,
-          includeInlayFunctionLikeReturnTypeHints = true,
-          includeInlayEnumMemberValueHints = true,
         },
       },
     },
-    config = function(_, opts)
-      require("typescript-tools").setup(opts)
-
-      -- Create TypeScript commands
-      local api = require("typescript-tools.api")
-      for cmd, fn in pairs({
-        TypescriptOrganizeImports = api.organize_imports,
-        TypescriptRenameFile = api.rename_file,
-        TypescriptAddMissingImports = api.add_missing_imports,
-        TypescriptRemoveUnused = api.remove_unused,
-        TypescriptFixAll = api.fix_all,
-      }) do
-        vim.api.nvim_create_user_command(cmd, fn, { desc = cmd })
-      end
-    end,
   },
 
   -- Inlay hints for older Neovim
@@ -394,20 +189,11 @@ return {
     "lvimuser/lsp-inlayhints.nvim",
     event = "LspAttach",
     enabled = vim.fn.has("nvim-0.10") == 0,
-    opts = {
-      inlay_hints = {
-        parameter_hints = { show = true },
-        type_hints = { show = true },
-        label_formatter = function(label, hint)
-          return " " .. label .. " "
-        end,
-      },
-    },
+    opts = {},
     config = function(_, opts)
       require("lsp-inlayhints").setup(opts)
       vim.api.nvim_create_autocmd("LspAttach", {
         callback = function(args)
-          if not (args.data and args.data.client_id) then return end
           local client = vim.lsp.get_client_by_id(args.data.client_id)
           if client and client.server_capabilities.inlayHintProvider then
             require("lsp-inlayhints").on_attach(client, args.buf)
