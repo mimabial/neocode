@@ -55,9 +55,8 @@ return {
       end, opts.ensure_installed)
 
       -- Register filetypes to parsers mapping
-      local ft_to_parser = require("nvim-treesitter.parsers").filetype_to_parsername
-      ft_to_parser.javascriptreact = "jsx"
-      ft_to_parser.typescriptreact = "tsx"
+      vim.treesitter.language.register('tsx', 'typescriptreact')
+      vim.treesitter.language.register('jsx', 'javascriptreact')
 
       -- Main TS setup
       require("nvim-treesitter.configs").setup(opts)

@@ -1,48 +1,20 @@
 return {
-  -- Rainbow delimiters for matching pairs
   {
     "HiPhish/rainbow-delimiters.nvim",
     event = "BufReadPost",
     config = function()
       local rainbow_delimiters = require("rainbow-delimiters")
 
-      local function get_rainbow_colors()
-        if _G.get_ui_colors then
-          local ok, colors = pcall(_G.get_ui_colors)
-          if ok and colors then
-            return {
-              colors.red,
-              colors.yellow,
-              colors.blue,
-              colors.orange,
-              colors.green,
-              colors.purple,
-              colors.aqua or colors.blue,
-            }
-          end
-        end
-
-        local function get_hl_color(group, fallback)
-          local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group })
-          if ok and hl.fg then
-            return string.format("#%06x", hl.fg)
-          end
-          return fallback
-        end
-
-        return {
-          get_hl_color("DiagnosticError", "#cc241d"), -- Red
-          get_hl_color("DiagnosticWarn", "#d79921"),  -- Yellow
-          get_hl_color("Function", "#458588"),        -- Blue
-          get_hl_color("Number", "#d65d0e"),          -- Orange
-          get_hl_color("String", "#98971a"),          -- Green
-          get_hl_color("Keyword", "#b16286"),         -- Purple
-          get_hl_color("Type", "#689d6a"),            -- Aqua
-        }
-      end
-
       local function set_rainbow_colors()
-        local palette = get_rainbow_colors()
+        local colors = _G.get_ui_colors()
+        local palette = {
+          colors.red,
+          colors.yellow,
+          colors.blue,
+          colors.orange,
+          colors.green,
+          colors.purple,
+        }
 
         for i, color in ipairs(palette) do
           local hl_group = "RainbowDelimiter" .. i
@@ -84,7 +56,6 @@ return {
           "RainbowDelimiter4",
           "RainbowDelimiter5",
           "RainbowDelimiter6",
-          "RainbowDelimiter7",
         },
       }
 
@@ -100,7 +71,6 @@ return {
     event = "BufReadPre",
     dependencies = { "HiPhish/rainbow-delimiters.nvim" },
     opts = function()
-      -- Default indent character
       local indent_char = "│"
 
       return {
@@ -149,35 +119,13 @@ return {
       }
     end,
     config = function(_, opts)
-      local ok, ibl = pcall(require, "ibl")
-      if not ok then
-        vim.notify("Failed to load indent-blankline.nvim", vim.log.levels.ERROR)
-        return
-      end
+      local ibl = require("ibl")
+      local hooks = require("ibl.hooks")
 
       -- Set up custom highlight using the hooks system
-      local hooks = require("ibl.hooks")
-      
-      -- Create custom highlight group using the hooks system
       hooks.register(hooks.type.HIGHLIGHT_SETUP, function()
-        -- Get colors from UI system if available
-        local colors = _G.get_ui_colors and _G.get_ui_colors() or {}
-        
-        -- Fallback color extraction
-        local function get_hl_color(group, attr, fallback)
-          local hl_ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group })
-          local val = hl_ok and hl[attr]
-          if not val then return fallback end
-          if type(val) == "number" then
-            return string.format("#%06x", val)
-          end
-          return tostring(val)
-        end
-        
-        local border_color = colors.border or get_hl_color("FloatBorder", "fg", "#45403d")
-        
-        -- Set the scope highlight to use a border-like color
-        vim.api.nvim_set_hl(0, "IblScope", { fg = border_color })
+        local colors = _G.get_ui_colors()
+        vim.api.nvim_set_hl(0, "IblScope", { fg = colors.red })
       end)
 
       ibl.setup(opts)

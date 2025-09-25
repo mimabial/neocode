@@ -7,10 +7,12 @@ local function extract_colors()
     if not val then return fallback end
     return type(val) == "number" and string.format("#%06x", val) or tostring(val)
   end
-
+  local bg = hl_color("Normal", "bg", "#1f1f28")
+  local fg = hl_color("Normal", "fg", "#dcd7ba")
   return {
-    bg = hl_color("Normal", "bg", "#1f1f28"),
-    fg = hl_color("Normal", "fg", "#dcd7ba"),
+    bg = bg,
+    fg = fg,
+
     red = hl_color("DiagnosticError", "fg", "#ea6962"),
     green = hl_color("DiagnosticOk", "fg", "#89b482"),
     yellow = hl_color("DiagnosticWarn", "fg", "#d8a657"),
@@ -19,6 +21,10 @@ local function extract_colors()
     orange = hl_color("Number", "fg", "#e78a4e"),
     gray = hl_color("Comment", "fg", "#928374"),
     border = hl_color("FloatBorder", "fg", "#45403d"),
+
+    select_bg = hl_color("PmenuSel", "bg", "#45403d"),
+    select_fg = hl_color("PmenuSel", "fg", "#dcd7ba"),
+    popup_bg = hl_color("Pmenu", "bg", bg),
   }
 end
 
