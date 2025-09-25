@@ -1,15 +1,5 @@
 local M = {}
 
--- Helper to safely require optional modules
-local function safe_require(mod)
-  local ok, m = pcall(require, mod)
-  if not ok then
-    vim.notify(string.format("[Autocmds] Could not load '%s': %s", mod, m), vim.log.levels.WARN)
-    return nil
-  end
-  return m
-end
-
 function M.setup()
   -- 1) Line number toggling
   local num_grp = vim.api.nvim_create_augroup("NumToggle", { clear = true })
@@ -51,7 +41,7 @@ function M.setup()
   vim.api.nvim_create_autocmd("TextYankPost", {
     group = "YankHighlight",
     callback = function()
-      vim.highlight.on_yank({ timeout = 600 })
+      vim.highlight.on_yank({ timeout = 300 })
     end,
     desc = "Highlight yanked text",
   })
@@ -118,14 +108,7 @@ function M.setup()
     callback = function()
       local name = vim.api.nvim_buf_get_name(0)
       if vim.fn.isdirectory(name) == 1 then
-        local explorer = vim.g.default_explorer or "oil"
-        if explorer == "snacks" and safe_require("snacks.explorer") then
-          require("snacks.explorer").open({ path = name })
-        elseif safe_require("oil") then
-          require("oil").open(name)
-        else
-          vim.notify("No explorer available for directory", vim.log.levels.WARN)
-        end
+        require("oil").open(name)
       end
     end,
     desc = "Open directory path in configured explorer",
@@ -136,8 +119,8 @@ function M.setup()
   vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost" }, {
     group = "AutoLint",
     callback = function()
-      local lint = safe_require("lint")
-      if lint then
+      local ok, lint = pcall(require, "lint")
+      if ok then
         lint.try_lint()
       end
     end,
@@ -167,7 +150,7 @@ function M.setup()
     desc = "Reload file if changed outside Neovim",
   })
 
-  -- 12) Terminal mode settings
+  -- 10) Terminal mode settings
   vim.api.nvim_create_augroup("TerminalMode", { clear = true })
   vim.api.nvim_create_autocmd("TermOpen", {
     group = "TerminalMode",
@@ -191,21 +174,21 @@ function M.setup()
     desc = "Configure terminal keymaps",
   })
 
-  -- 13) Refresh gitsigns after lazygit
+  -- 11) Refresh gitsigns after lazygit
   local git_grp = vim.api.nvim_create_augroup("GitSignsRefresh", { clear = true })
   vim.api.nvim_create_autocmd("TermClose", {
     group = git_grp,
     pattern = "*lazygit",
     desc = "Refresh gitsigns on lazygit exit",
     callback = function()
-      local gs = safe_require("gitsigns")
-      if gs and gs.refresh then
+      local ok, gs = pcall(require, "gitsigns")
+      if ok and gs.refresh then
         gs.refresh()
       end
     end,
   })
 
-  -- 15) Update window title
+  -- 12) Update window title
   vim.api.nvim_create_augroup("WinTitle", { clear = true })
   vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost", "VimResume" }, {
     group = "WinTitle",
@@ -220,7 +203,7 @@ function M.setup()
     desc = "Set window title",
   })
 
-  -- 17) Disable auto comment continuation
+  -- 13) Disable auto comment continuation
   vim.api.nvim_create_augroup("NoCommentCont", { clear = true })
   vim.api.nvim_create_autocmd("FileType", {
     group = "NoCommentCont",

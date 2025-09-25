@@ -1,23 +1,24 @@
 local M = {}
 
 local function extract_colors()
-  local function hl_color(group, attr)
+  local function hl_color(group, attr, fallback)
     local hl = vim.api.nvim_get_hl(0, { name = group })
     local val = hl[attr]
-    return val and (type(val) == "number" and string.format("#%06x", val) or tostring(val))
+    if not val then return fallback end
+    return type(val) == "number" and string.format("#%06x", val) or tostring(val)
   end
 
   return {
-    bg = hl_color("Normal", "bg") or "#1f1f28",
-    fg = hl_color("Normal", "fg") or "#dcd7ba",
-    red = hl_color("DiagnosticError", "fg") or "#ea6962",
-    green = hl_color("DiagnosticOk", "fg") or "#89b482",
-    yellow = hl_color("DiagnosticWarn", "fg") or "#d8a657",
-    blue = hl_color("Function", "fg") or "#7daea3",
-    purple = hl_color("Keyword", "fg") or "#d3869b",
-    orange = hl_color("Number", "fg") or "#e78a4e",
-    gray = hl_color("Comment", "fg") or "#928374",
-    border = hl_color("FloatBorder", "fg") or "#45403d",
+    bg = hl_color("Normal", "bg", "#1f1f28"),
+    fg = hl_color("Normal", "fg", "#dcd7ba"),
+    red = hl_color("DiagnosticError", "fg", "#ea6962"),
+    green = hl_color("DiagnosticOk", "fg", "#89b482"),
+    yellow = hl_color("DiagnosticWarn", "fg", "#d8a657"),
+    blue = hl_color("Function", "fg", "#7daea3"),
+    purple = hl_color("Keyword", "fg", "#d3869b"),
+    orange = hl_color("Number", "fg", "#e78a4e"),
+    gray = hl_color("Comment", "fg", "#928374"),
+    border = hl_color("FloatBorder", "fg", "#45403d"),
   }
 end
 

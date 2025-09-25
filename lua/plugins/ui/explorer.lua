@@ -190,65 +190,16 @@ return {
       }
     end,
     config = function(_, opts)
-      -- Safe loading
-      local ok, nvim_tree = pcall(require, "nvim-tree")
-      if not ok then
-        vim.notify("Failed to load nvim-tree", vim.log.levels.WARN)
-        return
-      end
+      require("nvim-tree").setup(opts)
 
-      -- Setup with error handling
-      local setup_ok, err = pcall(function()
-        nvim_tree.setup(opts)
-
-        -- Create stack-specific tree commands
-        vim.api.nvim_create_user_command("NvimTreeGOTH", function()
-          require("nvim-tree.api").tree.toggle({
-            path = vim.fn.getcwd(),
-            find_file = true,
-            filters = {
-              custom = {
-                "^.git$",
-                "^node_modules$",
-                "^vendor$",
-                "^.next$",
-              },
-            },
-          })
-        end, { desc = "Open NvimTree focused on GOTH stack" })
-
-        vim.api.nvim_create_user_command("NvimTreeNext", function()
-          require("nvim-tree.api").tree.toggle({
-            path = vim.fn.getcwd(),
-            find_file = true,
-            filters = {
-              custom = {
-                "^.git$",
-                "^vendor$",
-              },
-            },
-          })
-        end, { desc = "Open NvimTree focused on Next.js stack" })
-      end)
-
-      if not setup_ok then
-        vim.notify("Failed to setup nvim-tree: " .. tostring(err), vim.log.levels.ERROR)
-      end
-
-      -- Update the existing explorer toggle command to support nvim-tree
+      -- Explorer toggle command
       vim.api.nvim_create_user_command("ExplorerToggle", function(opts)
         local explorer = opts.args ~= "" and opts.args or vim.g.default_explorer or "oil"
 
         if explorer == "nvim-tree" then
-          pcall(vim.cmd, "NvimTreeToggle")
+          vim.cmd("NvimTreeToggle")
         elseif explorer == "oil" then
-          local oil = safe_require("oil")
-          if oil then
-            oil.open()
-          else
-            -- Fallback to NvimTree if oil not available
-            pcall(vim.cmd, "NvimTreeToggle")
-          end
+          require("oil").open()
         elseif explorer == "netrw" then
           vim.cmd("Explore")
         end

@@ -44,44 +44,33 @@ return {
       },
     },
     config = function(_, opts)
-      -- Safe initialization with error handling
-      local function setup_treesitter()
-        -- Remove duplicates in ensure_installed
-        local seen = {}
-        opts.ensure_installed = vim.tbl_filter(function(lang)
-          if seen[lang] then
-            return false
-          end
-          seen[lang] = true
-          return true
-        end, opts.ensure_installed)
+      -- Remove duplicates in ensure_installed
+      local seen = {}
+      opts.ensure_installed = vim.tbl_filter(function(lang)
+        if seen[lang] then
+          return false
+        end
+        seen[lang] = true
+        return true
+      end, opts.ensure_installed)
 
-        -- Setup parsers with error handling
-        pcall(function()
-          -- Register filetypes to parsers mapping
-          local ft_to_parser = require("nvim-treesitter.parsers").filetype_to_parsername
-          ft_to_parser.javascriptreact = "jsx"
-          ft_to_parser.typescriptreact = "tsx"
-        end)
+      -- Register filetypes to parsers mapping
+      local ft_to_parser = require("nvim-treesitter.parsers").filetype_to_parsername
+      ft_to_parser.javascriptreact = "jsx"
+      ft_to_parser.typescriptreact = "tsx"
 
-        -- Main TS setup with error handling
-        require("nvim-treesitter.configs").setup(opts)
-      end
+      -- Main TS setup
+      require("nvim-treesitter.configs").setup(opts)
 
-      -- Run setup with global error handling
-      pcall(setup_treesitter)
-
-      -- Add custom highlights for JSX with error handling
-      pcall(function()
-        vim.api.nvim_create_autocmd("ColorScheme", {
-          callback = function()
-            -- JSX highlights
-            vim.api.nvim_set_hl(0, "@tag.jsx", { link = "@tag.tsx" })
-            vim.api.nvim_set_hl(0, "@tag.delimiter.jsx", { link = "@tag.delimiter.tsx" })
-            vim.api.nvim_set_hl(0, "@constructor.jsx", { link = "@constructor.tsx" })
-          end,
-        })
-      end)
+      -- Add custom highlights for JSX
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = function()
+          -- JSX highlights
+          vim.api.nvim_set_hl(0, "@tag.jsx", { link = "@tag.tsx" })
+          vim.api.nvim_set_hl(0, "@tag.delimiter.jsx", { link = "@tag.delimiter.tsx" })
+          vim.api.nvim_set_hl(0, "@constructor.jsx", { link = "@constructor.tsx" })
+        end,
+      })
     end,
   },
   {
@@ -94,28 +83,10 @@ return {
     config = function(_, opts)
       require("treesitter-context").setup(opts)
 
-      -- Function to properly extract and set treesitter context colors
       local function update_context_highlights()
-        -- Direct color extraction from highlight groups
-        local function get_hl_color(group, attr, fallback)
-          local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group })
-          local val = ok and hl[attr]
-          if not val then
-            return fallback
-          end
-          if type(val) == "number" then
-            return string.format("#%06x", val)
-          end
-          return tostring(val)
-        end
-
-        -- Get background from Normal highlight group (works for all themes)
-        local bg_color = get_hl_color("Normal", "bg", "NONE")
-        local border_color = get_hl_color("FloatBorder", "fg", get_hl_color("Comment", "fg", "#666666"))
-
-        -- Set treesitter context highlights
-        vim.api.nvim_set_hl(0, "TreesitterContext", { bg = bg_color })
-        vim.api.nvim_set_hl(0, "TreesitterContextSeparator", { fg = border_color })
+        local colors = _G.get_ui_colors()
+        vim.api.nvim_set_hl(0, "TreesitterContext", { bg = colors.bg })
+        vim.api.nvim_set_hl(0, "TreesitterContextSeparator", { fg = colors.border })
       end
 
       -- Initial setup
