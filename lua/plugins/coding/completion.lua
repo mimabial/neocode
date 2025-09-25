@@ -36,8 +36,6 @@ return {
       },
     },
   },
-
-  -- Core completion engine
   {
     "hrsh7th/nvim-cmp",
     event = { "InsertEnter", "CmdlineEnter" },
@@ -59,7 +57,6 @@ return {
     config = function()
       local cmp = require("cmp")
       local luasnip = require("luasnip")
-      require("luasnip.loaders.from_lua").load({ paths = { vim.fn.stdpath("config") .. "/snippets" } })
       local lspkind = require("lspkind")
 
       local function build_sources()
@@ -76,13 +73,7 @@ return {
 
       -- Get UI config if available
       local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
-
-      local float_config = vim.tbl_deep_extend("force", {
-        border = "single",
-        padding = { 0, 1 },
-        max_width = 80,
-        max_height = 20,
-      }, ui_config.float or {})
+      local float_config = ui_config.float
 
       local win_opts = {
         winhighlight = "Normal:CmpNormal,FloatBorder:CmpBorder,CursorLine:CmpSel",
@@ -161,7 +152,6 @@ return {
               nvim_lua = " Lua",
               path = " Path",
               emoji = " Emoji",
-              copilot = " Copilot",
               codeium = " Codeium",
             }
 
@@ -172,11 +162,7 @@ return {
               ellipsis_char = "...",
               menu = menu_icons,
               before = function(entry, vim_item)
-                -- Add additional styling for AI sources
-                if entry.source.name == "copilot" then
-                  vim_item.kind = "Copilot"
-                  vim_item.kind_hl_group = "CmpItemKindCopilot"
-                elseif entry.source.name == "codeium" then
+                if entry.source.name == "codeium" then
                   vim_item.kind = "Codeium"
                   vim_item.kind_hl_group = "CmpItemKindCodeium"
                 end
@@ -192,18 +178,7 @@ return {
       -- Initial setup
       cmp.setup(cmp_config)
 
-      -- Reload cmp when AI provider changes
-      vim.api.nvim_create_autocmd("User", {
-        pattern = "AIProviderChanged",
-        callback = function()
-          -- Update sources in the stored config
-          cmp_config.sources = cmp.config.sources(build_sources())
-          -- Reconfigure cmp with updated sources
-          cmp.setup(cmp_config)
-        end,
-      })
-
-      -- Cmdline completions with enhanced styling
+      -- Cmdline completions
       cmp.setup.cmdline(":", {
         mapping = cmp.mapping.preset.cmdline(),
         sources = cmp.config.sources({ { name = "path" } }, { { name = "cmdline" } }),

@@ -179,6 +179,7 @@ return {
           icon = "",
           variants = { "hard", "medium", "soft" },
           setup = function(variant, transparency)
+            vim.o.background = "dark"
             if variant then vim.g.gruvbox_material_background = variant end
             if transparency then vim.g.gruvbox_material_transparent_background = 1 end
             vim.cmd("colorscheme gruvbox-material")

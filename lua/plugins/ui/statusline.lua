@@ -96,7 +96,7 @@ return {
 
           local lsp_names = {}
           for _, client in ipairs(buf_clients) do
-            if not vim.tbl_contains({ "copilot", "null-ls", "conform" }, client.name) then
+            if not vim.tbl_contains({ "null-ls", "conform" }, client.name) then
               table.insert(lsp_names, client.name)
             end
           end
@@ -178,22 +178,8 @@ return {
         },
         lualine_x = {
           lsp_status(),
-          -- { "filetype", icon_only = true },
-          -- {
-          --   "encoding",
-          --   fmt = string.upper,
-          --   color = { fg = colors.green },
-          --   cond = function() return vim.bo.fileencoding ~= "utf-8" end,
-          -- },
-          -- {
-          --   "fileformat",
-          --   symbols = { unix = " ", dos = " ", mac = " " },
-          --   color = { fg = colors.green },
-          --   cond = function() return vim.bo.fileformat ~= "unix" end,
-          -- },
         },
         lualine_y = {
-          -- { "progress", color = { fg = colors.fg, gui = "bold" } }
           ai_indicators(),
         },
         lualine_z = {
@@ -224,16 +210,7 @@ return {
   config = function(_, opts)
     require("lualine").setup(opts)
 
-    -- Update on colorscheme changes
     vim.api.nvim_create_autocmd("ColorScheme", {
-      callback = function()
-        require("lualine").refresh()
-      end,
-    })
-
-    -- Refresh on AI provider changes
-    vim.api.nvim_create_autocmd("User", {
-      pattern = "AIProviderChanged",
       callback = function()
         require("lualine").refresh()
       end,
