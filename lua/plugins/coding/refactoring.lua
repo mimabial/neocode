@@ -5,6 +5,13 @@ return {
     "nvim-lua/plenary.nvim",
     "nvim-treesitter/nvim-treesitter",
   },
+  keys = {
+    { "<leader>rr", mode = { "n", "x" },     desc = "Refactoring menu" },
+    { "<leader>re", mode = { "n", "x" },     desc = "Extract function" },
+    { "<leader>rv", mode = "x",              desc = "Extract variable" },
+    { "<leader>ri", desc = "Inline variable" },
+  },
+  ft = { "go", "typescript", "javascript", "typescriptreact", "javascriptreact" },
   config = function()
     require("refactoring").setup({
       prompt_func_return_type = {
