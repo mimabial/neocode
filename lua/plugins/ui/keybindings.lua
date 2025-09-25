@@ -165,6 +165,14 @@ return {
       { "<leader>uL", desc = "List available system themes" },
     })
 
+    -- Navic & Outline
+    which_key.add({
+      { "<leader>nb", desc = "Toggle breadcrumbs" },
+      { "<leader>o",  desc = "Toggle outline" },
+      { "]]",         desc = "Next reference" },
+      { "[[",         desc = "Prev reference" },
+    })
+
     -- Layouts
     which_key.add({
       { "<leader>L1", desc = "Coding Layout" },

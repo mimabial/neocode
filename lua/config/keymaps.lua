@@ -118,6 +118,13 @@ function M.setup()
   map("n", "<leader>ap", "<cmd>AICopilot<cr>", { desc = "Toggle Copilot" })
   map("n", "<leader>am", "<cmd>AICodeium<cr>", { desc = "Toggle Codeium" })
 
+
+  -- ========================================
+  -- Navic & Outline
+  -- ========================================
+  map("n", "<leader>nb", "<cmd>NavicToggle<cr>", { desc = "Toggle breadcrumbs" })
+  map("n", "<leader>o", "<cmd>Outline<cr>", { desc = "Toggle outline" })
+
   -- ========================================
   -- Layout Presets
   -- ========================================
