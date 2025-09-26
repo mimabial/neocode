@@ -167,7 +167,7 @@ return {
 
     -- Navic & Outline
     which_key.add({
-      { "<leader>nb", desc = "Toggle breadcrumbs" },
+      { "<leader>nb", desc = "Toggle dropbar" },
       { "<leader>o",  desc = "Toggle outline" },
       { "]]",         desc = "Next reference" },
       { "[[",         desc = "Prev reference" },

@@ -152,7 +152,7 @@ function M.setup()
   -- ========================================
   -- Navic & Outline
   -- ========================================
-  map("n", "<leader>nb", "<cmd>NavicToggle<cr>", { desc = "Toggle breadcrumbs" })
+  map("n", "<leader>nb", "<cmd>DropbarToggle<cr>", { desc = "Toggle breadcrumbs" })
   map("n", "<leader>o", "<cmd>Outline<cr>", { desc = "Toggle outline" })
 
   -- ========================================
