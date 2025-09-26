@@ -213,22 +213,6 @@ function M.setup()
     end,
     desc = "Disable auto comment continuation",
   })
-
-  -- Ensure winbar works with single buffers
-  vim.api.nvim_create_autocmd("BufEnter", {
-    callback = function()
-      if vim.bo.buftype == "" and vim.bo.filetype ~= "" then
-        vim.defer_fn(function()
-          if package.loaded["nvim-navic"] then
-            local navic = require("nvim-navic")
-            if navic.is_available() then
-              vim.wo.winbar = "%{%v:lua.require('nvim-navic').get_location()%}"
-            end
-          end
-        end, 50)
-      end
-    end,
-  })
 end
 
 return M

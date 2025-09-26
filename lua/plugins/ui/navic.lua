@@ -111,15 +111,18 @@ return {
 
         if client and client.server_capabilities.documentSymbolProvider then
           navic.attach(client, args.buf)
-          -- Auto-enable winbar for LSP buffers
-          vim.schedule(function()
-            if navic.is_available(args.buf) then
-              -- Use vim.wo instead of buf_set_option for immediate effect
-              vim.api.nvim_win_set_option(0, "winbar", "%{%v:lua.require('nvim-navic').get_location()%}")
-              -- Also set it globally for the buffer
-              vim.api.nvim_buf_set_option(args.buf, "winbar", "%{%v:lua.require('nvim-navic').get_location()%}")
-            end
-          end)
+        end
+      end,
+    })
+
+    -- Set winbar for any window displaying a navic-enabled buffer
+    vim.api.nvim_create_autocmd({ "BufWinEnter", "WinEnter" }, {
+      callback = function()
+        if package.loaded["nvim-navic"] then
+          local navic = require("nvim-navic")
+          if navic.is_available() then
+            vim.wo.winbar = "%{%v:lua.require('nvim-navic').get_location()%}"
+          end
         end
       end,
     })
