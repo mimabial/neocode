@@ -84,6 +84,17 @@ return {
             require("bamboo").load()
           end,
         },
+        ["bauhaus"] = {
+          icon = "",
+          variants = { "default", "bauhaus", "bluesky" },
+          setup = function(variant, transparency)
+            require("bauhaus").setup({
+              variant = variant,
+              transparent = transparency,
+            })
+            vim.cmd("colorscheme bauhaus")
+          end,
+        },
         ["catppuccin"] = {
           icon = "",
           variants = { "latte", "frappe", "macchiato", "mocha" },
@@ -94,17 +105,6 @@ return {
             })
             require("catppuccin").compile()
             vim.cmd("colorscheme catppuccin" .. (variant and "-" .. variant or ""))
-          end,
-        },
-        ["cyberdream"] = {
-          icon = "",
-          variants = { "default", "bauhaus", "bluesky" },
-          setup = function(variant, transparency)
-            require("cyberdream").setup({
-              variant = variant,
-              transparent = transparency,
-            })
-            vim.cmd("colorscheme cyberdream")
           end,
         },
         ["darkvoid"] = {
@@ -166,15 +166,6 @@ return {
             vim.cmd("colorscheme everforest")
           end,
         },
-        ["gruvbox"] = {
-          icon = "",
-          variants = { "dark", "light" },
-          setup = function(variant, transparency)
-            if variant then vim.o.background = variant end
-            if transparency then require("gruvbox").setup({ transparent_mode = true }) end
-            vim.cmd("colorscheme gruvbox")
-          end,
-        },
         ["gruvbox-material"] = {
           icon = "",
           variants = { "hard", "medium", "soft" },
@@ -190,10 +181,10 @@ return {
           variants = { "wave", "dragon", "lotus" },
           setup = function(variant, transparency)
             require("kanagawa").setup({
-              theme = variant,
+              theme = variant and variant or "wave",
               transparent = transparency,
             })
-            vim.cmd("colorscheme kanagawa" .. "-" .. variant)
+            vim.cmd("colorscheme kanagawa" .. "-" .. (variant and variant or "wave"))
           end,
         },
         ["monokai-pro"] = {
@@ -258,7 +249,7 @@ return {
           icon = "",
           variants = {},
           setup = function(variant, transparency)
-            if transparency then require("solarized-osaka").setup({ transparent = true }) end
+            require("solarized-osaka").setup({ transparent = transparency })
             vim.cmd("colorscheme solarized-osaka")
           end,
         },
@@ -605,11 +596,10 @@ return {
   { "Shatur/neovim-ayu",                lazy = true, priority = 950 },
   { "ribru17/bamboo.nvim",              lazy = true, priority = 950 },
   { "catppuccin/nvim",                  lazy = true, priority = 950 },
-  { "mimabial/cyberdream.nvim",         lazy = true, priority = 950 },
+  { "mimabial/bauhaus.nvim",            lazy = true, priority = 950 },
   { "aliqyan-21/darkvoid.nvim",         lazy = true, priority = 950 },
   { "decaycs/decay.nvim",               lazy = true, priority = 950 },
   { "sainnhe/everforest",               lazy = true, priority = 950 },
-  { "ellisonleao/gruvbox.nvim",         lazy = true, priority = 950 },
   { "sainnhe/gruvbox-material",         lazy = true, priority = 950 },
   { "loctvl842/monokai-pro.nvim",       lazy = true, priority = 950 },
   { "shaunsingh/nord.nvim",             lazy = true, priority = 950 },

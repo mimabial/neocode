@@ -77,7 +77,9 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "BufferLineIndicatorSelected", { fg = colors.blue, bg = colors.bg })
   vim.api.nvim_set_hl(0, "BufferLineFill", { fg = colors.fg, bg = colors.bg })
 
-  -- diagnostic highlights
+  -- notification highlights
+  vim.api.nvim_set_hl(0, "NotifyBorder", { fg = colors.border })
+  vim.api.nvim_set_hl(0, "NotifyBackground", { bg = colors.bg })
 
   -- Telescope highlights
   vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = colors.orange })
