@@ -45,6 +45,9 @@ function M.setup()
   opt.hlsearch = true   -- Highlight search results
   opt.incsearch = true  -- Incremental search
 
+  -- Winbar settings
+  opt.winbar = "" -- Allow winbar to be set by plugins
+
   -- Performance tweaks
   opt.updatetime = 300 -- Faster completion
   opt.timeoutlen = 200 -- Faster timeout for mapped sequences

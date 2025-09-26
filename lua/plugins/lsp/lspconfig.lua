@@ -28,7 +28,7 @@ return {
       end
 
       require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "ts_ls", "html", "jsonls" },
+        ensure_installed = { "lua_ls", "ts_ls", "html", "jsonls", "pyright" },
         automatic_installation = false,
         handlers = {
           -- Default handler for all servers

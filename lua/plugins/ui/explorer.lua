@@ -84,22 +84,71 @@ return {
     opts = function()
       return {
         disable_netrw = true,
+        hijack_netrw = true,
         hijack_cursor = true,
         sync_root_with_cwd = true,
         respect_buf_cwd = true,
+        log = {
+          enable = true,
+          truncate = true,
+          types = {
+            all = false,
+            config = false,
+            copy_paste = false,
+            diagnostics = true,
+            git = false,
+            profile = false,
+            watcher = true,
+          },
+        },
         update_focused_file = {
           enable = true,
           update_root = false,
         },
         view = {
-          adaptive_size = false,
-          width = 30,
-          side = "left",
-          preserve_window_proportions = true,
+          float = {
+            enable = true,
+            open_win_config = function()
+              local screen_w = vim.opt.columns:get()
+              local screen_h = vim.opt.lines:get() - vim.opt.cmdheight:get()
+              local w_h = 30
+              local s_h = 98
+              local center_x = (screen_w - w_h) - 2
+              local center_y = ((vim.opt.lines:get() - s_h) / 5) - vim.opt.cmdheight:get()
+              return {
+                border = "single",
+                relative = "editor",
+                row = center_y,
+                col = center_x,
+                width = w_h,
+                height = s_h,
+              }
+            end,
+          },
+          width = function()
+            return math.floor(vim.opt.columns:get() * 5)
+          end,
+        },
+        diagnostics = {
+          enable = false,
+          show_on_dirs = false,
+          show_on_open_dirs = false,
+          debounce_delay = 500,
+
+          severity = {
+            min = vim.diagnostic.severity.HINT,
+            max = vim.diagnostic.severity.ERROR,
+          },
+          icons = {
+            hint = "H",
+            info = "I",
+            warning = "W",
+            error = "E",
+          },
         },
         git = {
           enable = true,
-          ignore = false,
+          ignore = true,
         },
         filesystem_watchers = {
           enable = true,
@@ -107,34 +156,59 @@ return {
         actions = {
           open_file = {
             resize_window = true,
-            window_picker = {
-              enable = true,
-            },
+          },
+          remove_file = {
+            close_window = true,
+          },
+          change_dir = {
+            enable = true,
+            global = true,
+            restrict_above_cwd = false,
           },
         },
         renderer = {
-          root_folder_label = false,
+          root_folder_label = true,
           highlight_git = true,
-          highlight_opened_files = "name",
+          highlight_opened_files = "none",
+          special_files = { "Makefile", "README.md", "readme.md", "LICENSE", "Dockerfile" },
+
           indent_markers = {
             enable = true,
+            icons = {
+              corner = "└",
+              edge = "│",
+              none = "",
+            },
           },
           icons = {
+            git_placement = "after",
+            modified_placement = "after",
             show = {
-              file = true,
-              folder = true,
-              folder_arrow = true,
+              file = false,
+              folder = false,
+              folder_arrow = false,
               git = true,
             },
+
             glyphs = {
+              default = "",
+              symlink = "",
+              folder = {
+                default = "/",
+                empty = "/",
+                empty_open = "/",
+                open = "/",
+                symlink = "/",
+                symlink_open = "/",
+              },
               git = {
-                unstaged = "•",
-                staged = "✓",
-                unmerged = "",
-                renamed = "➜",
-                untracked = "★",
-                deleted = "",
-                ignored = "◌",
+                unstaged = "[u]",
+                staged = "[s]",
+                unmerged = "[ ]",
+                renamed = "[r]",
+                untracked = "[?]",
+                deleted = "[d]",
+                ignored = "[i]",
               },
             },
           },
@@ -147,21 +221,6 @@ return {
             "^node_modules$",
             "^.cache$",
             "^.DS_Store$",
-          },
-          exclude = {},
-        },
-        diagnostics = {
-          enable = true,
-          show_on_dirs = true,
-          severity = {
-            min = vim.diagnostic.severity.HINT,
-            max = vim.diagnostic.severity.ERROR,
-          },
-          icons = {
-            hint = " ",
-            info = " ",
-            warning = " ",
-            error = " ",
           },
         },
         on_attach = function(bufnr)
@@ -191,25 +250,6 @@ return {
     end,
     config = function(_, opts)
       require("nvim-tree").setup(opts)
-
-      -- Explorer toggle command
-      vim.api.nvim_create_user_command("ExplorerToggle", function(opts)
-        local explorer = opts.args ~= "" and opts.args or vim.g.default_explorer or "oil"
-
-        if explorer == "nvim-tree" then
-          vim.cmd("NvimTreeToggle")
-        elseif explorer == "oil" then
-          require("oil").open()
-        elseif explorer == "netrw" then
-          vim.cmd("Explore")
-        end
-      end, {
-        nargs = "?",
-        complete = function()
-          return { "oil", "nvim-tree", "netrw" }
-        end,
-        desc = "Toggle file explorer (oil, nvim-tree, or netrw)",
-      })
     end,
   },
 }
