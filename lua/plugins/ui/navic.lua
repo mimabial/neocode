@@ -34,7 +34,7 @@ return {
       TypeParameter = " ",
     },
     lsp = {
-      auto_attach = true
+      auto_attach = false
     },
     highlight = true,
     separator = " ",
@@ -45,7 +45,8 @@ return {
     click = false,
   },
   config = function(_, opts)
-    require("nvim-navic").setup(opts)
+    local navic = require("nvim-navic")
+    navic.setup(opts)
 
     local function setup_highlights()
       local colors = _G.get_ui_colors()
@@ -86,9 +87,33 @@ return {
     setup_highlights()
     vim.api.nvim_create_autocmd("ColorScheme", { callback = setup_highlights })
 
+    -- Set up navic when LSP attaches
+    vim.api.nvim_create_autocmd("LspAttach", {
+      callback = function(event)
+        local client = vim.lsp.get_client_by_id(event.data.client_id)
+        if client and client.server_capabilities.documentSymbolProvider then
+          navic.attach(client, event.buf)
+        end
+      end,
+    })
+
+    -- Set winbar for all buffers when navic is available
+    vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+      callback = function(event)
+        -- Skip for certain filetypes
+        local ft = vim.bo[event.buf].filetype
+        if vim.tbl_contains({ "oil", "NvimTree", "neo-tree", "Trouble", "lazy", "mason", "TelescopePrompt" }, ft) then
+          return
+        end
+
+        if navic.is_available(event.buf) then
+          vim.wo.winbar = "%{%v:lua.require('nvim-navic').get_location()%}"
+        end
+      end,
+    })
+
     -- Create command to toggle navic in winbar
     vim.api.nvim_create_user_command("NavicToggle", function()
-      local navic = require("nvim-navic")
       if vim.wo.winbar and vim.wo.winbar:find("navic") then
         vim.wo.winbar = ""
         vim.notify("Navic disabled", vim.log.levels.INFO)
@@ -101,14 +126,5 @@ return {
         end
       end
     end, { desc = "Toggle navic breadcrumbs in winbar" })
-
-    vim.api.nvim_create_autocmd("BufEnter", {
-      callback = function()
-        local navic = require("nvim-navic")
-        if navic.is_available() then
-          vim.wo.winbar = "%{%v:lua.require('nvim-navic').get_location()%}"
-        end
-      end,
-    })
   end,
 }

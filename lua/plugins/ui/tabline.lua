@@ -50,7 +50,7 @@ return {
       show_buffer_close_icons = true,
       show_tab_indicators = true,
       separator_style = "thin",
-      always_show_bufferline = true,
+      always_show_bufferline = false,
     },
   },
   config = function(_, opts)
