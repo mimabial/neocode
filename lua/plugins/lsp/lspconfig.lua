@@ -19,12 +19,6 @@ return {
         if vim.fn.has("nvim-0.10") == 1 and client.server_capabilities.inlayHintProvider then
           vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
         end
-
-        -- Attach navic if available
-        if client.server_capabilities.documentSymbolProvider then
-          local ok, navic = pcall(require, "nvim-navic")
-          if ok then navic.attach(client, bufnr) end
-        end
       end
 
       require("mason-lspconfig").setup({

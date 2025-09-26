@@ -3,7 +3,7 @@ return {
   dependencies = {
     "neovim/nvim-lspconfig",
   },
-  event = "LspAttach",
+  lazy = false,
   opts = {
     icons = {
       File = " ",
@@ -34,8 +34,7 @@ return {
       TypeParameter = " ",
     },
     lsp = {
-      auto_attach = false, -- We'll manually attach in LSP config
-      preference = { "gopls", "ts_ls", "lua_ls", "pyright" },
+      auto_attach = true
     },
     highlight = true,
     separator = " ",
@@ -103,26 +102,11 @@ return {
       end
     end, { desc = "Toggle navic breadcrumbs in winbar" })
 
-    -- Auto-enable winbar for supported buffers
-    vim.api.nvim_create_autocmd("LspAttach", {
-      callback = function(args)
-        local client = vim.lsp.get_client_by_id(args.data.client_id)
-        local navic = require("nvim-navic")
-
-        if client and client.server_capabilities.documentSymbolProvider then
-          navic.attach(client, args.buf)
-        end
-      end,
-    })
-
-    -- Set winbar for any window displaying a navic-enabled buffer
-    vim.api.nvim_create_autocmd({ "BufWinEnter", "WinEnter" }, {
+    vim.api.nvim_create_autocmd("BufEnter", {
       callback = function()
-        if package.loaded["nvim-navic"] then
-          local navic = require("nvim-navic")
-          if navic.is_available() then
-            vim.wo.winbar = "%{%v:lua.require('nvim-navic').get_location()%}"
-          end
+        local navic = require("nvim-navic")
+        if navic.is_available() then
+          vim.wo.winbar = "%{%v:lua.require('nvim-navic').get_location()%}"
         end
       end,
     })
