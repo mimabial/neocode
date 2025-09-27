@@ -80,12 +80,18 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "BufferLineCloseButtonSelected", { fg = colors.red, bg = colors.bg })
   vim.api.nvim_set_hl(0, "BufferLineCloseButtonVisible", { fg = colors.gray, bg = colors.bg })
 
-  -- Icon highlights
-  vim.api.nvim_set_hl(0, "BufferLineIcon", { fg = colors.blue, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineIconSelected", { fg = colors.blue, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineIconVisible", { fg = colors.blue, bg = colors.bg })
+  -- Separator highlights
+  vim.api.nvim_set_hl(0, "BufferLineSeparator", { fg = colors.bg, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "BufferLineSeparatorSelected", { fg = colors.bg, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "BufferLineSeparatorVisible", { fg = colors.bg, bg = colors.bg })
 
-  -- Underline indicator for selected buffer
+  -- Icon highlights
+  vim.api.nvim_set_hl(0, "BufferLineIcon", { fg = colors.blue, bg = colors.blue })
+  vim.api.nvim_set_hl(0, "BufferLineIconSelected", { fg = colors.blue, bg = colors.blue })
+  vim.api.nvim_set_hl(0, "BufferLineIconVisible", { fg = colors.blue, bg = colors.blue })
+
+  -- Indicator highlights
+  vim.api.nvim_set_hl(0, "BufferLineIndicator", { fg = colors.border, bg = colors.bg })
   vim.api.nvim_set_hl(0, "BufferLineIndicatorSelected", { fg = colors.blue, bg = colors.bg, underline = true })
 
   vim.api.nvim_set_hl(0, "BufferLineError", { fg = colors.red, bg = colors.bg })

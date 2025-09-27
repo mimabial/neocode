@@ -8,12 +8,14 @@ return {
   opts = {
     options = {
       mode = "buffers",
+      themable = true,
       numbers = "none",
       close_command = "bdelete! %d",
       right_mouse_command = "bdelete! %d",
       left_mouse_command = "buffer %d",
       indicator = {
-        style = "underline",
+        icon = "│",
+        style = "icon",
       },
       left_trunc_marker = "",
       right_trunc_marker = "",
@@ -52,6 +54,7 @@ return {
     },
   },
   config = function(_, opts)
+    require("mini.icons").setup()
     require("bufferline").setup(opts)
 
     -- Buffer navigation keymaps
