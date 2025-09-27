@@ -33,14 +33,9 @@ require("config.options").setup()
 require("config.ui").setup()
 require("config.lazy").setup()
 require("config.keymaps").setup()
-require("config.autocmds").setup()
 require("config.commands").setup()
 
 -- Load additional modules
+require("autocmds.init").setup()
 require("autocmds.diagnostics").setup()
 require("commands.lazy").setup()
-
--- Set colorscheme with fallback
--- if not pcall(vim.cmd.colorscheme, "kanagawa") then
---   vim.cmd.colorscheme("habamax")
--- end

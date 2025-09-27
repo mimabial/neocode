@@ -2,44 +2,44 @@ local M = {}
 
 function M.setup()
   -- 1) Line number toggling
-  local num_grp = vim.api.nvim_create_augroup("NumToggle", { clear = true })
+  local num_grp = vim.api.nvim_create_augroup("NumberToggle", { clear = true })
+
+  -- Enable numbers for normal buffers only once
   vim.api.nvim_create_autocmd("BufWinEnter", {
     group = num_grp,
     callback = function()
       local ft = vim.bo.filetype
-      if ft:match("^(oil|terminal|help|lazy)$") then
-        return
-      end
-      vim.wo.number = true
-      if not vim.g.disable_relative_number then
-        vim.wo.relativenumber = true
+      if not ft:match("^(oil|terminal|help|lazy|NvimTree|neo%-tree|Trouble|trouble|notify)$") then
+        vim.wo.number = true
+        vim.wo.relativenumber = not vim.g.disable_relative_number
       end
     end,
     desc = "Enable numbers for normal buffers",
   })
-  vim.api.nvim_create_autocmd({ "InsertEnter", "BufLeave", "FocusLost", "WinLeave" }, {
+
+  -- Toggle relative numbers on focus/mode changes
+  vim.api.nvim_create_autocmd({ "InsertEnter", "WinLeave" }, {
     group = num_grp,
     callback = function()
       if vim.wo.number then
         vim.wo.relativenumber = false
       end
     end,
-    desc = "Disable relative numbers when leaving buffer or entering insert mode",
+    desc = "Disable relative numbers on insert/unfocus",
   })
-  vim.api.nvim_create_autocmd({ "InsertLeave", "BufEnter", "FocusGained", "WinEnter" }, {
+
+  vim.api.nvim_create_autocmd({ "InsertLeave", "WinEnter" }, {
     group = num_grp,
     callback = function()
       if vim.wo.number and not vim.g.disable_relative_number then
         vim.wo.relativenumber = true
       end
     end,
-    desc = "Re-enable relative numbers when entering buffer or leaving insert mode",
+    desc = "Enable relative numbers on normal/focus",
   })
 
   -- 2) Yank highlighting
-  vim.api.nvim_create_augroup("YankHighlight", { clear = true })
   vim.api.nvim_create_autocmd("TextYankPost", {
-    group = "YankHighlight",
     callback = function()
       vim.highlight.on_yank({ timeout = 300 })
     end,
@@ -47,9 +47,7 @@ function M.setup()
   })
 
   -- 3) Auto-resize splits
-  vim.api.nvim_create_augroup("AutoResizeSplits", { clear = true })
   vim.api.nvim_create_autocmd("VimResized", {
-    group = "AutoResizeSplits",
     callback = function()
       vim.cmd("tabdo wincmd =")
     end,
@@ -57,9 +55,7 @@ function M.setup()
   })
 
   -- 4) Restore cursor position
-  vim.api.nvim_create_augroup("RestoreCursor", { clear = true })
   vim.api.nvim_create_autocmd("BufReadPost", {
-    group = "RestoreCursor",
     callback = function()
       local mark = vim.api.nvim_buf_get_mark(0, '"')
       if mark[1] > 0 and mark[1] <= vim.api.nvim_buf_line_count(0) then
@@ -73,23 +69,12 @@ function M.setup()
   local indent_grp = vim.api.nvim_create_augroup("FileTypeIndent", { clear = true })
   vim.api.nvim_create_autocmd("FileType", {
     group = indent_grp,
-    pattern = {
-      "lua",
-      "javascript",
-      "typescript",
-      "json",
-      "html",
-      "css",
-      "yaml",
-      "markdown",
-      "tsx",
-      "jsx",
-    },
+    pattern = { "lua", "javascript", "typescript", "json", "html", "css", "yaml", "markdown", "tsx", "jsx" },
     callback = function()
       vim.bo.tabstop = 2
       vim.bo.shiftwidth = 2
     end,
-    desc = "Set 2-space indent for web and templating files",
+    desc = "Set 2-space indent for web languages",
   })
   vim.api.nvim_create_autocmd("FileType", {
     group = indent_grp,
@@ -102,9 +87,7 @@ function M.setup()
   })
 
   -- 6) Directory auto-open
-  vim.api.nvim_create_augroup("DirExplorer", { clear = true })
   vim.api.nvim_create_autocmd("BufEnter", {
-    group = "DirExplorer",
     callback = function()
       local name = vim.api.nvim_buf_get_name(0)
       if vim.fn.isdirectory(name) == 1 then
@@ -114,100 +97,47 @@ function M.setup()
     desc = "Open directory path in configured explorer",
   })
 
-  -- 7) Linting on save/open
-  vim.api.nvim_create_augroup("AutoLint", { clear = true })
-  vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost" }, {
-    group = "AutoLint",
-    callback = function()
-      local ok, lint = pcall(require, "lint")
-      if ok then
-        lint.try_lint()
-      end
-    end,
-    desc = "Run lint checks on file save or open",
-  })
-
-  -- 8) Exit notify windows with 'q'
-  vim.api.nvim_create_autocmd("FileType", {
-    pattern = "notify",
-    callback = function()
-      -- map 'q' to close the float
-      vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = true, silent = true, desc = "Close notification" })
-      -- (optionally) map <Esc> as well
-      vim.keymap.set("n", "<Esc>", "<cmd>close<cr>", { buffer = true, silent = true })
-    end,
-  })
-
-  -- 9) Auto-reload changed files
-  vim.api.nvim_create_augroup("AutoReload", { clear = true })
-  vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHoldI" }, {
-    group = "AutoReload",
-    callback = function()
-      if vim.fn.mode() ~= "c" and not vim.bo.modified and vim.fn.expand("%") ~= "" then
-        vim.cmd("checktime")
-      end
-    end,
-    desc = "Reload file if changed outside Neovim",
-  })
-
-  -- 10) Terminal mode settings
-  vim.api.nvim_create_augroup("TerminalMode", { clear = true })
+  -- 7) Terminal mode settings
   vim.api.nvim_create_autocmd("TermOpen", {
-    group = "TerminalMode",
     callback = function()
       vim.opt_local.number = false
       vim.opt_local.relativenumber = false
       vim.cmd("startinsert")
+
       local buf = vim.api.nvim_get_current_buf()
-      -- Define terminal-mode mappings
-      local term_mappings = {
-        ["<Esc>"] = "<C-\\><C-n>",
-        ["<C-h>"] = "<C-\\><C-n><C-w>h",
-        ["<C-j>"] = "<C-\\><C-n><C-w>j",
-        ["<C-k>"] = "<C-\\><C-n><C-w>k",
-        ["<C-l>"] = "<C-\\><C-n><C-w>l",
-      }
-      for lhs, rhs in pairs(term_mappings) do
-        vim.keymap.set("t", lhs, rhs, { buffer = buf, silent = true })
-      end
+      local opts = { buffer = buf, silent = true }
+      vim.keymap.set("t", "<Esc>", "<C-\\><C-n>", opts)
+      vim.keymap.set("t", "<C-h>", "<C-\\><C-n><C-w>h", opts)
+      vim.keymap.set("t", "<C-j>", "<C-\\><C-n><C-w>j", opts)
+      vim.keymap.set("t", "<C-k>", "<C-\\><C-n><C-w>k", opts)
+      vim.keymap.set("t", "<C-l>", "<C-\\><C-n><C-w>l", opts)
     end,
     desc = "Configure terminal keymaps",
   })
 
-  -- 11) Refresh gitsigns after lazygit
-  local git_grp = vim.api.nvim_create_augroup("GitSignsRefresh", { clear = true })
+  -- 8) Refresh gitsigns after lazygit
   vim.api.nvim_create_autocmd("TermClose", {
-    group = git_grp,
     pattern = "*lazygit",
-    desc = "Refresh gitsigns on lazygit exit",
     callback = function()
-      local ok, gs = pcall(require, "gitsigns")
-      if ok and gs.refresh then
-        gs.refresh()
-      end
+      pcall(function()
+        require("gitsigns").refresh()
+      end)
     end,
+    desc = "Refresh gitsigns on lazygit exit",
   })
 
-  -- 12) Update window title
-  vim.api.nvim_create_augroup("WinTitle", { clear = true })
+  -- 9) Update window title
   vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost", "VimResume" }, {
-    group = "WinTitle",
     callback = function()
       local name = vim.fn.expand("%:t")
-      if name == "" then
-        name = "Untitled"
-      end
-      vim.opt.titlestring = string.format("%s - NVIM", name)
+      vim.opt.titlestring = (name ~= "" and name or "Neovim") .. " - NVIM"
       vim.opt.title = true
     end,
     desc = "Set window title",
   })
 
-  -- 13) Disable auto comment continuation
-  vim.api.nvim_create_augroup("NoCommentCont", { clear = true })
+  -- 10) Disable auto comment continuation
   vim.api.nvim_create_autocmd("FileType", {
-    group = "NoCommentCont",
-    pattern = "*",
     callback = function()
       vim.bo.formatoptions = vim.bo.formatoptions:gsub("[cro]", "")
     end,

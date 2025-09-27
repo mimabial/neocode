@@ -26,12 +26,10 @@ return {
   config = function(_, opts)
     local lint = require("lint")
 
-    --- Check if a given command is executable
     local function is_executable(cmd)
       return type(cmd) == "string" and vim.fn.executable(cmd) == 1
     end
 
-    --- Filter linters to only those that are executable
     local function filter_linters(list)
       local out = {}
       for _, name in ipairs(list) do
@@ -43,14 +41,12 @@ return {
       return out
     end
 
-    --- Build filtered linters_by_ft table
     local linters_by_ft = {}
     for ft, linters_for_ft in pairs(opts.linters_by_ft) do
       linters_by_ft[ft] = filter_linters(linters_for_ft)
     end
     lint.linters_by_ft = linters_by_ft
 
-    --- Merge additional linter settings
     for name, config in pairs(opts.linters) do
       if lint.linters[name] then
         for key, val in pairs(config) do
@@ -59,7 +55,6 @@ return {
       end
     end
 
-    --- Autocommand to auto-lint
     vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
       callback = function()
         local ft = vim.bo.filetype
@@ -69,7 +64,6 @@ return {
       end,
     })
 
-    --- Manual lint keybinding
     vim.keymap.set("n", "<leader>cl", function()
       lint.try_lint()
       vim.notify("Triggered linting", vim.log.levels.INFO)

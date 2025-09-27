@@ -175,7 +175,7 @@ return {
           indent_markers = {
             enable = true,
             icons = {
-              corner = "└",
+              corner = "", -- alt: └
               edge = "│",
               none = "",
             },
@@ -202,13 +202,13 @@ return {
                 symlink_open = "/",
               },
               git = {
-                unstaged = "[u]",
-                staged = "[s]",
-                unmerged = "[ ]",
-                renamed = "[r]",
-                untracked = "[?]",
-                deleted = "[d]",
-                ignored = "[i]",
+                unstaged = "󰰩",
+                staged = "󰰣",
+                unmerged = " ",
+                renamed = "󰰠",
+                untracked = "",
+                deleted = "󰯶",
+                ignored = "󰰅",
               },
             },
           },

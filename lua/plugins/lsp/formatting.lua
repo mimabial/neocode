@@ -44,7 +44,6 @@ return {
   opts = function()
     local util = require("conform.util")
 
-    -- Check if templ supports stdin formatting
     local function check_templ_supports_stdin()
       local handle = io.popen("templ version 2>&1")
       if not handle then
