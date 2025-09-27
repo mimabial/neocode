@@ -10,7 +10,7 @@ return {
     },
     highlight = true,
     separator = " ",
-    depth_limit = 5,
+    depth_limit = 4,
     depth_limit_indicator = "..",
     safe_output = true,
     lazy_update_context = false,
@@ -65,6 +65,19 @@ return {
         -- Skip for certain filetypes
         local ft = vim.bo[event.buf].filetype
         if vim.tbl_contains({ "oil", "NvimTree", "neo-tree", "Trouble", "lazy", "mason", "TelescopePrompt" }, ft) then
+          return
+        end
+
+        -- Skip for floating windows (telescope popups)
+        local win_config = vim.api.nvim_win_get_config(0)
+        if win_config.relative ~= "" then
+          return
+        end
+
+        -- Skip for very small windows
+        local win_height = vim.api.nvim_win_get_height(0)
+        local win_width = vim.api.nvim_win_get_width(0)
+        if win_height < 5 or win_width < 20 then
           return
         end
 

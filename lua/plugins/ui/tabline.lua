@@ -23,7 +23,7 @@ return {
       diagnostics = "nvim_lsp",
       diagnostics_update_in_insert = false,
       diagnostics_indicator = function(count, level)
-        local icon = level:match("error") and " " or " "
+        local icon = level:match("error") and "" or ""
         return " " .. icon .. count
       end,
       offsets = {
@@ -40,7 +40,7 @@ return {
           separator = true,
         },
       },
-      show_buffer_icons = true,
+      show_buffer_icons = false,
       show_buffer_close_icons = true,
       show_close_icon = true,
       show_tab_indicators = true,
