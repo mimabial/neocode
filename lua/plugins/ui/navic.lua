@@ -5,36 +5,8 @@ return {
   },
   lazy = false,
   opts = {
-    icons = {
-      File = " ",
-      Module = " ",
-      Namespace = " ",
-      Package = " ",
-      Class = " ",
-      Method = " ",
-      Property = " ",
-      Field = " ",
-      Constructor = " ",
-      Enum = " ",
-      Interface = " ",
-      Function = " ",
-      Variable = " ",
-      Constant = " ",
-      String = " ",
-      Number = " ",
-      Boolean = " ",
-      Array = " ",
-      Object = " ",
-      Key = " ",
-      Null = " ",
-      EnumMember = " ",
-      Struct = " ",
-      Event = " ",
-      Operator = " ",
-      TypeParameter = " ",
-    },
     lsp = {
-      auto_attach = false
+      auto_attach = true
     },
     highlight = true,
     separator = " ",
@@ -87,16 +59,6 @@ return {
     setup_highlights()
     vim.api.nvim_create_autocmd("ColorScheme", { callback = setup_highlights })
 
-    -- Set up navic when LSP attaches
-    vim.api.nvim_create_autocmd("LspAttach", {
-      callback = function(event)
-        local client = vim.lsp.get_client_by_id(event.data.client_id)
-        if client and client.server_capabilities.documentSymbolProvider then
-          navic.attach(client, event.buf)
-        end
-      end,
-    })
-
     -- Set winbar for all buffers when navic is available
     vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
       callback = function(event)
@@ -106,9 +68,8 @@ return {
           return
         end
 
-        if navic.is_available(event.buf) then
-          vim.wo.winbar = "%{%v:lua.require('nvim-navic').get_location()%}"
-        end
+        -- Always set winbar (will be empty if navic not available)
+        vim.wo.winbar = "%{%v:lua.require('nvim-navic').get_location()%}"
       end,
     })
 
@@ -118,12 +79,8 @@ return {
         vim.wo.winbar = ""
         vim.notify("Navic disabled", vim.log.levels.INFO)
       else
-        if navic.is_available() then
-          vim.wo.winbar = "%{%v:lua.require('nvim-navic').get_location()%}"
-          vim.notify("Navic enabled", vim.log.levels.INFO)
-        else
-          vim.notify("Navic not available for this buffer", vim.log.levels.WARN)
-        end
+        vim.wo.winbar = "%{%v:lua.require('nvim-navic').get_location()%}"
+        vim.notify("Navic enabled", vim.log.levels.INFO)
       end
     end, { desc = "Toggle navic breadcrumbs in winbar" })
   end,
