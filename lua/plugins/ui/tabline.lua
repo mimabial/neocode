@@ -13,10 +13,8 @@ return {
       right_mouse_command = "bdelete! %d",
       left_mouse_command = "buffer %d",
       indicator = {
-        icon = "▎",
-        style = "icon",
+        style = "underline",
       },
-      modified_icon = "●",
       left_trunc_marker = "",
       right_trunc_marker = "",
       max_name_length = 30,
@@ -34,12 +32,6 @@ return {
           separator = true,
         },
         {
-          filetype = "neo-tree",
-          text = "File Explorer",
-          text_align = "center",
-          separator = true,
-        },
-        {
           filetype = "oil",
           text = "File Explorer",
           text_align = "center",
@@ -48,9 +40,15 @@ return {
       },
       show_buffer_icons = true,
       show_buffer_close_icons = true,
+      show_close_icon = true,
       show_tab_indicators = true,
       separator_style = "thin",
-      always_show_bufferline = false,
+      always_show_bufferline = true,
+      hover = {
+        enabled = true,
+        delay = 200,
+        reveal = { 'close' }
+      },
     },
   },
   config = function(_, opts)

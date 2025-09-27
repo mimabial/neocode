@@ -9,7 +9,7 @@ function M.setup()
     group = num_grp,
     callback = function()
       local ft = vim.bo.filetype
-      if not ft:match("^(oil|terminal|help|lazy|NvimTree|neo%-tree|Trouble|trouble|notify)$") then
+      if not ft:match("^(oil|terminal|help|lazy|Trouble|trouble|notify)$") then
         vim.wo.number = true
         vim.wo.relativenumber = not vim.g.disable_relative_number
       end

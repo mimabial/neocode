@@ -163,7 +163,7 @@ return {
           change_dir = {
             enable = true,
             global = true,
-            restrict_above_cwd = false,
+            restrict_above_cwd = true,
           },
         },
         renderer = {
@@ -175,8 +175,10 @@ return {
           indent_markers = {
             enable = true,
             icons = {
-              corner = "", -- alt: └
-              edge = "│",
+              corner = "", -- alt: └ 
+              edge = "┆", --alt: │
+              item = "┆", -- alt: ├
+              bottom = "─",
               none = "",
             },
           },
@@ -250,6 +252,14 @@ return {
     end,
     config = function(_, opts)
       require("nvim-tree").setup(opts)
+      local function setup_nvim_tree_highlights()
+        local colors = _G.get_ui_colors()
+        vim.api.nvim_set_hl(0, "NvimTreeNormal", { bg = colors.bg, fg = colors.fg })
+        vim.api.nvim_set_hl(0, "NvimTreeEndOfBuffer", { bg = colors.bg, fg = colors.bg })
+      end
+
+      setup_nvim_tree_highlights()
+      vim.api.nvim_create_autocmd("ColorScheme", { callback = setup_nvim_tree_highlights })
     end,
   },
 }

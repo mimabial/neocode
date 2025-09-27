@@ -50,7 +50,11 @@ local function setup_highlights()
 
   -- Float window
   vim.api.nvim_set_hl(0, "FloatBorder", { fg = colors.border })
-  vim.api.nvim_set_hl(0, "NormalFloat", { bg = colors.popup_bg })
+  vim.api.nvim_set_hl(0, "NormalFloat", { bg = colors.bg })
+
+  -- Winbar highlights
+  vim.api.nvim_set_hl(0, "WinBar", { bg = colors.bg, fg = colors.fg })
+  vim.api.nvim_set_hl(0, "WinBarNC", { bg = colors.bg, fg = colors.gray })
 
   -- Completion menu
   vim.api.nvim_set_hl(0, "CmpNormal", { bg = colors.bg })
@@ -70,6 +74,19 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "BufferLineBufferVisible", { fg = colors.fg, bg = colors.bg })
   vim.api.nvim_set_hl(0, "BufferLineModified", { fg = colors.green, bg = colors.bg })
   vim.api.nvim_set_hl(0, "BufferLineModifiedSelected", { fg = colors.green, bg = colors.bg })
+
+  -- Close button highlights
+  vim.api.nvim_set_hl(0, "BufferLineCloseButton", { fg = colors.gray, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "BufferLineCloseButtonSelected", { fg = colors.red, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "BufferLineCloseButtonVisible", { fg = colors.gray, bg = colors.bg })
+
+  -- Icon highlights
+  vim.api.nvim_set_hl(0, "BufferLineIcon", { fg = colors.blue, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "BufferLineIconSelected", { fg = colors.blue, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "BufferLineIconVisible", { fg = colors.blue, bg = colors.bg })
+
+  -- Underline indicator for selected buffer
+  vim.api.nvim_set_hl(0, "BufferLineIndicatorSelected", { fg = colors.blue, bg = colors.bg, underline = true })
 
   vim.api.nvim_set_hl(0, "BufferLineError", { fg = colors.red, bg = colors.bg })
   vim.api.nvim_set_hl(0, "BufferLineErrorSelected", { fg = colors.red, bg = colors.bg, bold = true })
