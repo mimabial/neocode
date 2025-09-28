@@ -100,6 +100,10 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "BufferLineIndicatorSelected", { fg = colors.blue, bg = colors.bg })
   vim.api.nvim_set_hl(0, "BufferLineFill", { fg = colors.fg, bg = colors.bg })
 
+  -- Lualine highlights
+  vim.api.nvim_set_hl(0, "StatusLine", { bg = colors.bg })
+  vim.api.nvim_set_hl(0, "StatusLineNC", { bg = colors.bg })
+
   -- notification highlights
   vim.api.nvim_set_hl(0, "NotifyBorder", { fg = colors.border })
   vim.api.nvim_set_hl(0, "NotifyBackground", { bg = colors.bg })

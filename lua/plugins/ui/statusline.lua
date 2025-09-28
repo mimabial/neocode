@@ -36,7 +36,6 @@ return {
         modified = "",
       },
       ai = {
-        copilot = "",
         codeium = "󰚩",
       },
     }
@@ -65,6 +64,7 @@ return {
             return (icon and icon .. " " or "") .. filename
           end
         end,
+        color = { bg = colors.bg },
         cond = function()
           return vim.fn.expand("%:t") ~= ""
         end,
@@ -79,7 +79,7 @@ return {
           local disp = cwd:sub(1, #home) == home and "~" .. cwd:sub(#home + 1) or cwd
           return "" .. vim.fn.fnamemodify(disp, ":t")
         end,
-        color = { fg = colors.green },
+        color = { fg = colors.green, bg = colors.bg },
         cond = function()
           return not vim.b.no_root_dir
         end,
@@ -108,38 +108,41 @@ return {
 
           return " " .. names_str
         end,
-        color = { fg = colors.green },
+        color = { fg = colors.green, bg = colors.bg },
       }
     end
 
     local function ai_indicators()
       return {
         function()
-          -- Simple check if Codeium is loaded
+          -- Check if Codeium is loaded
           if package.loaded["codeium"] then
             return "󰚩 " -- Windsurf icon
           end
           return ""
         end,
-        color = { fg = "#09B6A2" }, -- Windsurf green
+        color = { fg = "#09B6A2", bg = colors.bg }, -- Windsurf green
       }
     end
 
     local function file_size()
-      return function()
-        local f = vim.fn.expand("%:p")
-        if f == "" or vim.bo.buftype ~= "" then return "" end
-        local size = vim.fn.getfsize(f)
-        if size <= 0 then return "" end
+      return {
+        function()
+          local f = vim.fn.expand("%:p")
+          if f == "" or vim.bo.buftype ~= "" then return "" end
+          local size = vim.fn.getfsize(f)
+          if size <= 0 then return "" end
 
-        local units = { "B", "K", "M", "G" }
-        local idx = 1
-        while size > 1024 and idx < #units do
-          size = size / 1024
-          idx = idx + 1
-        end
-        return string.format("%.1f%s", size, units[idx])
-      end
+          local units = { "B", "K", "M", "G" }
+          local idx = 1
+          while size > 1024 and idx < #units do
+            size = size / 1024
+            idx = idx + 1
+          end
+          return string.format("%.1f%s", size, units[idx])
+        end,
+        color = { bg = colors.bg },
+      }
     end
 
     return {
@@ -149,8 +152,8 @@ return {
         theme = "auto",
         globalstatus = vim.o.laststatus == 3,
         disabled_filetypes = {
-          statusline = { "neo-tree", "oil", "Trouble", "lazy", "NvimTree" },
-          winbar = { "neo-tree", "oil", "Trouble", "lazy", "NvimTree" },
+          statusline = { "oil", "Trouble", "lazy", "NvimTree" },
+          winbar = { "oil", "Trouble", "lazy", "NvimTree" },
         },
       },
       sections = {
@@ -168,7 +171,7 @@ return {
           {
             "branch",
             icon = "",
-            color = { fg = colors.orange },
+            color = { fg = colors.orange, bg = colors.bg },
           },
           root_dir(),
         },
@@ -195,7 +198,6 @@ return {
         lualine_z = {},
       },
       extensions = {
-        "neo-tree",
         "lazy",
         "trouble",
         "toggleterm",
