@@ -242,8 +242,10 @@ return {
     {
       "microsoft/vscode-js-debug",
       opt = true,
-      build =
-      "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --legacy-peer-deps && npx gulp vsDebugServerBundle && mv dist out"
+      build = function()
+        vim.env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
+        vim.cmd("!npm install --legacy-peer-deps && npx gulp vsDebugServerBundle && mv dist out")
+      end
     },
     {
       "mxsdev/nvim-dap-vscode-js",
