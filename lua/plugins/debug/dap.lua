@@ -55,8 +55,6 @@ end
 local function dapui_eval()
   require("dapui").eval()
 end
--- local function debug_goth_app() _G.debug_goth_app() end
--- local function debug_nextjs_app() _G.debug_nextjs_app() end
 
 local function setup_dap()
   local dap = require("dap")
@@ -64,7 +62,38 @@ local function setup_dap()
   local vt = require("nvim-dap-virtual-text")
   vt.setup({ commented = true })
 
-  dapui.setup()
+  dapui.setup({
+    controls = {
+      element = "repl",
+      enabled = true,
+    },
+    floating = {
+      border = "single",
+      mappings = {
+        close = { "q", "<Esc>" },
+      },
+    },
+    layouts = {
+      {
+        elements = {
+          { id = "scopes",      size = 0.25 },
+          { id = "breakpoints", size = 0.25 },
+          { id = "stacks",      size = 0.25 },
+          { id = "watches",     size = 0.25 },
+        },
+        position = "left",
+        size = 40,
+      },
+      {
+        elements = {
+          { id = "repl",    size = 0.5 },
+          { id = "console", size = 0.5 },
+        },
+        position = "bottom",
+        size = 10,
+      },
+    },
+  })
 
   require("mason-nvim-dap").setup({
     automatic_installation = true,
@@ -81,8 +110,124 @@ local function setup_dap()
     dapui.close()
   end
 
-  -- require("plugins.dap.lang.go").setup()
-  -- require("plugins.dap.lang.python").setup()
+  require("dap-vscode-js").setup({
+    debugger_path = vim.fn.stdpath("data") .. "/lazy/vscode-js-debug",
+    adapters = {
+      'pwa-node',
+      'pwa-chrome',
+      'pwa-msedge',
+      'node-terminal',
+      'pwa-extensionHost'
+    },
+  })
+
+  for _, language in ipairs({ "typescript", "javascript", "typescriptreact", "javascriptreact" }) do
+    dap.configurations[language] = {
+      -- Launch single file
+      {
+        type = "pwa-node",
+        request = "launch",
+        name = "Launch file",
+        program = "${file}",
+        cwd = "${workspaceFolder}",
+        sourceMaps = true,
+        protocol = "inspector",
+        console = "integratedTerminal",
+      },
+      -- Attach to process
+      {
+        type = "pwa-node",
+        request = "attach",
+        name = "Attach",
+        processId = require("dap.utils").pick_process,
+        cwd = "${workspaceFolder}",
+        sourceMaps = true,
+        protocol = "inspector",
+      },
+      -- Debug Next.js dev server
+      {
+        type = "pwa-node",
+        request = "launch",
+        name = "Debug Next.js (server)",
+        program = "${workspaceFolder}/node_modules/next/dist/bin/next",
+        args = { "dev" },
+        cwd = "${workspaceFolder}",
+        env = {
+          NODE_OPTIONS = "--inspect=9229"
+        },
+        sourceMaps = true,
+        protocol = "inspector",
+        console = "integratedTerminal",
+      },
+      -- Debug Next.js in Chrome
+      {
+        type = "pwa-chrome",
+        request = "launch",
+        name = "Debug Next.js (client)",
+        url = "http://localhost:3000",
+        webRoot = "${workspaceFolder}",
+        sourceMaps = true,
+        userDataDir = false,
+        runtimeExecutable = "/usr/bin/google-chrome-stable", -- Adjust path as needed
+      },
+      -- Debug Jest tests
+      {
+        type = "pwa-node",
+        request = "launch",
+        name = "Debug Jest Tests",
+        program = "${workspaceFolder}/node_modules/.bin/jest",
+        args = { "--runInBand", "--no-coverage", "--no-cache" },
+        cwd = "${workspaceFolder}",
+        env = { CI = "true" },
+        console = "integratedTerminal",
+        sourceMaps = true,
+      },
+      -- Debug npm script
+      {
+        type = "pwa-node",
+        request = "launch",
+        name = "Debug npm script",
+        runtimeExecutable = "npm",
+        runtimeArgs = function()
+          return { "run", vim.fn.input("Script name: ") }
+        end,
+        cwd = "${workspaceFolder}",
+        console = "integratedTerminal",
+        sourceMaps = true,
+      },
+    }
+  end
+
+  vim.fn.sign_define('DapBreakpoint', {
+    text = '●',
+    texthl = 'DapBreakpoint',
+    linehl = '',
+    numhl = ''
+  })
+  vim.fn.sign_define('DapBreakpointCondition', {
+    text = '◐',
+    texthl = 'DapBreakpointCondition',
+    linehl = '',
+    numhl = ''
+  })
+  vim.fn.sign_define('DapStopped', {
+    text = '▶',
+    texthl = 'DapStopped',
+    linehl = 'DapStoppedLine',
+    numhl = ''
+  })
+
+  -- Setup colors
+  local function setup_dap_highlights()
+    local colors = _G.get_ui_colors()
+    vim.api.nvim_set_hl(0, 'DapBreakpoint', { fg = colors.red })
+    vim.api.nvim_set_hl(0, 'DapBreakpointCondition', { fg = colors.yellow })
+    vim.api.nvim_set_hl(0, 'DapStopped', { fg = colors.green })
+    vim.api.nvim_set_hl(0, 'DapStoppedLine', { bg = colors.select_bg })
+  end
+
+  setup_dap_highlights()
+  vim.api.nvim_create_autocmd("ColorScheme", { callback = setup_dap_highlights })
 end
 
 return {
@@ -94,32 +239,39 @@ return {
     "williamboman/mason.nvim",
     "leoluz/nvim-dap-go",
     "mfussenegger/nvim-dap-python",
+    {
+      "microsoft/vscode-js-debug",
+      opt = true,
+      build = "npm install --legacy-peer-deps && npx gulp vsDebugServerBundle && mv dist out"
+    },
+    {
+      "mxsdev/nvim-dap-vscode-js",
+      dependencies = { "mfussenegger/nvim-dap" },
+    },
   },
   config = setup_dap,
   keys = {
-    { "<leader>db", toggle_dap_breakpoint, desc = "Toggle Breakpoint" },
+    { "<leader>db", toggle_dap_breakpoint,      desc = "Toggle Breakpoint" },
     { "<leader>dB", set_conditional_breakpoint, desc = "Conditional Breakpoint" },
-    { "<leader>dc", dap_continue, desc = "Continue" },
-    { "<leader>di", dap_step_into, desc = "Step Into" },
-    { "<leader>do", dap_step_over, desc = "Step Over" },
-    { "<leader>dO", dap_step_out, desc = "Step Out" },
-    { "<leader>dt", dap_terminate, desc = "Terminate" },
-    { "<leader>dC", dap_run_to_cursor, desc = "Run to Cursor" },
-    { "<leader>dg", dap_goto, desc = "Go to Line (no execute)" },
-    { "<leader>dj", dap_down, desc = "Down" },
-    { "<leader>dk", dap_up, desc = "Up" },
-    { "<leader>dl", dap_run_last, desc = "Run Last" },
-    { "<leader>dp", dap_pause, desc = "Pause" },
-    { "<leader>dr", dap_repl_toggle, desc = "Toggle REPL" },
-    { "<leader>ds", dap_session, desc = "Session" },
-    { "<leader>dw", dap_widgets_hover, desc = "Widgets" },
-    { "<F5>", dap_continue, desc = "Debug: Continue" },
-    { "<F10>", dap_step_over, desc = "Debug: Step Over" },
-    { "<F11>", dap_step_into, desc = "Debug: Step Into" },
-    { "<F12>", dap_step_out, desc = "Debug: Step Out" },
-    { "<leader>du", dapui_toggle, desc = "Toggle UI" },
-    { "<leader>de", dapui_eval, desc = "Evaluate" },
-    -- { "<leader>dG", debug_goth_app, desc = "Debug GOTH App" },
-    -- { "<leader>dN", debug_nextjs_app, desc = "Debug Next.js App" },
+    { "<leader>dc", dap_continue,               desc = "Continue" },
+    { "<leader>di", dap_step_into,              desc = "Step Into" },
+    { "<leader>do", dap_step_over,              desc = "Step Over" },
+    { "<leader>dO", dap_step_out,               desc = "Step Out" },
+    { "<leader>dt", dap_terminate,              desc = "Terminate" },
+    { "<leader>dC", dap_run_to_cursor,          desc = "Run to Cursor" },
+    { "<leader>dg", dap_goto,                   desc = "Go to Line (no execute)" },
+    { "<leader>dj", dap_down,                   desc = "Down" },
+    { "<leader>dk", dap_up,                     desc = "Up" },
+    { "<leader>dl", dap_run_last,               desc = "Run Last" },
+    { "<leader>dp", dap_pause,                  desc = "Pause" },
+    { "<leader>dr", dap_repl_toggle,            desc = "Toggle REPL" },
+    { "<leader>ds", dap_session,                desc = "Session" },
+    { "<leader>dw", dap_widgets_hover,          desc = "Widgets" },
+    { "<F5>",       dap_continue,               desc = "Debug: Continue" },
+    { "<F10>",      dap_step_over,              desc = "Debug: Step Over" },
+    { "<F11>",      dap_step_into,              desc = "Debug: Step Into" },
+    { "<F12>",      dap_step_out,               desc = "Debug: Step Out" },
+    { "<leader>du", dapui_toggle,               desc = "Toggle UI" },
+    { "<leader>de", dapui_eval,                 desc = "Evaluate" },
   },
 }

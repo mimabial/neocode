@@ -364,9 +364,15 @@ return {
   config = function(_, opts)
     require("lualine").setup(opts)
 
+    local function rebuild_lualine()
+      -- Rebuild the config with new colors
+      local new_opts = require("plugins.ui.statusline").opts()
+      require("lualine").setup(new_opts)
+    end
+
     vim.api.nvim_create_autocmd("ColorScheme", {
       callback = function()
-        require("lualine").refresh()
+        vim.schedule(rebuild_lualine)
       end,
     })
 

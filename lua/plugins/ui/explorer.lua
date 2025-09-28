@@ -112,9 +112,9 @@ return {
               local screen_w = vim.opt.columns:get()
               local screen_h = vim.opt.lines:get() - vim.opt.cmdheight:get()
               local w_h = 30
-              local s_h = 98
+              local s_h = math.floor(screen_h * 0.9)
               local center_x = (screen_w - w_h) - 2
-              local center_y = ((vim.opt.lines:get() - s_h) / 5) - vim.opt.cmdheight:get()
+              local center_y = math.max(1, ((screen_h - s_h) / 6))
               return {
                 border = "single",
                 relative = "editor",

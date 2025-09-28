@@ -1,5 +1,3 @@
--- lua/plugins/trouble.lua
--- Plugin specification for trouble.nvim (Diagnostics list)
 return {
   "folke/trouble.nvim",
   cmd = { "Trouble", "TroubleToggle", "TroubleRefresh" },
@@ -41,7 +39,7 @@ return {
     auto_preview = true,
     auto_fold = false,
     auto_jump = { "lsp_definitions" },
-    -- signs = { error = "", warning = "", hint = "", information = "" },
+    signs = { error = "", warning = "", hint = "", information = "" },
     use_diagnostic_signs = false,
     win_config = {
       border = "single",
