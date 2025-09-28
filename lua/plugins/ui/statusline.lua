@@ -22,10 +22,10 @@ return {
 
     local icons = {
       diagnostics = {
-        Error = " ",
-        Warn = " ",
-        Info = " ",
-        Hint = " ",
+        Error = "",
+        Warn = "",
+        Info = "",
+        Hint = "",
       },
       git = {
         added = "",
@@ -160,9 +160,9 @@ return {
       return {
         "fileformat",
         symbols = {
-          unix = " ",
-          dos = " ",
-          mac = " ",
+          unix = "",
+          dos = "",
+          mac = "",
         },
         color = { fg = colors.green, bg = colors.bg },
         cond = function()
@@ -199,9 +199,32 @@ return {
             icon = "",
             color = { fg = colors.orange, bg = colors.bg },
           },
+          {
+            "diff",
+            symbols = {
+              added = icons.diff.add,
+              modified = icons.diff.modified,
+              removed = icons.diff.remove,
+            },
+            diff_color = {
+              added = { fg = colors.green },
+              modified = { fg = colors.orange },
+              removed = { fg = colors.red },
+            },
+          },
         },
         lualine_c = {
           root_dir(),
+          {
+            "diagnostics",
+            symbols = {
+              error = icons.diagnostics.Error,
+              warn = icons.diagnostics.Warn,
+              info = icons.diagnostics.Info,
+              hint = icons.diagnostics.Hint,
+            },
+            colored = true,
+          },
         },
         lualine_x = {
           ai_indicators(),
