@@ -50,6 +50,57 @@ return {
       t = colors.green,
     }
 
+    local custom_theme = {
+      normal = {
+        a = { bg = colors.bg, fg = colors.green, gui = 'bold' },
+        b = { bg = colors.bg, fg = colors.fg },
+        c = { bg = colors.bg, fg = colors.fg },
+        x = { bg = colors.bg, fg = colors.fg },
+        y = { bg = colors.bg, fg = colors.fg },
+        z = { bg = colors.bg, fg = colors.fg },
+      },
+      insert = {
+        a = { bg = colors.bg, fg = colors.blue, gui = 'bold' },
+        b = { bg = colors.bg, fg = colors.fg },
+        c = { bg = colors.bg, fg = colors.fg },
+        x = { bg = colors.bg, fg = colors.fg },
+        y = { bg = colors.bg, fg = colors.fg },
+        z = { bg = colors.bg, fg = colors.fg },
+      },
+      visual = {
+        a = { bg = colors.bg, fg = colors.purple, gui = 'bold' },
+        b = { bg = colors.bg, fg = colors.fg },
+        c = { bg = colors.bg, fg = colors.fg },
+        x = { bg = colors.bg, fg = colors.fg },
+        y = { bg = colors.bg, fg = colors.fg },
+        z = { bg = colors.bg, fg = colors.fg },
+      },
+      command = {
+        a = { bg = colors.bg, fg = colors.orange, gui = 'bold' },
+        b = { bg = colors.bg, fg = colors.fg },
+        c = { bg = colors.bg, fg = colors.fg },
+        x = { bg = colors.bg, fg = colors.fg },
+        y = { bg = colors.bg, fg = colors.fg },
+        z = { bg = colors.bg, fg = colors.fg },
+      },
+      terminal = {
+        a = { bg = colors.bg, fg = colors.green, gui = 'bold' },
+        b = { bg = colors.bg, fg = colors.fg },
+        c = { bg = colors.bg, fg = colors.fg },
+        x = { bg = colors.bg, fg = colors.fg },
+        y = { bg = colors.bg, fg = colors.fg },
+        z = { bg = colors.bg, fg = colors.fg },
+      },
+      inactive = {
+        a = { bg = colors.bg, fg = colors.gray },
+        b = { bg = colors.bg, fg = colors.gray },
+        c = { bg = colors.bg, fg = colors.gray },
+        x = { bg = colors.bg, fg = colors.gray },
+        y = { bg = colors.bg, fg = colors.gray },
+        z = { bg = colors.bg, fg = colors.gray },
+      },
+    }
+
     local function pretty_path()
       return {
         function()
@@ -179,7 +230,7 @@ return {
       options = {
         component_separators = { left = "", right = "" },
         section_separators = { left = "", right = "" },
-        theme = "auto",
+        theme = custom_theme,
         globalstatus = vim.o.laststatus == 3,
         disabled_filetypes = {
           statusline = { "oil", "Trouble", "lazy", "NvimTree" },
@@ -194,7 +245,7 @@ return {
               local m = vim.api.nvim_get_mode().mode
               return { fg = mode_color[m] or colors.blue, bg = colors.bg, gui = "bold" }
             end,
-            padding = { left = 0, right = 0 },
+            padding = { left = 1, right = 1 },
           },
           -- lazy updates
           {
