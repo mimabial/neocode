@@ -22,12 +22,12 @@ return {
 
     local icons = {
       diagnostics = {
-        Error = "",
-        Warn = "",
-        Info = "",
-        Hint = "",
+        error = "",
+        warn = "",
+        info = "",
+        hint = "",
       },
-      git = {
+      diff = {
         added = "",
         modified = "",
         removed = "",
@@ -55,13 +55,17 @@ return {
         function()
           local path = vim.fn.expand("%:p:~:.")
           local filename = vim.fn.expand("%:t")
-          local extension = vim.fn.expand("%:e")
-          local icon = require("nvim-web-devicons").get_icon(filename, extension)
-
+          -- local extension = vim.fn.expand("%:e")
+          -- local icon = require("nvim-web-devicons").get_icon(filename, extension)
+          -- if vim.fn.winwidth(0) > 90 then
+          --   return (icon and icon .. " " or "") .. path
+          -- else
+          --   return (icon and icon .. " " or "") .. filename
+          -- end
           if vim.fn.winwidth(0) > 90 then
-            return (icon and icon .. " " or "") .. path
+            return path
           else
-            return (icon and icon .. " " or "") .. filename
+            return filename
           end
         end,
         color = { bg = colors.bg },
@@ -79,7 +83,7 @@ return {
           local disp = cwd:sub(1, #home) == home and "~" .. cwd:sub(#home + 1) or cwd
           return "" .. vim.fn.fnamemodify(disp, ":t")
         end,
-        color = { fg = colors.green, bg = colors.bg },
+        color = { fg = colors.yellow, bg = colors.bg },
         cond = function()
           return not vim.b.no_root_dir
         end,
@@ -106,9 +110,9 @@ return {
             names_str = string.sub(names_str, 1, 27) .. "..."
           end
 
-          return " " .. names_str
+          return "" .. names_str
         end,
-        color = { fg = colors.green, bg = colors.bg },
+        color = { fg = colors.blue, bg = colors.bg },
       }
     end
 
@@ -121,7 +125,7 @@ return {
           end
           return ""
         end,
-        color = { fg = "#09B6A2", bg = colors.bg }, -- Windsurf green
+        color = { fg = colors.purple, bg = colors.bg }, -- Windsurf green
       }
     end
 
@@ -190,7 +194,20 @@ return {
               local m = vim.api.nvim_get_mode().mode
               return { fg = mode_color[m] or colors.blue, bg = colors.bg, gui = "bold" }
             end,
-            padding = { left = 1, right = 1 },
+            padding = { left = 0, right = 0 },
+          },
+          -- lazy updates
+          {
+            function()
+              local lazy_status = require("lazy.status")
+              return lazy_status.has_updates() and lazy_status.updates() or ""
+            end,
+            cond = function()
+              return package.loaded["lazy.status"] and require("lazy.status").has_updates()
+            end,
+            color = function()
+              return { fg = colors.fg, bg = colors.bg }
+            end,
           },
         },
         lualine_b = {
@@ -207,39 +224,78 @@ return {
               removed = icons.diff.remove,
             },
             diff_color = {
-              added = { fg = colors.green },
-              modified = { fg = colors.orange },
-              removed = { fg = colors.red },
+              added = { fg = colors.green, bg = colors.bg },
+              modified = { fg = colors.orange, bg = colors.bg },
+              removed = { fg = colors.red, bg = colors.bg },
             },
           },
         },
         lualine_c = {
           root_dir(),
+          pretty_path(),
           {
             "diagnostics",
             symbols = {
-              error = icons.diagnostics.Error,
-              warn = icons.diagnostics.Warn,
-              info = icons.diagnostics.Info,
-              hint = icons.diagnostics.Hint,
+              error = icons.diagnostics.error,
+              warn = icons.diagnostics.warn,
+              info = icons.diagnostics.info,
+              hint = icons.diagnostics.hint,
             },
             colored = true,
+            color = { bg = colors.bg },
           },
         },
         lualine_x = {
-          ai_indicators(),
-          lsp_status(),
           file_size(),
-          { "filetype", color = { bg = colors.bg } },
           file_encoding(),
           file_format(),
+          -- noice command status
+          {
+            function()
+              return require("noice").api.status.command.get()
+            end,
+            cond = function()
+              return package.loaded["noice"] and require("noice").api.status.command.has()
+            end,
+            color = function()
+              return { fg = colors.fg }
+            end,
+          },
+          -- noice mode status
+          {
+            function()
+              return require("noice").api.status.mode.get()
+            end,
+            cond = function()
+              return package.loaded["noice"] and require("noice").api.status.mode.has()
+            end,
+            color = function()
+              return { fg = colors.fg }
+            end,
+          },
+          -- dap status
+          {
+            function()
+              return "  " .. require("dap").status()
+            end,
+            cond = function()
+              return package.loaded["dap"] and require("dap").status() ~= ""
+            end,
+            color = function()
+              return { fg = colors.fg }
+            end,
+          },
+
         },
         lualine_y = {
+          ai_indicators(),
+          lsp_status(),
+
           { "progress", color = { fg = colors.fg, bg = colors.bg } }
 
         },
         lualine_z = {
-          { "location", color = { fg = colors.fg, bg = colors.bg, gui = "bold" } }
+          { "location", color = { fg = colors.fg, bg = colors.bg } }
         },
       },
       extensions = {
