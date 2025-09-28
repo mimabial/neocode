@@ -117,7 +117,7 @@ return {
         function()
           -- Check if Codeium is loaded
           if package.loaded["codeium"] then
-            return "󰚩 " -- Windsurf icon
+            return "codeuim" -- Windsurf icon
           end
           return ""
         end,
@@ -145,6 +145,32 @@ return {
       }
     end
 
+    local function file_encoding()
+      return {
+        "encoding",
+        fmt = string.upper,
+        color = { fg = colors.green, bg = colors.bg },
+        cond = function()
+          return vim.bo.fileencoding ~= "utf-8"
+        end,
+      }
+    end
+
+    local function file_format()
+      return {
+        "fileformat",
+        symbols = {
+          unix = " ",
+          dos = " ",
+          mac = " ",
+        },
+        color = { fg = colors.green, bg = colors.bg },
+        cond = function()
+          return vim.bo.fileformat ~= "unix"
+        end,
+      }
+    end
+
     return {
       options = {
         component_separators = { left = "", right = "" },
@@ -162,7 +188,7 @@ return {
             "mode",
             color = function()
               local m = vim.api.nvim_get_mode().mode
-              return { bg = mode_color[m] or colors.blue, fg = colors.bg, gui = "bold" }
+              return { fg = mode_color[m] or colors.blue, bg = colors.bg, gui = "bold" }
             end,
             padding = { left = 1, right = 1 },
           },
@@ -173,29 +199,25 @@ return {
             icon = "",
             color = { fg = colors.orange, bg = colors.bg },
           },
-          root_dir(),
         },
         lualine_c = {
-          pretty_path(),
-          file_size(),
+          root_dir(),
         },
         lualine_x = {
+          ai_indicators(),
           lsp_status(),
+          file_size(),
+          { "filetype", color = { bg = colors.bg } },
+          file_encoding(),
+          file_format(),
         },
         lualine_y = {
-          ai_indicators(),
+          { "progress", color = { fg = colors.fg, bg = colors.bg } }
+
         },
         lualine_z = {
-          { "location", color = { fg = colors.white, gui = "bold" } }
+          { "location", color = { fg = colors.fg, bg = colors.bg, gui = "bold" } }
         },
-      },
-      inactive_sections = {
-        lualine_a = {},
-        lualine_b = {},
-        lualine_c = { pretty_path() },
-        lualine_x = { "location" },
-        lualine_y = {},
-        lualine_z = {},
       },
       extensions = {
         "lazy",
