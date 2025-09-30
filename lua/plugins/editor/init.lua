@@ -2,7 +2,6 @@ return {
   require("plugins.editor.colorizer"),
   require("plugins.editor.comment"),
   require("plugins.editor.dressing"),
-  require("plugins.editor.grug-far"),
   require("plugins.editor.illuminate"),
   require("plugins.editor.indentation"),
   require("plugins.editor.outline"),

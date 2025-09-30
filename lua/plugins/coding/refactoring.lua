@@ -1,122 +1,158 @@
--- lua/plugins/refactoring.lua
 return {
-  "ThePrimeagen/refactoring.nvim",
-  dependencies = {
-    "nvim-lua/plenary.nvim",
-    "nvim-treesitter/nvim-treesitter",
-  },
+  "nvim-pack/nvim-spectre",
+  dependencies = { "nvim-lua/plenary.nvim" },
+  cmd = "Spectre",
   keys = {
-    { "<leader>rr", mode = { "n", "x" },     desc = "Refactoring menu" },
-    { "<leader>re", mode = { "n", "x" },     desc = "Extract function" },
-    { "<leader>rv", mode = "x",              desc = "Extract variable" },
-    { "<leader>ri", desc = "Inline variable" },
-  },
-  ft = { "go", "typescript", "javascript", "typescriptreact", "javascriptreact" },
-  config = function()
-    require("refactoring").setup({
-      prompt_func_return_type = {
-        go = true,
-        typescript = true,
-        javascript = true,
-      },
-      prompt_func_param_type = {
-        go = true,
-        typescript = true,
-        javascript = true,
-      },
-      printf_statements = {
-        go = { 'fmt.Printf("%v\\n", %s)' },
-      },
-      print_var_statements = {
-        go = { 'fmt.Printf("%v: %%+v\\n", %s)' },
-        typescript = { 'console.log("%s:", %s)' },
-        javascript = { 'console.log("%s:", %s)' },
-      },
-    })
-
-    -- Load refactoring Telescope extension
-    require("telescope").load_extension("refactoring")
-
-    -- Remaps for the refactoring operations
-    vim.api.nvim_set_keymap(
-      "v",
-      "<leader>rr",
-      "<Esc><cmd>lua require('telescope').extensions.refactoring.refactors()<CR>",
-      { noremap = true, desc = "Refactoring menu" }
-    )
-
-    -- Extract function supports both normal and visual mode
-    vim.api.nvim_set_keymap(
-      "n",
-      "<leader>re",
-      ":lua require('refactoring').refactor('Extract Function')<CR>",
-      { noremap = true, desc = "Extract function" }
-    )
-    vim.api.nvim_set_keymap(
-      "v",
-      "<leader>re",
-      ":lua require('refactoring').refactor('Extract Function')<CR>",
-      { noremap = true, desc = "Extract function" }
-    )
-
-    -- Extract variable supports only visual mode
-    vim.api.nvim_set_keymap(
-      "v",
-      "<leader>rv",
-      ":lua require('refactoring').refactor('Extract Variable')<CR>",
-      { noremap = true, desc = "Extract variable" }
-    )
-
-    -- Inline variable supports only normal mode
-    vim.api.nvim_set_keymap(
-      "n",
-      "<leader>ri",
-      ":lua require('refactoring').refactor('Inline Variable')<CR>",
-      { noremap = true, desc = "Inline variable" }
-    )
-
-    -- Add filetype-specific keys
-    vim.api.nvim_create_autocmd("FileType", {
-      pattern = { "go", "typescript", "javascript", "typescriptreact", "javascriptreact" },
-      callback = function()
-        -- Debug print statements
-        vim.api.nvim_buf_set_keymap(
-          0,
-          "n",
-          "<leader>rp",
-          ":lua require('refactoring').debug_print()<CR>",
-          { noremap = true, desc = "Debug print" }
-        )
-        vim.api.nvim_buf_set_keymap(
-          0,
-          "v",
-          "<leader>rp",
-          ":lua require('refactoring').debug_print()<CR>",
-          { noremap = true, desc = "Debug print" }
-        )
-        -- Remove debug print statements
-        vim.api.nvim_buf_set_keymap(
-          0,
-          "n",
-          "<leader>rc",
-          ":lua require('refactoring').debug_cleanup()<CR>",
-          { noremap = true, desc = "Clean debug prints" }
-        )
+    {
+      "<leader>sR",
+      function()
+        require("spectre").toggle()
       end,
-    })
+      desc = "Search and Replace (Spectre)",
+    },
+    {
+      "<leader>sr",
+      function()
+        require("spectre").open_file_search()
+      end,
+      desc = "Search and Replace (Current File)",
+    },
+    {
+      "<leader>sw",
+      function()
+        require("spectre").open_visual({ select_word = true })
+      end,
+      desc = "Search Word Under Cursor",
+    },
+    {
+      "<leader>sW",
+      function()
+        require("spectre").open_visual()
+      end,
+      mode = "v",
+      desc = "Search Selection",
+    },
+  },
+  opts = {
+    open_cmd = "noswapfile vnew",
+    live_update = false,
+    line_sep_start = "┌─────────────────────────────────────────",
+    result_padding = "│  ",
+    line_sep = "└─────────────────────────────────────────",
+    highlight = {
+      ui = "String",
+      search = "DiffChange",
+      replace = "DiffDelete",
+    },
+    mapping = {
+      ["toggle_line"] = {
+        map = "dd",
+        cmd = "<cmd>lua require('spectre').toggle_line()<CR>",
+        desc = "toggle item",
+      },
+      ["enter_file"] = {
+        map = "<cr>",
+        cmd = "<cmd>lua require('spectre').open_file_search()<CR>",
+        desc = "open file",
+      },
+      ["send_to_qf"] = {
+        map = "<leader>q",
+        cmd = "<cmd>lua require('spectre').send_to_qf()<CR>",
+        desc = "send to quickfix",
+      },
+      ["replace_cmd"] = {
+        map = "<leader>c",
+        cmd = "<cmd>lua require('spectre.actions').replace_cmd()<CR>",
+        desc = "replace command",
+      },
+      ["show_option_menu"] = {
+        map = "<leader>o",
+        cmd = "<cmd>lua require('spectre').show_options()<CR>",
+        desc = "show options",
+      },
+      ["run_current_replace"] = {
+        map = "<leader>rc",
+        cmd = "<cmd>lua require('spectre.actions').run_current_replace()<CR>",
+        desc = "replace current",
+      },
+      ["run_replace"] = {
+        map = "<leader>R",
+        cmd = "<cmd>lua require('spectre.actions').run_replace()<CR>",
+        desc = "replace all",
+      },
+      ["change_view_mode"] = {
+        map = "<leader>v",
+        cmd = "<cmd>lua require('spectre').change_view()<CR>",
+        desc = "change view mode",
+      },
+      ["change_replace_sed"] = {
+        map = "trs",
+        cmd = "<cmd>lua require('spectre').change_engine_replace('sed')<CR>",
+        desc = "use sed",
+      },
+      ["change_replace_oxi"] = {
+        map = "tro",
+        cmd = "<cmd>lua require('spectre').change_engine_replace('oxi')<CR>",
+        desc = "use oxi",
+      },
+      ["toggle_live_update"] = {
+        map = "tu",
+        cmd = "<cmd>lua require('spectre').toggle_live_update()<CR>",
+        desc = "toggle live update",
+      },
+      ["toggle_ignore_case"] = {
+        map = "ti",
+        cmd = "<cmd>lua require('spectre').change_options('ignore-case')<CR>",
+        desc = "toggle ignore case",
+      },
+      ["toggle_ignore_hidden"] = {
+        map = "th",
+        cmd = "<cmd>lua require('spectre').change_options('hidden')<CR>",
+        desc = "toggle hidden",
+      },
+      ["resume_last_search"] = {
+        map = "<leader>l",
+        cmd = "<cmd>lua require('spectre').resume_last_search()<CR>",
+        desc = "resume last search",
+      },
+      ["quit"] = {
+        map = "q",
+        cmd = "<cmd>close<CR>",
+        desc = "quit",
+      },
+    },
+  },
+  config = function(_, opts)
+    require("spectre").setup(opts)
 
-    -- Update which-key with refactoring descriptions
-    local which_key_ok, which_key = pcall(require, "which-key")
-    if which_key_ok then
-      which_key.register({
-        ["<leader>r"] = { name = "Refactoring" },
-        ["<leader>rr"] = { desc = "Refactoring menu" },
-        ["<leader>re"] = { desc = "Extract function" },
-        ["<leader>rv"] = { desc = "Extract variable" },
-        ["<leader>ri"] = { desc = "Inline variable" },
-        ["<leader>rp"] = { desc = "Debug print" },
-        ["<leader>rc"] = { desc = "Clean debug prints" },
+    -- Override toggle to use floating window
+    local spectre = require("spectre")
+    local original_toggle = spectre.toggle
+
+    spectre.toggle = function()
+      -- Close if already open
+      if spectre.is_open() then
+        spectre.close()
+        return
+      end
+
+      -- Create floating window
+      local width = math.floor(vim.o.columns * 0.8)
+      local height = math.floor(vim.o.lines * 0.8)
+      local buf = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_open_win(buf, true, {
+        relative = "editor",
+        width = width,
+        height = height,
+        col = math.floor((vim.o.columns - width) / 2),
+        row = math.floor((vim.o.lines - height) / 2),
+        border = "single",
+        style = "minimal",
       })
+
+      -- Open spectre in this buffer
+      vim.api.nvim_set_current_buf(buf)
+      original_toggle()
     end
   end,
 }

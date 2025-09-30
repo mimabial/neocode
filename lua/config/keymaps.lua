@@ -20,6 +20,10 @@ function M.setup()
     callback = function(args)
       local opts = { buffer = args.buf, silent = true }
 
+      -- Save and quit
+      map('n', '<C-s>', '<cmd> w <CR>', opts)
+      map('n', '<C-q>', '<cmd> q <CR>', opts)
+
       -- Navigation
       map("n", "gd", vim.lsp.buf.definition, vim.tbl_extend("force", opts, { desc = "Go to definition" }))
       map("n", "gD", vim.lsp.buf.declaration, vim.tbl_extend("force", opts, { desc = "Go to declaration" }))
@@ -54,6 +58,9 @@ function M.setup()
   -- ========================================
   -- Editing
   -- ========================================
+  -- Keep last yanked when pasting
+  map('v', 'p', '"_dP', { desc = "Keep yanked text when pasting" })
+
   -- Keep selection when indenting in visual mode
   map("v", ">", ">gv", { desc = "Indent and keep selection" })
   map("v", "<", "<gv", { desc = "Outdent and keep selection" })
@@ -62,10 +69,17 @@ function M.setup()
   map("v", "J", ":m '>+1<CR>gv=gv", { desc = "Move selection down" })
   map("v", "K", ":m '<-2<CR>gv=gv", { desc = "Move selection up" })
 
+  -- Vertical scroll and center
+  map('n', '<C-d>', '<C-d>zz', { desc = "Scroll down (centered)" })
+  map('n', '<C-u>', '<C-u>zz', { desc = "Scroll up (centered)" })
+
   -- Keep cursor centered when joining lines or searching
   map("n", "J", "mzJ`z", { desc = "Join lines (keep cursor)" })
   map("n", "n", "nzzzv", { desc = "Next search result (centered)" })
   map("n", "N", "Nzzzv", { desc = "Previous search result (centered)" })
+
+  -- Toggle line wrapping
+  map('n', '<leader>lw', '<cmd>set wrap!<CR>', { desc = "Toggle line wrap" })
 
   -- ========================================
   -- Navigation

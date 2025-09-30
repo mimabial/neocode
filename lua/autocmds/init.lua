@@ -135,14 +135,6 @@ function M.setup()
     end,
     desc = "Set window title",
   })
-
-  -- 10) Disable auto comment continuation
-  vim.api.nvim_create_autocmd("FileType", {
-    callback = function()
-      vim.bo.formatoptions = vim.bo.formatoptions:gsub("[cro]", "")
-    end,
-    desc = "Disable auto comment continuation",
-  })
 end
 
 return M
