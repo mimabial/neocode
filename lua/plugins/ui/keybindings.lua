@@ -39,7 +39,7 @@ return {
       { "<leader>L",  group = "Layouts" },
       { "<leader>n",  group = "Notifications" },
       { "<leader>r",  group = "Refactoring" },
-      { "<leader>s",  group = "Stack/Sessions" },
+      { "<leader>s",  group = "Search/Replace" },
       { "<leader>t",  group = "Terminal/Toggle" },
       { "<leader>u",  group = "UI/Settings" },
       { "<leader>w",  group = "Windows" },
@@ -78,8 +78,19 @@ return {
 
     -- File/Explorer
     which_key.add({
-      { "<leader>e", desc = "Open File Explorer" },
-      { "<leader>E", desc = "NvimTree Explorer" },
+      { "<leader>e",  desc = "Open File Explorer" },
+      { "<leader>ed", desc = "Toggle Oil file details" },
+      { "<leader>E",  desc = "NvimTree Explorer" },
+    })
+
+    -- Search/Replace
+    which_key.add({
+      { "<leader>sr", desc = "Search and Replace (Project)" },
+      { "<leader>sR", desc = "Search and Replace (Current File)" },
+      { "<leader>sw", desc = "Search Word Under Cursor" },
+      { "<leader>sW", desc = "Search Word (Current File)" },
+      { "<leader>si", desc = "Search Within Range" },
+      { "<leader>sb", desc = "Search Last Pattern" },
     })
 
     -- Telescope/Find
@@ -136,12 +147,6 @@ return {
       { "<leader>rp", desc = "Debug print" },
       { "<leader>rc", desc = "Clean debug prints" },
       { "<leader>rv", desc = "Extract variable" },
-    })
-
-    -- Stack
-    which_key.add({
-      { "<leader>sg", desc = "Focus GOTH Stack" },
-      { "<leader>sn", desc = "Focus Next.js Stack" },
     })
 
     -- Terminal

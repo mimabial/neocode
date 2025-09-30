@@ -104,6 +104,11 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "NotifyBorder", { fg = colors.border })
   vim.api.nvim_set_hl(0, "NotifyBackground", { bg = colors.bg })
 
+  -- illuminate highlights
+  vim.api.nvim_set_hl(0, "IlluminatedWordText", { bg = colors.border, underline = true })
+  vim.api.nvim_set_hl(0, "IlluminatedWordRead", { bg = colors.border, underline = true })
+  vim.api.nvim_set_hl(0, "IlluminatedWordWrite", { bg = colors.border, underline = true, bold = true })
+
   -- Telescope highlights
   vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = colors.orange })
   vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = colors.border })

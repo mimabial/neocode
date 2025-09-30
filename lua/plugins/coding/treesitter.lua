@@ -56,15 +56,5 @@ return {
 
     -- Main TS setup
     require("nvim-treesitter.configs").setup(opts)
-
-    -- Add custom highlights for JSX
-    vim.api.nvim_create_autocmd("ColorScheme", {
-      callback = function()
-        -- JSX highlights
-        vim.api.nvim_set_hl(0, "@tag.jsx", { link = "@tag.tsx" })
-        vim.api.nvim_set_hl(0, "@tag.delimiter.jsx", { link = "@tag.delimiter.tsx" })
-        vim.api.nvim_set_hl(0, "@constructor.jsx", { link = "@constructor.tsx" })
-      end,
-    })
   end,
 }

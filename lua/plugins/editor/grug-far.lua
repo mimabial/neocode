@@ -3,7 +3,7 @@ return {
   cmd = "GrugFar",
   keys = {
     {
-      "<leader>sr",
+      "<leader>sR",
       function()
         local grug = require("grug-far")
         local ext = vim.bo.buftype == "" and vim.fn.expand("%:e")
@@ -18,16 +18,17 @@ return {
       desc = "Search and Replace",
     },
     {
-      "<leader>sR",
+      "<leader>sr",
       function()
+        local path = vim.fn.expand("%")
         require("grug-far").open({
-          prefills = { paths = vim.fn.expand("%") }
+          prefills = { paths = string.format('"%s"', path) }
         })
       end,
       desc = "Search and Replace (Current File)",
     },
     {
-      "<leader>sw",
+      "<leader>sW",
       function()
         require("grug-far").open({
           prefills = { search = vim.fn.expand("<cword>") }
@@ -36,12 +37,13 @@ return {
       desc = "Search Word Under Cursor",
     },
     {
-      "<leader>sW",
+      "<leader>sw",
       function()
+        local path = vim.fn.expand("%")
         require("grug-far").open({
           prefills = {
             search = vim.fn.expand("<cword>"),
-            paths = vim.fn.expand("%")
+            paths = string.format('"%s"', path)
           }
         })
       end,

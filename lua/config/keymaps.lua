@@ -76,6 +76,12 @@ function M.setup()
   map("n", "<C-k>", "<C-w>k", { desc = "Window up" })
   map("n", "<C-l>", "<C-w>l", { desc = "Window right" })
 
+  -- Window splits
+  map("n", "<leader>wv", "<cmd>vsplit<cr>", { desc = "Split vertical" })
+  map("n", "<leader>ws", "<cmd>split<cr>", { desc = "Split horizontal" })
+  map("n", "<leader>wc", "<cmd>close<cr>", { desc = "Close window" })
+  map("n", "<leader>wo", "<cmd>only<cr>", { desc = "Close other windows" })
+
   -- Resize windows with arrows
   map("n", "<C-Up>", ":resize -2<CR>", { desc = "Decrease window height" })
   map("n", "<C-Down>", ":resize +2<CR>", { desc = "Increase window height" })

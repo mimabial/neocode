@@ -57,6 +57,17 @@ return {
         ["gs"] = "actions.change_sort",
         ["gx"] = "actions.open_external",
         ["g."] = "actions.toggle_hidden",
+        ["gd"] = {
+          desc = "Toggle file detail view",
+          callback = function()
+            detail = not detail
+            if detail then
+              require("oil").set_columns({ "permissions", "size" })
+            else
+              require("oil").set_columns({})
+            end
+          end,
+        },
       },
       use_default_keymaps = true,
     },
