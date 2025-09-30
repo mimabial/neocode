@@ -233,8 +233,8 @@ return {
         theme = custom_theme,
         globalstatus = vim.o.laststatus == 3,
         disabled_filetypes = {
-          statusline = { "oil", "Trouble", "lazy", "NvimTree" },
-          winbar = { "oil", "Trouble", "lazy", "NvimTree" },
+          statusline = { "lazy", "NvimTree", "oil", "spectre-panel", "Trouble" },
+          winbar = { "lazy", "NvimTree", "oil", "spectre-panel", "Trouble" },
         },
       },
       sections = {

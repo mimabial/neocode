@@ -125,34 +125,24 @@ return {
   config = function(_, opts)
     require("spectre").setup(opts)
 
-    -- Override toggle to use floating window
-    local spectre = require("spectre")
-    local original_toggle = spectre.toggle
+    -- Convert to floating window after opening
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = "spectre_panel",
+      callback = function()
+        local buf = vim.api.nvim_get_current_buf()
+        local width = math.floor(vim.o.columns * 0.8)
+        local height = math.floor(vim.o.lines * 0.8)
 
-    spectre.toggle = function()
-      -- Close if already open
-      if spectre.is_open() then
-        spectre.close()
-        return
-      end
-
-      -- Create floating window
-      local width = math.floor(vim.o.columns * 0.8)
-      local height = math.floor(vim.o.lines * 0.8)
-      local buf = vim.api.nvim_create_buf(false, true)
-      vim.api.nvim_open_win(buf, true, {
-        relative = "editor",
-        width = width,
-        height = height,
-        col = math.floor((vim.o.columns - width) / 2),
-        row = math.floor((vim.o.lines - height) / 2),
-        border = "single",
-        style = "minimal",
-      })
-
-      -- Open spectre in this buffer
-      vim.api.nvim_set_current_buf(buf)
-      original_toggle()
-    end
+        vim.api.nvim_open_win(buf, true, {
+          relative = "editor",
+          width = width,
+          height = height,
+          col = math.floor((vim.o.columns - width) / 2),
+          row = math.floor((vim.o.lines - height) / 2),
+          border = "single",
+          style = "minimal",
+        })
+      end,
+    })
   end,
 }
