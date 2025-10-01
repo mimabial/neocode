@@ -100,18 +100,28 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "BufferLineIndicatorSelected", { fg = colors.blue, bg = colors.bg })
   vim.api.nvim_set_hl(0, "BufferLineFill", { fg = colors.fg, bg = colors.bg })
 
+  -- Floating window highlights
+  vim.api.nvim_set_hl(0, "FloatTitle", { fg = colors.red, bg = colors.bg, bold = true })
+
   -- notification highlights
   vim.api.nvim_set_hl(0, "NotifyBorder", { fg = colors.border })
   vim.api.nvim_set_hl(0, "NotifyBackground", { bg = colors.bg })
 
+  -- nvimtree highlights
+  vim.api.nvim_set_hl(0, "NvimTreeNormal", { bg = colors.bg, fg = colors.fg })
+  vim.api.nvim_set_hl(0, "NvimTreeEndOfBuffer", { bg = colors.bg, fg = colors.bg })
+  vim.api.nvim_set_hl(0, "NvimTreeFolderName", { fg = colors.blue })
+  vim.api.nvim_set_hl(0, "NvimTreeOpenedFolderName", { fg = colors.blue })
+  vim.api.nvim_set_hl(0, "NvimTreeEmptyFolderName", { fg = colors.red })
+
   -- illuminate highlights
-  vim.api.nvim_set_hl(0, "IlluminatedWordText", { bg = colors.border, underline = true })
-  vim.api.nvim_set_hl(0, "IlluminatedWordRead", { bg = colors.border, underline = true })
-  vim.api.nvim_set_hl(0, "IlluminatedWordWrite", { bg = colors.border, underline = true, bold = true })
+  vim.api.nvim_set_hl(0, "IlluminatedWordText", { bg = colors.bg, underline = true })
+  vim.api.nvim_set_hl(0, "IlluminatedWordRead", { bg = colors.bg, underline = true })
+  vim.api.nvim_set_hl(0, "IlluminatedWordWrite", { bg = colors.bg, underline = true, bold = true })
 
   -- Telescope highlights
   vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = colors.orange })
-  vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = colors.border })
+  vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = colors.blue })
   vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { fg = colors.orange })
   vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = colors.blue })
   vim.api.nvim_set_hl(0, "TelescopeSelection", { fg = colors.blue })

@@ -1,4 +1,3 @@
--- lua/plugins/telescope.lua
 return {
   "nvim-telescope/telescope.nvim",
   dependencies = {
@@ -23,14 +22,21 @@ return {
       end
     end
 
-    -- Set global layout value from saved preference
-    vim.g.telescope_layout = layout_data.layout
-
-    -- Function to save layout preference
     local function save_layout(layout)
       local data = vim.fn.json_encode({ layout = layout })
       vim.fn.mkdir(vim.fn.fnamemodify(layout_file, ":h"), "p")
       vim.fn.writefile({ data }, layout_file)
+    end
+
+    vim.g.telescope_layout = layout_data.layout
+
+    local max_columns = vim.o.columns
+    if max_columns < 120 and vim.g.telescope_layout ~= "ebony" then
+      vim.g.telescope_layout = "ebony"
+      save_layout("ebony")
+    elseif max_columns >= 120 and vim.g.telescope_layout ~= "ivory" then
+      vim.g.telescope_layout = "ivory"
+      save_layout("ivory")
     end
 
     -- Define border styles
@@ -44,9 +50,9 @@ return {
         preview = { "─", " ", " ", " ", "─", "─", " ", " " },
       },
       ebony = {
-        prompt = { "─", " ", "─", " ", "─", "─", "─", "─" },
-        results = { " ", " ", " ", " ", " ", " ", " ", " " },
-        preview = { " ", " ", "─", " ", " ", " ", " ", " " },
+        preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+        prompt = { " ", " ", " ", " ", " ", " ", " ", " " },
+        results = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
       },
     }
 
@@ -107,49 +113,46 @@ return {
 
     -- Custom vertical layout with full screen usage and preview on top
     layout_strategies.ebony = function(picker, max_columns, max_lines)
-      local layout = layout_strategies.vertical(picker, max_columns, max_lines)
       local has_previewer = picker.previewer ~= nil and picker.previewer ~= false
 
+      local borders = vim.g.telescope_borders.ebony
+      local preview_height = has_previewer and math.floor(max_lines * 0.4) or 0
+      local prompt_line = has_previewer and (preview_height + 3) or 1
+
+      local layout = {
+        prompt = {
+          line = prompt_line,
+          height = 1,
+          width = max_columns - 2,
+          col = 2,
+          border = true,
+          borderchars = borders.prompt,
+          enter = true,
+          title = false,
+        },
+        results = {
+          line = prompt_line + 2,
+          height = max_lines - prompt_line - 2,
+          width = max_columns - 2,
+          col = 2,
+          border = true,
+          borderchars = borders.results,
+          enter = false,
+          title = false,
+        }
+      }
+
       if has_previewer then
-        if not layout.preview then
-          layout.preview = {}
-        end
-        -- Position preview at top with full width
-        layout.preview.line = 1
-        layout.preview.height = math.floor(max_lines * 0.6)
-        layout.preview.width = max_columns
-        layout.preview.col = 0
-        -- Position prompt below preview
-        if layout.prompt then
-          layout.prompt.line = layout.preview.height + 2
-          layout.prompt.height = 1
-          layout.prompt.width = max_columns
-          layout.prompt.col = 2
-        end
-        -- Position results below prompt
-        if layout.results and layout.prompt then
-          layout.results.line = layout.prompt.line + layout.prompt.height + 2
-          layout.results.height = max_lines - layout.results.line + 1
-          layout.results.width = max_columns
-          layout.results.col = 0
-        end
-      else
-        -- No previewer - remove preview and use full space
-        layout.preview = nil
-
-        if layout.prompt then
-          layout.prompt.line = 2
-          layout.prompt.width = max_columns
-          layout.prompt.height = 1
-          layout.prompt.col = 2
-        end
-
-        if layout.results and layout.prompt then
-          layout.results.line = layout.prompt.line + layout.prompt.height + 2
-          layout.results.height = max_lines - layout.results.line + 1
-          layout.results.width = max_columns
-          layout.results.col = 0
-        end
+        layout.preview = {
+          line = 2,
+          height = preview_height,
+          width = max_columns - 2,
+          col = 2,
+          border = true,
+          borderchars = borders.preview,
+          enter = false,
+          title = false,
+        }
       end
       return layout
     end
@@ -229,7 +232,7 @@ return {
 
         -- Preview configuration with line numbers
         preview = {
-          timeout = 500,
+          timeout = 1000,
           hide_on_startup = false,
         },
 
@@ -394,20 +397,20 @@ return {
         local current_layout = vim.g.telescope_layout or "ivory"
         local target_layout = nil
 
-        -- Determine target layout based on screen width
         if max_columns < 120 and current_layout ~= "ebony" then
           target_layout = "ebony"
         elseif max_columns >= 120 and current_layout ~= "ivory" then
           target_layout = "ivory"
         end
 
-        -- Auto-switch layout if needed
         if target_layout then
           vim.g.telescope_layout = target_layout
           local layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
           local data = vim.fn.json_encode({ layout = target_layout })
           vim.fn.mkdir(vim.fn.fnamemodify(layout_file, ":h"), "p")
           vim.fn.writefile({ data }, layout_file)
+
+          vim.notify("Telescope auto-switched to " .. target_layout .. " layout", vim.log.levels.INFO)
         end
       end,
     })

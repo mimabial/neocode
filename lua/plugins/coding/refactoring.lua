@@ -130,15 +130,28 @@ return {
       pattern = "spectre_panel",
       callback = function()
         local buf = vim.api.nvim_get_current_buf()
-        local width = math.floor(vim.o.columns * 0.8)
-        local height = math.floor(vim.o.lines * 0.8)
+        local split_win = vim.api.nvim_get_current_win()
+
+        -- Close the split
+        vim.api.nvim_win_close(split_win, false)
+
+        local top_spacing = math.floor(vim.o.lines * 0.00)     -- 0%
+        local bottom_spacing = math.floor(vim.o.lines * 0.04)  -- 4%
+        local left_spacing = math.floor(vim.o.columns * 0.02)  -- 2%
+        local right_spacing = math.floor(vim.o.columns * 0.02) -- 2%
+
+        local available_height = vim.o.lines - top_spacing - bottom_spacing
+        local available_width = vim.o.columns - left_spacing - right_spacing
+
+        local width = math.min(math.floor(vim.o.columns * 0.5), available_width)
+        local height = math.min(math.floor(vim.o.lines * 0.9), available_height)
 
         vim.api.nvim_open_win(buf, true, {
           relative = "editor",
           width = width,
           height = height,
-          col = math.floor((vim.o.columns - width) / 2),
-          row = math.floor((vim.o.lines - height) / 2),
+          col = vim.o.columns - width - right_spacing,
+          row = top_spacing,
           border = "single",
           style = "minimal",
         })

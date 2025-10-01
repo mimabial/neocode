@@ -122,17 +122,25 @@ return {
             open_win_config = function()
               local screen_w = vim.opt.columns:get()
               local screen_h = vim.opt.lines:get() - vim.opt.cmdheight:get()
-              local w_h = 30
-              local s_h = math.floor(screen_h * 0.9)
-              local center_x = (screen_w - w_h) - 2
-              local center_y = math.max(1, ((screen_h - s_h) / 6))
+
+              local top_spacing = math.floor(screen_h * 0.00)
+              local bottom_spacing = math.floor(screen_h * 0.04)
+              local left_spacing = math.floor(screen_w * 0.02)
+              local right_spacing = math.floor(screen_w * 0.02)
+
+              local available_height = screen_h - top_spacing - bottom_spacing
+              local available_width = screen_w - left_spacing - right_spacing
+
+              local width = math.min(30, available_width)
+              local height = math.min(math.floor(screen_h * 0.9), available_height)
+
               return {
                 border = "single",
                 relative = "editor",
-                row = center_y,
-                col = center_x,
-                width = w_h,
-                height = s_h,
+                row = top_spacing,
+                col = screen_w - width - right_spacing,
+                width = width,
+                height = height,
               }
             end,
           },
