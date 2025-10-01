@@ -94,14 +94,20 @@ return {
     },
 
     opts = {
+      commands = {
+        all = {
+          view = "popup",
+          opts = { enter = true, format = "details" },
+        },
+      },
       cmdline = {
         opts = {
-          position = { row = "30%", col = "50%" },
-          size = { width = 60, height = "auto" },
           border = {
             style = "single",
             padding = { 0, 1 },
           },
+          position = { row = "30%", col = "50%" },
+          size = { width = 60, height = "auto" },
         },
         format = {
           cmdline = { pattern = "^:", icon = ":", lang = "vim", title = "" },
@@ -163,6 +169,24 @@ return {
           position = { row = 2, col = 0 },
           size = { width = "auto", height = "auto" },
         },
+        popup = {
+          position = {
+            row = "100%",
+            col = "50%",
+          },
+          size = {
+            width = "95%",
+            height = "50%",
+          },
+          border = {
+            style = "single",
+          },
+          win_options = {
+            wrap = true,
+            linebreak = true,
+          },
+        },
+
       },
     },
 

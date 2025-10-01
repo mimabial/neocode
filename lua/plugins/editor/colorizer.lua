@@ -2,18 +2,31 @@ return {
   -- Tailwind and CSS color preview
   {
     "NvChad/nvim-colorizer.lua",
-    ft = { "css", "html", "javascript", "typescript", "javascriptreact", "typescriptreact" },
+    event = "BufReadPre",
+    keys = {
+      { "<leader>uc", "<cmd>ColorizerToggle<cr>", desc = "Toggle Colorizer" },
+    },
     opts = {
+      filetypes = {
+        "*", -- Highlight all files
+        -- Exclude specific filetypes if needed
+        "!lazy",
+        "!mason",
+      },
       user_default_options = {
-        tailwind = true,
-        mode = "background",
+        RGB = true,
+        RRGGBB = true,
+        names = false,
+        RRGGBBAA = true,
+        rgb_fn = true,
+        hsl_fn = true,
         css = true,
         css_fn = true,
-      }
+        mode = "background",
+        tailwind = true,
+        virtualtext = "■",
+      },
     },
-    config = function(_, opts)
-      require("colorizer").setup(opts)
-    end,
   },
 
   -- Tailwind colorizer for completion menu

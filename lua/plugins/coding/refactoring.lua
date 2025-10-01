@@ -35,10 +35,10 @@ return {
   },
   opts = {
     open_cmd = "noswapfile vnew",
-    live_update = false,
-    line_sep_start = "┌─────────────────────────────────────────",
+    live_update = true,
+    line_sep_start = "┌─",
     result_padding = "│  ",
-    line_sep = "└─────────────────────────────────────────",
+    line_sep = "└─",
     highlight = {
       ui = "String",
       search = "DiffChange",
