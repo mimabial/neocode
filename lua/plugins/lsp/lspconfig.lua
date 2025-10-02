@@ -22,7 +22,7 @@ return {
       end
 
       require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "ts_ls", "html", "jsonls", "pyright" },
+        ensure_installed = { "lua_ls", "ts_ls", "html", "jsonls", "pyright", "intelephense" },
         automatic_installation = false,
         handlers = {
           -- Default handler for all servers
@@ -53,31 +53,6 @@ return {
             })
           end,
 
-          ["gopls"] = function()
-            require("lspconfig").gopls.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              settings = {
-                gopls = {
-                  analyses = {
-                    unusedparams = true,
-                    shadow = true,
-                  },
-                  staticcheck = true,
-                  gofumpt = true,
-                  usePlaceholders = true,
-                  completeUnimported = true,
-                  hints = {
-                    assignVariableTypes = true,
-                    compositeLiteralFields = true,
-                    constantValues = true,
-                    parameterNames = true,
-                  },
-                },
-              },
-            })
-          end,
-
           ["ts_ls"] = function()
             require("lspconfig").ts_ls.setup({
               capabilities = capabilities,
@@ -96,26 +71,6 @@ return {
                   },
                 },
               },
-            })
-          end,
-
-          ["html"] = function()
-            require("lspconfig").html.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              filetypes = { "html", "templ" },
-            })
-          end,
-
-          ["tailwindcss"] = function()
-            require("lspconfig").tailwindcss.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              filetypes = {
-                "html", "css", "javascript", "javascriptreact",
-                "typescript", "typescriptreact", "templ",
-              },
-              init_options = { userLanguages = { templ = "html" } },
             })
           end,
 

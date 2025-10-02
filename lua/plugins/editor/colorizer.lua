@@ -9,6 +9,7 @@ return {
     opts = {
       filetypes = {
         "*", -- Highlight all files
+        "php",
         -- Exclude specific filetypes if needed
         "!lazy",
         "!mason",

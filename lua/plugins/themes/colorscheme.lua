@@ -145,6 +145,18 @@ return {
             vim.cmd("colorscheme everforest")
           end,
         },
+        ["gruvbox"] = {
+          icon = "",
+          variants = { "dark", "light" },
+          setup = function(variant, transparency)
+            vim.o.background = variant
+            require("gruvbox").setup({
+              transparent_mode = transparency,
+              constract = "hard"
+            })
+            vim.cmd("colorscheme gruvbox")
+          end,
+        },
         ["gruvbox-material"] = {
           icon = "",
           variants = { "hard", "medium", "soft" },
@@ -578,6 +590,7 @@ return {
   { "aliqyan-21/darkvoid.nvim",         lazy = true, priority = 950 },
   { "decaycs/decay.nvim",               lazy = true, priority = 950 },
   { "sainnhe/everforest",               lazy = true, priority = 950 },
+  { "ellisonleao/gruvbox.nvim",         lazy = true, priority = 950 },
   { "sainnhe/gruvbox-material",         lazy = true, priority = 950 },
   { "loctvl842/monokai-pro.nvim",       lazy = true, priority = 950 },
   { "shaunsingh/nord.nvim",             lazy = true, priority = 950 },

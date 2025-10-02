@@ -53,6 +53,9 @@ function M.setup()
       },
       missing = true, -- Install missing plugins on startup
     },
+    pkg = {
+      enabled = false,
+    },
     checker = {
       enabled = true,   -- Check for plugin updates
       notify = false,   -- Don't notify about updates

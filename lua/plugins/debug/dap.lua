@@ -237,7 +237,6 @@ return {
     "theHamsta/nvim-dap-virtual-text",
     "jay-babu/mason-nvim-dap.nvim",
     "williamboman/mason.nvim",
-    "leoluz/nvim-dap-go",
     "mfussenegger/nvim-dap-python",
     {
       "microsoft/vscode-js-debug",

@@ -108,17 +108,9 @@ return {
         jsonc = { "prettierd", "prettier" },
         yaml = { "prettierd", "prettier" },
         markdown = { "prettierd", "prettier" },
-        graphql = { "prettierd", "prettier" },
         lua = { "stylua" },
-        go = { "gofumpt", "goimports" },
-        templ = { "templ" },
         python = { "ruff_organize_imports", "ruff_format" },
-        rust = { "rustfmt" },
-        c = { "clang_format" },
-        cpp = { "clang_format" },
-        java = { "google_java_format" },
         php = { "php_cs_fixer" },
-        ruby = { "rubocop" },
         sh = { "shfmt" },
         bash = { "shfmt", "shellcheck" },
         zsh = { "shfmt" },
@@ -154,15 +146,6 @@ return {
             return { "--search-parent-directories", "--respect-ignores", "--stdin-filepath", ctx.filename, "-" }
           end,
         },
-        gofumpt = { prepend_args = { "-extra" } },
-        goimports = {},
-        templ = {
-          command = "templ",
-          args = function()
-            return check_templ_supports_stdin() and { "fmt", "-" } or { "fmt", "$FILENAME" }
-          end,
-          stdin = check_templ_supports_stdin,
-        },
         ruff_format = {
           command = "ruff",
           args = {
@@ -187,12 +170,6 @@ return {
           stdin = true,
         },
         shfmt = { prepend_args = { "-i", "2", "-ci" } },
-        clang_format = {
-          prepend_args = function(_, ctx)
-            local style_file = util.root_file({ ".clang-format" }, ctx.filename)
-            return style_file and {} or { "-style={BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 100}" }
-          end,
-        },
       },
       notify_on_error = true,
     }

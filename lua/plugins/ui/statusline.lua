@@ -104,20 +104,17 @@ return {
     local function pretty_path()
       return {
         function()
-          local path = vim.fn.expand("%:p:~:.")
-          local filename = vim.fn.expand("%:t")
+          -- local path = vim.fn.expand("%:p:~:.")
+          local filename = vim.fn.expand("%:t:r")
           -- local extension = vim.fn.expand("%:e")
           -- local icon = require("nvim-web-devicons").get_icon(filename, extension)
           -- if vim.fn.winwidth(0) > 90 then
           --   return (icon and icon .. " " or "") .. path
+          -- return path
           -- else
           --   return (icon and icon .. " " or "") .. filename
+          return filename
           -- end
-          if vim.fn.winwidth(0) > 90 then
-            return path
-          else
-            return filename
-          end
         end,
         color = { bg = colors.bg },
         cond = function()
@@ -300,6 +297,12 @@ return {
           file_size(),
           file_encoding(),
           file_format(),
+          {
+            "filetype",
+            colored = true,
+            icons_enabled = false,
+            color = { fg = colors.fg, bg = colors.bg }
+          },
           -- noice command status
           {
             function()

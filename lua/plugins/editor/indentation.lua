@@ -70,6 +70,7 @@ return {
     main = "ibl",
     event = "BufReadPre",
     dependencies = { "HiPhish/rainbow-delimiters.nvim" },
+    submodules = false,
     opts = function()
       local indent_char = "│"
 

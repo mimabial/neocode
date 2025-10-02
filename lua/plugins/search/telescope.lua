@@ -236,17 +236,6 @@ return {
           hide_on_startup = false,
         },
 
-        mappings = {
-          i = {
-            ["<C-c>"] = actions.close,
-            ["<C-u>"] = actions.preview_scrolling_up,
-            ["<C-d>"] = actions.preview_scrolling_down,
-            ["<C-_>"] = actions.which_key,
-          },
-          n = {
-            ["?"] = actions.which_key,
-          },
-        },
         file_ignore_patterns = {
           "%.git/",
           "node_modules/",

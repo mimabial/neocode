@@ -11,6 +11,7 @@ return {
       },
     },
     opts = {
+
       timeout = 1000,
       stages = "fade",
       render = "wrapped-compact",
@@ -18,6 +19,13 @@ return {
       max_width = 80,
       max_height = 20,
       top_down = true,
+      icons = {
+        ERROR = "",
+        WARN = "",
+        INFO = "",
+        DEBUG = "",
+        TRACE = "",
+      },
       on_open = function(win)
         vim.api.nvim_win_set_config(win, { zindex = 100, border = "single" })
       end,

@@ -14,12 +14,13 @@ return {
   opts = {
     ensure_installed = {
       "bash",
-      "c",
+      "css",
       "html",
       "javascript",
       "json",
       "lua",
       "markdown",
+      "yaml",
       "vim",
       "vimdoc",
       "tsx",
