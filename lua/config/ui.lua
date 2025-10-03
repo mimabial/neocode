@@ -56,6 +56,10 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "WinBar", { bg = colors.bg, fg = colors.fg })
   vim.api.nvim_set_hl(0, "WinBarNC", { bg = colors.bg, fg = colors.gray })
 
+  -- Window separators
+  vim.api.nvim_set_hl(0, "StatusLine", { fg = colors.bg, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "StatusLineNC", { fg = colors.gray, bg = colors.bg })
+
   -- Completion menu
   vim.api.nvim_set_hl(0, "CmpNormal", { bg = colors.bg })
   vim.api.nvim_set_hl(0, "CmpBorder", { fg = colors.border })
@@ -117,6 +121,7 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "NvimTreeFolderName", { fg = colors.blue })
   vim.api.nvim_set_hl(0, "NvimTreeOpenedFolderName", { fg = colors.blue })
   vim.api.nvim_set_hl(0, "NvimTreeEmptyFolderName", { fg = colors.red })
+  vim.api.nvim_set_hl(0, "NvimTreeIndentMarker", { fg = colors.gray }) -- or any color you prefer
 
   -- illuminate highlights
   vim.api.nvim_set_hl(0, "IlluminatedWordText", { bg = colors.bg, underline = true })

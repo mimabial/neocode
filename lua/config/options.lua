@@ -19,6 +19,7 @@ function M.setup()
   opt.background = "dark"                          -- Dark background
   opt.signcolumn = "yes:1"                         -- Always show sign column with fixed width
   opt.showtabline = 2                              -- Show tab line if there are at least two tabs
+  opt.laststatus = 3                               -- Global statusline (single bar at bottom)
   opt.formatoptions:remove { 'c', 'r', 'o' }       -- Disable comment continuation
   opt.runtimepath:remove '/usr/share/vim/vimfiles' -- Separate Vim plugins from Neovim
 

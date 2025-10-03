@@ -101,27 +101,27 @@ return {
       },
     }
 
-    local function pretty_path()
-      return {
-        function()
-          -- local path = vim.fn.expand("%:p:~:.")
-          local filename = vim.fn.expand("%:t:r")
-          -- local extension = vim.fn.expand("%:e")
-          -- local icon = require("nvim-web-devicons").get_icon(filename, extension)
-          -- if vim.fn.winwidth(0) > 90 then
-          --   return (icon and icon .. " " or "") .. path
-          -- return path
-          -- else
-          --   return (icon and icon .. " " or "") .. filename
-          return filename
-          -- end
-        end,
-        color = { bg = colors.bg },
-        cond = function()
-          return vim.fn.expand("%:t") ~= ""
-        end,
-      }
-    end
+    -- local function pretty_path()
+    --   return {
+    --     function()
+    --       -- local path = vim.fn.expand("%:p:~:.")
+    --       local filename = vim.fn.expand("%:t:r")
+    --       -- local extension = vim.fn.expand("%:e")
+    --       -- local icon = require("nvim-web-devicons").get_icon(filename, extension)
+    --       -- if vim.fn.winwidth(0) > 90 then
+    --       --   return (icon and icon .. " " or "") .. path
+    --       -- return path
+    --       -- else
+    --       --   return (icon and icon .. " " or "") .. filename
+    --       return filename
+    --       -- end
+    --     end,
+    --     color = { bg = colors.bg },
+    --     cond = function()
+    --       return vim.fn.expand("%:t") ~= ""
+    --     end,
+    --   }
+    -- end
 
     local function root_dir()
       return {
@@ -228,7 +228,6 @@ return {
         component_separators = { left = "", right = "" },
         section_separators = { left = "", right = "" },
         theme = custom_theme,
-        globalstatus = vim.o.laststatus == 3,
         disabled_filetypes = {
           statusline = { "lazy", "NvimTree", "oil", "spectre-panel", "Trouble" },
           winbar = { "lazy", "NvimTree", "oil", "spectre-panel", "Trouble" },
@@ -280,29 +279,34 @@ return {
         },
         lualine_c = {
           root_dir(),
-          pretty_path(),
-          {
-            "diagnostics",
-            symbols = {
-              error = icons.diagnostics.error,
-              warn = icons.diagnostics.warn,
-              info = icons.diagnostics.info,
-              hint = icons.diagnostics.hint,
-            },
-            colored = true,
-            color = { bg = colors.bg },
-          },
+          -- pretty_path(),
+          -- {
+          --   "diagnostics",
+          --   symbols = {
+          --     error = icons.diagnostics.error,
+          --     warn = icons.diagnostics.warn,
+          --     info = icons.diagnostics.info,
+          --     hint = icons.diagnostics.hint,
+          --   },
+          --   colored = true,
+          --   color = { bg = colors.bg },
+          -- },
         },
         lualine_x = {
-          file_size(),
-          file_encoding(),
-          file_format(),
+          ai_indicators(),
           {
             "filetype",
             colored = true,
             icons_enabled = false,
             color = { fg = colors.fg, bg = colors.bg }
           },
+          lsp_status(),
+        },
+        lualine_y = {
+          file_size(),
+          file_encoding(),
+          file_format(),
+
           -- noice command status
           {
             function()
@@ -341,16 +345,18 @@ return {
           },
 
         },
-        lualine_y = {
-          ai_indicators(),
-          lsp_status(),
-
-          { "progress", color = { fg = colors.fg, bg = colors.bg } }
-
-        },
         lualine_z = {
+          { "progress", color = { fg = colors.fg, bg = colors.bg } },
           { "location", color = { fg = colors.fg, bg = colors.bg } }
         },
+      },
+      inactive_sections = {
+        lualine_a = {},
+        lualine_b = {},
+        lualine_c = {},
+        lualine_x = {},
+        lualine_y = {},
+        lualine_z = {}
       },
       extensions = {
         "lazy",

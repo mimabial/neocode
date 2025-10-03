@@ -51,7 +51,6 @@ return {
         ["<C-r>"] = "actions.refresh",
 
         ["<C-c>"] = "actions.close",
-        ["<ESC>"] = "actions.close",
         ["q"] = "actions.close",
 
         ["-"] = "actions.parent",
@@ -94,7 +93,17 @@ return {
     },
     cmd = { "NvimTreeToggle", "NvimTreeFindFile" },
     keys = {
-      { "<leader>E", "<cmd>NvimTreeToggle<cr>", desc = "NvimTree Explorer" },
+      {
+        "<leader>E",
+        function()
+          -- Don't open nvim-tree if we're in oil
+          if vim.bo.filetype == "oil" then
+            return
+          end
+          vim.cmd("NvimTreeToggle")
+        end,
+        desc = "NvimTree Explorer"
+      },
     },
     opts = function()
       return {
@@ -149,6 +158,7 @@ return {
             -- end,
           },
           width = 30,
+          side = "right"
           -- auto_resize = true,
           -- width = function()
           --   return math.floor(vim.opt.columns:get() * 5)
@@ -201,11 +211,11 @@ return {
           indent_markers = {
             enable = true,
             icons = {
-              corner = "", -- alt: └ 
-              edge = "┆", --alt: │
-              item = "┆", -- alt: ├
+              corner = "󱞩", -- alt: └ 
+              edge = "│", --alt: │┆
+              item = "│", -- alt: ├
               bottom = "─",
-              none = "",
+              none = "│",
             },
           },
           icons = {
@@ -279,6 +289,17 @@ return {
     end,
     config = function(_, opts)
       require("nvim-tree").setup(opts)
+      -- Close Neovim if nvim-tree is the last window
+      vim.api.nvim_create_autocmd("BufEnter", {
+        nested = true,
+        callback = function()
+          if #vim.api.nvim_list_wins() == 1 and
+              vim.bo.filetype == "NvimTree" then
+            vim.cmd("quit")
+          end
+        end,
+      })
+
       -- Prevent floating nvim-tree from closing on focus loss
       -- vim.api.nvim_create_autocmd("FileType", {
       --   pattern = "NvimTree",

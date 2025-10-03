@@ -103,6 +103,14 @@ return {
 
     opts = {
       commands = {
+        history = {
+          view = "popup",
+          opts = { enter = true, format = "details" },
+        },
+        last = {
+          view = "popup",
+          opts = { enter = true, format = "details" },
+        },
         all = {
           view = "popup",
           opts = { enter = true, format = "details" },
@@ -123,6 +131,11 @@ return {
           search_up = { kind = "search", pattern = "^%?", icon = "?", lang = "regex" },
           filter = { pattern = "^:%s*!", icon = "!", lang = "bash" },
           help = { pattern = "^:%s*he?l?p?", icon = "??" },
+        },
+        mappings = {
+          n = {
+            ["<Esc>"] = "close",
+          },
         },
       },
       lsp = {
@@ -201,9 +214,32 @@ return {
     config = function(_, opts)
       require("noice").setup(opts)
 
-      vim.api.nvim_create_autocmd("FileType", {
-        pattern = { "neo-tree", "lazy" },
-        callback = function() vim.b.noice_disable = true end,
+      -- Close Neovim if only Noice windows remain
+      vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
+        callback = function()
+          local wins = vim.api.nvim_list_wins()
+          local normal_wins = 0
+
+          for _, win in ipairs(wins) do
+            if vim.api.nvim_win_is_valid(win) then
+              local buf = vim.api.nvim_win_get_buf(win)
+              local ft = vim.bo[buf].filetype
+              local config = vim.api.nvim_win_get_config(win)
+
+              -- Count only normal (non-floating, non-special) windows
+              if config.relative == "" and not vim.tbl_contains(
+                    { "noice", "notify", "TelescopePrompt", "TelescopeResults" }, ft
+                  ) then
+                normal_wins = normal_wins + 1
+              end
+            end
+          end
+
+          -- If no normal windows remain, quit
+          if normal_wins == 0 then
+            vim.cmd("quit")
+          end
+        end,
       })
 
       local function update_highlights()
