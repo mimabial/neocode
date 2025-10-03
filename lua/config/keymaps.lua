@@ -59,7 +59,7 @@ function M.setup()
   -- Editing
   -- ========================================
   map('n', 'x', '"_x', { desc = "Don't copy deleted character" })
-  map('v', 'p', '"_dP', { desc = "Keep yanked text when pasting" })
+  map('v', 'p', '"_dp', { desc = "Keep yanked text when pasting" })
 
   -- Keep selection when indenting in visual mode
   map("v", ">", ">gv", { desc = "Indent and keep selection" })

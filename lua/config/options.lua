@@ -36,7 +36,6 @@ function M.setup()
   opt.showmode = false      -- Mode handled by statusline
   opt.showcmd = false       -- Don't show partial commands
   opt.shortmess:append("c") -- Don't show completion messages
-  opt.iskeyword:append '-'  -- Ad '-' to words recognized by searches
   -- opt.shortmess:remove("S") -- Allow search count in statusline
 
   -- Indentation
