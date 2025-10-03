@@ -20,10 +20,6 @@ function M.setup()
     callback = function(args)
       local opts = { buffer = args.buf, silent = true }
 
-      -- Save and quit
-      map('n', '<C-s>', '<cmd> w <CR>', opts)
-      map('n', '<C-q>', '<cmd> q <CR>', opts)
-
       -- Navigation
       map("n", "gd", vim.lsp.buf.definition, vim.tbl_extend("force", opts, { desc = "Go to definition" }))
       map("n", "gD", vim.lsp.buf.declaration, vim.tbl_extend("force", opts, { desc = "Go to declaration" }))

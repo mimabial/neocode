@@ -48,8 +48,12 @@ return {
         ["<C-s>"] = "actions.select_split",
         ["<C-t>"] = "actions.select_tab",
         ["<C-p>"] = "actions.preview",
-        ["<C-c>"] = "actions.close",
         ["<C-r>"] = "actions.refresh",
+
+        ["<C-c>"] = "actions.close",
+        ["<ESC>"] = "actions.close",
+        ["q"] = "actions.close",
+
         ["-"] = "actions.parent",
         ["_"] = "actions.open_cwd",
         ["`"] = "actions.cd",
@@ -265,6 +269,7 @@ return {
           vim.keymap.set("n", "a", api.fs.create, opts("Create"))
           vim.keymap.set("n", "R", api.tree.reload, opts("Refresh"))
           vim.keymap.set("n", "?", api.tree.toggle_help, opts("Help"))
+          vim.keymap.set("n", "<ESC>", api.tree.close, opts("Close"))
           vim.keymap.set("n", "q", api.tree.close, opts("Close"))
         end,
       }

@@ -39,6 +39,49 @@ return {
         node_decremental = "<BS>",
       },
     },
+    textobjects = {
+      select = {
+        enable = true,
+        lookahead = true, -- Jump forward to next text object
+        keymaps = {
+          -- Functions
+          ["af"] = "@function.outer",
+          ["if"] = "@function.inner",
+          ["ac"] = "@class.outer",
+          ["ic"] = "@class.inner",
+          -- Blocks
+          ["ab"] = "@block.outer",
+          ["ib"] = "@block.inner",
+          -- Parameters
+          ["aa"] = "@parameter.outer",
+          ["ia"] = "@parameter.inner",
+        },
+      },
+      move = {
+        enable = true,
+        set_jumps = true,
+        goto_next_start = {
+          ["]f"] = "@function.outer",
+          ["]c"] = "@class.outer",
+          ["]a"] = "@parameter.inner",
+        },
+        goto_next_end = {
+          ["]F"] = "@function.outer",
+          ["]C"] = "@class.outer",
+          ["]A"] = "@parameter.inner",
+        },
+        goto_previous_start = {
+          ["[f"] = "@function.outer",
+          ["[c"] = "@class.outer",
+          ["[a"] = "@parameter.inner",
+        },
+        goto_previous_end = {
+          ["[F"] = "@function.outer",
+          ["[C"] = "@class.outer",
+          ["[A"] = "@parameter.inner",
+        },
+      },
+    },
   },
   config = function(_, opts)
     -- Remove duplicates in ensure_installed

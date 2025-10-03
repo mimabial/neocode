@@ -4,13 +4,6 @@ return {
   cmd = "Spectre",
   keys = {
     {
-      "<leader>sR",
-      function()
-        require("spectre").toggle()
-      end,
-      desc = "Search and Replace (Spectre)",
-    },
-    {
       "<leader>sr",
       function()
         require("spectre").open_file_search()
@@ -18,19 +11,25 @@ return {
       desc = "Search and Replace (Current File)",
     },
     {
+      "<leader>sR",
+      function()
+        require("spectre").toggle()
+      end,
+      desc = "Search and Replace (Project)",
+    },
+    {
       "<leader>sw",
       function()
-        require("spectre").open_visual({ select_word = true })
+        require("spectre").open_file_search({ select_word = true })
       end,
-      desc = "Search Word Under Cursor",
+      desc = "Search Word (Current File)",
     },
     {
       "<leader>sW",
       function()
-        require("spectre").open_visual()
+        require("spectre").open_visual({ select_word = true })
       end,
-      mode = "v",
-      desc = "Search Selection",
+      desc = "Search Word (Project)",
     },
   },
   opts = {
@@ -116,7 +115,7 @@ return {
         desc = "resume last search",
       },
       ["quit"] = {
-        map = "q",
+        map = { "q" },
         cmd = "<cmd>close<CR>",
         desc = "quit",
       },

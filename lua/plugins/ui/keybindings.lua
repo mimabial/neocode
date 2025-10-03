@@ -85,10 +85,10 @@ return {
 
     -- Search/Replace
     which_key.add({
-      { "<leader>sr", desc = "Search and Replace (Project)" },
-      { "<leader>sR", desc = "Search and Replace (Current File)" },
-      { "<leader>sw", desc = "Search Word Under Cursor" },
-      { "<leader>sW", desc = "Search Word (Current File)" },
+      { "<leader>sr", desc = "Search and Replace (Current File)" },
+      { "<leader>sR", desc = "Search and Replace (Project)" },
+      { "<leader>sw", desc = "Search Word (Current File)" },
+      { "<leader>sW", desc = "Search Word (Project)" },
       { "<leader>si", desc = "Search Within Range" },
       { "<leader>sb", desc = "Search Last Pattern" },
     })
