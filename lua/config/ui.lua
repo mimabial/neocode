@@ -100,6 +100,10 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "BufferLineIndicatorSelected", { fg = colors.blue, bg = colors.bg })
   vim.api.nvim_set_hl(0, "BufferLineFill", { fg = colors.fg, bg = colors.bg })
 
+  -- Bufferline offset highlights (for nvim-tree/oil sections)
+  vim.api.nvim_set_hl(0, "BufferLineOffsetSeparator", { fg = colors.bg, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "BufferLineOffset", { fg = colors.fg, bg = colors.bg })
+
   -- Floating window highlights
   vim.api.nvim_set_hl(0, "FloatTitle", { fg = colors.red, bg = colors.bg, bold = true })
 

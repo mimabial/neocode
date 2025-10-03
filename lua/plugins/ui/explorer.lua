@@ -149,7 +149,6 @@ return {
             -- end,
           },
           width = 30,
-          title = false
           -- auto_resize = true,
           -- width = function()
           --   return math.floor(vim.opt.columns:get() * 5)
@@ -281,18 +280,18 @@ return {
     config = function(_, opts)
       require("nvim-tree").setup(opts)
       -- Prevent floating nvim-tree from closing on focus loss
-      vim.api.nvim_create_autocmd("FileType", {
-        pattern = "NvimTree",
-        callback = function(args)
-          local bufnr = args.buf
-          vim.api.nvim_create_autocmd("WinLeave", {
-            buffer = bufnr,
-            callback = function()
-              return true -- Prevent default behavior
-            end,
-          })
-        end,
-      })
+      -- vim.api.nvim_create_autocmd("FileType", {
+      --   pattern = "NvimTree",
+      --   callback = function(args)
+      --     local bufnr = args.buf
+      --     vim.api.nvim_create_autocmd("WinLeave", {
+      --       buffer = bufnr,
+      --       callback = function()
+      --         return true -- Prevent default behavior
+      --       end,
+      --     })
+      --   end,
+      -- })
 
       local function setup_nvim_tree_highlights()
         local colors = _G.get_ui_colors()

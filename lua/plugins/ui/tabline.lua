@@ -29,13 +29,13 @@ return {
       offsets = {
         {
           filetype = "NvimTree",
-          text = "File Explorer",
+          text = "",
           text_align = "center",
           separator = true,
         },
         {
           filetype = "oil",
-          text = "File Explorer",
+          text = "",
           text_align = "center",
           separator = true,
         },
