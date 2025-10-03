@@ -118,39 +118,42 @@ return {
         },
         update_focused_file = {
           enable = true,
-          update_root = false,
+          update_root = true,
         },
         view = {
           float = {
-            enable = true,
-            open_win_config = function()
-              local screen_w = vim.opt.columns:get()
-              local screen_h = vim.opt.lines:get() - vim.opt.cmdheight:get()
-
-              local top_spacing = math.floor(screen_h * 0.00)
-              local bottom_spacing = math.floor(screen_h * 0.04)
-              local left_spacing = math.floor(screen_w * 0.02)
-              local right_spacing = math.floor(screen_w * 0.02)
-
-              local available_height = screen_h - top_spacing - bottom_spacing
-              local available_width = screen_w - left_spacing - right_spacing
-
-              local width = math.min(30, available_width)
-              local height = math.min(math.floor(screen_h * 0.9), available_height)
-
-              return {
-                border = "single",
-                relative = "editor",
-                row = top_spacing,
-                col = screen_w - width - right_spacing,
-                width = width,
-                height = height,
-              }
-            end,
+            enable = false,
+            -- open_win_config = function()
+            --   local screen_w = vim.opt.columns:get()
+            --   local screen_h = vim.opt.lines:get() - vim.opt.cmdheight:get()
+            --
+            --   local top_spacing = math.floor(screen_h * 0.00)
+            --   local bottom_spacing = math.floor(screen_h * 0.04)
+            --   local left_spacing = math.floor(screen_w * 0.02)
+            --   local right_spacing = math.floor(screen_w * 0.02)
+            --
+            --   local available_height = screen_h - top_spacing - bottom_spacing
+            --   local available_width = screen_w - left_spacing - right_spacing
+            --
+            --   local width = math.min(30, available_width)
+            --   local height = math.min(math.floor(screen_h * 1), available_height)
+            --
+            --   return {
+            --     border = "single",
+            --     relative = "editor",
+            --     row = top_spacing,
+            --     col = screen_w - width - right_spacing,
+            --     width = width,
+            --     height = height,
+            --   }
+            -- end,
           },
-          width = function()
-            return math.floor(vim.opt.columns:get() * 5)
-          end,
+          width = 30,
+          title = false
+          -- auto_resize = true,
+          -- width = function()
+          --   return math.floor(vim.opt.columns:get() * 5)
+          -- end,
         },
         diagnostics = {
           enable = false,
@@ -179,6 +182,7 @@ return {
         actions = {
           open_file = {
             resize_window = true,
+            quit_on_open = false,
           },
           remove_file = {
             close_window = true,
@@ -276,6 +280,20 @@ return {
     end,
     config = function(_, opts)
       require("nvim-tree").setup(opts)
+      -- Prevent floating nvim-tree from closing on focus loss
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "NvimTree",
+        callback = function(args)
+          local bufnr = args.buf
+          vim.api.nvim_create_autocmd("WinLeave", {
+            buffer = bufnr,
+            callback = function()
+              return true -- Prevent default behavior
+            end,
+          })
+        end,
+      })
+
       local function setup_nvim_tree_highlights()
         local colors = _G.get_ui_colors()
         vim.api.nvim_set_hl(0, "NvimTreeNormal", { bg = colors.bg, fg = colors.fg })
