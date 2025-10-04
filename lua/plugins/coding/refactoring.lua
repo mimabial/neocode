@@ -57,16 +57,17 @@ return {
       is_insert_mode = false,
 
       open_cmd = function()
-        local width = math.max(math.floor(vim.o.columns * 0.6), 80)
-        return width .. 'vnew'
+        vim.cmd('vnew')
+        local width = math.min(math.floor(vim.o.columns * 0.4), 80)
+        vim.cmd('vertical resize ' .. width)
       end,
 
       color_devicons = true,
       live_update = false,
       lnum_for_results = true,
-      line_sep_start = "┌────────────────────────────────────────", -- alt: ┌─
-      result_padding = "│  ", -- alt: │
-      line_sep = "└──────────────────────────────────────", -- alt: └─
+      line_sep_start = "  ┌────────────────────────────────────────────────────────────────────────────────", -- alt: ┌─
+      result_padding = "  │  ", -- alt: │
+      line_sep = "  └──────────────────────────────────────────────────────────────────────────────", -- alt: └─
       highlight = {
         ui = "String",
         search = "DiffChange",
@@ -160,50 +161,34 @@ return {
   config = function(_, opts)
     require("spectre").setup(opts)
 
-    -- Store original spectre window size
-    local spectre_width = nil
-
     vim.api.nvim_create_autocmd("FileType", {
       pattern = "spectre_panel",
-      callback = function()
+      callback = function(args)
+        local bufnr = args.buf
+
+        -- Store original width
+        local original_width = vim.api.nvim_win_get_width(0)
+
+        -- Window options
         vim.opt_local.number = false
         vim.opt_local.relativenumber = false
         vim.opt_local.signcolumn = "no"
         vim.opt_local.cursorline = true
 
-        -- Store original width on first open
-        if not spectre_width then
-          spectre_width = vim.api.nvim_win_get_width(0)
-        end
-      end,
-    })
+        -- Buffer-local autocmds for window management
+        vim.api.nvim_create_autocmd("WinLeave", {
+          buffer = bufnr,
+          callback = function()
+            vim.api.nvim_win_set_width(0, 40)
+          end,
+        })
 
-    -- Shrink spectre when leaving to file
-    vim.api.nvim_create_autocmd("WinLeave", {
-      pattern = "*",
-      callback = function()
-        if vim.bo.filetype == "spectre_panel" then
-          vim.api.nvim_win_set_width(0, 30)
-        end
-      end,
-    })
-
-    -- Expand spectre when returning
-    vim.api.nvim_create_autocmd("WinEnter", {
-      pattern = "*",
-      callback = function()
-        if vim.bo.filetype == "spectre_panel" and spectre_width then
-          vim.api.nvim_win_set_width(0, spectre_width)
-        end
-      end,
-    })
-
-    -- Ensure proper highlighting
-    vim.api.nvim_create_autocmd("FileType", {
-      pattern = "spectre_panel",
-      callback = function()
-        vim.opt_local.signcolumn = "no"
-        vim.opt_local.cursorline = true
+        vim.api.nvim_create_autocmd("WinEnter", {
+          buffer = bufnr,
+          callback = function()
+            vim.api.nvim_win_set_width(0, original_width)
+          end,
+        })
       end,
     })
   end,
