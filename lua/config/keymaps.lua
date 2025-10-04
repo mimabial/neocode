@@ -74,9 +74,6 @@ function M.setup()
   map("n", "n", "nzzzv", { desc = "Next search result (centered)" })
   map("n", "N", "Nzzzv", { desc = "Previous search result (centered)" })
 
-  -- Toggle line wrapping
-  map('n', '<leader>lw', '<cmd>set wrap!<CR>', { desc = "Toggle line wrap" })
-
   -- ========================================
   -- Navigation
   -- ========================================
@@ -145,8 +142,9 @@ function M.setup()
   -- <leader>fG* - Telescope git operations (handled by telescope keys)
 
   -- ========================================
-  -- Theme Management
+  -- UI/display setting
   -- ========================================
+  -- Theme Management
   map("n", "<leader>us", "<cmd>CycleColorScheme<cr>", { desc = "Cycle color scheme" })
   map("n", "<leader>uS", "<cmd>ColorScheme<cr>", { desc = "Select color scheme" })
   map("n", "<leader>uv", "<cmd>CycleColorVariant<cr>", { desc = "Cycle color variant" })
@@ -157,6 +155,8 @@ function M.setup()
   map("n", "<leader>uY", "<cmd>SystemDetect<cr>", { desc = "Detect system theme" })
   map("n", "<leader>uz", "<cmd>SystemSetTheme<cr>", { desc = "Set system NVIM_SCHEME" })
   map("n", "<leader>uL", "<cmd>SystemListThemes<cr>", { desc = "List available system themes" })
+  -- Toggle line wrapping
+  map('n', '<leader>uw', '<cmd>set wrap!<CR>', { desc = "Toggle line wrap" })
 
   -- ========================================
   -- AI Provider Management

@@ -91,9 +91,9 @@ return {
       { "<leader>fc",  builtin.command_history,                  desc = "Command History" },
       { "<leader>f/",  builtin.search_history,                   desc = "Search History" },
       -- Redirect command-line window to Telescope
-      { "q:",          builtin.command_history,                  desc = "Command History (Telescope)" },
-      { "q/",          builtin.search_history,                   desc = "Search History (Telescope)" },
-      { "q?",          builtin.search_history,                   desc = "Search History (Telescope)" },
+      { "q:",          builtin.command_history,                  desc = "Command History" },
+      { "q/",          builtin.search_history,                   desc = "Search History" },
+      { "q?",          builtin.search_history,                   desc = "Search History" },
       -- Git integration
       { "<leader>fGc", builtin.git_commits,                      desc = "Git Commits" },
       { "<leader>fGb", builtin.git_branches,                     desc = "Git Branches" },

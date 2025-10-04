@@ -168,6 +168,7 @@ return {
       { "<leader>uY", desc = "Detect system theme" },
       { "<leader>uz", desc = "Set system NVIM_SCHEME" },
       { "<leader>uL", desc = "List available system themes" },
+      { "<leader>uw", desc = "Toggle line wrap" },
     })
 
     -- Navic & Outline
