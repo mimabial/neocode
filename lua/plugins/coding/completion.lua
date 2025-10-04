@@ -31,7 +31,6 @@ return {
         Event = "󰉁",
         Operator = "󰆕",
         TypeParameter = "󰅲",
-        Copilot = "",
         Codeium = "󰚩",
       },
     },
@@ -84,7 +83,10 @@ return {
         enabled = function()
           local buftype = vim.api.nvim_get_option_value("buftype", { buf = 0 })
           local filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 })
-          return filetype ~= "oil" and buftype ~= "prompt" and filetype ~= "TelescopePrompt"
+          return filetype ~= "oil"
+              and buftype ~= "prompt"
+              and filetype ~= "TelescopePrompt"
+              and filetype ~= "spectre_panel"
         end,
         snippet = {
           expand = function(args)

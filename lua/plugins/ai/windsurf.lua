@@ -8,7 +8,14 @@ return {
       enable_chat = true,
     })
 
-    -- Keymaps for Windsurf (formerly Codeium)
+    -- Disable Codeium in special buffers
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = { "spectre_panel", "TelescopePrompt", "oil" },
+      callback = function()
+        vim.b.codeium_enabled = false
+      end,
+    })
+
     vim.keymap.set("i", "<C-g>", function()
       return require("codeium").complete()
     end, { expr = true, desc = "Windsurf: Accept suggestion" })

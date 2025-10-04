@@ -135,6 +135,14 @@ function M.setup()
     end,
     desc = "Set window title",
   })
+
+  -- 10) Prevent auto-comment continuation (runs after ftplugin to reset option)
+  vim.api.nvim_create_autocmd("FileType", {
+    callback = function()
+      vim.opt_local.formatoptions:remove({ 'c', 'r', 'o' })
+    end,
+    desc = "Disable comment continuation",
+  })
 end
 
 return M

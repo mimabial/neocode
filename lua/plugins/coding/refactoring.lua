@@ -69,10 +69,12 @@ return {
 
     return {
       color_devicons = true,
-      open_cmd = function()
-        local buf, win = create_floating_window()
-        return buf, win
-      end,
+
+      -- open_cmd = function()
+      --   local buf, win = create_floating_window()
+      --   return buf, win
+      -- end,
+
       live_update = false,
       lnum_for_results = true,
       line_sep_start = "┌─",
@@ -170,37 +172,6 @@ return {
 
   config = function(_, opts)
     require("spectre").setup(opts)
-
-    -- Global function for replace with auto-refresh
-    _G.spectre_replace_and_refresh = function()
-      local spectre = require("spectre")
-      local actions = require("spectre.actions")
-
-      -- Store current state before replace
-      local state = actions.get_state()
-
-      -- Run replace
-      actions.run_replace()
-
-      -- Auto-refresh after a delay to let sed complete
-      vim.defer_fn(function()
-        -- Check if spectre window still exists
-        local wins = vim.api.nvim_list_wins()
-        for _, win in ipairs(wins) do
-          if vim.api.nvim_win_is_valid(win) then
-            local buf = vim.api.nvim_win_get_buf(win)
-            if vim.api.nvim_buf_is_valid(buf) then
-              local ft = vim.bo[buf].filetype
-              if ft == "spectre_panel" then
-                -- Window still open, resume search to refresh counts
-                spectre.resume_last_search()
-                return
-              end
-            end
-          end
-        end
-      end, 500)
-    end
 
     -- Auto-resize floating window on VimResized
     vim.api.nvim_create_autocmd("VimResized", {

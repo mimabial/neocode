@@ -110,6 +110,7 @@ return {
   config = function()
     -- IMPORTANT: Register custom layout strategies FIRST before any setup
     local layout_strategies = require("telescope.pickers.layout_strategies")
+    local actions = require("telescope.actions")
 
     -- Custom vertical layout with full screen usage and preview on top
     layout_strategies.ebony = function(picker, max_columns, max_lines)
@@ -202,6 +203,11 @@ return {
         prompt_title = false,
         preview_title = false,
         results_title = false,
+        mappings = {
+          i = {
+            ["<esc>"] = actions.close,
+          },
+        },
 
         prompt_prefix = " ",
         selection_caret = "  ",
