@@ -6,6 +6,8 @@ return {
     {
       "<leader>sr",
       function()
+        local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
+        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then return end
         require("spectre").open_file_search()
       end,
       desc = "Search and Replace (Current File)",
@@ -13,6 +15,8 @@ return {
     {
       "<leader>sR",
       function()
+        local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
+        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then return end
         require("spectre").toggle()
       end,
       desc = "Search and Replace (Project)",
@@ -20,6 +24,8 @@ return {
     {
       "<leader>sw",
       function()
+        local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
+        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then return end
         require("spectre").open_file_search({ select_word = true })
       end,
       desc = "Search Word (Current File)",
@@ -27,6 +33,8 @@ return {
     {
       "<leader>sW",
       function()
+        local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
+        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then return end
         require("spectre").open_visual({ select_word = true })
       end,
       desc = "Search Word (Project)",
@@ -34,12 +42,31 @@ return {
   },
   opts = function()
     return {
+      default = {
+        find = {
+          cmd = "rg",
+          options = {}
+        },
+        replace = {
+          cmd = "sed"
+        }
+      },
+
+      -- Window size options
+      is_open_target_win = true,
+      is_insert_mode = false,
+
+      open_cmd = function()
+        local width = math.max(math.floor(vim.o.columns * 0.6), 80)
+        return width .. 'vnew'
+      end,
+
       color_devicons = true,
       live_update = false,
       lnum_for_results = true,
-      line_sep_start = "┌─",
-      result_padding = "│  ",
-      line_sep = "└─",
+      line_sep_start = "┌────────────────────────────────────────", -- alt: ┌─
+      result_padding = "│  ", -- alt: │
+      line_sep = "└──────────────────────────────────────", -- alt: └─
       highlight = {
         ui = "String",
         search = "DiffChange",
@@ -133,12 +160,48 @@ return {
   config = function(_, opts)
     require("spectre").setup(opts)
 
-    -- Ensure proper highlighting
+    -- Store original spectre window size
+    local spectre_width = nil
+
     vim.api.nvim_create_autocmd("FileType", {
       pattern = "spectre_panel",
       callback = function()
         vim.opt_local.number = false
         vim.opt_local.relativenumber = false
+        vim.opt_local.signcolumn = "no"
+        vim.opt_local.cursorline = true
+
+        -- Store original width on first open
+        if not spectre_width then
+          spectre_width = vim.api.nvim_win_get_width(0)
+        end
+      end,
+    })
+
+    -- Shrink spectre when leaving to file
+    vim.api.nvim_create_autocmd("WinLeave", {
+      pattern = "*",
+      callback = function()
+        if vim.bo.filetype == "spectre_panel" then
+          vim.api.nvim_win_set_width(0, 30)
+        end
+      end,
+    })
+
+    -- Expand spectre when returning
+    vim.api.nvim_create_autocmd("WinEnter", {
+      pattern = "*",
+      callback = function()
+        if vim.bo.filetype == "spectre_panel" and spectre_width then
+          vim.api.nvim_win_set_width(0, spectre_width)
+        end
+      end,
+    })
+
+    -- Ensure proper highlighting
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = "spectre_panel",
+      callback = function()
         vim.opt_local.signcolumn = "no"
         vim.opt_local.cursorline = true
       end,

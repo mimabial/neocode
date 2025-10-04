@@ -169,7 +169,7 @@ return {
         function()
           -- Check if Codeium is loaded
           if package.loaded["codeium"] then
-            return "codeuim" -- Windsurf icon
+            return "windsurf"
           end
           return ""
         end,
@@ -293,7 +293,6 @@ return {
           -- },
         },
         lualine_x = {
-          ai_indicators(),
           {
             "filetype",
             colored = true,
@@ -346,6 +345,7 @@ return {
 
         },
         lualine_z = {
+          ai_indicators(),
           { "progress", color = { fg = colors.fg, bg = colors.bg } },
           { "location", color = { fg = colors.fg, bg = colors.bg } }
         },
