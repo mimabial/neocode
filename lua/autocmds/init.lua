@@ -143,6 +143,15 @@ function M.setup()
     end,
     desc = "Disable comment continuation",
   })
+
+  -- 11) Command-line window keymaps
+  vim.api.nvim_create_autocmd("CmdwinEnter", {
+    callback = function()
+      vim.keymap.set("n", "<Esc>", "<cmd>quit<cr>", { buffer = true, silent = true })
+      vim.keymap.set("n", "q", "<cmd>quit<cr>", { buffer = true, silent = true })
+    end,
+    desc = "Close command-line window with Esc/q",
+  })
 end
 
 return M

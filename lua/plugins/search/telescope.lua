@@ -104,6 +104,10 @@ return {
       -- Other useful pickers
       { "<leader>ft",  with_layout("treesitter"),                desc = "Find Symbols (Treesitter)" },
       { "<leader>fk",  with_layout("keymaps"),                   desc = "Find Keymaps" },
+      -- Redirect command-line window to Telescope
+      { "q:",          with_layout("command_history"),           desc = "Command History (Telescope)" },
+      { "q/",          with_layout("search_history"),            desc = "Search History (Telescope)" },
+      { "q?",          with_layout("search_history"),            desc = "Search History (Telescope)" },
     }
   end,
 
@@ -420,6 +424,15 @@ return {
       vim.fn.writefile({ data }, layout_file)
       vim.notify("Telescope layout: " .. (layout == "ivory" and "ivory" or "ebony") .. " (saved)")
     end, {})
+
+
+    vim.api.nvim_create_user_command("History", function()
+      require("telescope.builtin").command_history()
+    end, { desc = "Command History (Telescope)" })
+
+    vim.api.nvim_create_user_command("Hist", function()
+      require("telescope.builtin").command_history()
+    end, { desc = "Command History (Telescope)" })
 
     -- Enhanced preview settings
     vim.api.nvim_create_autocmd("User", {

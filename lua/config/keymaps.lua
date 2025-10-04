@@ -145,7 +145,7 @@ function M.setup()
   -- <leader>fG* - Telescope git operations (handled by telescope keys)
 
   -- ========================================
-  -- heme Management
+  -- Theme Management
   -- ========================================
   map("n", "<leader>us", "<cmd>CycleColorScheme<cr>", { desc = "Cycle color scheme" })
   map("n", "<leader>uS", "<cmd>ColorScheme<cr>", { desc = "Select color scheme" })
@@ -163,7 +163,6 @@ function M.setup()
   -- ========================================
   map("n", "<leader>as", "<cmd>AIStatus<cr>", { desc = "Show active AI provider" })
   map("n", "<leader>at", "<cmd>AIToggle<cr>", { desc = "Toggle AI provider" })
-
 
   -- ========================================
   -- Navic & Outline

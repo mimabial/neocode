@@ -146,12 +146,12 @@ return {
         },
         ["quit"] = {
           map = "q",
-          cmd = "<cmd>close<CR>",
+          cmd = "<cmd>lua if #vim.api.nvim_list_wins() == 1 then vim.cmd('quit') else require('spectre').close() end<CR>",
           desc = "quit",
         },
         ["escape"] = {
           map = "<ESC>",
-          cmd = "<cmd>close<CR>",
+          cmd = "<cmd>lua if #vim.api.nvim_list_wins() == 1 then vim.cmd('quit') else require('spectre').close() end<CR>",
           desc = "quit",
         },
       },
@@ -160,6 +160,22 @@ return {
 
   config = function(_, opts)
     require("spectre").setup(opts)
+
+    -- Close Neovim if spectre is the last window
+    vim.api.nvim_create_autocmd("WinClosed", {
+      callback = function()
+        -- Schedule to run after the window is actually closed
+        vim.schedule(function()
+          local wins = vim.api.nvim_list_wins()
+          if #wins == 1 then
+            local buf = vim.api.nvim_win_get_buf(wins[1])
+            if vim.bo[buf].filetype == "spectre_panel" then
+              vim.cmd("quit")
+            end
+          end
+        end)
+      end,
+    })
 
     vim.api.nvim_create_autocmd("FileType", {
       pattern = "spectre_panel",
