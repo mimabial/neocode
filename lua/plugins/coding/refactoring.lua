@@ -33,48 +33,8 @@ return {
     },
   },
   opts = function()
-    -- Floating window configuration
-    local function create_floating_window()
-      local top_spacing = math.floor(vim.o.lines * 0)
-      local bottom_spacing = math.floor(vim.o.lines * 0)
-      local left_spacing = math.floor(vim.o.columns * 0)
-      local right_spacing = math.floor(vim.o.columns * 0.02)
-
-      local available_height = vim.o.lines - top_spacing - bottom_spacing
-      local available_width = vim.o.columns - left_spacing - right_spacing
-
-      local width = math.min(math.floor(vim.o.columns * 0.6), available_width)
-      local height = math.min(math.floor(vim.o.lines * 1), available_height)
-
-      local buf = vim.api.nvim_create_buf(false, true)
-
-      local win = vim.api.nvim_open_win(buf, true, {
-        relative = "editor",
-        width = width,
-        height = height,
-        col = vim.o.columns - width - right_spacing,
-        row = top_spacing,
-        border = "single",
-        style = "minimal",
-      })
-
-      -- Set window options
-      vim.api.nvim_set_option_value("number", false, { win = win })
-      vim.api.nvim_set_option_value("relativenumber", false, { win = win })
-      vim.api.nvim_set_option_value("cursorline", true, { win = win })
-      vim.api.nvim_set_option_value("signcolumn", "no", { win = win })
-
-      return buf, win
-    end
-
     return {
       color_devicons = true,
-
-      -- open_cmd = function()
-      --   local buf, win = create_floating_window()
-      --   return buf, win
-      -- end,
-
       live_update = false,
       lnum_for_results = true,
       line_sep_start = "┌─",
@@ -173,39 +133,7 @@ return {
   config = function(_, opts)
     require("spectre").setup(opts)
 
-    -- Auto-resize floating window on VimResized
-    vim.api.nvim_create_autocmd("VimResized", {
-      pattern = "*",
-      callback = function()
-        -- Find spectre window and resize it
-        local wins = vim.api.nvim_list_wins()
-        for _, win in ipairs(wins) do
-          if vim.api.nvim_win_is_valid(win) then
-            local buf = vim.api.nvim_win_get_buf(win)
-            if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].filetype == "spectre_panel" then
-              local config = vim.api.nvim_win_get_config(win)
-              if config.relative ~= "" then -- It's a floating window
-                local width = math.floor(vim.o.columns * 0.8)
-                local height = math.floor(vim.o.lines * 0.8)
-                local col = math.floor((vim.o.columns - width) / 2)
-                local row = math.floor((vim.o.lines - height) / 2)
-
-                vim.api.nvim_win_set_config(win, {
-                  relative = "editor",
-                  width = width,
-                  height = height,
-                  col = col,
-                  row = row,
-                  border = "single",
-                })
-              end
-            end
-          end
-        end
-      end,
-    })
-
-    -- Ensure proper highlighting in floating window
+    -- Ensure proper highlighting
     vim.api.nvim_create_autocmd("FileType", {
       pattern = "spectre_panel",
       callback = function()
