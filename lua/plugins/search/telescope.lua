@@ -7,6 +7,8 @@ return {
   },
   cmd = "Telescope",
   keys = function()
+    local builtin = require("telescope.builtin")
+
     -- Load saved layout preference or use default
     local layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
     local layout_data = { layout = "ivory" }
@@ -56,64 +58,61 @@ return {
       },
     }
 
-    -- Create a helper function that applies the current layout to any picker
-    local function with_layout(picker_name)
-      return function()
-        -- Get the current layout and borders
-        local layout = vim.g.telescope_layout or "ivory"
-        local borders = vim.g.telescope_borders[layout] or vim.g.telescope_borders.ivory
-        require("telescope.builtin")[picker_name]({
-          layout_strategy = layout,
-          borderchars = borders,
-        })
-      end
-    end
-
     return {
       -- Layout toggle
       {
         "<leader>fl",
         function()
-          -- Toggle between ivory and ebony
-          vim.g.telescope_layout = (vim.g.telescope_layout == "ivory") and "ebony" or "ivory"
-          local layout = vim.g.telescope_layout
-          -- Save preference to file
-          save_layout(layout)
-          vim.notify("Telescope layout: " .. layout .. " (saved)")
+          local layout = vim.g.telescope_layout == "ivory" and "ebony" or "ivory"
+          vim.g.telescope_layout = layout
+
+          -- Update Telescope's live config
+          local config = require("telescope.config")
+          config.values.layout_strategy = layout
+          config.values.borderchars = vim.g.telescope_borders[layout]
+          config.values.layout_config[layout] = config.values.layout_config[layout] -- Ensure layout_config exists
+
+          -- Save preference
+          local data = vim.fn.json_encode({ layout = layout })
+          vim.fn.writefile({ data }, vim.fn.stdpath("data") .. "/telescope_layout.json")
+
+          vim.notify("Telescope: " .. layout)
         end,
-        desc = "Toggle Layout",
+        desc = "Toggle Layout"
       },
       -- Core finder functions - using our layout wrapper
-      { "<leader>ff",  with_layout("find_files"),                desc = "Find Files" },
-      { "<leader>fg",  with_layout("live_grep"),                 desc = "Find Text (Grep)" },
-      { "<leader>fb",  with_layout("buffers"),                   desc = "Find Buffers" },
-      { "<leader>fh",  with_layout("help_tags"),                 desc = "Find Help" },
-      { "<leader>fr",  with_layout("oldfiles"),                  desc = "Recent Files" },
+      { "<leader>ff",  builtin.find_files,                       desc = "Find Files" },
+      { "<leader>fg",  builtin.live_grep,                        desc = "Find Text" },
+      { "<leader>fb",  builtin.buffers,                          desc = "Find Buffers" },
+      { "<leader>fr",  builtin.oldfiles,                         desc = "Recent Files" },
+      { "<leader>fh",  builtin.help_tags,                        desc = "Find Help" },
       -- Extended search functionality
-      { "<leader>fs",  with_layout("grep_string"),               desc = "Find Current Word" },
-      { "<leader>fc",  with_layout("command_history"),           desc = "Command History" },
-      { "<leader>f/",  with_layout("search_history"),            desc = "Search History" },
+      { "<leader>fs",  builtin.grep_string,                      desc = "Find Current Word" },
+      { "<leader>fc",  builtin.command_history,                  desc = "Command History" },
+      { "<leader>f/",  builtin.search_history,                   desc = "Search History" },
+      -- Redirect command-line window to Telescope
+      { "q:",          builtin.command_history,                  desc = "Command History (Telescope)" },
+      { "q/",          builtin.search_history,                   desc = "Search History (Telescope)" },
+      { "q?",          builtin.search_history,                   desc = "Search History (Telescope)" },
       -- Git integration
-      { "<leader>fGc", "<cmd>Telescope git_commits<cr>",         desc = "Find Git Commits" },
-      { "<leader>fGb", "<cmd>Telescope git_branches<cr>",        desc = "Find Git Branches" },
-      { "<leader>fGs", "<cmd>Telescope git_status<cr>",          desc = "Find Git Status" },
-      { "<leader>fGf", "<cmd>Telescope git_files<cr>",           desc = "Find Git Files" },
+      { "<leader>fGc", builtin.git_commits,                      desc = "Git Commits" },
+      { "<leader>fGb", builtin.git_branches,                     desc = "Git Branches" },
+      { "<leader>fGs", builtin.git_status,                       desc = "Git Status" },
+      { "<leader>fGf", builtin.git_files,                        desc = "Git Files" },
       -- LSP integration
       { "<leader>fd",  "<cmd>Telescope diagnostics bufnr=0<cr>", desc = "Document Diagnostics" },
-      { "<leader>fD",  with_layout("diagnostics"),               desc = "Workspace Diagnostics" },
+      { "<leader>fD",  builtin.diagnostics,                      desc = "Workspace Diagnostics" },
       -- Other useful pickers
-      { "<leader>ft",  with_layout("treesitter"),                desc = "Find Symbols (Treesitter)" },
-      { "<leader>fk",  with_layout("keymaps"),                   desc = "Find Keymaps" },
-      -- Redirect command-line window to Telescope
-      { "q:",          with_layout("command_history"),           desc = "Command History (Telescope)" },
-      { "q/",          with_layout("search_history"),            desc = "Search History (Telescope)" },
-      { "q?",          with_layout("search_history"),            desc = "Search History (Telescope)" },
+      { "<leader>ft",  builtin.treesitter,                       desc = "Symbols" },
+      { "<leader>fk",  builtin.keymaps,                          desc = "Keymaps" },
+
     }
   end,
 
   config = function()
     -- IMPORTANT: Register custom layout strategies FIRST before any setup
     local layout_strategies = require("telescope.pickers.layout_strategies")
+    local telescope = require("telescope")
     local actions = require("telescope.actions")
 
     -- Custom vertical layout with full screen usage and preview on top
@@ -197,9 +196,6 @@ return {
       return layout
     end
 
-    local telescope = require("telescope")
-    local actions = require("telescope.actions")
-
     -- Basic configuration with both layout options predefined
     telescope.setup({
 
@@ -234,11 +230,12 @@ return {
           },
         },
 
-        -- Dynamic borderchars based on terminal width
-        borderchars = function()
-          local layout = vim.g.telescope_layout or "ivory"
-          return vim.g.telescope_borders[layout]
-        end,
+        -- Static default borderchars (overridden by with_layout helper)
+        borderchars = {
+          prompt = { "─", " ", "─", " ", " ", " ", "─", "─" },
+          results = { "─", "│", " ", " ", " ", " ", "│", " " },
+          preview = { "─", " ", " ", " ", "─", "─", " ", " " },
+        },
 
         -- Preview configuration with line numbers
         preview = {
@@ -404,6 +401,13 @@ return {
 
         if target_layout then
           vim.g.telescope_layout = target_layout
+
+          -- Update Telescope's live config
+          local config = require("telescope.config")
+          config.values.layout_strategy = target_layout
+          config.values.borderchars = vim.g.telescope_borders[target_layout]
+
+          -- Save preference
           local layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
           local data = vim.fn.json_encode({ layout = target_layout })
           vim.fn.mkdir(vim.fn.fnamemodify(layout_file, ":h"), "p")
@@ -424,15 +428,6 @@ return {
       vim.fn.writefile({ data }, layout_file)
       vim.notify("Telescope layout: " .. (layout == "ivory" and "ivory" or "ebony") .. " (saved)")
     end, {})
-
-
-    vim.api.nvim_create_user_command("History", function()
-      require("telescope.builtin").command_history()
-    end, { desc = "Command History (Telescope)" })
-
-    vim.api.nvim_create_user_command("Hist", function()
-      require("telescope.builtin").command_history()
-    end, { desc = "Command History (Telescope)" })
 
     -- Enhanced preview settings
     vim.api.nvim_create_autocmd("User", {

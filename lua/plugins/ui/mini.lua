@@ -116,6 +116,7 @@ return {
 
         -- Session items
         local session_items = {
+          ---@diagnostic disable-next-line: different-requires
           {
             action = function()
               require("persistence").load()

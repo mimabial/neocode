@@ -331,6 +331,7 @@ return {
             end,
           },
           -- dap status
+          ---@diagnostic disable-next-line: different-requires
           {
             function()
               return "  " .. require("dap").status()

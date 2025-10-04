@@ -60,6 +60,14 @@ return {
         ["gs"] = "actions.change_sort",
         ["gx"] = "actions.open_external",
         ["g."] = "actions.toggle_hidden",
+      },
+      use_default_keymaps = true,
+    },
+    config = function(_, opts)
+      local detail = false -- State variable
+
+      -- Merge keymap with detail toggle
+      opts.keymaps = vim.tbl_extend("force", opts.keymaps or {}, {
         ["gd"] = {
           desc = "Toggle file detail view",
           callback = function()
@@ -71,10 +79,8 @@ return {
             end
           end,
         },
-      },
-      use_default_keymaps = true,
-    },
-    config = function(_, opts)
+      })
+
       require("oil").setup(opts)
 
       -- Disable global confirm for oil buffers specifically
@@ -165,7 +171,7 @@ return {
           -- end,
         },
         diagnostics = {
-          enable = false,
+          enable = true,
           show_on_dirs = false,
           show_on_open_dirs = false,
           debounce_delay = 500,
