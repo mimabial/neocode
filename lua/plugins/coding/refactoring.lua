@@ -106,7 +106,7 @@ return {
         },
         ["run_replace"] = {
           map = "<leader>R",
-          cmd = "<cmd>lua _G.spectre_replace_and_refresh()<CR>",
+          cmd = "<cmd>lua require('spectre.actions').run_replace()<CR>",
           desc = "replace all",
         },
         ["change_view_mode"] = {

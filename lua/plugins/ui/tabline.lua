@@ -45,7 +45,7 @@ return {
       show_close_icon = true,
       show_tab_indicators = true,
       separator_style = "thin",
-      always_show_bufferline = false,
+      always_show_bufferline = true,
       hover = {
         enabled = true,
         delay = 200,

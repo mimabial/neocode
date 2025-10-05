@@ -263,19 +263,6 @@ return {
             icon = "",
             color = { fg = colors.orange, bg = colors.bg },
           },
-          {
-            "diff",
-            symbols = {
-              added = icons.diff.add,
-              modified = icons.diff.modified,
-              removed = icons.diff.remove,
-            },
-            diff_color = {
-              added = { fg = colors.green, bg = colors.bg },
-              modified = { fg = colors.orange, bg = colors.bg },
-              removed = { fg = colors.red, bg = colors.bg },
-            },
-          },
         },
         lualine_c = {
           root_dir(),
@@ -331,12 +318,13 @@ return {
             end,
           },
           -- dap status
-          ---@diagnostic disable-next-line: different-requires
           {
             function()
+              ---@diagnostic disable-next-line: different-requires
               return "  " .. require("dap").status()
             end,
             cond = function()
+              ---@diagnostic disable-next-line: different-requires
               return package.loaded["dap"] and require("dap").status() ~= ""
             end,
             color = function()

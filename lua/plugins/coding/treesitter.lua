@@ -16,6 +16,7 @@ return {
       "bash",
       "css",
       "html",
+      "hyprlang",
       "javascript",
       "json",
       "lua",

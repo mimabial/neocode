@@ -34,8 +34,6 @@ function M.setup()
       -- Actions
       map("n", "<leader>ca", vim.lsp.buf.code_action, vim.tbl_extend("force", opts, { desc = "Code actions" }))
       map("n", "<leader>cr", vim.lsp.buf.rename, vim.tbl_extend("force", opts, { desc = "Rename symbol" }))
-      map("n", "<leader>cf", function() vim.lsp.buf.format({ async = true }) end,
-        vim.tbl_extend("force", opts, { desc = "Format" }))
 
       -- Diagnostics
       map("n", "<leader>cd", vim.diagnostic.open_float, vim.tbl_extend("force", opts, { desc = "Show diagnostics" }))

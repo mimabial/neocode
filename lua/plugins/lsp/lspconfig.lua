@@ -22,7 +22,7 @@ return {
       end
 
       require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "ts_ls", "html", "jsonls", "pyright", "intelephense" },
+        ensure_installed = { "lua_ls", "ts_ls", "html", "jsonls", "pyright", "intelephense", "bashls" },
         automatic_installation = false,
         handlers = {
           -- Default handler for all servers
@@ -78,6 +78,7 @@ return {
             require("lspconfig").jsonls.setup({
               capabilities = capabilities,
               on_attach = on_attach,
+              filetypes = { "json", "jsonc" },
               settings = {
                 json = { schemas = require("schemastore").json.schemas() },
               },

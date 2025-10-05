@@ -152,6 +152,28 @@ function M.setup()
     end,
     desc = "Close command-line window with Esc/q",
   })
+
+  -- 12) Filetype detection for .theme files (Hyprland theme configs)
+  vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+    pattern = "*.theme",
+    callback = function()
+      vim.bo.filetype = "hyprlang"
+    end,
+    desc = "Set filetype for Hyprland .theme files",
+  })
+
+  -- 13) Force bashls to attach to zsh files
+  vim.api.nvim_create_autocmd("FileType", {
+    pattern = "zsh",
+    callback = function()
+      vim.lsp.start({
+        name = "bashls",
+        cmd = { "bash-language-server", "start" },
+        filetypes = { "sh", "bash", "zsh" },
+        root_dir = vim.fs.dirname(vim.fs.find({ ".git" }, { upward = true })[1]),
+      })
+    end,
+  })
 end
 
 return M
