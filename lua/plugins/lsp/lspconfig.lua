@@ -22,7 +22,7 @@ return {
       end
 
       require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "ts_ls", "html", "jsonls", "pyright", "intelephense", "bashls" },
+        ensure_installed = { "lua_ls", "html", "jsonls", "pyright", "intelephense", "bashls" },
         automatic_installation = false,
         handlers = {
           -- Default handler for all servers
@@ -48,27 +48,6 @@ return {
                   },
                   telemetry = { enable = false },
                   hint = { enable = true },
-                },
-              },
-            })
-          end,
-
-          ["ts_ls"] = function()
-            require("lspconfig").ts_ls.setup({
-              capabilities = capabilities,
-              on_attach = function(client, bufnr)
-                -- Disable formatting (use prettier)
-                client.server_capabilities.documentFormattingProvider = false
-                client.server_capabilities.documentRangeFormattingProvider = false
-                on_attach(client, bufnr)
-              end,
-              settings = {
-                typescript = {
-                  inlayHints = {
-                    includeInlayParameterNameHints = "all",
-                    includeInlayFunctionParameterTypeHints = true,
-                    includeInlayVariableTypeHints = true,
-                  },
                 },
               },
             })
