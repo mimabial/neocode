@@ -42,16 +42,6 @@ return {
   },
   opts = function()
     return {
-      default = {
-        find = {
-          cmd = "rg",
-          options = {}
-        },
-        replace = {
-          cmd = "sed"
-        }
-      },
-
       -- Window size options
       is_open_target_win = true,
       is_insert_mode = false,

@@ -174,6 +174,15 @@ function M.setup()
       })
     end,
   })
+
+  -- 14) Protect special windows from buffer replacement
+  vim.api.nvim_create_autocmd("FileType", {
+    pattern = { "spectre_panel", "Trouble", "trouble", "qf", "help" },
+    callback = function()
+      vim.wo.winfixbuf = true
+    end,
+    desc = "Prevent buffer replacement in special windows",
+  })
 end
 
 return M
