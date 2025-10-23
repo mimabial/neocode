@@ -82,14 +82,6 @@ return {
       })
 
       require("oil").setup(opts)
-
-      -- Disable global confirm for oil buffers specifically
-      vim.api.nvim_create_autocmd("FileType", {
-        pattern = "oil",
-        callback = function()
-          vim.opt_local.confirm = false
-        end,
-      })
     end,
   },
   {
