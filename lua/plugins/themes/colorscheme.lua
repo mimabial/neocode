@@ -73,6 +73,17 @@ return {
             end
           end,
         },
+        ["bamboo"] = {
+          icon = "",
+          variants = { "vulgaris", "multiplex", "light" },
+          setup = function(variant, transparency)
+            require("bamboo").setup({
+              style = variant,
+              transparent = transparency,
+            })
+            require("bamboo").load()
+          end,
+        },
         ["catppuccin"] = {
           icon = "",
           variants = { "latte", "frappe", "macchiato", "mocha" },
@@ -591,6 +602,7 @@ return {
   -- Additional themes (lazy loaded)
   { "ficcdaf/ashen.nvim",               lazy = true, priority = 950 },
   { "Shatur/neovim-ayu",                lazy = true, priority = 950 },
+  { "ribru17/bamboo.nvim",              lazy = true, priority = 950 },
   { "catppuccin/nvim",                  lazy = true, priority = 950 },
   { "aliqyan-21/darkvoid.nvim",         lazy = true, priority = 950 },
   { "decaycs/decay.nvim",               lazy = true, priority = 950 },
