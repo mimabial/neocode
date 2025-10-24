@@ -9,7 +9,11 @@ return {
         "shfmt",
         "prettierd",
       },
+      run_on_start = true,
     },
+    config = function(_, opts)
+      require("mason-tool-installer").setup(opts)
+    end,
   },
 
   {
@@ -97,17 +101,17 @@ return {
           end
         end,
         formatters_by_ft = {
-          javascript = { "prettierd", "prettier" },
-          typescript = { "prettierd", "prettier" },
-          javascriptreact = { "prettierd", "prettier" },
-          typescriptreact = { "prettierd", "prettier" },
-          html = { "prettierd", "prettier" },
-          css = { "prettierd", "prettier" },
-          scss = { "prettierd", "prettier" },
-          json = { "prettierd", "prettier" },
-          jsonc = { "prettierd", "prettier" },
-          yaml = { "prettierd", "prettier" },
-          markdown = { "prettierd", "prettier" },
+          javascript = { "prettier" },
+          typescript = { "prettier" },
+          javascriptreact = { "prettier" },
+          typescriptreact = { "prettier" },
+          html = { "prettier" },
+          css = { "prettier" },
+          scss = { "prettier" },
+          json = { "prettier" },
+          jsonc = { "prettier" },
+          yaml = { "prettier" },
+          markdown = { "prettier" },
           lua = { "stylua" },
           python = { "ruff_organize_imports", "ruff_format" },
           php = { "php_cs_fixer" },
@@ -136,9 +140,6 @@ return {
               end
               return args
             end,
-          },
-          prettierd = {
-            env = { PRETTIERD_DEFAULT_CONFIG = vim.fn.expand("~/.config/nvim/.prettierrc") },
           },
           stylua = {
             config_path = vim.fn.stdpath("config") .. "/stylua.toml",
@@ -185,7 +186,7 @@ return {
               start = { args.line1, 0 },
               ["end"] = { args.line2, 999999 },
             }
-            or nil
+          or nil
         conform.format({ async = true, lsp_fallback = true, range = range })
       end, { range = true, desc = "Format buffer or range" })
 
@@ -203,5 +204,5 @@ return {
         desc = "Format with specific formatter",
       })
     end,
-  }
+  },
 }
