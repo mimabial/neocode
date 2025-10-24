@@ -123,7 +123,7 @@ return {
           ["*"] = { stop_after_first = true },
           prettier = {
             prepend_args = function(_, ctx)
-              local args = { "--print-width", "100" }
+              local args = { "--print-width", "100", "--trailing-comma", "none" }
               local config = util.root_file({
                 ".prettierrc",
                 ".prettierrc.json",
