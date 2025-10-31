@@ -46,6 +46,28 @@ return {
       persist = false, -- Keep trouble window open
     },
   },
+  config = function(_, opts)
+    require("trouble").setup(opts)
+
+    -- Store source window when opening trouble, restore on close
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = "trouble",
+      callback = function(args)
+        local source_win = vim.fn.win_getid(vim.fn.winnr("#"))
+        vim.api.nvim_create_autocmd("WinClosed", {
+          buffer = args.buf,
+          once = true,
+          callback = function()
+            vim.schedule(function()
+              if vim.api.nvim_win_is_valid(source_win) then
+                vim.api.nvim_set_current_win(source_win)
+              end
+            end)
+          end,
+        })
+      end,
+    })
+  end,
   keys = {
     {
       "<leader>xx",

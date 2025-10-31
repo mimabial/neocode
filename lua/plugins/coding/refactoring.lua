@@ -138,6 +138,7 @@ return {
     vim.api.nvim_create_autocmd("FileType", {
       pattern = "spectre_panel",
       callback = function(args)
+        local source_win = vim.fn.win_getid(vim.fn.winnr("#"))
         local bufnr = args.buf
 
         -- Store original width
@@ -155,6 +156,32 @@ return {
             vim.api.nvim_win_set_width(0, original_width)
           end,
         })
+        -- Restore source window on close
+        vim.api.nvim_create_autocmd("WinClosed", {
+          buffer = bufnr,
+          once = true,
+          callback = function()
+            vim.schedule(function()
+              if vim.api.nvim_win_is_valid(source_win) then
+                vim.api.nvim_set_current_win(source_win)
+              end
+            end)
+          end,
+        })
+      end,
+    })
+
+    vim.api.nvim_create_autocmd("WinClosed", {
+      callback = function()
+        vim.schedule(function()
+          local wins = vim.api.nvim_list_wins()
+          if #wins == 1 then
+            local buf = vim.api.nvim_win_get_buf(wins[1])
+            if vim.bo[buf].filetype == "spectre_panel" then
+              vim.cmd("quit")
+            end
+          end
+        end)
       end,
     })
   end,
