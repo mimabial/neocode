@@ -13,8 +13,6 @@ return {
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
       local function on_attach(client, bufnr)
-        if client.name == "null-ls" then return end
-
         -- Enable inlay hints if supported
         if vim.fn.has("nvim-0.10") == 1 and client.server_capabilities.inlayHintProvider then
           vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
@@ -92,8 +90,8 @@ return {
       })
 
       vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "single" })
-      vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help,
-        { border = "single" })
+      vim.lsp.handlers["textDocument/signatureHelp"] =
+        vim.lsp.with(vim.lsp.handlers.signature_help, { border = "single" })
     end,
   },
 

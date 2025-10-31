@@ -39,8 +39,12 @@ function M.setup()
       map("n", "<leader>cd", vim.diagnostic.open_float, vim.tbl_extend("force", opts, { desc = "Show diagnostics" }))
       map("n", "[d", vim.diagnostic.goto_prev, vim.tbl_extend("force", opts, { desc = "Previous diagnostic" }))
       map("n", "]d", vim.diagnostic.goto_next, vim.tbl_extend("force", opts, { desc = "Next diagnostic" }))
-      map("n", "<leader>cq", vim.diagnostic.setloclist,
-        vim.tbl_extend("force", opts, { desc = "Diagnostics to loclist" }))
+      map(
+        "n",
+        "<leader>cq",
+        vim.diagnostic.setloclist,
+        vim.tbl_extend("force", opts, { desc = "Diagnostics to loclist" })
+      )
     end,
   })
 
@@ -52,8 +56,8 @@ function M.setup()
   -- ========================================
   -- Editing
   -- ========================================
-  map('n', 'x', '"_x', { desc = "Don't copy deleted character" })
-  map('v', 'p', '"_dP', { desc = "Keep yanked text when pasting" })
+  map("n", "x", '"_x', { desc = "Don't copy deleted character" })
+  map("v", "p", '"_dP', { desc = "Keep yanked text when pasting" })
 
   -- Keep selection when indenting in visual mode
   map("v", ">", ">gv", { desc = "Indent and keep selection" })
@@ -64,8 +68,8 @@ function M.setup()
   map("v", "K", ":m '<-2<CR>gv=gv", { desc = "Move selection up" })
 
   -- Vertical scroll and center
-  map('n', '<C-d>', '<C-d>zz', { desc = "Scroll down (centered)" })
-  map('n', '<C-u>', '<C-u>zz', { desc = "Scroll up (centered)" })
+  map("n", "<C-d>", "<C-d>zz", { desc = "Scroll down (centered)" })
+  map("n", "<C-u>", "<C-u>zz", { desc = "Scroll up (centered)" })
 
   -- Keep cursor centered when joining lines or searching
   map("n", "J", "mzJ`z", { desc = "Join lines (keep cursor)" })
@@ -154,7 +158,7 @@ function M.setup()
   map("n", "<leader>uz", "<cmd>SystemSetTheme<cr>", { desc = "Set system NVIM_SCHEME" })
   map("n", "<leader>uL", "<cmd>SystemListThemes<cr>", { desc = "List available system themes" })
   -- Toggle line wrapping
-  map('n', '<leader>uw', '<cmd>set wrap!<CR>', { desc = "Toggle line wrap" })
+  map("n", "<leader>tw", "<cmd>set wrap!<CR>", { desc = "Toggle line wrap" })
 
   -- ========================================
   -- AI Provider Management

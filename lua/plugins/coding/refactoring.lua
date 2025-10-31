@@ -7,8 +7,12 @@ return {
       "<leader>sr",
       function()
         local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
-        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then return end
-        require("spectre").open_file_search()
+        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then
+          return
+        end
+        require("spectre").open_file_search({
+          path = vim.fn.expand("%:p"),
+        })
       end,
       desc = "Search and Replace (Current File)",
     },
@@ -16,7 +20,9 @@ return {
       "<leader>sR",
       function()
         local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
-        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then return end
+        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then
+          return
+        end
         require("spectre").toggle()
       end,
       desc = "Search and Replace (Project)",
@@ -25,8 +31,13 @@ return {
       "<leader>sw",
       function()
         local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
-        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then return end
-        require("spectre").open_file_search({ select_word = true })
+        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then
+          return
+        end
+        require("spectre").open_file_search({
+          select_word = true,
+          path = vim.fn.expand("%:p"),
+        })
       end,
       desc = "Search Word (Current File)",
     },
@@ -34,7 +45,9 @@ return {
       "<leader>sW",
       function()
         local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
-        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then return end
+        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then
+          return
+        end
         require("spectre").open_visual({ select_word = true })
       end,
       desc = "Search Word (Project)",
@@ -47,9 +60,9 @@ return {
       is_insert_mode = false,
 
       open_cmd = function()
-        vim.cmd('vnew')
-        local width = math.min(math.floor(vim.o.columns * 0.4), 80)
-        vim.cmd('vertical resize ' .. width)
+        vim.cmd("vnew")
+        local width = vim.o.columns < 120 and vim.o.columns or math.min(math.floor(vim.o.columns * 0.5), 120)
+        vim.cmd("vertical resize " .. width)
       end,
 
       color_devicons = true,
@@ -65,14 +78,24 @@ return {
       },
       mapping = {
         ["toggle_line"] = {
-          map = "dd",
-          cmd = "<cmd>lua require('spectre').toggle_line()<CR>",
+          map = "tl",
+          cmd = "<cmd>lua require('spectre').toggle_line()<CR>j",
           desc = "toggle item",
         },
-        ["enter_file"] = {
-          map = "<cr>",
+        ["delete_line"] = {
+          map = "dd",
+          cmd = "<cmd>lua require('spectre.actions').run_current_delete()<CR>",
+          desc = "delete current item",
+        },
+        ["leave_to_match"] = {
+          map = "<CR>",
           cmd = "<cmd>lua require('spectre.actions').select_entry()<CR>",
-          desc = "open file",
+          desc = "open file and jump to match",
+        },
+        ["go_to_match"] = {
+          map = "o",
+          cmd = "<cmd>lua require('spectre.actions').select_entry(true)<CR>",
+          desc = "open file and keep spectre open",
         },
         ["send_to_qf"] = {
           map = "<leader>q",
@@ -90,12 +113,12 @@ return {
           desc = "show options",
         },
         ["run_current_replace"] = {
-          map = "<leader>rc",
-          cmd = "<cmd>lua require('spectre.actions').run_current_replace()<CR>",
+          map = "r",
+          cmd = "<cmd>lua require('spectre.actions').run_current_replace()<CR>j",
           desc = "replace current",
         },
         ["run_replace"] = {
-          map = "<leader>R",
+          map = "R",
           cmd = "<cmd>lua require('spectre.actions').run_replace()<CR>",
           desc = "replace all",
         },

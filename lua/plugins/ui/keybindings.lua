@@ -28,23 +28,23 @@ return {
 
     -- Group definitions using v3 API
     which_key.add({
-      { "<leader>a",  group = "Avante" },
-      { "<leader>b",  group = "Buffers" },
-      { "<leader>c",  group = "Code/LSP" },
-      { "<leader>d",  group = "Debug" },
-      { "<leader>f",  group = "Find/Telescope" },
+      { "<leader>a", group = "Avante" },
+      { "<leader>b", group = "Buffers" },
+      { "<leader>c", group = "Code/LSP" },
+      { "<leader>d", group = "Debug" },
+      { "<leader>f", group = "Find/Telescope" },
       { "<leader>fG", group = "Find Git" },
-      { "<leader>g",  group = "Git" },
+      { "<leader>g", group = "Git" },
       { "<leader>go", group = "Git Operations (Octo)" },
-      { "<leader>L",  group = "Layouts" },
-      { "<leader>n",  group = "Notifications" },
-      { "<leader>r",  group = "Refactoring" },
-      { "<leader>s",  group = "Search/Replace" },
-      { "<leader>t",  group = "Terminal/Toggle" },
-      { "<leader>u",  group = "UI/Settings" },
-      { "<leader>w",  group = "Windows" },
-      { "<leader>x",  group = "Diagnostics/Trouble" },
-      { "<leader>z",  group = "Folds" },
+      { "<leader>L", group = "Layouts" },
+      { "<leader>n", group = "Notifications" },
+      { "<leader>r", group = "Refactoring" },
+      { "<leader>s", group = "Search/Replace" },
+      { "<leader>t", group = "Terminal/Toggle" },
+      { "<leader>u", group = "UI/Settings" },
+      { "<leader>w", group = "Windows" },
+      { "<leader>x", group = "Diagnostics/Trouble" },
+      { "<leader>z", group = "Folds" },
     })
 
     -- Avante
@@ -78,9 +78,9 @@ return {
 
     -- File/Explorer
     which_key.add({
-      { "<leader>e",  desc = "Open File Explorer" },
+      { "<leader>e", desc = "Open File Explorer" },
       { "<leader>ed", desc = "Toggle Oil file details" },
-      { "<leader>E",  desc = "NvimTree Explorer" },
+      { "<leader>E", desc = "NvimTree Explorer" },
     })
 
     -- Search/Replace
@@ -134,19 +134,9 @@ return {
 
     -- Octo (go namespace)
     which_key.add({
-      { "<leader>go",  desc = "Octo" },
+      { "<leader>go", desc = "Octo" },
       { "<leader>gpr", desc = "PR List" },
-      { "<leader>gi",  desc = "Issue List" },
-    })
-
-    -- Refactoring
-    which_key.add({
-      { "<leader>rr", desc = "Refactoring menu" },
-      { "<leader>re", desc = "Extract function" },
-      { "<leader>ri", desc = "Inline variable" },
-      { "<leader>rp", desc = "Debug print" },
-      { "<leader>rc", desc = "Clean debug prints" },
-      { "<leader>rv", desc = "Extract variable" },
+      { "<leader>gi", desc = "Issue List" },
     })
 
     -- Terminal
@@ -168,15 +158,14 @@ return {
       { "<leader>uY", desc = "Detect system theme" },
       { "<leader>uz", desc = "Set system NVIM_SCHEME" },
       { "<leader>uL", desc = "List available system themes" },
-      { "<leader>uw", desc = "Toggle line wrap" },
     })
 
     -- Navic & Outline
     which_key.add({
       { "<leader>nb", desc = "Toggle dropbar" },
-      { "<leader>o",  desc = "Toggle outline" },
-      { "]]",         desc = "Next reference" },
-      { "[[",         desc = "Prev reference" },
+      { "<leader>o", desc = "Toggle outline" },
+      { "]]", desc = "Next reference" },
+      { "[[", desc = "Prev reference" },
     })
 
     -- Layouts
@@ -219,14 +208,14 @@ return {
     vim.api.nvim_create_autocmd("LspAttach", {
       callback = function(args)
         which_key.add({
-          { "gd",    desc = "Go to Definition",     buffer = args.buf },
-          { "gD",    desc = "Go to Declaration",    buffer = args.buf },
-          { "gi",    desc = "Go to Implementation", buffer = args.buf },
-          { "gr",    desc = "Find References",      buffer = args.buf },
-          { "K",     desc = "Hover Documentation",  buffer = args.buf },
-          { "<C-k>", desc = "Signature Help",       buffer = args.buf },
-          { "[d",    desc = "Previous Diagnostic",  buffer = args.buf },
-          { "]d",    desc = "Next Diagnostic",      buffer = args.buf },
+          { "gd", desc = "Go to Definition", buffer = args.buf },
+          { "gD", desc = "Go to Declaration", buffer = args.buf },
+          { "gi", desc = "Go to Implementation", buffer = args.buf },
+          { "gr", desc = "Find References", buffer = args.buf },
+          { "K", desc = "Hover Documentation", buffer = args.buf },
+          { "<C-k>", desc = "Signature Help", buffer = args.buf },
+          { "[d", desc = "Previous Diagnostic", buffer = args.buf },
+          { "]d", desc = "Next Diagnostic", buffer = args.buf },
         })
       end,
     })

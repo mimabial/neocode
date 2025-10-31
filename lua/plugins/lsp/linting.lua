@@ -4,6 +4,7 @@ return {
   opts = {
     linters_by_ft = {
       lua = { "luacheck" },
+      python = { "ruff" },
       javascript = { "eslint" },
       typescript = { "eslint" },
       javascriptreact = { "eslint" },

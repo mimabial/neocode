@@ -117,7 +117,6 @@ return {
           php = { "php_cs_fixer" },
           sh = { "shfmt" },
           bash = { "shfmt", "shellcheck" },
-          zsh = { "shfmt" },
         },
         formatters = {
           ["*"] = { stop_after_first = true },

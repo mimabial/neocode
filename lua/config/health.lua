@@ -3,12 +3,12 @@ local M = {}
 -- Check if required external tools are available
 M.check_external_tools = function()
   local tools = {
-    { name = "git",     required = true,  desc = "Version control" },
-    { name = "rg",      required = true,  desc = "Ripgrep for telescope" },
-    { name = "fd",      required = false, desc = "Fast file finder" },
+    { name = "git", required = true, desc = "Version control" },
+    { name = "rg", required = true, desc = "Ripgrep for telescope" },
+    { name = "fd", required = false, desc = "Fast file finder" },
     { name = "lazygit", required = false, desc = "Git UI" },
-    { name = "node",    required = false, desc = "Node.js for LSP servers" },
-    { name = "go",      required = false, desc = "Go development" },
+    { name = "node", required = false, desc = "Node.js for LSP servers" },
+    { name = "go", required = false, desc = "Go development" },
   }
 
   local issues = {}
@@ -46,13 +46,6 @@ M.check_lsp = function()
 
   if #clients == 0 then
     table.insert(issues, "⚠️  No LSP clients attached")
-  end
-
-  -- Check for common LSP issues
-  for _, client in ipairs(clients) do
-    if client.name == "null-ls" and not client.server_capabilities then
-      table.insert(issues, "❌ null-ls client has no capabilities")
-    end
   end
 
   return issues
@@ -110,7 +103,7 @@ end
 
 -- Create health check command
 vim.api.nvim_create_user_command("ConfigHealth", M.check, {
-  desc = "Run configuration health checks"
+  desc = "Run configuration health checks",
 })
 
 return M

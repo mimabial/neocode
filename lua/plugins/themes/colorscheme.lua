@@ -13,7 +13,9 @@ return {
         local ok, content = pcall(vim.fn.readfile, settings_file)
         if ok and content[1] then
           local success, data = pcall(vim.json.decode, content[1])
-          if success then return data end
+          if success then
+            return data
+          end
         end
         return { theme = "kanagawa", variant = nil, transparency = false }
       end
@@ -151,19 +153,32 @@ return {
           variants = { "soft", "medium", "hard" },
           setup = function(variant, transparency)
             vim.o.background = "dark"
-            if variant then vim.g.everforest_background = variant end
-            if transparency then vim.g.everforest_transparent_background = 1 end
+            if variant then
+              vim.g.everforest_background = variant
+            end
+            if transparency then
+              vim.g.everforest_transparent_background = 1
+            end
             vim.cmd("colorscheme everforest")
           end,
         },
         ["gruvbox"] = {
           icon = "",
-          variants = { "dark", "light" },
+          variants = {
+            "dark-soft",
+            "dark-medium",
+            "dark-hard",
+            "light-soft",
+            "light-medium",
+            "light-hard",
+          },
           setup = function(variant, transparency)
-            vim.o.background = variant
+            local bg, contrast = variant:match("^(%w+)%-(%w+)$")
+            vim.o.background = bg or "dark"
+
             require("gruvbox").setup({
               transparent_mode = transparency,
-              constract = "hard"
+              contrast = contrast or "medium",
             })
             vim.cmd("colorscheme gruvbox")
           end,
@@ -173,7 +188,9 @@ return {
           variants = { "hard", "medium", "soft" },
           setup = function(variant, transparency)
             vim.o.background = "dark"
-            if variant then vim.g.gruvbox_material_background = variant end
+            if variant then
+              vim.g.gruvbox_material_background = variant
+            end
             vim.g.gruvbox_material_transparent_background = 0
 
             vim.cmd("colorscheme gruvbox-material")
@@ -205,7 +222,9 @@ return {
           icon = "",
           variants = {},
           setup = function(variant, transparency)
-            if transparency then vim.g.nord_disable_background = true end
+            if transparency then
+              vim.g.nord_disable_background = true
+            end
             vim.cmd("colorscheme nord")
           end,
         },
@@ -255,7 +274,7 @@ return {
             vim.o.background = variant or "dark"
             require("solarized").setup({
               transparent = {
-                enabled = transparency
+                enabled = transparency,
               },
             })
             vim.cmd("colorscheme solarized")
@@ -284,8 +303,10 @@ return {
 
         if variant and theme.variants and #theme.variants > 0 then
           if not vim.tbl_contains(theme.variants, variant) then
-            vim.notify("Variant '" .. variant .. "' not available for " .. name .. ", using default",
-              vim.log.levels.WARN)
+            vim.notify(
+              "Variant '" .. variant .. "' not available for " .. name .. ", using default",
+              vim.log.levels.WARN
+            )
             variant = nil
           end
         end
@@ -375,9 +396,13 @@ return {
         apply_theme(detected_scheme, detected_variant, final_transparency)
 
         local variant_text = detected_variant and ("-" .. detected_variant) or ""
-        local transparency_text = detected_transparency ~= nil and
-            (", transparency " .. (detected_transparency and "on" or "off")) or ""
-        vim.notify("Applied system theme: " .. detected_scheme .. variant_text .. transparency_text, vim.log.levels.INFO)
+        local transparency_text = detected_transparency ~= nil
+            and (", transparency " .. (detected_transparency and "on" or "off"))
+          or ""
+        vim.notify(
+          "Applied system theme: " .. detected_scheme .. variant_text .. transparency_text,
+          vim.log.levels.INFO
+        )
         return true
       end
 
@@ -412,7 +437,8 @@ return {
         local idx = 1
         for i, name in ipairs(names) do
           if name == theme_name then
-            idx = i; break
+            idx = i
+            break
           end
         end
 
@@ -500,8 +526,11 @@ return {
             -- Find NVIM_SCHEME line and insert NVIM_TRANSPARENCY after it
             for i, line in ipairs(content) do
               if line:match("^%$NVIM_SCHEME") then
-                table.insert(content, i + (line:match("^%$NVIM_VARIANT") and 2 or 1),
-                  "$NVIM_TRANSPARENCY = " .. (settings.transparency and "true" or "false"))
+                table.insert(
+                  content,
+                  i + (line:match("^%$NVIM_VARIANT") and 2 or 1),
+                  "$NVIM_TRANSPARENCY = " .. (settings.transparency and "true" or "false")
+                )
                 break
               end
             end
@@ -514,18 +543,26 @@ return {
       end
 
       vim.api.nvim_create_user_command("CycleColorScheme", cycle_theme, { desc = "Cycle through color schemes" })
-      vim.api.nvim_create_user_command("CycleColorVariant", cycle_variant,
-        { desc = "Cycle through color scheme variants" })
-      vim.api.nvim_create_user_command("ToggleBackgroundTransparency", toggle_transparency,
-        { desc = "Toggle background transparency" })
+      vim.api.nvim_create_user_command(
+        "CycleColorVariant",
+        cycle_variant,
+        { desc = "Cycle through color scheme variants" }
+      )
+      vim.api.nvim_create_user_command(
+        "ToggleBackgroundTransparency",
+        toggle_transparency,
+        { desc = "Toggle background transparency" }
+      )
 
       vim.api.nvim_create_user_command("ColorScheme", function(opts)
         local args = opts.args
         if args == "" then
           local available = {}
           for name, theme in pairs(themes) do
-            local variant_info = theme.variants and #theme.variants > 0
-                and (" (" .. table.concat(theme.variants, ", ") .. ")") or ""
+            local variant_info = theme.variants
+                and #theme.variants > 0
+                and (" (" .. table.concat(theme.variants, ", ") .. ")")
+              or ""
             table.insert(available, theme.icon .. " " .. name .. variant_info)
           end
           vim.notify("Available themes:\n" .. table.concat(available, "\n"), vim.log.levels.INFO)
@@ -533,7 +570,9 @@ return {
         end
 
         local theme_name, variant = args:match("([%w-]+)%s*(.*)$")
-        if variant == "" then variant = nil end
+        if variant == "" then
+          variant = nil
+        end
 
         local settings = load_settings()
         apply_theme(theme_name, variant, settings.transparency)
@@ -543,7 +582,9 @@ return {
         vim.notify(icon .. "Switched to " .. theme_name .. (variant and ("-" .. variant) or ""), vim.log.levels.INFO)
       end, {
         nargs = "?",
-        complete = function() return vim.tbl_keys(themes) end,
+        complete = function()
+          return vim.tbl_keys(themes)
+        end,
         desc = "Set colorscheme",
       })
 
@@ -558,8 +599,10 @@ return {
 
         local variant = opts.args
         if variant == "" then
-          vim.notify("Available variants for " .. current .. ": " .. table.concat(theme.variants, ", "),
-            vim.log.levels.INFO)
+          vim.notify(
+            "Available variants for " .. current .. ": " .. table.concat(theme.variants, ", "),
+            vim.log.levels.INFO
+          )
           return
         end
 
@@ -600,20 +643,20 @@ return {
   },
 
   -- Additional themes (lazy loaded)
-  { "ficcdaf/ashen.nvim",               lazy = true, priority = 950 },
-  { "Shatur/neovim-ayu",                lazy = true, priority = 950 },
-  { "ribru17/bamboo.nvim",              lazy = true, priority = 950 },
-  { "catppuccin/nvim",                  lazy = true, priority = 950 },
-  { "aliqyan-21/darkvoid.nvim",         lazy = true, priority = 950 },
-  { "decaycs/decay.nvim",               lazy = true, priority = 950 },
-  { "sainnhe/everforest",               lazy = true, priority = 950 },
-  { "ellisonleao/gruvbox.nvim",         lazy = true, priority = 950 },
-  { "sainnhe/gruvbox-material",         lazy = true, priority = 950 },
-  { "loctvl842/monokai-pro.nvim",       lazy = true, priority = 950 },
-  { "shaunsingh/nord.nvim",             lazy = true, priority = 950 },
-  { "navarasu/onedark.nvim",            lazy = true, priority = 950 },
+  { "ficcdaf/ashen.nvim", lazy = true, priority = 950 },
+  { "Shatur/neovim-ayu", lazy = true, priority = 950 },
+  { "ribru17/bamboo.nvim", lazy = true, priority = 950 },
+  { "catppuccin/nvim", lazy = true, priority = 950 },
+  { "aliqyan-21/darkvoid.nvim", lazy = true, priority = 950 },
+  { "decaycs/decay.nvim", lazy = true, priority = 950 },
+  { "sainnhe/everforest", lazy = true, priority = 950 },
+  { "ellisonleao/gruvbox.nvim", lazy = true, priority = 950 },
+  { "sainnhe/gruvbox-material", lazy = true, priority = 950 },
+  { "loctvl842/monokai-pro.nvim", lazy = true, priority = 950 },
+  { "shaunsingh/nord.nvim", lazy = true, priority = 950 },
+  { "navarasu/onedark.nvim", lazy = true, priority = 950 },
   { "nyoom-engineering/oxocarbon.nvim", lazy = true, priority = 950 },
-  { "rose-pine/neovim",                 lazy = true, priority = 950 },
-  { "maxmx03/solarized.nvim",           lazy = true, priority = 950 },
-  { "folke/tokyonight.nvim",            lazy = true, priority = 950 },
+  { "rose-pine/neovim", lazy = true, priority = 950 },
+  { "maxmx03/solarized.nvim", lazy = true, priority = 950 },
+  { "folke/tokyonight.nvim", lazy = true, priority = 950 },
 }

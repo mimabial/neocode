@@ -52,7 +52,7 @@ return {
 
     local custom_theme = {
       normal = {
-        a = { bg = colors.bg, fg = colors.green, gui = 'bold' },
+        a = { bg = colors.bg, fg = colors.green, gui = "bold" },
         b = { bg = colors.bg, fg = colors.fg },
         c = { bg = colors.bg, fg = colors.fg },
         x = { bg = colors.bg, fg = colors.fg },
@@ -60,7 +60,7 @@ return {
         z = { bg = colors.bg, fg = colors.fg },
       },
       insert = {
-        a = { bg = colors.bg, fg = colors.blue, gui = 'bold' },
+        a = { bg = colors.bg, fg = colors.blue, gui = "bold" },
         b = { bg = colors.bg, fg = colors.fg },
         c = { bg = colors.bg, fg = colors.fg },
         x = { bg = colors.bg, fg = colors.fg },
@@ -68,7 +68,7 @@ return {
         z = { bg = colors.bg, fg = colors.fg },
       },
       visual = {
-        a = { bg = colors.bg, fg = colors.purple, gui = 'bold' },
+        a = { bg = colors.bg, fg = colors.purple, gui = "bold" },
         b = { bg = colors.bg, fg = colors.fg },
         c = { bg = colors.bg, fg = colors.fg },
         x = { bg = colors.bg, fg = colors.fg },
@@ -76,7 +76,7 @@ return {
         z = { bg = colors.bg, fg = colors.fg },
       },
       command = {
-        a = { bg = colors.bg, fg = colors.orange, gui = 'bold' },
+        a = { bg = colors.bg, fg = colors.orange, gui = "bold" },
         b = { bg = colors.bg, fg = colors.fg },
         c = { bg = colors.bg, fg = colors.fg },
         x = { bg = colors.bg, fg = colors.fg },
@@ -84,7 +84,7 @@ return {
         z = { bg = colors.bg, fg = colors.fg },
       },
       terminal = {
-        a = { bg = colors.bg, fg = colors.green, gui = 'bold' },
+        a = { bg = colors.bg, fg = colors.green, gui = "bold" },
         b = { bg = colors.bg, fg = colors.fg },
         c = { bg = colors.bg, fg = colors.fg },
         x = { bg = colors.bg, fg = colors.fg },
@@ -148,7 +148,7 @@ return {
 
           local lsp_names = {}
           for _, client in ipairs(buf_clients) do
-            if not vim.tbl_contains({ "null-ls", "conform" }, client.name) then
+            if not vim.tbl_contains({ "conform" }, client.name) then
               table.insert(lsp_names, client.name)
             end
           end
@@ -181,9 +181,13 @@ return {
       return {
         function()
           local f = vim.fn.expand("%:p")
-          if f == "" or vim.bo.buftype ~= "" then return "" end
+          if f == "" or vim.bo.buftype ~= "" then
+            return ""
+          end
           local size = vim.fn.getfsize(f)
-          if size <= 0 then return "" end
+          if size <= 0 then
+            return ""
+          end
 
           local units = { "B", "K", "M", "G" }
           local idx = 1
@@ -284,7 +288,7 @@ return {
             "filetype",
             colored = true,
             icons_enabled = false,
-            color = { fg = colors.fg, bg = colors.bg }
+            color = { fg = colors.fg, bg = colors.bg },
           },
           lsp_status(),
         },
@@ -331,12 +335,11 @@ return {
               return { fg = colors.fg }
             end,
           },
-
         },
         lualine_z = {
           ai_indicators(),
           { "progress", color = { fg = colors.fg, bg = colors.bg } },
-          { "location", color = { fg = colors.fg, bg = colors.bg } }
+          { "location", color = { fg = colors.fg, bg = colors.bg } },
         },
       },
       inactive_sections = {
@@ -345,7 +348,7 @@ return {
         lualine_c = {},
         lualine_x = {},
         lualine_y = {},
-        lualine_z = {}
+        lualine_z = {},
       },
       extensions = {
         "lazy",
