@@ -64,22 +64,11 @@ return {
         local width = vim.o.columns < 120 and vim.o.columns or math.min(math.floor(vim.o.columns * 0.5), 120)
         vim.cmd("vertical resize " .. width)
       end,
-
-      color_devicons = true,
-      live_update = false,
-      lnum_for_results = true,
-      line_sep_start = "  ┌────────────────────────────────────────────────────────────────────────────────", -- alt: ┌─
-      result_padding = "  │  ", -- alt: │
-      line_sep = "  └──────────────────────────────────────────────────────────────────────────────", -- alt: └─
-      highlight = {
-        ui = "String",
-        search = "DiffChange",
-        replace = "DiffDelete",
-      },
+      live_update = true,
       mapping = {
         ["toggle_line"] = {
-          map = "tl",
-          cmd = "<cmd>lua require('spectre').toggle_line()<CR>j",
+          map = "tt",
+          cmd = "<cmd>lua require('spectre').toggle_line(); if not vim.fn.getline(vim.fn.line('.') + 1):find('└') then vim.cmd('normal! j') end<CR>",
           desc = "toggle item",
         },
         ["delete_line"] = {
@@ -87,75 +76,35 @@ return {
           cmd = "<cmd>lua require('spectre.actions').run_current_delete()<CR>",
           desc = "delete current item",
         },
-        ["leave_to_match"] = {
+        ["leave_to_entry"] = {
           map = "<CR>",
           cmd = "<cmd>lua require('spectre.actions').select_entry()<CR>",
           desc = "open file and jump to match",
         },
-        ["go_to_match"] = {
-          map = "o",
+        ["go_to_entry"] = {
+          map = "se",
           cmd = "<cmd>lua require('spectre.actions').select_entry(true)<CR>",
           desc = "open file and keep spectre open",
         },
         ["send_to_qf"] = {
-          map = "<leader>q",
+          map = "<leader>qf",
           cmd = "<cmd>lua require('spectre.actions').send_to_qf()<CR>",
-          desc = "send to quickfix",
+          desc = "send all items to quickfix",
         },
         ["replace_cmd"] = {
-          map = "<leader>c",
+          map = "<leader>rc",
           cmd = "<cmd>lua require('spectre.actions').replace_cmd()<CR>",
           desc = "replace command",
         },
-        ["show_option_menu"] = {
-          map = "<leader>o",
-          cmd = "<cmd>lua require('spectre').show_options()<CR>",
-          desc = "show options",
-        },
         ["run_current_replace"] = {
           map = "r",
-          cmd = "<cmd>lua require('spectre.actions').run_current_replace()<CR>j",
+          cmd = "<cmd>lua require('spectre.actions').run_current_replace(); if not vim.fn.getline(vim.fn.line('.') + 1):find('└') then vim.cmd('normal! j') end<CR>",
           desc = "replace current",
         },
         ["run_replace"] = {
           map = "R",
           cmd = "<cmd>lua require('spectre.actions').run_replace()<CR>",
           desc = "replace all",
-        },
-        ["change_view_mode"] = {
-          map = "<leader>v",
-          cmd = "<cmd>lua require('spectre').change_view()<CR>",
-          desc = "change view mode",
-        },
-        ["change_replace_sed"] = {
-          map = "trs",
-          cmd = "<cmd>lua require('spectre').change_engine_replace('sed')<CR>",
-          desc = "use sed",
-        },
-        ["change_replace_oxi"] = {
-          map = "tro",
-          cmd = "<cmd>lua require('spectre').change_engine_replace('oxi')<CR>",
-          desc = "use oxi",
-        },
-        ["toggle_live_update"] = {
-          map = "tu",
-          cmd = "<cmd>lua require('spectre').toggle_live_update()<CR>",
-          desc = "toggle live update",
-        },
-        ["toggle_ignore_case"] = {
-          map = "ti",
-          cmd = "<cmd>lua require('spectre').change_options('ignore-case')<CR>",
-          desc = "toggle ignore case",
-        },
-        ["toggle_ignore_hidden"] = {
-          map = "th",
-          cmd = "<cmd>lua require('spectre').change_options('hidden')<CR>",
-          desc = "toggle hidden",
-        },
-        ["resume_last_search"] = {
-          map = "<leader>l",
-          cmd = "<cmd>lua require('spectre').resume_last_search()<CR>",
-          desc = "resume last search",
         },
         ["quit"] = {
           map = "q",
@@ -168,6 +117,7 @@ return {
           desc = "quit",
         },
       },
+      use_trouble_qf = true,
     }
   end,
 
@@ -200,7 +150,7 @@ return {
 
         -- Window options
         vim.opt_local.number = false
-        vim.opt_local.relativenumber = false
+        vim.opt_local.relativenumber = true
         vim.opt_local.signcolumn = "no"
         vim.opt_local.cursorline = true
 
