@@ -139,7 +139,7 @@ function M.setup()
   -- 10) Prevent auto-comment continuation (runs after ftplugin to reset option)
   vim.api.nvim_create_autocmd("FileType", {
     callback = function()
-      vim.opt_local.formatoptions:remove({ 'c', 'r', 'o' })
+      vim.opt_local.formatoptions:remove({ "c", "r", "o" })
     end,
     desc = "Disable comment continuation",
   })
@@ -182,6 +182,20 @@ function M.setup()
       vim.wo.winfixbuf = true
     end,
     desc = "Prevent buffer replacement in special windows",
+  })
+
+  -- 15) Return to previous window when closing a window
+  vim.api.nvim_create_autocmd("WinClosed", {
+    nested = true,
+    callback = function(args)
+      -- Only run if we're currently in a different window than the one being closed
+      if vim.api.nvim_get_current_win() ~= tonumber(args.match) then
+        return
+      end
+      -- Return to previous window
+      pcall(vim.cmd.wincmd, "p")
+    end,
+    desc = "Return to previous window on close",
   })
 end
 
