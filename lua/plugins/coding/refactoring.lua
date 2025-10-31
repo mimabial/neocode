@@ -76,15 +76,10 @@ return {
           cmd = "<cmd>lua require('spectre.actions').run_current_delete()<CR>",
           desc = "delete current item",
         },
-        ["leave_to_entry"] = {
+        ["enter_file"] = {
           map = "<CR>",
           cmd = "<cmd>lua require('spectre.actions').select_entry()<CR>",
           desc = "open file and jump to match",
-        },
-        ["go_to_entry"] = {
-          map = "se",
-          cmd = "<cmd>lua require('spectre.actions').select_entry(true)<CR>",
-          desc = "open file and keep spectre open",
         },
         ["send_to_qf"] = {
           map = "<leader>qf",
@@ -153,14 +148,6 @@ return {
         vim.opt_local.relativenumber = true
         vim.opt_local.signcolumn = "no"
         vim.opt_local.cursorline = true
-
-        -- Buffer-local autocmds for window management
-        vim.api.nvim_create_autocmd("WinLeave", {
-          buffer = bufnr,
-          callback = function()
-            vim.api.nvim_win_set_width(0, 40)
-          end,
-        })
 
         vim.api.nvim_create_autocmd("WinEnter", {
           buffer = bufnr,

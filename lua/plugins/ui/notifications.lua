@@ -52,30 +52,22 @@ return {
     keys = {
       {
         "<leader>nl",
-        function()
-          require("noice").cmd("last")
-        end,
+        "<cmd>Noice last<cr>",
         desc = "Noice Last Message",
       },
       {
         "<leader>nh",
-        function()
-          require("noice").cmd("history")
-        end,
+        "<cmd>Noice history<cr>",
         desc = "Noice History",
       },
       {
         "<leader>na",
-        function()
-          require("noice").cmd("all")
-        end,
+        "<cmd>Noice<cr>",
         desc = "Noice All Messages",
       },
       {
         "<leader>nd",
-        function()
-          require("noice").cmd("dismiss")
-        end,
+        "<cmd>Noice dismiss<cr>",
         desc = "Dismiss All Messages",
       },
       {
@@ -214,7 +206,6 @@ return {
             linebreak = true,
           },
         },
-
       },
     },
 
@@ -234,9 +225,10 @@ return {
               local config = vim.api.nvim_win_get_config(win)
 
               -- Count only normal (non-floating, non-special) windows
-              if config.relative == "" and not vim.tbl_contains(
-                    { "noice", "notify", "TelescopePrompt", "TelescopeResults" }, ft
-                  ) then
+              if
+                config.relative == ""
+                and not vim.tbl_contains({ "noice", "notify", "TelescopePrompt", "TelescopeResults" }, ft)
+              then
                 normal_wins = normal_wins + 1
               end
             end
@@ -260,5 +252,5 @@ return {
       update_highlights()
       vim.api.nvim_create_autocmd("ColorScheme", { callback = update_highlights })
     end,
-  }
+  },
 }

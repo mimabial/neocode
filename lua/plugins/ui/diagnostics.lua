@@ -1,6 +1,6 @@
 return {
   "folke/trouble.nvim",
-  cmd = { "Trouble", "TroubleToggle", "TroubleRefresh" },
+  event = "VeryLazy",
   dependencies = { "nvim-tree/nvim-web-devicons" },
 
   -- Pass options to setup
@@ -68,12 +68,12 @@ return {
       desc = "LSP Definitions / references / ... (Trouble)",
     },
     {
-      "<leader>xL",
+      "<leader>xl",
       "<cmd>Trouble loclist toggle<cr>",
       desc = "Location List (Trouble)",
     },
     {
-      "<leader>xQ",
+      "<leader>xq",
       "<cmd>Trouble qflist toggle<cr>",
       desc = "Quickfix List (Trouble)",
     },
@@ -102,7 +102,7 @@ return {
         end
       end,
       desc = "Next trouble/quickfix",
-      flags = { "silent" },
+      silent = true,
     },
   },
 }
