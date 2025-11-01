@@ -42,6 +42,21 @@ return {
       desc = "Search Word (Current File)",
     },
     {
+      "<leader>sw",
+      mode = "v",
+      function()
+        local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
+        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then
+          return
+        end
+        require("spectre").open_file_search({
+          select_word = true,
+          path = vim.fn.expand("%:p"),
+        })
+      end,
+      desc = "Search Selection (Current File)",
+    },
+    {
       "<leader>sW",
       function()
         local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
@@ -51,6 +66,18 @@ return {
         require("spectre").open_visual({ select_word = true })
       end,
       desc = "Search Word (Project)",
+    },
+    {
+      "<leader>sW",
+      mode = "v",
+      function()
+        local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
+        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then
+          return
+        end
+        require("spectre").open_visual({ select_word = true })
+      end,
+      desc = "Search Selection (Project)",
     },
   },
   opts = function()
