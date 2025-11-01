@@ -31,7 +31,6 @@ function M.setup()
   lazy.setup({
     spec = {
       -- Import all plugin specs from the plugins directory
-      { import = "plugins" },
       { import = "plugins.ai" },
       { import = "plugins.coding" },
       { import = "plugins.debug" },
@@ -43,7 +42,7 @@ function M.setup()
       { import = "plugins.ui" },
     },
     defaults = {
-      lazy = true,     -- Don't load plugins until needed
+      lazy = true, -- Don't load plugins until needed
       version = false, -- Use latest plugin versions
     },
     install = {
@@ -57,8 +56,8 @@ function M.setup()
       enabled = false,
     },
     checker = {
-      enabled = true,   -- Check for plugin updates
-      notify = false,   -- Don't notify about updates
+      enabled = true, -- Check for plugin updates
+      notify = false, -- Don't notify about updates
       frequency = 3600, -- Check hourly for updates
     },
     change_detection = {
@@ -113,7 +112,7 @@ function M.setup()
       -- Core functionality plugins
       ["telescope.nvim"] = 80, -- Primary picker
       ["which-key.nvim"] = 80,
-      ["oil.nvim"] = 80,       -- Primary file explorer
+      ["oil.nvim"] = 80, -- Primary file explorer
 
       -- Stack-specific plugins
       ["go.nvim"] = 70,

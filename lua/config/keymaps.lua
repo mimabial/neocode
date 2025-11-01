@@ -116,13 +116,9 @@ function M.setup()
   map("n", "<S-l>", "<cmd>bnext<cr>", { desc = "Next Buffer" })
 
   -- File explorer
-  map("n", "<leader>e", function()
-    require("oil").open()
-  end, { desc = "Open File Explorer" })
-
   map("n", "-", function()
     require("oil").open()
-  end, { desc = "File Explorer (parent dir)" })
+  end, { desc = "Open Oil Explorer (parent dir)" })
 
   -- ========================================
   -- Git Integration

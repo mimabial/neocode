@@ -78,34 +78,33 @@ return {
 
           vim.notify("Telescope: " .. layout)
         end,
-        desc = "Toggle Layout"
+        desc = "Toggle Layout",
       },
       -- Core finder functions - using our layout wrapper
-      { "<leader>ff",  builtin.find_files,                       desc = "Find Files" },
-      { "<leader>fg",  builtin.live_grep,                        desc = "Find Text" },
-      { "<leader>fb",  builtin.buffers,                          desc = "Find Buffers" },
-      { "<leader>fr",  builtin.oldfiles,                         desc = "Recent Files" },
-      { "<leader>fh",  builtin.help_tags,                        desc = "Find Help" },
+      { "<leader>ff", builtin.find_files, desc = "Find Files" },
+      { "<leader>ft", builtin.live_grep, desc = "Find Text (Grep)" },
+      { "<leader>fb", builtin.buffers, desc = "Find Buffers" },
+      { "<leader>fr", builtin.oldfiles, desc = "Recent Files" },
+      { "<leader>fh", builtin.help_tags, desc = "Find Help" },
       -- Extended search functionality
-      { "<leader>fs",  builtin.grep_string,                      desc = "Find Current Word" },
-      { "<leader>fc",  builtin.command_history,                  desc = "Command History" },
-      { "<leader>f/",  builtin.search_history,                   desc = "Search History" },
+      { "<leader>fw", builtin.grep_string, desc = "Find Current Word" },
+      { "<leader>fc", builtin.command_history, desc = "Command History" },
+      { "<leader>f/", builtin.search_history, desc = "Search History" },
       -- Redirect command-line window to Telescope
-      { "q:",          builtin.command_history,                  desc = "Command History" },
-      { "q/",          builtin.search_history,                   desc = "Search History" },
-      { "q?",          builtin.search_history,                   desc = "Search History" },
+      { "q:", builtin.command_history, desc = "Command History" },
+      { "q/", builtin.search_history, desc = "Search History" },
+      { "q?", builtin.search_history, desc = "Search History" },
       -- Git integration
-      { "<leader>fGc", builtin.git_commits,                      desc = "Git Commits" },
-      { "<leader>fGb", builtin.git_branches,                     desc = "Git Branches" },
-      { "<leader>fGs", builtin.git_status,                       desc = "Git Status" },
-      { "<leader>fGf", builtin.git_files,                        desc = "Git Files" },
+      { "<leader>fgc", builtin.git_commits, desc = "Git Commits" },
+      { "<leader>fgb", builtin.git_branches, desc = "Git Branches" },
+      { "<leader>fgs", builtin.git_status, desc = "Git Status" },
+      { "<leader>fgf", builtin.git_files, desc = "Git Files" },
       -- LSP integration
-      { "<leader>fd",  "<cmd>Telescope diagnostics bufnr=0<cr>", desc = "Document Diagnostics" },
-      { "<leader>fD",  builtin.diagnostics,                      desc = "Workspace Diagnostics" },
+      { "<leader>fd", "<cmd>Telescope diagnostics bufnr=0<cr>", desc = "Document Diagnostics" },
+      { "<leader>fD", builtin.diagnostics, desc = "Workspace Diagnostics" },
       -- Other useful pickers
-      { "<leader>ft",  builtin.treesitter,                       desc = "Symbols" },
-      { "<leader>fk",  builtin.keymaps,                          desc = "Keymaps" },
-
+      { "<leader>fs", builtin.treesitter, desc = "Symbols" },
+      { "<leader>fk", builtin.keymaps, desc = "Keymaps" },
     }
   end,
 
@@ -143,7 +142,7 @@ return {
           borderchars = borders.results,
           enter = false,
           title = false,
-        }
+        },
       }
 
       if has_previewer then
@@ -223,8 +222,8 @@ return {
             preview_cutoff = 120,
           },
           ebony = {
-            width = 1.0,        -- Full width
-            height = 1.0,       -- Full height
+            width = 1.0, -- Full width
+            height = 1.0, -- Full height
             preview_cutoff = 0, -- Always show preview
             prompt_position = "top",
           },
@@ -274,8 +273,9 @@ return {
           no_ignore = false,
           hidden = true,
           follow = true,
-          find_command = vim.fn.executable("fd") == 1 and
-              { "fd", "--type", "f", "--strip-cwd-prefix", "--hidden", "--exclude", ".git" } or nil,
+          find_command = vim.fn.executable("fd") == 1
+              and { "fd", "--type", "f", "--strip-cwd-prefix", "--hidden", "--exclude", ".git" }
+            or nil,
           prompt_prefix = " Find Files: ",
         },
         live_grep = {

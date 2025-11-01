@@ -1,5 +1,6 @@
 return {
   "yetone/avante.nvim",
+  enabled = vim.env.ANTHROPIC_API_KEY ~= nil,
   event = "VeryLazy",
   version = false,
   build = "make",
@@ -59,8 +60,8 @@ return {
     hints = { enabled = true },
     windows = {
       position = "right", -- the position of the sidebar
-      wrap = true,        -- similar to vim.o.wrap
-      width = 30,         -- default % based on available width
+      wrap = true, -- similar to vim.o.wrap
+      width = 30, -- default % based on available width
       sidebar_header = {
         align = "center", -- left, center, right for title
         rounded = true,

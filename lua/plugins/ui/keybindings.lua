@@ -29,15 +29,17 @@ return {
     -- Group definitions using v3 API
     which_key.add({
       { "<leader>a", group = "Avante" },
+      { "<leader>ai", group = "AI (NeoCodeium)" },
       { "<leader>b", group = "Buffers" },
       { "<leader>c", group = "Code/LSP" },
       { "<leader>d", group = "Debug" },
       { "<leader>f", group = "Find/Telescope" },
-      { "<leader>fG", group = "Find Git" },
+      { "<leader>fg", group = "Find Git" },
       { "<leader>g", group = "Git" },
       { "<leader>go", group = "Git Operations (Octo)" },
       { "<leader>L", group = "Layouts" },
       { "<leader>n", group = "Notifications" },
+      { "<leader>q", group = "Quit" },
       { "<leader>r", group = "Refactoring" },
       { "<leader>s", group = "Search/Replace" },
       { "<leader>t", group = "Terminal/Toggle" },
@@ -76,13 +78,6 @@ return {
       })
     end
 
-    -- File/Explorer
-    which_key.add({
-      { "<leader>e", desc = "Open File Explorer" },
-      { "<leader>ed", desc = "Toggle Oil file details" },
-      { "<leader>E", desc = "NvimTree Explorer" },
-    })
-
     -- Search/Replace
     which_key.add({
       { "<leader>sr", desc = "Search and Replace (Current File)" },
@@ -91,30 +86,6 @@ return {
       { "<leader>sW", desc = "Search Word (Project)" },
       { "<leader>si", desc = "Search Within Range" },
       { "<leader>sb", desc = "Search Last Pattern" },
-    })
-
-    -- Telescope/Find
-    which_key.add({
-      { "<leader>ff", desc = "Find Files" },
-      { "<leader>fg", desc = "Find Text (Grep)" },
-      { "<leader>fb", desc = "Find Buffers" },
-      { "<leader>fr", desc = "Recent Files" },
-      { "<leader>fh", desc = "Find Help" },
-      { "<leader>fs", desc = "Find Current Word" },
-      { "<leader>fc", desc = "Command History" },
-      { "<leader>f/", desc = "Search History" },
-      { "<leader>fk", desc = "Find Keymaps" },
-      { "<leader>fd", desc = "Document Diagnostics" },
-      { "<leader>fD", desc = "Workspace Diagnostics" },
-      { "<leader>ft", desc = "Find Symbols" },
-    })
-
-    -- Telescope Git (moved to fG namespace)
-    which_key.add({
-      { "<leader>fGc", desc = "Find Git Commits" },
-      { "<leader>fGb", desc = "Find Git Branches" },
-      { "<leader>fGs", desc = "Find Git Status" },
-      { "<leader>fGf", desc = "Find Git Files" },
     })
 
     -- Core Git (no conflicts)

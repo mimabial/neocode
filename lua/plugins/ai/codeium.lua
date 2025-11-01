@@ -16,6 +16,7 @@ return {
       end,
     })
 
+    vim.keymap.set("n", "<leader>ac", "<cmd>Codeium Chat<cr>", { desc = "Windsurf: Open Chat" })
     vim.keymap.set("i", "<C-g>", function()
       return require("codeium").complete()
     end, { expr = true, desc = "Windsurf: Accept suggestion" })

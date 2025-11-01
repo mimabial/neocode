@@ -92,15 +92,16 @@ return {
     cmd = { "NvimTreeToggle", "NvimTreeFindFile" },
     keys = {
       {
-        "<leader>E",
+        "<leader>e",
         function()
           -- Don't open nvim-tree if we're in oil
           if vim.bo.filetype == "oil" then
+            vim.notify("Cannot open nvim-tree in oil buffer", vim.log.levels.WARN)
             return
           end
           vim.cmd("NvimTreeToggle")
         end,
-        desc = "NvimTree Explorer"
+        desc = "Open NvimTree Explorer",
       },
     },
     opts = function()
@@ -129,7 +130,7 @@ return {
         },
         view = {
           width = 30,
-          side = "right"
+          side = "right",
         },
         diagnostics = {
           enable = true,
@@ -260,8 +261,7 @@ return {
       vim.api.nvim_create_autocmd("BufEnter", {
         nested = true,
         callback = function()
-          if #vim.api.nvim_list_wins() == 1 and
-              vim.bo.filetype == "NvimTree" then
+          if #vim.api.nvim_list_wins() == 1 and vim.bo.filetype == "NvimTree" then
             vim.cmd("quit")
           end
         end,
