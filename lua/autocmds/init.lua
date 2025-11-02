@@ -177,100 +177,11 @@ function M.setup()
 
   -- 14) Protect special windows from buffer replacement
   vim.api.nvim_create_autocmd("FileType", {
-    pattern = { "spectre_panel", "Trouble", "trouble", "qf", "help" },
+    pattern = { "Trouble", "trouble", "qf", "help", "grug-far", "grug-far-history", "grug-far-help" },
     callback = function()
       vim.wo.winfixbuf = true
     end,
     desc = "Prevent buffer replacement in special windows",
-  })
-
-  -- 15) Cycle through matches in spectre
-  vim.api.nvim_create_autocmd("FileType", {
-    pattern = "spectre_panel",
-    callback = function(args)
-      local bufnr = args.buf
-
-      local function get_all_matches()
-        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-        local matches = {}
-        for i, line in ipairs(lines) do
-          if line:match("^│%s+%d+ ") then
-            table.insert(matches, i)
-          end
-        end
-        return matches
-      end
-
-      -- Go to next match
-      vim.keymap.set("n", "n", function()
-        local count = vim.v.count1
-        local cur = vim.api.nvim_win_get_cursor(0)[1]
-        local matches = get_all_matches()
-        if #matches == 0 then
-          return
-        end
-
-        local on_match = false
-        local idx = 1
-        for i, m in ipairs(matches) do
-          if m == cur then
-            on_match = true
-            idx = i
-            break
-          elseif m > cur then
-            idx = i
-            break
-          end
-        end
-
-        if not on_match then
-          vim.api.nvim_win_set_cursor(0, { matches[idx], 0 })
-          return
-        end
-
-        local next_idx = ((idx - 1 + count) % #matches) + 1
-        vim.api.nvim_win_set_cursor(0, { matches[next_idx], 0 })
-      end, { buffer = bufnr, desc = "Spectre: next match" })
-
-      -- Go to previous match
-      vim.keymap.set("n", "N", function()
-        local count = vim.v.count1
-        local cur = vim.api.nvim_win_get_cursor(0)[1]
-        local matches = get_all_matches()
-        if #matches == 0 then
-          return
-        end
-
-        local on_match = false
-        local idx = nil
-
-        for i, m in ipairs(matches) do
-          if m == cur then
-            on_match = true
-            idx = i
-            break
-          elseif m > cur then
-            idx = i - 1
-            break
-          end
-        end
-
-        if idx == nil then
-          idx = #matches
-        end
-        if idx <= 0 then
-          idx = #matches
-        end
-
-        if not on_match then
-          vim.api.nvim_win_set_cursor(0, { matches[idx], 0 })
-          return
-        end
-
-        local prev_idx = ((idx - 1 - count) % #matches) + 1
-        vim.api.nvim_win_set_cursor(0, { matches[prev_idx], 0 })
-      end, { buffer = bufnr, desc = "Spectre: previous match" })
-    end,
   })
 end
 
