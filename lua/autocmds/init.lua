@@ -210,16 +210,24 @@ function M.setup()
           return
         end
 
-        -- find current index
+        local on_match = false
         local idx = 1
         for i, m in ipairs(matches) do
-          if m >= cur then
+          if m == cur then
+            on_match = true
+            idx = i
+            break
+          elseif m > cur then
             idx = i
             break
           end
         end
 
-        -- move forward `count` times, wrap around
+        if not on_match then
+          vim.api.nvim_win_set_cursor(0, { matches[idx], 0 })
+          return
+        end
+
         local next_idx = ((idx - 1 + count) % #matches) + 1
         vim.api.nvim_win_set_cursor(0, { matches[next_idx], 0 })
       end, { buffer = bufnr, desc = "Spectre: next match" })
@@ -233,16 +241,32 @@ function M.setup()
           return
         end
 
-        -- find current index
-        local idx = #matches
+        local on_match = false
+        local idx = nil
+
         for i, m in ipairs(matches) do
-          if m >= cur then
+          if m == cur then
+            on_match = true
             idx = i
+            break
+          elseif m > cur then
+            idx = i - 1
             break
           end
         end
 
-        -- move backward `count` times, wrap around
+        if idx == nil then
+          idx = #matches
+        end
+        if idx <= 0 then
+          idx = #matches
+        end
+
+        if not on_match then
+          vim.api.nvim_win_set_cursor(0, { matches[idx], 0 })
+          return
+        end
+
         local prev_idx = ((idx - 1 - count) % #matches) + 1
         vim.api.nvim_win_set_cursor(0, { matches[prev_idx], 0 })
       end, { buffer = bufnr, desc = "Spectre: previous match" })
