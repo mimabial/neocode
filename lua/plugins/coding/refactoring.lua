@@ -3,7 +3,7 @@ return {
   cmd = "GrugFar",
   keys = {
     {
-      "<leader>sh",
+      "<leader>sl",
       function()
         require("grug-far").toggle_instance({
           instanceName = "grug-far",
@@ -22,17 +22,42 @@ return {
           prefills = { paths = vim.fn.expand("%:p") },
         })
       end,
-      desc = "Search and Replace (Current File)",
+      desc = "Search and Replace",
     },
     {
-      "<leader>sR",
+      "<leader>scr",
       function()
         require("grug-far").toggle_instance({
           instanceName = "grug-far",
           transient = true,
         })
       end,
-      desc = "Search and Replace (Project)",
+      desc = "Search CWD and Replace",
+    },
+    {
+      "<leader>sgr",
+      function()
+        local git_root = vim.fn.systemlist("git rev-parse --show-toplevel")[1]
+        if vim.v.shell_error ~= 0 then
+          vim.notify("Not in a git repository", vim.log.levels.WARN)
+          return
+        end
+        require("grug-far").open({
+          transient = true,
+          prefills = { paths = git_root },
+        })
+      end,
+      desc = "Search and Replace GIT",
+    },
+    {
+      "<leader>shr",
+      function()
+        require("grug-far").open({
+          transient = true,
+          prefills = { paths = vim.fn.expand("~") },
+        })
+      end,
+      desc = "Search $HOME and Replace",
     },
     {
       "<leader>sw",
@@ -46,7 +71,7 @@ return {
           },
         })
       end,
-      desc = "Search Word (Current File)",
+      desc = "Search Word",
     },
     {
       "<leader>sw",
@@ -58,10 +83,10 @@ return {
           prefills = { paths = vim.fn.expand("%:p") },
         })
       end,
-      desc = "Search Selection (Current File)",
+      desc = "Search Selection",
     },
     {
-      "<leader>sW",
+      "<leader>scw",
       function()
         require("grug-far").toggle_instance({
           instanceName = "grug-far",
@@ -69,10 +94,10 @@ return {
           prefills = { search = vim.fn.expand("<cword>") },
         })
       end,
-      desc = "Search Word (Project)",
+      desc = "Search Word CWD",
     },
     {
-      "<leader>sW",
+      "<leader>scw",
       mode = "v",
       function()
         require("grug-far").with_visual_selection({
@@ -80,20 +105,31 @@ return {
           transient = true,
         })
       end,
-      desc = "Search Selection (Project)",
+      desc = "Search Selection CWD",
     },
   },
 
   opts = {
     windowCreationCommand = "vsplit",
-    startInInsertMode = false,
+    startInInsertMode = true,
     icons = { enabled = false },
     engines = {
       ripgrep = {
         placeholders = {
           enabled = false, -- Removes all placeholder text
         },
+        extraArgs = "--glob=!.git/*",
       },
+    },
+    prefills = {
+      flags = "--hidden "
+        .. "--glob !dotfiles/** "
+        .. "--glob !**/lib/hyde/** "
+        .. "--glob !.codeium/** "
+        .. "--glob !**/cfg_backups/** "
+        .. "--glob !**/hyde/logs/** "
+        .. "--glob !**/state/nvim/** "
+        .. "--glob !**/*Code*OSS*/**",
     },
   },
 

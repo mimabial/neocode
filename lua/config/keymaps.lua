@@ -85,6 +85,8 @@ function M.setup()
   map("n", "<leader>wc", "<cmd>close<cr>", { desc = "Close window" })
   map("n", "<leader>wo", "<cmd>only<cr>", { desc = "Close other windows" })
 
+  map("n", "<leader>wf", "<cmd>noautocmd w<cr>", { desc = "Save without formatting" })
+
   -- Resize windows with arrows
   map("n", "<C-Up>", ":resize -2<CR>", { desc = "Decrease window height" })
   map("n", "<C-Down>", ":resize +2<CR>", { desc = "Increase window height" })
