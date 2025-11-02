@@ -91,7 +91,8 @@ return {
         local width = vim.o.columns < 120 and vim.o.columns or math.min(math.floor(vim.o.columns * 0.5), 120)
         vim.cmd("vertical resize " .. width)
       end,
-      live_update = true,
+      live_update = true, -- auto execute search again when you write to any file in vim
+      lnum_for_results = true, -- show line number for search/replace results
       mapping = {
         ["toggle_line"] = {
           map = "tt",

@@ -183,6 +183,71 @@ function M.setup()
     end,
     desc = "Prevent buffer replacement in special windows",
   })
+
+  -- 15) Cycle through matches in spectre
+  vim.api.nvim_create_autocmd("FileType", {
+    pattern = "spectre_panel",
+    callback = function(args)
+      local bufnr = args.buf
+
+      local function get_all_matches()
+        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+        local matches = {}
+        for i, line in ipairs(lines) do
+          if line:match("^│%s+%d+ ") then
+            table.insert(matches, i)
+          end
+        end
+        return matches
+      end
+
+      -- Go to next match
+      vim.keymap.set("n", "n", function()
+        local count = vim.v.count1
+        local cur = vim.api.nvim_win_get_cursor(0)[1]
+        local matches = get_all_matches()
+        if #matches == 0 then
+          return
+        end
+
+        -- find current index
+        local idx = 1
+        for i, m in ipairs(matches) do
+          if m >= cur then
+            idx = i
+            break
+          end
+        end
+
+        -- move forward `count` times, wrap around
+        local next_idx = ((idx - 1 + count) % #matches) + 1
+        vim.api.nvim_win_set_cursor(0, { matches[next_idx], 0 })
+      end, { buffer = bufnr, desc = "Spectre: next match" })
+
+      -- Go to previous match
+      vim.keymap.set("n", "N", function()
+        local count = vim.v.count1
+        local cur = vim.api.nvim_win_get_cursor(0)[1]
+        local matches = get_all_matches()
+        if #matches == 0 then
+          return
+        end
+
+        -- find current index
+        local idx = #matches
+        for i, m in ipairs(matches) do
+          if m >= cur then
+            idx = i
+            break
+          end
+        end
+
+        -- move backward `count` times, wrap around
+        local prev_idx = ((idx - 1 - count) % #matches) + 1
+        vim.api.nvim_win_set_cursor(0, { matches[prev_idx], 0 })
+      end, { buffer = bufnr, desc = "Spectre: previous match" })
+    end,
+  })
 end
 
 return M
