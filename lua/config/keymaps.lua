@@ -8,12 +8,6 @@ function M.setup()
   end
 
   -- ========================================
-  -- Leader key
-  -- ========================================
-  vim.g.mapleader = " "
-  vim.g.maplocalleader = " "
-
-  -- ========================================
   -- LSP Keymaps (set up via autocmd)
   -- ========================================
   vim.api.nvim_create_autocmd("LspAttach", {

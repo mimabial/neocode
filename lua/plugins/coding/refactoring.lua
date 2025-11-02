@@ -1,17 +1,21 @@
 return {
-  "nvim-pack/nvim-spectre",
-  dependencies = { "nvim-lua/plenary.nvim" },
-  cmd = "Spectre",
+  "MagicDuck/grug-far.nvim",
+  cmd = "GrugFar",
   keys = {
+    {
+      "<leader>sh",
+      function()
+        require("grug-far").open({
+          prefills = require("grug-far").get_last_search(),
+        })
+      end,
+      desc = "Resume last search",
+    },
     {
       "<leader>sr",
       function()
-        local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
-        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then
-          return
-        end
-        require("spectre").open_file_search({
-          path = vim.fn.expand("%:p"),
+        require("grug-far").open({
+          prefills = { paths = vim.fn.expand("%:p") },
         })
       end,
       desc = "Search and Replace (Current File)",
@@ -19,24 +23,18 @@ return {
     {
       "<leader>sR",
       function()
-        local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
-        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then
-          return
-        end
-        require("spectre").toggle()
+        require("grug-far").open()
       end,
       desc = "Search and Replace (Project)",
     },
     {
       "<leader>sw",
       function()
-        local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
-        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then
-          return
-        end
-        require("spectre").open_file_search({
-          select_word = true,
-          path = vim.fn.expand("%:p"),
+        require("grug-far").open({
+          prefills = {
+            search = vim.fn.expand("<cword>"),
+            paths = vim.fn.expand("%:p"),
+          },
         })
       end,
       desc = "Search Word (Current File)",
@@ -45,13 +43,8 @@ return {
       "<leader>sw",
       mode = "v",
       function()
-        local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
-        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then
-          return
-        end
-        require("spectre").open_file_search({
-          select_word = true,
-          path = vim.fn.expand("%:p"),
+        require("grug-far").with_visual_selection({
+          prefills = { paths = vim.fn.expand("%:p") },
         })
       end,
       desc = "Search Selection (Current File)",
@@ -59,11 +52,9 @@ return {
     {
       "<leader>sW",
       function()
-        local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
-        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then
-          return
-        end
-        require("spectre").open_visual({ select_word = true })
+        require("grug-far").open({
+          prefills = { search = vim.fn.expand("<cword>") },
+        })
       end,
       desc = "Search Word (Project)",
     },
@@ -71,145 +62,52 @@ return {
       "<leader>sW",
       mode = "v",
       function()
-        local disabled_fts = { "oil", "NvimTree", "Trouble", "lazy", "mason", "spectre_panel" }
-        if vim.tbl_contains(disabled_fts, vim.bo.filetype) then
-          return
-        end
-        require("spectre").open_visual({ select_word = true })
+        require("grug-far").with_visual_selection()
       end,
       desc = "Search Selection (Project)",
     },
   },
-  opts = function()
-    return {
-      -- Window size options
-      is_open_target_win = true,
-      is_insert_mode = false,
 
-      open_cmd = function()
-        vim.cmd("vnew")
-        local width = vim.o.columns < 120 and vim.o.columns or math.min(math.floor(vim.o.columns * 0.5), 120)
-        vim.cmd("vertical resize " .. width)
-      end,
-      live_update = true, -- auto execute search again when you write to any file in vim
-      lnum_for_results = true, -- show line number for search/replace results
-      mapping = {
-        ["toggle_line"] = {
-          map = "tt",
-          cmd = "<cmd>lua require('spectre').toggle_line(); if not vim.fn.getline(vim.fn.line('.') + 1):find('└') then vim.cmd('normal! j') end<CR>",
-          desc = "toggle item",
-        },
-        ["delete_line"] = {
-          map = "dd",
-          cmd = "<cmd>lua require('spectre.actions').run_current_delete()<CR>",
-          desc = "delete current item",
-        },
-        ["enter_file"] = {
-          map = "<CR>",
-          cmd = "<cmd>lua require('spectre.actions').select_entry()<CR>",
-          desc = "open file and jump to match",
-        },
-        ["send_to_qf"] = {
-          map = "<leader>qf",
-          cmd = "<cmd>lua require('spectre.actions').send_to_qf()<CR>",
-          desc = "send all items to quickfix",
-        },
-        ["replace_cmd"] = {
-          map = "<leader>rc",
-          cmd = "<cmd>lua require('spectre.actions').replace_cmd()<CR>",
-          desc = "replace command",
-        },
-        ["run_current_replace"] = {
-          map = "r",
-          cmd = "<cmd>lua require('spectre.actions').run_current_replace(); if not vim.fn.getline(vim.fn.line('.') + 1):find('└') then vim.cmd('normal! j') end<CR>",
-          desc = "replace current",
-        },
-        ["run_replace"] = {
-          map = "R",
-          cmd = "<cmd>lua require('spectre.actions').run_replace()<CR>",
-          desc = "replace all",
-        },
-        ["quit"] = {
-          map = "q",
-          cmd = "<cmd>lua if #vim.api.nvim_list_wins() == 1 then vim.cmd('quit') else require('spectre').close() end<CR>",
-          desc = "quit",
-        },
-        ["escape"] = {
-          map = "<ESC>",
-          cmd = "<cmd>lua if #vim.api.nvim_list_wins() == 1 then vim.cmd('quit') else require('spectre').close() end<CR>",
-          desc = "quit",
-        },
-      },
-      use_trouble_qf = true,
-    }
-  end,
+  opts = {
+    windowCreationCommand = "vnew",
+    startInInsertMode = false,
+  },
 
   config = function(_, opts)
-    require("spectre").setup(opts)
-
-    -- Close Neovim if spectre is the last window
-    vim.api.nvim_create_autocmd("WinClosed", {
-      callback = function()
-        -- Schedule to run after the window is actually closed
-        vim.schedule(function()
-          local wins = vim.api.nvim_list_wins()
-          if #wins == 1 then
-            local buf = vim.api.nvim_win_get_buf(wins[1])
-            if vim.bo[buf].filetype == "spectre_panel" then
-              vim.cmd("quit")
-            end
-          end
-        end)
-      end,
-    })
+    require("grug-far").setup(opts)
 
     vim.api.nvim_create_autocmd("FileType", {
-      pattern = "spectre_panel",
-      callback = function(args)
-        local source_win = vim.fn.win_getid(vim.fn.winnr("#"))
-        local bufnr = args.buf
-
-        -- Store original width
-        local original_width = vim.api.nvim_win_get_width(0)
-
-        -- Window options
-        vim.opt_local.number = false
-        vim.opt_local.relativenumber = true
-        vim.opt_local.signcolumn = "no"
-        vim.opt_local.cursorline = true
-
-        vim.api.nvim_create_autocmd("WinEnter", {
-          buffer = bufnr,
-          callback = function()
-            vim.api.nvim_win_set_width(0, original_width)
-          end,
-        })
-        -- Restore source window on close
-        vim.api.nvim_create_autocmd("WinClosed", {
-          buffer = bufnr,
-          once = true,
-          callback = function()
-            vim.schedule(function()
-              if vim.api.nvim_win_is_valid(source_win) then
-                vim.api.nvim_set_current_win(source_win)
-              end
-            end)
-          end,
-        })
-      end,
-    })
-
-    vim.api.nvim_create_autocmd("WinClosed", {
+      pattern = "grug-far",
       callback = function()
-        vim.schedule(function()
-          local wins = vim.api.nvim_list_wins()
-          if #wins == 1 then
-            local buf = vim.api.nvim_win_get_buf(wins[1])
-            if vim.bo[buf].filetype == "spectre_panel" then
-              vim.cmd("quit")
-            end
-          end
-        end)
+        local width = vim.o.columns < 120 and vim.o.columns or math.min(math.floor(vim.o.columns * 0.5), 120)
+        vim.cmd("vertical resize " .. width)
+
+        -- vim.opt_local.number = false
+        -- vim.opt_local.relativenumber = true
+        -- vim.opt_local.signcolumn = "no"
+        -- vim.opt_local.cursorline = true
+
+        local bufnr = vim.api.nvim_get_current_buf()
+        vim.keymap.set("n", "r", "<localleader>r", { buffer = bufnr, remap = true, desc = "Replace current" })
+        vim.keymap.set("n", "R", "<localleader>R", { buffer = bufnr, remap = true, desc = "Replace all" })
+        vim.keymap.set("n", "n", "<down>", { buffer = bufnr, remap = true, desc = "Next result" })
+        vim.keymap.set("n", "N", "<up>", { buffer = bufnr, remap = true, desc = "Previous result" })
+        vim.keymap.set("n", "q", "<localleader>c", { buffer = bufnr, remap = true, desc = "Close" })
+        vim.keymap.set("n", "<ESC>", "<localleader>c", { buffer = bufnr, remap = true, desc = "Close" })
+
+        vim.keymap.set("n", "tc", function()
+          require("grug-far").get_instance(0):toggle_flags({ "--ignore-case" })
+        end, { buffer = bufnr, desc = "Toggle case sensitivity" })
+
+        vim.keymap.set("n", "ti", function()
+          local instance = require("grug-far").get_instance(0)
+          instance:toggle_flags({ "--no-ignore" })
+        end, { buffer = bufnr, desc = "Toggle gitignore" })
+
+        vim.keymap.set("n", "th", function()
+          local instance = require("grug-far").get_instance(0)
+          instance:toggle_flags({ "--hidden" })
+        end, { buffer = bufnr, desc = "Toggle hidden files" })
       end,
     })
   end,

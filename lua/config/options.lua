@@ -6,53 +6,49 @@ function M.setup()
   local g = vim.g
   local fn = vim.fn
 
-  -- Leader keys
-  g.mapleader = " "
-  g.maplocalleader = " "
-
   -- Basic UI
-  opt.number = true                                -- Show absolute line numbers
-  opt.relativenumber = true                        -- Show relative line numbers
-  opt.numberwidth = 4                              -- Set number column width to 2
-  opt.cursorline = true                            -- Highlight current line
-  opt.termguicolors = true                         -- True color support
-  opt.background = "dark"                          -- Dark background
-  opt.signcolumn = "yes:1"                         -- Always show sign column with fixed width
-  opt.showtabline = 2                              -- Show tab line if there are at least two tabs
-  opt.laststatus = 3                               -- Global statusline (single bar at bottom)
-  opt.formatoptions:remove { 'c', 'r', 'o' }       -- Disable comment continuation
-  opt.runtimepath:remove '/usr/share/vim/vimfiles' -- Separate Vim plugins from Neovim
+  opt.number = true -- Show absolute line numbers
+  opt.relativenumber = true -- Show relative line numbers
+  opt.numberwidth = 4 -- Set number column width to 2
+  opt.cursorline = true -- Highlight current line
+  opt.termguicolors = true -- True color support
+  opt.background = "dark" -- Dark background
+  opt.signcolumn = "yes:1" -- Always show sign column with fixed width
+  opt.showtabline = 2 -- Show tab line if there are at least two tabs
+  opt.laststatus = 3 -- Global statusline (single bar at bottom)
+  opt.formatoptions:remove({ "c", "r", "o" }) -- Disable comment continuation
+  opt.runtimepath:remove("/usr/share/vim/vimfiles") -- Separate Vim plugins from Neovim
 
   -- Scrolling
-  opt.scrolloff = 4     -- Keep 4 lines visible when scrolling
+  opt.scrolloff = 4 -- Keep 4 lines visible when scrolling
   opt.sidescrolloff = 8 -- Keep 8 columns visible when scrolling horizontally
 
   -- Wrapping
-  opt.wrap = false           -- Display lines as one long line
-  opt.linebreak = true       -- Companion to wrap, don't split words
-  opt.whichwrap = 'bs<>[]hl' -- Which "horizontal" keys are allowed to wrap
+  opt.wrap = false -- Display lines as one long line
+  opt.linebreak = true -- Companion to wrap, don't split words
+  opt.whichwrap = "bs<>[]hl" -- Which "horizontal" keys are allowed to wrap
 
   -- Command line behavior
-  opt.cmdheight = 1         -- Command line height
-  opt.showmode = false      -- Mode handled by statusline
-  opt.showcmd = false       -- Don't show partial commands
+  opt.cmdheight = 1 -- Command line height
+  opt.showmode = false -- Mode handled by statusline
+  opt.showcmd = false -- Don't show partial commands
   opt.shortmess:append("c") -- Don't show completion messages
   -- opt.shortmess:remove("S") -- Allow search count in statusline
 
   -- Indentation
-  opt.expandtab = true   -- Use spaces instead of tabs
-  opt.shiftwidth = 2     -- Size of an indent
-  opt.tabstop = 2        -- Number of spaces tabs count for
-  opt.softtabstop = 2    -- Number of spaces tabs count for while editing
-  opt.autoindent = true  -- Copy indent from current line to new one
+  opt.expandtab = true -- Use spaces instead of tabs
+  opt.shiftwidth = 2 -- Size of an indent
+  opt.tabstop = 2 -- Number of spaces tabs count for
+  opt.softtabstop = 2 -- Number of spaces tabs count for while editing
+  opt.autoindent = true -- Copy indent from current line to new one
   opt.smartindent = true -- Smart indenting
   opt.breakindent = true -- Wrapped lines maintain indent
 
   -- Search settings
   opt.ignorecase = true -- Case-insensitive search
-  opt.smartcase = true  -- Smart case
-  opt.hlsearch = true   -- Highlight search results
-  opt.incsearch = true  -- Incremental search
+  opt.smartcase = true -- Smart case
+  opt.hlsearch = true -- Highlight search results
+  opt.incsearch = true -- Incremental search
 
   -- Winbar settings
   opt.winbar = "" -- Allow winbar to be set by plugins
@@ -102,7 +98,7 @@ function M.setup()
   -- Misc safety / UX
   opt.backupskip = { "/tmp/*", "/private/*" } -- skip noisy tmp files
   opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize" }
-  opt.confirm = true                          -- prompt rather than error on unsaved changes
+  opt.confirm = true -- prompt rather than error on unsaved changes
 
   -- Window splits
   opt.splitright = true -- Splits open to the right
