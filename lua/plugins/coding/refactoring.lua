@@ -5,7 +5,8 @@ return {
     {
       "<leader>sh",
       function()
-        require("grug-far").open({
+        require("grug-far").toggle_instance({
+          instanceName = "grug-far",
           transient = true,
           prefills = require("grug-far").get_last_search(),
         })
@@ -15,7 +16,8 @@ return {
     {
       "<leader>sr",
       function()
-        require("grug-far").open({
+        require("grug-far").toggle_instance({
+          instanceName = "grug-far",
           transient = true,
           prefills = { paths = vim.fn.expand("%:p") },
         })
@@ -25,7 +27,8 @@ return {
     {
       "<leader>sR",
       function()
-        require("grug-far").open({
+        require("grug-far").toggle_instance({
+          instanceName = "grug-far",
           transient = true,
         })
       end,
@@ -34,7 +37,8 @@ return {
     {
       "<leader>sw",
       function()
-        require("grug-far").open({
+        require("grug-far").toggle_instance({
+          instanceName = "grug-far",
           transient = true,
           prefills = {
             search = vim.fn.expand("<cword>"),
@@ -49,6 +53,7 @@ return {
       mode = "v",
       function()
         require("grug-far").with_visual_selection({
+          instanceName = "grug-far",
           transient = true,
           prefills = { paths = vim.fn.expand("%:p") },
         })
@@ -58,7 +63,8 @@ return {
     {
       "<leader>sW",
       function()
-        require("grug-far").open({
+        require("grug-far").toggle_instance({
+          instanceName = "grug-far",
           transient = true,
           prefills = { search = vim.fn.expand("<cword>") },
         })
@@ -70,6 +76,7 @@ return {
       mode = "v",
       function()
         require("grug-far").with_visual_selection({
+          instanceName = "grug-far",
           transient = true,
         })
       end,
