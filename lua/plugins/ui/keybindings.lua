@@ -42,6 +42,9 @@ return {
       { "<leader>q", group = "Quit" },
       { "<leader>r", group = "Refactoring" },
       { "<leader>s", group = "Search/Replace" },
+      { "<leader>sc", group = "Search CWD" },
+      { "<leader>sg", group = "Search Git" },
+      { "<leader>sh", group = "Search Home" },
       { "<leader>t", group = "Terminal/Toggle" },
       { "<leader>u", group = "UI/Settings" },
       { "<leader>w", group = "Windows" },
@@ -77,16 +80,6 @@ return {
         { "<leader>b" .. i, desc = "Go to buffer " .. i },
       })
     end
-
-    -- Search/Replace
-    which_key.add({
-      { "<leader>sr", desc = "Search and Replace (Current File)" },
-      { "<leader>sR", desc = "Search and Replace (Project)" },
-      { "<leader>sw", desc = "Search Word (Current File)" },
-      { "<leader>sW", desc = "Search Word (Project)" },
-      { "<leader>si", desc = "Search Within Range" },
-      { "<leader>sb", desc = "Search Last Pattern" },
-    })
 
     -- Core Git (no conflicts)
     which_key.add({

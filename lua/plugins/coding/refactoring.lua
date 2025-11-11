@@ -19,7 +19,7 @@ return {
         require("grug-far").toggle_instance({
           instanceName = "grug-far",
           transient = true,
-          prefills = { paths = vim.fn.expand("%:p") },
+          prefills = { paths = vim.fn.fnameescape(vim.fn.expand("%:p")) },
         })
       end,
       desc = "Search and Replace",
@@ -32,7 +32,7 @@ return {
           transient = true,
         })
       end,
-      desc = "Search CWD and Replace",
+      desc = "Search and Replace CWD",
     },
     {
       "<leader>sgr",
@@ -44,7 +44,7 @@ return {
         end
         require("grug-far").open({
           transient = true,
-          prefills = { paths = git_root },
+          prefills = { paths = vim.fn.fnameescape(git_root) },
         })
       end,
       desc = "Search and Replace GIT",
@@ -54,10 +54,10 @@ return {
       function()
         require("grug-far").open({
           transient = true,
-          prefills = { paths = vim.fn.expand("~") },
+          prefills = { paths = vim.fn.fnameescape(vim.fn.expand("~")) },
         })
       end,
-      desc = "Search $HOME and Replace",
+      desc = "Search and Replace HOME",
     },
     {
       "<leader>sw",
@@ -67,7 +67,7 @@ return {
           transient = true,
           prefills = {
             search = vim.fn.expand("<cword>"),
-            paths = vim.fn.expand("%:p"),
+            paths = vim.fn.fnameescape(vim.fn.expand("%:p")),
           },
         })
       end,
@@ -80,7 +80,7 @@ return {
         require("grug-far").with_visual_selection({
           instanceName = "grug-far",
           transient = true,
-          prefills = { paths = vim.fn.expand("%:p") },
+          prefills = { paths = vim.fn.fnameescape(vim.fn.expand("%:p")) },
         })
       end,
       desc = "Search Selection",
@@ -107,6 +107,64 @@ return {
       end,
       desc = "Search Selection CWD",
     },
+    {
+      "<leader>sgw",
+      function()
+        local git_root = vim.fn.systemlist("git rev-parse --show-toplevel")[1]
+        if vim.v.shell_error ~= 0 then
+          vim.notify("Not in a git repository", vim.log.levels.WARN)
+          return
+        end
+        require("grug-far").open({
+          transient = true,
+          prefills = {
+            search = vim.fn.expand("<cword>"),
+            paths = vim.fn.fnameescape(git_root),
+          },
+        })
+      end,
+      desc = "Search Word GIT",
+    },
+    {
+      "<leader>sgw",
+      mode = "v",
+      function()
+        local git_root = vim.fn.systemlist("git rev-parse --show-toplevel")[1]
+        if vim.v.shell_error ~= 0 then
+          vim.notify("Not in a git repository", vim.log.levels.WARN)
+          return
+        end
+        require("grug-far").with_visual_selection({
+          transient = true,
+          prefills = { paths = vim.fn.fnameescape(git_root) },
+        })
+      end,
+      desc = "Search Selection GIT",
+    },
+    {
+      "<leader>shw",
+      function()
+        require("grug-far").open({
+          transient = true,
+          prefills = {
+            search = vim.fn.expand("<cword>"),
+            paths = vim.fn.fnameescape(vim.fn.expand("~")),
+          },
+        })
+      end,
+      desc = "Search Word HOME",
+    },
+    {
+      "<leader>shw",
+      mode = "v",
+      function()
+        require("grug-far").with_visual_selection({
+          transient = true,
+          prefills = { paths = vim.fn.fnameescape(vim.fn.expand("~")) },
+        })
+      end,
+      desc = "Search Selection HOME",
+    },
   },
 
   opts = {
@@ -118,17 +176,23 @@ return {
         placeholders = {
           enabled = false, -- Removes all placeholder text
         },
-        extraArgs = "--glob=!.git/*",
+        extraArgs = "--glob=!.git/*"
+          .. "--glob=!**/.viminfo* "
+          .. "--glob=!**/.zcompdump* "
+          .. "--glob=!**/Trash/** "
+          .. "--glob=!**/logs/** "
+          .. "--glob=!**/backup/** "
+          .. "--glob=!**/cfg_backups/**",
       },
     },
     prefills = {
       flags = "--hidden "
-        .. "--glob !dotfiles/** "
+        .. "--glob !**/hyde-shell "
+        .. "--glob !**/dotfiles/** "
         .. "--glob !**/lib/hyde/** "
-        .. "--glob !.codeium/** "
-        .. "--glob !**/cfg_backups/** "
-        .. "--glob !**/hyde/logs/** "
+        .. "--glob !**/.codeium/** "
         .. "--glob !**/state/nvim/** "
+        .. "--glob !**/share/nvim/** "
         .. "--glob !**/*Code*OSS*/**",
     },
   },
