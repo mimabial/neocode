@@ -16,21 +16,21 @@ return {
       end,
     })
 
-    vim.keymap.set("n", "<leader>ac", "<cmd>Codeium Chat<cr>", { desc = "Windsurf: Open Chat" })
-    vim.keymap.set("i", "<C-g>", function()
+    vim.keymap.set("n", "<leader>ac", "<cmd>Codeium Chat<cr>", { desc = "Codeium: Open Chat" })
+    vim.keymap.set("i", "<C-y>", function()
       return require("codeium").complete()
-    end, { expr = true, desc = "Windsurf: Accept suggestion" })
+    end, { expr = true, desc = "Codeium: Accept suggestion" })
 
     vim.keymap.set("i", "<C-;>", function()
       return require("codeium").cycle_completions(1)
-    end, { expr = true, desc = "Windsurf: Next completion" })
+    end, { expr = true, desc = "Codeium: Next completion" })
 
     vim.keymap.set("i", "<C-,>", function()
       return require("codeium").cycle_completions(-1)
-    end, { expr = true, desc = "Windsurf: Previous completion" })
+    end, { expr = true, desc = "Codeium: Previous completion" })
 
     vim.keymap.set("i", "<C-x>", function()
       return require("codeium").clear()
-    end, { expr = true, desc = "Windsurf: Clear suggestions" })
+    end, { expr = true, desc = "Codeium: Clear suggestions" })
   end,
 }

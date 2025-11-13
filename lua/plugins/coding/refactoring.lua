@@ -212,7 +212,6 @@ return {
         -- vim.opt_local.cursorline = true
 
         local bufnr = vim.api.nvim_get_current_buf()
-        vim.keymap.set("n", "r", "<localleader>r", { buffer = bufnr, remap = true, desc = "Replace current" })
         vim.keymap.set("n", "n", "<down>", { buffer = bufnr, remap = true, desc = "Next result" })
         vim.keymap.set("n", "N", "<up>", { buffer = bufnr, remap = true, desc = "Previous result" })
         vim.keymap.set("n", "q", "<localleader>c", { buffer = bufnr, remap = true, desc = "Close" })
