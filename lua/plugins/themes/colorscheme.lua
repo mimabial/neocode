@@ -624,6 +624,127 @@ return {
         desc = "Set colorscheme variant",
       })
 
+      -- System theme integration commands
+      vim.api.nvim_create_user_command("SystemSync", function()
+        local success = apply_system_theme()
+        if success then
+          vim.notify("Synced with system theme", vim.log.levels.INFO)
+        else
+          vim.notify("No system theme detected", vim.log.levels.WARN)
+        end
+      end, { desc = "Sync Neovim theme with system theme" })
+
+      vim.api.nvim_create_user_command("SystemDetect", function()
+        local detected_scheme, detected_variant, detected_transparency = detect_system_theme()
+        if detected_scheme then
+          local variant_text = detected_variant and (" variant: " .. detected_variant) or ""
+          local transparency_text = detected_transparency ~= nil
+              and (", transparency: " .. (detected_transparency and "on" or "off"))
+            or ""
+          vim.notify(
+            "Detected system theme: " .. detected_scheme .. variant_text .. transparency_text,
+            vim.log.levels.INFO
+          )
+        else
+          vim.notify("No system theme configuration found", vim.log.levels.WARN)
+        end
+      end, { desc = "Detect system theme configuration" })
+
+      vim.api.nvim_create_user_command("SystemSetTheme", function(opts)
+        local theme_file = os.getenv("HOME") .. "/.config/hypr/themes/theme.conf"
+        local settings = load_settings()
+
+        -- If no args provided, show current and prompt
+        if opts.args == "" then
+          local available = {}
+          for name, theme in pairs(themes) do
+            local icon = theme.icon or ""
+            table.insert(available, icon .. " " .. name)
+          end
+          table.sort(available)
+
+          vim.notify(
+            "Current: " .. settings.theme .. "\n\nAvailable themes:\n" .. table.concat(available, "\n"),
+            vim.log.levels.INFO
+          )
+          return
+        end
+
+        local theme_name, variant = opts.args:match("([%w-]+)%s*(.*)$")
+        if variant == "" then
+          variant = nil
+        end
+
+        -- Validate theme
+        if not themes[theme_name] then
+          vim.notify("Invalid theme: " .. theme_name, vim.log.levels.ERROR)
+          return
+        end
+
+        -- Update Hyprland config if it exists
+        if vim.fn.filereadable(theme_file) == 1 then
+          local content = vim.fn.readfile(theme_file)
+          local updated_scheme = false
+          local updated_variant = false
+
+          for i, line in ipairs(content) do
+            if line:match("^%$NVIM_SCHEME") then
+              content[i] = "$NVIM_SCHEME = " .. theme_name
+              updated_scheme = true
+            elseif line:match("^%$NVIM_VARIANT") then
+              content[i] = "$NVIM_VARIANT = " .. (variant or "")
+              updated_variant = true
+            end
+          end
+
+          -- Add lines if they don't exist
+          if not updated_scheme then
+            table.insert(content, 1, "$NVIM_SCHEME = " .. theme_name)
+          end
+          if not updated_variant and variant then
+            -- Insert after NVIM_SCHEME
+            for i, line in ipairs(content) do
+              if line:match("^%$NVIM_SCHEME") then
+                table.insert(content, i + 1, "$NVIM_VARIANT = " .. variant)
+                break
+              end
+            end
+          end
+
+          pcall(vim.fn.writefile, content, theme_file)
+          vim.notify(
+            "Updated system theme config: " .. theme_name .. (variant and ("-" .. variant) or ""),
+            vim.log.levels.INFO
+          )
+        else
+          vim.notify("Hyprland theme config not found at " .. theme_file, vim.log.levels.WARN)
+        end
+
+        -- Apply the theme immediately
+        apply_theme(theme_name, variant, settings.transparency)
+      end, {
+        nargs = "?",
+        complete = function()
+          return vim.tbl_keys(themes)
+        end,
+        desc = "Set system NVIM_SCHEME in Hyprland config",
+      })
+
+      vim.api.nvim_create_user_command("SystemListThemes", function()
+        local available = {}
+        for name, theme in pairs(themes) do
+          local icon = theme.icon or ""
+          local variant_info = theme.variants
+              and #theme.variants > 0
+              and (" - variants: " .. table.concat(theme.variants, ", "))
+            or ""
+          table.insert(available, icon .. " " .. name .. variant_info)
+        end
+        table.sort(available)
+
+        vim.notify("Available themes:\n" .. table.concat(available, "\n"), vim.log.levels.INFO)
+      end, { desc = "List all available themes and variants" })
+
       -- Auto-apply system theme on startup and setup watcher
       vim.defer_fn(function()
         if not apply_system_theme() then

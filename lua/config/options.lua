@@ -111,7 +111,8 @@ function M.setup()
 
   -- Misc safety / UX
   opt.backupskip = { "/tmp/*", "/private/*" } -- skip noisy tmp files
-  opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize" }
+  -- Session options (aligned with persistence.nvim)
+  opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp" }
   opt.confirm = true -- prompt rather than error on unsaved changes
 
   -- Window splits

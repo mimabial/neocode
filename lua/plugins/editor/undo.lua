@@ -103,7 +103,7 @@ return {
     },
   },
 
-  -- Proper undo configuration
+  -- Visual undo tree (undo configuration is in lua/config/options.lua)
   {
     "mbbill/undotree",
     cmd = "UndotreeToggle",
@@ -111,17 +111,8 @@ return {
       { "<leader>U", "<cmd>UndotreeToggle<cr>", desc = "Toggle Undotree" },
     },
     config = function()
-      -- Create undo directory if it doesn't exist
-      local undodir = vim.fn.stdpath("data") .. "/undodir"
-      if vim.fn.isdirectory(undodir) == 0 then
-        vim.fn.mkdir(undodir, "p")
-      end
-
-      -- Set undo configuration
-      vim.opt.undodir = undodir
-      vim.opt.undofile = true
-      vim.opt.undolevels = 1000
-      vim.opt.undoreload = 10000
+      -- Note: Undo directory and settings are configured in lua/config/options.lua
+      -- This plugin just provides the visual interface
 
       vim.g.undotree_SetFocusWhenToggle = 1
       vim.g.undotree_WindowLayout = 2
