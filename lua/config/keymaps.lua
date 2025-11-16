@@ -120,20 +120,12 @@ function M.setup()
   -- Git Integration
   -- ========================================
   map("n", "<leader>gg", "<cmd>LazyGit<cr>", { desc = "LazyGit" })
-  map("n", "<leader>gs", "<cmd>Git<cr>", { desc = "Git Status" })
-  map("n", "<leader>gc", "<cmd>Git commit<cr>", { desc = "Git Commit" })
-  map("n", "<leader>gb", "<cmd>Git branch<cr>", { desc = "Git Branch" })
-  map("n", "<leader>gm", "<cmd>Git merge<cr>", { desc = "Git Merge" })
-  map("n", "<leader>gr", "<cmd>Git rebase<cr>", { desc = "Git Rebase" })
-  map("n", "<leader>gl", "<cmd>Git log --oneline<cr>", { desc = "Git Log" })
-  map("n", "<leader>gp", "<cmd>Git pull<cr>", { desc = "Git Pull" })
-  map("n", "<leader>gP", "<cmd>Git push<cr>", { desc = "Git Push" })
-  map("n", "<leader>gf", "<cmd>Git fetch<cr>", { desc = "Git Fetch" })
-  map("n", "<leader>ga", "<cmd>Git add .<cr>", { desc = "Git Add All" })
 
   -- Note:
   -- <leader>go* - Reserved for octo (handled by plugin keys)
   -- <leader>fG* - Telescope git operations (handled by telescope keys)
+  -- <leader>gh* - Gitsigns hunk operations (handled by gitsigns plugin)
+  -- Most git operations handled by LazyGit (<leader>gg)
 
   -- ========================================
   -- UI/display setting

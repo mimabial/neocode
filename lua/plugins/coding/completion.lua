@@ -59,8 +59,7 @@ return {
       local lspkind = require("lspkind")
 
       local function build_sources()
-        return {
-          { name = "codeium",  group_index = 0, priority = 100 }, -- Windsurf Plugins
+        local sources = {
           { name = "nvim_lsp", group_index = 1, priority = 90 },
           { name = "luasnip",  group_index = 1, priority = 80 },
           { name = "nvim_lua", group_index = 1, priority = 70 },
@@ -68,6 +67,14 @@ return {
           { name = "path",     group_index = 2, priority = 40 },
           { name = "emoji",    group_index = 3, priority = 30 },
         }
+
+        -- Add Codeium only if loaded
+        local has_codeium = pcall(require, "codeium")
+        if has_codeium then
+          table.insert(sources, 1, { name = "codeium", group_index = 0, priority = 100 })
+        end
+
+        return sources
       end
 
       -- Get UI config if available

@@ -282,7 +282,10 @@ return {
       -- })
 
       local function setup_nvim_tree_highlights()
-        local colors = _G.get_ui_colors()
+        local colors = (_G.get_ui_colors and _G.get_ui_colors()) or {
+          bg = "NONE",
+          fg = "NONE",
+        }
         vim.api.nvim_set_hl(0, "NvimTreeNormal", { bg = colors.bg, fg = colors.fg })
         vim.api.nvim_set_hl(0, "NvimTreeEndOfBuffer", { bg = colors.bg, fg = colors.bg })
       end
