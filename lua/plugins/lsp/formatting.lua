@@ -4,10 +4,63 @@ return {
     dependencies = { "williamboman/mason.nvim" },
     opts = {
       ensure_installed = {
-        "ruff",
+        -- Lua
         "stylua",
+
+        -- Shell
         "shfmt",
+        "shellcheck",
+
+        -- Web Development
         "prettierd",
+        "prettier",
+
+        -- Python
+        "ruff",
+        "black",
+        "isort",
+
+        -- Go
+        "gofumpt",
+        "goimports",
+        "golines",
+
+        -- Rust
+        "rustfmt",
+
+        -- C/C++
+        "clang-format",
+
+        -- Java
+        "google-java-format",
+
+        -- PHP
+        "php-cs-fixer",
+
+        -- Ruby
+        "rubocop",
+
+        -- SQL
+        "sqlfluff",
+        "sql-formatter",
+
+        -- TOML
+        "taplo",
+
+        -- YAML
+        "yamlfmt",
+
+        -- Markdown
+        "markdownlint",
+
+        -- Swift
+        "swiftformat",
+
+        -- Terraform
+        "terraform-fmt",
+
+        -- Proto
+        "buf",
       },
       run_on_start = true,
     },
@@ -101,25 +154,118 @@ return {
           end
         end,
         formatters_by_ft = {
-          javascript = { "prettier" },
-          typescript = { "prettier" },
-          javascriptreact = { "prettier" },
-          typescriptreact = { "prettier" },
-          html = { "prettier" },
-          css = { "prettier" },
-          scss = { "prettier" },
-          json = { "prettier" },
-          jsonc = { "prettier" },
-          yaml = { "prettier" },
-          markdown = { "prettier" },
+          -- Lua
           lua = { "stylua" },
-          python = { "ruff_organize_imports", "ruff_format" },
-          php = { "php_cs_fixer" },
+
+          -- Shell
           sh = { "shfmt" },
-          bash = { "shfmt", "shellcheck" },
+          bash = { "shfmt" },
+          zsh = { "shfmt" },
+
+          -- Web Development
+          javascript = { "prettierd", "prettier", stop_after_first = true },
+          typescript = { "prettierd", "prettier", stop_after_first = true },
+          javascriptreact = { "prettierd", "prettier", stop_after_first = true },
+          typescriptreact = { "prettierd", "prettier", stop_after_first = true },
+          vue = { "prettierd", "prettier", stop_after_first = true },
+          svelte = { "prettierd", "prettier", stop_after_first = true },
+          astro = { "prettierd", "prettier", stop_after_first = true },
+          html = { "prettierd", "prettier", stop_after_first = true },
+          css = { "prettierd", "prettier", stop_after_first = true },
+          scss = { "prettierd", "prettier", stop_after_first = true },
+          less = { "prettierd", "prettier", stop_after_first = true },
+          json = { "prettierd", "prettier", stop_after_first = true },
+          jsonc = { "prettierd", "prettier", stop_after_first = true },
+          yaml = { "prettierd", "prettier", stop_after_first = true },
+          graphql = { "prettierd", "prettier", stop_after_first = true },
+
+          -- Markdown
+          markdown = { "prettierd", "prettier", "markdownlint", stop_after_first = true },
+          ["markdown.mdx"] = { "prettierd", "prettier", stop_after_first = true },
+
+          -- Python
+          python = { "ruff_organize_imports", "ruff_format" },
+
+          -- Go
+          go = { "goimports", "gofumpt" },
+
+          -- Rust
+          rust = { "rustfmt" },
+
+          -- C/C++
+          c = { "clang_format" },
+          cpp = { "clang_format" },
+          objc = { "clang_format" },
+          objcpp = { "clang_format" },
+
+          -- C#
+          cs = { "csharpier" },
+
+          -- Java
+          java = { "google-java-format" },
+
+          -- Kotlin
+          kotlin = { "ktlint" },
+
+          -- Swift
+          swift = { "swiftformat" },
+
+          -- Ruby
+          ruby = { "rubocop" },
+
+          -- PHP
+          php = { "php_cs_fixer" },
+
+          -- Elixir
+          elixir = { "mix" },
+
+          -- SQL
+          sql = { "sqlfluff", "sql_formatter", stop_after_first = true },
+
+          -- TOML
+          toml = { "taplo" },
+
+          -- Terraform
+          terraform = { "terraform_fmt" },
+          tf = { "terraform_fmt" },
+          ["terraform-vars"] = { "terraform_fmt" },
+
+          -- Protocol Buffers
+          proto = { "buf" },
+
+          -- Nix
+          nix = { "alejandra", "nixpkgs_fmt", stop_after_first = true },
+
+          -- Zig
+          zig = { "zigfmt" },
+
+          -- OCaml
+          ocaml = { "ocamlformat" },
+
+          -- Haskell
+          haskell = { "fourmolu", "ormolu", stop_after_first = true },
+
+          -- Dart/Flutter
+          dart = { "dart_format" },
+
+          -- LaTeX
+          tex = { "latexindent" },
+          bib = { "bibtex-tidy" },
+
+          -- XML
+          xml = { "xmlformat" },
+
+          -- Fish
+          fish = { "fish_indent" },
+
+          -- Just
+          just = { "just" },
+
+          -- Makefile (careful - tabs matter!)
+          -- make = {},  -- Usually skip formatting makefiles
         },
         formatters = {
-          ["*"] = { stop_after_first = true },
+          -- Prettier (with prettierd as faster alternative)
           prettier = {
             prepend_args = function(_, ctx)
               local args = { "--print-width", "100", "--trailing-comma", "none" }
@@ -140,36 +286,68 @@ return {
               return args
             end,
           },
+
+          -- Lua
           stylua = {
-            config_path = vim.fn.stdpath("config") .. "/stylua.toml",
-            args = function(_, ctx)
-              return { "--search-parent-directories", "--respect-ignores", "--stdin-filepath", ctx.filename, "-" }
-            end,
+            prepend_args = { "--search-parent-directories", "--respect-ignores" },
           },
+
+          -- Python
           ruff_format = {
             command = "ruff",
-            args = {
-              "format",
-              "--stdin-filename",
-              "$FILENAME",
-              "-",
-            },
-            stdin = true,
+            args = { "format", "--stdin-filename", "$FILENAME", "-" },
           },
           ruff_organize_imports = {
             command = "ruff",
-            args = {
-              "check",
-              "--select",
-              "I",
-              "--fix",
-              "--stdin-filename",
-              "$FILENAME",
-              "-",
-            },
-            stdin = true,
+            args = { "check", "--select", "I", "--fix", "--stdin-filename", "$FILENAME", "-" },
           },
-          shfmt = { prepend_args = { "-i", "2", "-ci" } },
+
+          -- Go
+          goimports = {
+            prepend_args = { "-local", util.root_file({ "go.mod" })(vim.api.nvim_get_current_buf()) and "." or "" },
+          },
+          gofumpt = {
+            prepend_args = { "-extra" },
+          },
+
+          -- Shell
+          shfmt = {
+            prepend_args = { "-i", "2", "-ci", "-bn" },
+          },
+
+          -- C/C++
+          clang_format = {
+            prepend_args = function()
+              return { "--style", "file", "--fallback-style", "llvm" }
+            end,
+          },
+
+          -- SQL
+          sqlfluff = {
+            args = { "format", "--dialect=ansi", "-" },
+          },
+
+          -- Terraform
+          terraform_fmt = {
+            command = "terraform",
+            args = { "fmt", "-" },
+          },
+
+          -- PHP
+          php_cs_fixer = {
+            command = "php-cs-fixer",
+            args = {
+              "fix",
+              "$FILENAME",
+              "--rules=@PSR12",
+            },
+          },
+
+          -- Rust (uses rustfmt from toolchain)
+          rustfmt = {
+            command = "rustfmt",
+            args = { "--edition", "2021" },
+          },
         },
         notify_on_error = true,
       }
