@@ -1,24 +1,7 @@
 local M = {}
 
 function M.setup()
-  -- Bootstrap Lazy.nvim if missing
-  local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-  if vim.fn.isdirectory(lazypath) == 0 then
-    vim.notify("Installing lazy.nvim plugin manager...", vim.log.levels.INFO)
-    local result = vim.fn.system({
-      "git",
-      "clone",
-      "--filter=blob:none",
-      "--branch=stable",
-      "https://github.com/folke/lazy.nvim.git",
-      lazypath,
-    })
-    if vim.v.shell_error ~= 0 then
-      vim.notify("Failed to install lazy.nvim: " .. result, vim.log.levels.ERROR)
-      return
-    end
-  end
-  vim.opt.rtp:prepend(lazypath)
+  -- Note: Bootstrap is handled in init.lua to ensure lazy.nvim is available early
 
   -- Load Lazy with error handling
   local lazy_ok, lazy = pcall(require, "lazy")

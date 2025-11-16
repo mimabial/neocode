@@ -43,3 +43,6 @@ require("config.commands").setup()
 require("autocmds.init").setup()
 require("autocmds.diagnostics").setup()
 require("commands.lazy").setup()
+
+-- Load health check module (provides :ConfigHealth command)
+require("config.health")

@@ -65,8 +65,22 @@ function M.setup()
   opt.backupdir = fn.stdpath("data") .. "/backup//"
   -- keep a swapfile for crash recovery, but in RAM (tmpfs) if available
   opt.swapfile = true
-  -- e.g. /dev/shm on Linux; adjust to a tmpfs path on your system
-  opt.directory = "/dev/shm/nvim/swap//"
+
+  -- Platform-aware swap directory (use tmpfs on Linux, fallback to data dir)
+  local swap_dir
+  if vim.fn.has("linux") == 1 and fn.isdirectory("/dev/shm") == 1 then
+    swap_dir = "/dev/shm/nvim/swap//"
+    if fn.isdirectory("/dev/shm/nvim") == 0 then
+      fn.mkdir("/dev/shm/nvim", "p")
+    end
+  else
+    swap_dir = fn.stdpath("data") .. "/swap//"
+    if fn.isdirectory(fn.stdpath("data") .. "/swap") == 0 then
+      fn.mkdir(fn.stdpath("data") .. "/swap", "p")
+    end
+  end
+  opt.directory = swap_dir
+
   -- Skip fsync() after write (speed) but keep the above safety nets
   opt.fsync = false
 
@@ -97,7 +111,8 @@ function M.setup()
 
   -- Misc safety / UX
   opt.backupskip = { "/tmp/*", "/private/*" } -- skip noisy tmp files
-  opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize" }
+  -- Session options (aligned with persistence.nvim)
+  opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp" }
   opt.confirm = true -- prompt rather than error on unsaved changes
 
   -- Window splits
