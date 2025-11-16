@@ -5,15 +5,37 @@ return {
     "tpope/vim-repeat", -- Enables repeating leap operations with .
   },
   keys = {
-    { "s", mode = { "n", "x", "o" }, desc = "Leap forward" },
-    { "S", mode = { "n", "x", "o" }, desc = "Leap backward" },
-    { "gs", mode = { "n", "x", "o" }, desc = "Leap from windows" },
+    {
+      "s",
+      mode = { "n", "x", "o" },
+      function()
+        require("leap").leap({ target_windows = { vim.fn.win_getid() } })
+      end,
+      desc = "Leap forward",
+    },
+    {
+      "S",
+      mode = { "n", "x", "o" },
+      function()
+        require("leap").leap({ backward = true, target_windows = { vim.fn.win_getid() } })
+      end,
+      desc = "Leap backward",
+    },
+    {
+      "gs",
+      mode = { "n", "x", "o" },
+      function()
+        require("leap").leap({
+          target_windows = vim.tbl_filter(function(win)
+            return vim.api.nvim_win_get_config(win).focusable
+          end, vim.api.nvim_tabpage_list_wins(0)),
+        })
+      end,
+      desc = "Leap from windows",
+    },
   },
   config = function()
     local leap = require("leap")
-
-    -- Use default mappings
-    leap.add_default_mappings()
 
     -- Enhanced highlighting
     vim.api.nvim_set_hl(0, "LeapBackdrop", { link = "Comment" })
