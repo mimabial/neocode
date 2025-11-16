@@ -37,7 +37,7 @@ return {
 
       -- Conditionally add servers based on available runtimes
       local optional_servers = {
-        { cmd = "node", servers = { "tailwindcss", "emmet_ls", "vls", "svelte", "astro" } },
+        { cmd = "node", servers = { "tailwindcss", "emmet_ls", "vuels", "svelte", "astro" } },
         { cmd = "go", servers = { "gopls" } },
         { cmd = "rustc", servers = { "rust_analyzer" } },
         { cmd = "python3", servers = { "pyright", "ruff" } },
