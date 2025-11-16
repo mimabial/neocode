@@ -20,8 +20,68 @@ return {
       end
 
       require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "html", "jsonls", "pyright", "intelephense", "bashls" },
-        automatic_installation = false,
+        -- LazyVim-style comprehensive language server list
+        ensure_installed = {
+          -- Web Development
+          "html",           -- HTML
+          "cssls",          -- CSS
+          "tailwindcss",    -- TailwindCSS
+          "emmet_ls",       -- Emmet
+
+          -- JavaScript/TypeScript
+          "ts_ls",          -- TypeScript/JavaScript
+          "eslint",         -- ESLint
+          "volar",          -- Vue
+          "svelte",         -- Svelte
+          "astro",          -- Astro
+
+          -- Backend
+          "gopls",          -- Go
+          "rust_analyzer",  -- Rust
+          "pyright",        -- Python
+          "ruff_lsp",       -- Python (Ruff)
+          "ruby_lsp",       -- Ruby
+          "solargraph",     -- Ruby (alternative)
+          "elixirls",       -- Elixir
+
+          -- Systems & Low-level
+          "clangd",         -- C/C++
+          "cmake",          -- CMake
+
+          -- JVM Languages
+          "jdtls",          -- Java
+          "kotlin_language_server", -- Kotlin
+
+          -- .NET
+          "omnisharp",      -- C#
+
+          -- Scripting
+          "lua_ls",         -- Lua
+          "bashls",         -- Bash
+          "powershell_es",  -- PowerShell
+
+          -- Data & Config
+          "jsonls",         -- JSON
+          "yamlls",         -- YAML
+          "taplo",          -- TOML
+          "lemminx",        -- XML
+
+          -- Markup
+          "marksman",       -- Markdown
+
+          -- Database
+          "sqlls",          -- SQL
+
+          -- DevOps
+          "dockerls",       -- Docker
+          "docker_compose_language_service", -- Docker Compose
+          "terraformls",    -- Terraform
+          "helm_ls",        -- Helm
+
+          -- PHP
+          "intelephense",   -- PHP
+        },
+        automatic_installation = true, -- Auto-install missing servers
         handlers = {
           -- Default handler for all servers
           function(server_name)
@@ -74,6 +134,153 @@ return {
               end,
               settings = {
                 packageManager = "npm",
+              },
+            })
+          end,
+
+          -- Go
+          ["gopls"] = function()
+            require("lspconfig").gopls.setup({
+              capabilities = capabilities,
+              on_attach = on_attach,
+              settings = {
+                gopls = {
+                  gofumpt = true,
+                  codelenses = {
+                    gc_details = false,
+                    generate = true,
+                    regenerate_cgo = true,
+                    run_govulncheck = true,
+                    test = true,
+                    tidy = true,
+                    upgrade_dependency = true,
+                    vendor = true,
+                  },
+                  hints = {
+                    assignVariableTypes = true,
+                    compositeLiteralFields = true,
+                    compositeLiteralTypes = true,
+                    constantValues = true,
+                    functionTypeParameters = true,
+                    parameterNames = true,
+                    rangeVariableTypes = true,
+                  },
+                  analyses = {
+                    fieldalignment = true,
+                    nilness = true,
+                    unusedparams = true,
+                    unusedwrite = true,
+                    useany = true,
+                  },
+                  usePlaceholders = true,
+                  completeUnimported = true,
+                  staticcheck = true,
+                  directoryFilters = { "-.git", "-.vscode", "-.idea", "-.vscode-test", "-node_modules" },
+                  semanticTokens = true,
+                },
+              },
+            })
+          end,
+
+          -- Rust
+          ["rust_analyzer"] = function()
+            require("lspconfig").rust_analyzer.setup({
+              capabilities = capabilities,
+              on_attach = on_attach,
+              settings = {
+                ["rust-analyzer"] = {
+                  imports = {
+                    granularity = {
+                      group = "module",
+                    },
+                    prefix = "self",
+                  },
+                  cargo = {
+                    buildScripts = {
+                      enable = true,
+                    },
+                  },
+                  procMacro = {
+                    enable = true,
+                  },
+                  checkOnSave = {
+                    command = "clippy",
+                  },
+                },
+              },
+            })
+          end,
+
+          -- Python (Pyright)
+          ["pyright"] = function()
+            require("lspconfig").pyright.setup({
+              capabilities = capabilities,
+              on_attach = on_attach,
+              settings = {
+                python = {
+                  analysis = {
+                    autoSearchPaths = true,
+                    diagnosticMode = "workspace",
+                    useLibraryCodeForTypes = true,
+                    typeCheckingMode = "basic",
+                  },
+                },
+              },
+            })
+          end,
+
+          -- YAML
+          ["yamlls"] = function()
+            require("lspconfig").yamlls.setup({
+              capabilities = capabilities,
+              on_attach = on_attach,
+              settings = {
+                yaml = {
+                  schemas = require("schemastore").yaml.schemas(),
+                  schemaStore = {
+                    enable = false,
+                    url = "",
+                  },
+                },
+              },
+            })
+          end,
+
+          -- TailwindCSS
+          ["tailwindcss"] = function()
+            require("lspconfig").tailwindcss.setup({
+              capabilities = capabilities,
+              on_attach = on_attach,
+              filetypes = {
+                "html",
+                "css",
+                "scss",
+                "javascript",
+                "javascriptreact",
+                "typescript",
+                "typescriptreact",
+                "vue",
+                "svelte",
+                "astro",
+              },
+            })
+          end,
+
+          -- C/C++
+          ["clangd"] = function()
+            require("lspconfig").clangd.setup({
+              capabilities = vim.tbl_deep_extend("force", capabilities, {
+                offsetEncoding = { "utf-16" },
+              }),
+              on_attach = on_attach,
+              cmd = {
+                "clangd",
+                "--background-index",
+                "--clang-tidy",
+                "--header-insertion=iwyu",
+                "--completion-style=detailed",
+                "--function-arg-placeholders",
+                "--fallback-style=llvm",
               },
             })
           end,

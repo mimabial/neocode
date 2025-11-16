@@ -48,6 +48,37 @@ function M.setup()
   map("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy Plugin Manager" })
 
   -- ========================================
+  -- General Improvements (LazyVim style)
+  -- ========================================
+  -- Better escape (insert mode)
+  map("i", "jk", "<ESC>", { desc = "Exit insert mode" })
+  map("i", "jj", "<ESC>", { desc = "Exit insert mode" })
+
+  -- Save file
+  map({ "i", "x", "n", "s" }, "<C-s>", "<cmd>w<cr><esc>", { desc = "Save file" })
+
+  -- Quit
+  map("n", "<leader>qq", "<cmd>qa<cr>", { desc = "Quit all" })
+
+  -- New file
+  map("n", "<leader>fn", "<cmd>enew<cr>", { desc = "New File" })
+
+  -- Select all
+  map("n", "<C-a>", "ggVG", { desc = "Select all" })
+
+  -- Clear search with <esc>
+  map({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", { desc = "Escape and clear hlsearch" })
+
+  -- Better undo breakpoints (insert mode)
+  map("i", ",", ",<c-g>u")
+  map("i", ".", ".<c-g>u")
+  map("i", ";", ";<c-g>u")
+
+  -- Terminal mode escape
+  map("t", "<C-/>", "<c-\\><c-n>", { desc = "Enter Normal Mode" })
+  map("t", "<C-_>", "<c-\\><c-n>", { desc = "which_key_ignore" }) -- For compatibility
+
+  -- ========================================
   -- Editing
   -- ========================================
   map("n", "x", '"_x', { desc = "Don't copy deleted character" })
@@ -97,6 +128,15 @@ function M.setup()
   map("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, desc = "Move down (display lines)" })
   map("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, desc = "Move up (display lines)" })
 
+  -- Better increment/decrement
+  map("n", "+", "<C-a>", { desc = "Increment number" })
+  map("n", "_", "<C-x>", { desc = "Decrement number" })
+
+  -- Window management shortcuts (LazyVim style)
+  map("n", "<leader>-", "<C-W>s", { desc = "Split window below" })
+  map("n", "<leader>|", "<C-W>v", { desc = "Split window right" })
+  map("n", "<leader>wd", "<C-W>c", { desc = "Delete window" })
+
   -- ========================================
   -- Buffer management
   -- ========================================
@@ -110,6 +150,19 @@ function M.setup()
   -- Buffer navigation with Shift
   map("n", "<S-h>", "<cmd>bprevious<cr>", { desc = "Previous Buffer" })
   map("n", "<S-l>", "<cmd>bnext<cr>", { desc = "Next Buffer" })
+
+  -- Close buffers (LazyVim style)
+  map("n", "<leader>bD", "<cmd>:bd<cr>", { desc = "Delete Buffer and Window" })
+
+  -- ========================================
+  -- Tab Management (LazyVim style)
+  -- ========================================
+  map("n", "<leader><tab>l", "<cmd>tablast<cr>", { desc = "Last Tab" })
+  map("n", "<leader><tab>f", "<cmd>tabfirst<cr>", { desc = "First Tab" })
+  map("n", "<leader><tab><tab>", "<cmd>tabnew<cr>", { desc = "New Tab" })
+  map("n", "<leader><tab>]", "<cmd>tabnext<cr>", { desc = "Next Tab" })
+  map("n", "<leader><tab>d", "<cmd>tabclose<cr>", { desc = "Close Tab" })
+  map("n", "<leader><tab>[", "<cmd>tabprevious<cr>", { desc = "Previous Tab" })
 
   -- File explorer
   map("n", "-", function()
