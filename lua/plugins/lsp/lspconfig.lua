@@ -19,69 +19,54 @@ return {
         end
       end
 
+      -- Build ensure_installed list based on available languages
+      local ensure_installed = {
+        -- Always install (don't require runtime)
+        "lua_ls",         -- Lua
+        "bashls",         -- Bash
+        "jsonls",         -- JSON
+        "yamlls",         -- YAML
+        "marksman",       -- Markdown
+
+        -- Web Development (usually available via npm)
+        "html",           -- HTML
+        "cssls",          -- CSS
+        "ts_ls",          -- TypeScript/JavaScript
+        "eslint",         -- ESLint
+      }
+
+      -- Conditionally add servers based on available runtimes
+      local optional_servers = {
+        { cmd = "node", servers = { "tailwindcss", "emmet_ls", "volar", "svelte", "astro" } },
+        { cmd = "go", servers = { "gopls" } },
+        { cmd = "rustc", servers = { "rust_analyzer" } },
+        { cmd = "python3", servers = { "pyright", "ruff_lsp" } },
+        { cmd = "ruby", servers = { "ruby_lsp", "solargraph" } },
+        { cmd = "elixir", servers = { "elixirls" } },
+        { cmd = "clang", servers = { "clangd" } },
+        { cmd = "cmake", servers = { "cmake" } },
+        { cmd = "java", servers = { "jdtls" } },
+        { cmd = "dotnet", servers = { "omnisharp" } },
+        { cmd = "pwsh", servers = { "powershell_es" } },
+        { cmd = "docker", servers = { "dockerls", "docker_compose_language_service" } },
+        { cmd = "terraform", servers = { "terraformls" } },
+        { cmd = "helm", servers = { "helm_ls" } },
+        { cmd = "php", servers = { "intelephense" } },
+        { cmd = "sqlite3", servers = { "sqlls" } },
+      }
+
+      for _, entry in ipairs(optional_servers) do
+        if vim.fn.executable(entry.cmd) == 1 then
+          vim.list_extend(ensure_installed, entry.servers)
+        end
+      end
+
+      -- Always add these (work without specific runtime)
+      vim.list_extend(ensure_installed, { "taplo", "lemminx" })
+
       require("mason-lspconfig").setup({
-        -- LazyVim-style comprehensive language server list
-        ensure_installed = {
-          -- Web Development
-          "html",           -- HTML
-          "cssls",          -- CSS
-          "tailwindcss",    -- TailwindCSS
-          "emmet_ls",       -- Emmet
-
-          -- JavaScript/TypeScript
-          "ts_ls",          -- TypeScript/JavaScript
-          "eslint",         -- ESLint
-          "volar",          -- Vue
-          "svelte",         -- Svelte
-          "astro",          -- Astro
-
-          -- Backend
-          "gopls",          -- Go
-          "rust_analyzer",  -- Rust
-          "pyright",        -- Python
-          "ruff_lsp",       -- Python (Ruff)
-          "ruby_lsp",       -- Ruby
-          "solargraph",     -- Ruby (alternative)
-          "elixirls",       -- Elixir
-
-          -- Systems & Low-level
-          "clangd",         -- C/C++
-          "cmake",          -- CMake
-
-          -- JVM Languages
-          "jdtls",          -- Java
-          "kotlin_language_server", -- Kotlin
-
-          -- .NET
-          "omnisharp",      -- C#
-
-          -- Scripting
-          "lua_ls",         -- Lua
-          "bashls",         -- Bash
-          "powershell_es",  -- PowerShell
-
-          -- Data & Config
-          "jsonls",         -- JSON
-          "yamlls",         -- YAML
-          "taplo",          -- TOML
-          "lemminx",        -- XML
-
-          -- Markup
-          "marksman",       -- Markdown
-
-          -- Database
-          "sqlls",          -- SQL
-
-          -- DevOps
-          "dockerls",       -- Docker
-          "docker_compose_language_service", -- Docker Compose
-          "terraformls",    -- Terraform
-          "helm_ls",        -- Helm
-
-          -- PHP
-          "intelephense",   -- PHP
-        },
-        automatic_installation = true, -- Auto-install missing servers
+        ensure_installed = ensure_installed,
+        automatic_installation = false, -- Don't auto-install to avoid errors
         handlers = {
           -- Default handler for all servers
           function(server_name)
