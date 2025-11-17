@@ -267,7 +267,7 @@ return {
         formatters = {
           -- Prettier (with prettierd as faster alternative)
           prettier = {
-            prepend_args = function(_, ctx)
+            prepend_args = function(self, ctx)
               local args = { "--print-width", "100", "--trailing-comma", "none" }
               local config = util.root_file({
                 ".prettierrc",
@@ -278,7 +278,7 @@ return {
                 ".prettierrc.js",
                 "prettier.config.js",
                 ".prettierrc.toml",
-              })
+              })(ctx.buf)
               if config then
                 table.insert(args, "--config")
                 table.insert(args, config)
@@ -304,7 +304,13 @@ return {
 
           -- Go
           goimports = {
-            prepend_args = { "-local", util.root_file({ "go.mod" })(vim.api.nvim_get_current_buf()) and "." or "" },
+            prepend_args = function(self, ctx)
+              local go_mod = util.root_file({ "go.mod" })(ctx.buf)
+              if go_mod then
+                return { "-local", "." }
+              end
+              return {}
+            end,
           },
           gofumpt = {
             prepend_args = { "-extra" },
