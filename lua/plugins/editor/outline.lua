@@ -127,7 +127,7 @@ return {
 
     -- Set up highlights to match theme
     local function setup_highlights()
-      local colors = _G.get_ui_colors()
+      local colors = require("config.ui").get_colors()
       vim.api.nvim_set_hl(0, "OutlineNormal", { bg = colors.bg })
       vim.api.nvim_set_hl(0, "OutlineCurrent", { fg = colors.blue, bold = true })
       vim.api.nvim_set_hl(0, "OutlineGuides", { fg = colors.border })

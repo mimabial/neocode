@@ -6,7 +6,7 @@ return {
       local rainbow_delimiters = require("rainbow-delimiters")
 
       local function set_rainbow_colors()
-        local colors = _G.get_ui_colors()
+        local colors = require("config.ui").get_colors()
         local palette = {
           colors.red,
           colors.yellow,
@@ -125,7 +125,7 @@ return {
 
       -- Set up custom highlight using the hooks system
       hooks.register(hooks.type.HIGHLIGHT_SETUP, function()
-        local colors = _G.get_ui_colors()
+        local colors = require("config.ui").get_colors()
         vim.api.nvim_set_hl(0, "IblScope", { fg = colors.red })
       end)
 

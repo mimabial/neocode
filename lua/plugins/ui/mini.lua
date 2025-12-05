@@ -30,7 +30,7 @@ return {
 
       -- Update icons with theme colors
       local function update_icon_colors()
-        local colors = _G.get_ui_colors()
+        local colors = require("config.ui").get_colors()
 
         -- Apply colors to icon groups
         local icon_hl_groups = {
@@ -315,7 +315,7 @@ return {
 
           vim.keymap.set("n", "?", function()
             -- Get current theme colors
-            local colors = _G.get_ui_colors()
+            local colors = require("config.ui").get_colors()
 
             -- Create help highlight groups
             vim.api.nvim_set_hl(0, "StarterHelpNormal", { bg = colors.bg, fg = colors.fg })
@@ -412,7 +412,7 @@ return {
           end, { buffer = true, desc = "Show help" })
 
           -- Update highlights based on colorscheme
-          local colors = _G.get_ui_colors()
+          local colors = require("config.ui").get_colors()
 
           -- Set highlight groups
           vim.api.nvim_set_hl(0, "MiniStarterHeader", { fg = colors.green, bold = true })
@@ -451,7 +451,7 @@ return {
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
           if vim.bo.filetype == "starter" then
-            local colors = _G.get_ui_colors()
+            local colors = require("config.ui").get_colors()
 
             vim.api.nvim_set_hl(0, "MiniStarterHeader", { fg = colors.green, bold = true })
             vim.api.nvim_set_hl(0, "MiniStarterFooter", { fg = colors.gray, italic = true })

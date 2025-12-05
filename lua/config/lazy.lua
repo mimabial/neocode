@@ -105,8 +105,7 @@ function M.setup()
     debug = false,
   })
 
-  -- Set global picker preference
-  vim.g.default_picker = "telescope" -- Prefer telescope over snacks
+  -- Note: default_picker is set in init.lua
 
   -- Register helper command to reload plugins
   vim.api.nvim_create_user_command("PluginSync", function()

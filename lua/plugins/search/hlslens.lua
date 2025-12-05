@@ -40,16 +40,6 @@ return {
     map("n", "g#", "g#<Cmd>lua require('hlslens').start()<CR>", opts)
     map("n", "<Esc>", "<Cmd>noh<CR><Esc>", opts)
 
-    if package.loaded["lualine"] then
-      _G.search_count = function()
-        local s = vim.fn.searchcount({ maxcount = 999, timeout = 500 })
-        if vim.v.hlsearch == 1 and s.total > 0 then
-          return string.format("[%d/%d]", s.current, s.total)
-        end
-        return ""
-      end
-    end
-
     vim.api.nvim_create_autocmd("ColorScheme", {
       callback = function()
         if vim.g.colors_name == "gruvbox-material" then

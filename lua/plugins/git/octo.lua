@@ -1,3 +1,11 @@
+-- Octo - GitHub Integration
+-- Part of the git namespace (see plugins/git/lazygit.lua for organization)
+--
+-- Keybindings defined here:
+--   <leader>go  → Open Octo menu
+--   <leader>gpr → List pull requests
+--   <leader>gi  → List issues
+
 return {
   "pwntester/octo.nvim",
   dependencies = {

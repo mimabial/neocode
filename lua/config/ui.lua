@@ -1,34 +1,5 @@
 local M = {}
-
-local function extract_colors()
-  local function hl_color(group, attr, fallback)
-    local hl = vim.api.nvim_get_hl(0, { name = group })
-    local val = hl[attr]
-    if not val then return fallback end
-    return type(val) == "number" and string.format("#%06x", val) or tostring(val)
-  end
-  local bg = hl_color("Normal", "bg", "#1f1f28")
-  local fg = hl_color("Normal", "fg", "#dcd7ba")
-  return {
-    bg = bg,
-    fg = fg,
-
-    red = hl_color("DiagnosticError", "fg", "#ea6962"),
-    green = hl_color("DiagnosticOk", "fg", "#89b482"),
-    yellow = hl_color("DiagnosticWarn", "fg", "#d8a657"),
-    blue = hl_color("Function", "fg", "#7daea3"),
-    purple = hl_color("Keyword", "fg", "#d3869b"),
-    orange = hl_color("Number", "fg", "#e78a4e"),
-    gray = hl_color("Comment", "fg", "#928374"),
-    border = hl_color("FloatBorder", "fg", "#45403d"),
-
-    select_bg = hl_color("PmenuSel", "bg", "#45403d"),
-    select_fg = hl_color("PmenuSel", "fg", "#dcd7ba"),
-    popup_bg = hl_color("Pmenu", "bg", bg),
-
-    codeium = "#09B6A2",
-  }
-end
+local colors_lib = require("lib.colors")
 
 M.config = {
   float = {
@@ -46,7 +17,7 @@ M.config = {
 }
 
 local function setup_highlights()
-  local colors = extract_colors()
+  local colors = colors_lib.extract_all()
 
   -- Float window
   vim.api.nvim_set_hl(0, "FloatBorder", { fg = colors.border })
@@ -143,10 +114,12 @@ function M.setup()
   vim.api.nvim_create_autocmd("ColorScheme", {
     callback = setup_highlights,
   })
+end
 
-  -- Export functions globally
-  _G.get_ui_config = function() return M.config end
-  _G.get_ui_colors = extract_colors
+-- Export functions as module methods (no global pollution)
+M.get_colors = colors_lib.extract_all
+M.get_config = function()
+  return M.config
 end
 
 return M

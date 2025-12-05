@@ -23,7 +23,7 @@ function M.setup()
 
       -- Information
       map("n", "K", vim.lsp.buf.hover, vim.tbl_extend("force", opts, { desc = "Show hover information" }))
-      map("n", "<C-k>", vim.lsp.buf.signature_help, vim.tbl_extend("force", opts, { desc = "Signature help" }))
+      -- Note: <C-k> signature help handled by lsp_signature.nvim plugin
 
       -- Actions
       map("n", "<leader>ca", vim.lsp.buf.code_action, vim.tbl_extend("force", opts, { desc = "Code actions" }))
@@ -59,9 +59,6 @@ function M.setup()
 
   -- Quit
   map("n", "<leader>qq", "<cmd>qa<cr>", { desc = "Quit all" })
-
-  -- New file
-  map("n", "<leader>fn", "<cmd>enew<cr>", { desc = "New File" })
 
   -- Select all
   map("n", "<C-a>", "ggVG", { desc = "Select all" })
@@ -104,11 +101,10 @@ function M.setup()
   -- ========================================
   -- Navigation
   -- ========================================
-  -- Window navigation
-  map("n", "<C-h>", "<C-w>h", { desc = "Window left" })
-  map("n", "<C-j>", "<C-w>j", { desc = "Window down" })
-  map("n", "<C-k>", "<C-w>k", { desc = "Window up" })
-  map("n", "<C-l>", "<C-w>l", { desc = "Window right" })
+  -- Window navigation: <C-h/j/k/l> handled by navigator plugins
+  -- - tmux-navigator (when in tmux)
+  -- - kitty-navigator (when in kitty without tmux)
+  -- Both plugins provide seamless navigation between vim windows and terminal multiplexer panes
 
   -- Window splits
   map("n", "<leader>wv", "<cmd>vsplit<cr>", { desc = "Split vertical" })
@@ -139,20 +135,16 @@ function M.setup()
 
   -- ========================================
   -- Buffer management
+  -- Most buffer operations in plugins/ui/tabline.lua (BufferLine commands)
+  -- Core operations defined here:
   -- ========================================
+  map("n", "<leader>bn", "<cmd>enew<cr>", { desc = "New Buffer" })
   map("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to Other Buffer" })
   map("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Delete Buffer" })
-  map("n", "<leader>bf", "<cmd>bfirst<cr>", { desc = "First Buffer" })
-  map("n", "<leader>bl", "<cmd>blast<cr>", { desc = "Last Buffer" })
-  map("n", "<leader>bn", "<cmd>bnext<cr>", { desc = "Next Buffer" })
-  map("n", "<leader>bp", "<cmd>bprevious<cr>", { desc = "Previous Buffer" })
 
-  -- Buffer navigation with Shift
-  map("n", "<S-h>", "<cmd>bprevious<cr>", { desc = "Previous Buffer" })
-  map("n", "<S-l>", "<cmd>bnext<cr>", { desc = "Next Buffer" })
-
-  -- Close buffers (LazyVim style)
-  map("n", "<leader>bD", "<cmd>:bd<cr>", { desc = "Delete Buffer and Window" })
+  -- Note: Buffer navigation (<leader>b]/[, <S-h>/<S-l>) defined in tabline.lua
+  -- Note: Buffer deletion (<leader>bd) uses BufferLine in tabline.lua
+  -- Note: First/Last buffer (<leader>bf/bl) uses BufferLine in tabline.lua
 
   -- ========================================
   -- Tab Management (LazyVim style)
@@ -164,21 +156,13 @@ function M.setup()
   map("n", "<leader><tab>d", "<cmd>tabclose<cr>", { desc = "Close Tab" })
   map("n", "<leader><tab>[", "<cmd>tabprevious<cr>", { desc = "Previous Tab" })
 
-  -- File explorer
-  map("n", "-", function()
-    require("oil").open()
-  end, { desc = "Open Oil Explorer (parent dir)" })
+  -- Note: File explorer keybinding (-) is defined in plugins/ui/explorer.lua
 
   -- ========================================
   -- Git Integration
   -- ========================================
-  map("n", "<leader>gg", "<cmd>LazyGit<cr>", { desc = "LazyGit" })
-
-  -- Note:
-  -- <leader>go* - Reserved for octo (handled by plugin keys)
-  -- <leader>fG* - Telescope git operations (handled by telescope keys)
-  -- <leader>gh* - Gitsigns hunk operations (handled by gitsigns plugin)
-  -- Most git operations handled by LazyGit (<leader>gg)
+  -- All git keybindings are defined in plugins/git/* files
+  -- See plugins/git/lazygit.lua for namespace organization
 
   -- ========================================
   -- UI/display setting

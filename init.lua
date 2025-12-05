@@ -2,9 +2,9 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = ","
 
--- Enable default explorer
-vim.g.default_explorer = "oil"
-vim.g.default_picker = "telescope"
+-- Default tool preferences
+vim.g.default_explorer = "oil"      -- Reserved for future explorer switching logic
+vim.g.default_picker = "telescope"  -- Used by plugins to determine picker preference
 
 -- Disable legacy plugins
 vim.g.loaded_netrw = 1
@@ -33,16 +33,38 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 -- Load core configuration (order matters)
-require("config.options").setup()
-require("config.ui").setup()
-require("config.lazy").setup()
-require("config.keymaps").setup()
-require("config.commands").setup()
+local core_modules = {
+  "config.options",
+  "config.ui",
+  "config.terminal_sync",
+  "config.lazy",
+  "config.keymaps",
+  "config.commands",
+  "config.autocmds",
+}
 
--- Load additional modules
-require("autocmds.init").setup()
-require("autocmds.diagnostics").setup()
-require("commands.lazy").setup()
+for _, module in ipairs(core_modules) do
+  local ok, mod = pcall(require, module)
+  if ok and type(mod) == "table" and mod.setup then
+    local setup_ok, err = pcall(mod.setup)
+    if not setup_ok then
+      vim.notify("Failed to setup " .. module .. ": " .. tostring(err), vim.log.levels.ERROR)
+    end
+  elseif not ok then
+    vim.notify("Failed to load " .. module .. ": " .. tostring(mod), vim.log.levels.ERROR)
+  end
+end
+
+-- Setup smart auto-close for special windows
+local autoclose_ok, autoclose = pcall(require, "lib.autoclose")
+if autoclose_ok and autoclose.setup then
+  local setup_ok, err = pcall(autoclose.setup)
+  if not setup_ok then
+    vim.notify("Failed to setup autoclose: " .. tostring(err), vim.log.levels.WARN)
+  end
+else
+  vim.notify("Failed to load autoclose library", vim.log.levels.WARN)
+end
 
 -- Load health check module (provides :ConfigHealth command)
-require("config.health")
+pcall(require, "config.health")

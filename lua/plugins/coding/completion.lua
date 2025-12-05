@@ -78,7 +78,7 @@ return {
       end
 
       -- Get UI config if available
-      local ui_config = _G.get_ui_config and _G.get_ui_config() or {}
+      local ui_config = require("config.ui").get_config() or {}
       local float_config = ui_config.float
 
       local win_opts = {

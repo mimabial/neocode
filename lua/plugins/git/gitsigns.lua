@@ -1,3 +1,11 @@
+-- Gitsigns - Git Hunk Operations
+-- Part of the git namespace (see plugins/git/lazygit.lua for organization)
+--
+-- Keybindings defined here:
+--   <leader>h*  → Hunk operations (stage, reset, preview, blame, etc.)
+--   ]c / [c     → Navigate to next/previous hunk
+--   ih          → Text object for selecting hunks
+
 return {
   "lewis6991/gitsigns.nvim",
   event = { "BufReadPre", "BufNewFile" },

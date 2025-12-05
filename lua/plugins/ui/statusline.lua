@@ -18,7 +18,7 @@ return {
   end,
 
   opts = function()
-    local colors = _G.get_ui_colors()
+    local colors = require("config.ui").get_colors()
 
     local icons = {
       diagnostics = {

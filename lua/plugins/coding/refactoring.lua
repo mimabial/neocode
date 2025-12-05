@@ -187,13 +187,11 @@ return {
     },
     prefills = {
       flags = "--hidden "
-        .. "--glob !**/hyde-shell "
         .. "--glob !**/dotfiles/** "
-        .. "--glob !**/lib/hyde/** "
         .. "--glob !**/.codeium/** "
         .. "--glob !**/state/nvim/** "
         .. "--glob !**/share/nvim/** "
-        .. "--glob !**/*Code*OSS*/**",
+        .. "--glob !**/VSCodium/**",
     },
   },
 

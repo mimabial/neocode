@@ -21,7 +21,7 @@ return {
     navic.setup(opts)
 
     local function setup_highlights()
-      local colors = _G.get_ui_colors()
+      local colors = require("config.ui").get_colors()
 
       -- Main navic highlights
       vim.api.nvim_set_hl(0, "NavicText", { fg = colors.fg, bg = colors.bg })

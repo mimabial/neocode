@@ -1,26 +1,32 @@
+-- nvim-lint: Only for languages where LSP diagnostics are insufficient
+--
+-- Removed (LSP already provides good diagnostics):
+--   - lua: lua_ls has excellent diagnostics
+--   - python: pyright provides comprehensive type checking and linting
+--   - javascript/typescript: eslint LSP server handles this
+--   - json: jsonls provides schema validation
+--   - yaml: yamlls provides schema validation
+--
+-- Kept (LSP diagnostics are basic or missing):
+--   - sh: bashls has basic linting, shellcheck is superior
+--   - markdown: marksman doesn't provide style linting
+
 return {
   "mfussenegger/nvim-lint",
   event = { "BufReadPre", "BufNewFile" },
   opts = {
     linters_by_ft = {
-      lua = { "luacheck" },
-      python = { "ruff" },
-      javascript = { "eslint" },
-      typescript = { "eslint" },
-      javascriptreact = { "eslint" },
-      typescriptreact = { "eslint" },
-      json = { "jsonlint" },
-      yaml = { "yamllint" },
+      -- Shell scripts: shellcheck provides much better linting than bashls
       sh = { "shellcheck" },
+      bash = { "shellcheck" },
+      zsh = { "shellcheck" },
+
+      -- Markdown: marksman doesn't do style/formatting checks
       markdown = { "markdownlint" },
     },
     linters = {
-      luacheck = {
-        args = { "--globals", "vim", "--no-max-line-length" },
-      },
-      flake8 = {
-        args = { "--max-line-length=88", "--extend-ignore=E203" },
-      },
+      -- Shellcheck: already has good defaults
+      -- Markdownlint: already has good defaults
     },
   },
   config = function(_, opts)

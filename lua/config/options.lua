@@ -63,21 +63,12 @@ function M.setup()
   opt.writebackup = true
   -- enable traditional backups (e.g. file.txt~), but write them to a cache dir
   opt.backupdir = fn.stdpath("data") .. "/backup//"
-  -- keep a swapfile for crash recovery, but in RAM (tmpfs) if available
-  opt.swapfile = true
 
-  -- Platform-aware swap directory (use tmpfs on Linux, fallback to data dir)
-  local swap_dir
-  if vim.fn.has("linux") == 1 and fn.isdirectory("/dev/shm") == 1 then
-    swap_dir = "/dev/shm/nvim/swap//"
-    if fn.isdirectory("/dev/shm/nvim") == 0 then
-      fn.mkdir("/dev/shm/nvim", "p")
-    end
-  else
-    swap_dir = fn.stdpath("data") .. "/swap//"
-    if fn.isdirectory(fn.stdpath("data") .. "/swap") == 0 then
-      fn.mkdir(fn.stdpath("data") .. "/swap", "p")
-    end
+  -- Keep swapfile for crash recovery in persistent storage
+  opt.swapfile = true
+  local swap_dir = fn.stdpath("data") .. "/swap//"
+  if fn.isdirectory(fn.stdpath("data") .. "/swap") == 0 then
+    fn.mkdir(fn.stdpath("data") .. "/swap", "p")
   end
   opt.directory = swap_dir
 

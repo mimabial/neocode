@@ -1,5 +1,7 @@
 return {
   "christoomey/vim-tmux-navigator",
+  -- Only load when inside tmux
+  enabled = vim.env.TMUX ~= nil,
   cmd = {
     "TmuxNavigateLeft",
     "TmuxNavigateDown",

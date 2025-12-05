@@ -11,7 +11,7 @@ return {
       },
     },
     opts = {
-
+      background_colour = "#000000",
       timeout = 1000,
       stages = "fade",
       render = "wrapped-compact",
@@ -212,37 +212,10 @@ return {
     config = function(_, opts)
       require("noice").setup(opts)
 
-      -- Close Neovim if only Noice windows remain
-      vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
-        callback = function()
-          local wins = vim.api.nvim_list_wins()
-          local normal_wins = 0
-
-          for _, win in ipairs(wins) do
-            if vim.api.nvim_win_is_valid(win) then
-              local buf = vim.api.nvim_win_get_buf(win)
-              local ft = vim.bo[buf].filetype
-              local config = vim.api.nvim_win_get_config(win)
-
-              -- Count only normal (non-floating, non-special) windows
-              if
-                config.relative == ""
-                and not vim.tbl_contains({ "noice", "notify", "TelescopePrompt", "TelescopeResults" }, ft)
-              then
-                normal_wins = normal_wins + 1
-              end
-            end
-          end
-
-          -- If no normal windows remain, quit
-          if normal_wins == 0 then
-            vim.cmd("quit")
-          end
-        end,
-      })
+      -- Note: Auto-close is handled by lib/autoclose.lua
 
       local function update_highlights()
-        local colors = _G.get_ui_colors()
+        local colors = require("config.ui").get_colors()
         vim.api.nvim_set_hl(0, "NoiceCmdlinePopupBorder", { fg = colors.border })
         vim.api.nvim_set_hl(0, "NoiceCmdlinePopupTitle", { fg = colors.blue, bold = true })
         vim.api.nvim_set_hl(0, "NoiceConfirmBorder", { fg = colors.border })

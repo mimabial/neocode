@@ -49,7 +49,6 @@ return {
       { "<leader>u", group = "UI/Settings" },
       { "<leader>w", group = "Windows" },
       { "<leader>x", group = "Diagnostics/Trouble" },
-      { "<leader>z", group = "Folds" },
     })
 
     -- Avante
@@ -59,49 +58,34 @@ return {
       { "<leader>ar", desc = "Refresh Avante" },
     })
 
-    -- Buffer mappings
+    -- Buffer mappings (defined in config/keymaps.lua and plugins/ui/tabline.lua)
     which_key.add({
+      { "<leader>bn", desc = "New Buffer" },
       { "<leader>bb", desc = "Other Buffer" },
-      { "<leader>bd", desc = "Delete Buffer" },
+      { "<leader>bd", desc = "Delete Buffer (pick)" },
       { "<leader>bf", desc = "First Buffer" },
       { "<leader>bl", desc = "Last Buffer" },
-      { "<leader>bn", desc = "Next Buffer" },
-      { "<leader>bp", desc = "Previous Buffer" },
-      { "<leader>bP", desc = "Pick Buffer" },
+      { "<leader>b]", desc = "Next Buffer" },
+      { "<leader>b[", desc = "Previous Buffer" },
+      { "<leader>bp", desc = "Pick Buffer" },
       { "<leader>b<", desc = "Move Buffer Left" },
       { "<leader>b>", desc = "Move Buffer Right" },
       { "<leader>b.", desc = "Sort by Directory" },
       { "<leader>b,", desc = "Sort by Extension" },
     })
 
-    -- Buffer number mappings
+    -- Buffer number mappings (1-9, defined in tabline.lua)
     for i = 1, 9 do
       which_key.add({
         { "<leader>b" .. i, desc = "Go to buffer " .. i },
       })
     end
 
-    -- Core Git (no conflicts)
-    which_key.add({
-      { "<leader>gg", desc = "LazyGit" },
-      { "<leader>gs", desc = "Git Status" },
-      { "<leader>gc", desc = "Git Commit" },
-      { "<leader>gb", desc = "Git Branch" },
-      { "<leader>gm", desc = "Git Merge" },
-      { "<leader>gr", desc = "Git Rebase" },
-      { "<leader>gl", desc = "Git Log" },
-      { "<leader>gp", desc = "Git Pull" },
-      { "<leader>gP", desc = "Git Push" },
-      { "<leader>gf", desc = "Git Fetch" },
-      { "<leader>ga", desc = "Git Add All" },
-    })
-
-    -- Octo (go namespace)
-    which_key.add({
-      { "<leader>go", desc = "Octo" },
-      { "<leader>gpr", desc = "PR List" },
-      { "<leader>gi", desc = "Issue List" },
-    })
+    -- Note: Actual git keybindings are defined in their respective plugin files:
+    -- <leader>gg  → plugins/ui/terminal.lua (LazyGit)
+    -- <leader>go* → plugins/git/octo.lua (Octo commands)
+    -- <leader>gh* → plugins/git/gitsigns.lua (hunk operations)
+    -- <leader>fg* → plugins/search/telescope.lua (git searches)
 
     -- Terminal
     which_key.add({
@@ -157,16 +141,8 @@ return {
       { "<leader>xL", desc = "Location List (Trouble)" },
     })
 
-    -- Folds
-    which_key.add({
-      { "<leader>zR", desc = "Open all folds" },
-      { "<leader>zM", desc = "Close all folds" },
-      { "<leader>zo", desc = "Open fold" },
-      { "<leader>zc", desc = "Close fold" },
-      { "<leader>za", desc = "Toggle fold" },
-      { "<leader>zf", desc = "Create fold" },
-      { "<leader>zd", desc = "Delete fold" },
-    })
+    -- Note: Fold commands (z*) are built-in Vim commands, not custom keybindings
+    -- zR = open all folds, zM = close all folds, za = toggle fold, etc.
 
     -- Register LSP-specific keymaps when LSP attaches
     vim.api.nvim_create_autocmd("LspAttach", {

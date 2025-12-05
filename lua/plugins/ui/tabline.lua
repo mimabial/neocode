@@ -58,19 +58,29 @@ return {
     require("bufferline").setup(opts)
 
     -- Buffer navigation keymaps
+    -- Owner of <leader>b* namespace (shared with core keymaps.lua)
     local map = function(mode, lhs, rhs, desc)
       vim.keymap.set(mode, lhs, rhs, { noremap = true, silent = true, desc = desc })
     end
 
+    -- Quick navigation (Shift+h/l)
     map("n", "<S-h>", "<cmd>BufferLineCyclePrev<cr>", "Previous buffer")
     map("n", "<S-l>", "<cmd>BufferLineCycleNext<cr>", "Next buffer")
-    map("n", "<leader>bn", "<cmd>BufferLineCycleNext<cr>", "Next buffer")
-    map("n", "<leader>bp", "<cmd>BufferLineCyclePrev<cr>", "Previous buffer")
+
+    -- Buffer navigation
+    map("n", "<leader>b]", "<cmd>BufferLineCycleNext<cr>", "Next buffer")
+    map("n", "<leader>b[", "<cmd>BufferLineCyclePrev<cr>", "Previous buffer")
     map("n", "<leader>bf", "<cmd>BufferLineGoToBuffer 1<cr>", "First buffer")
     map("n", "<leader>bl", "<cmd>BufferLineGoToBuffer -1<cr>", "Last buffer")
-    map("n", "<leader>bP", "<cmd>BufferLinePick<cr>", "Pick buffer")
+
+    -- Buffer management
+    map("n", "<leader>bp", "<cmd>BufferLinePick<cr>", "Pick buffer")
+    map("n", "<leader>bo", "<cmd>BufferLineCloseOthers<cr>", "Delete buffer")
+    map("n", "<leader>bD", "<cmd>BufferLinePickClose<cr>", "Delete buffer (pick)")
     map("n", "<leader>b<", "<cmd>BufferLineMovePrev<cr>", "Move buffer left")
     map("n", "<leader>b>", "<cmd>BufferLineMoveNext<cr>", "Move buffer right")
+
+    -- Buffer sorting
     map("n", "<leader>b.", "<cmd>BufferLineSortByDirectory<cr>", "Sort by directory")
     map("n", "<leader>b,", "<cmd>BufferLineSortByExtension<cr>", "Sort by extension")
 

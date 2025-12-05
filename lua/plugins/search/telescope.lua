@@ -1,3 +1,22 @@
+-- Telescope - Fuzzy Finder
+-- Owner of the <leader>f* namespace for find/search operations
+--
+-- Keybindings defined here:
+--   <leader>ff  → Find files
+--   <leader>ft  → Find text (live grep)
+--   <leader>fb  → Find buffers
+--   <leader>fr  → Recent files
+--   <leader>fh  → Find help
+--   <leader>fw  → Find word under cursor
+--   <leader>fc  → Command history
+--   <leader>f/  → Search history
+--   <leader>fg* → Git searches (commits, branches, status, files)
+--   <leader>fd  → Document diagnostics
+--   <leader>fD  → Workspace diagnostics
+--   <leader>fs  → Symbols (treesitter)
+--   <leader>fk  → Keymaps
+--   q: / q? / q/ → Command/search history (replaces command-line window)
+
 return {
   "nvim-telescope/telescope.nvim",
   dependencies = {

@@ -118,7 +118,7 @@ return {
         hidden = true,
         direction = "float",
         float_opts = {
-          border = "curved",
+          border = "single",
         },
         on_open = function(term)
           vim.cmd("startinsert!")
@@ -133,11 +133,6 @@ return {
 
       -- Create the terminal
       local term = Terminal:new(term_opts)
-
-      -- Create the toggle function
-      _G["toggle_" .. name] = function()
-        term:toggle()
-      end
 
       -- Create user command
       vim.api.nvim_create_user_command(name, function()
@@ -160,13 +155,7 @@ return {
       keymap = "<leader>tf",
     })
 
-    -- Lazygit terminal
-    create_term_cmd("LazyGit", "lazygit", {
-      display_name = "LazyGit",
-      desc = "Git UI",
-      dir = "git_dir",
-      keymap = "<leader>gg",
-    })
+    -- Note: LazyGit keybinding (<leader>gg) is defined in plugins/git/lazygit.lua
 
     -- Create dynamic menu command to list available terminals
     vim.api.nvim_create_user_command("Terminals", function()

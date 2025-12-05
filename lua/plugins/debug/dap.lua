@@ -219,7 +219,7 @@ local function setup_dap()
 
   -- Setup colors
   local function setup_dap_highlights()
-    local colors = _G.get_ui_colors()
+    local colors = require("config.ui").get_colors()
     vim.api.nvim_set_hl(0, 'DapBreakpoint', { fg = colors.red })
     vim.api.nvim_set_hl(0, 'DapBreakpointCondition', { fg = colors.yellow })
     vim.api.nvim_set_hl(0, 'DapStopped', { fg = colors.green })

@@ -3,6 +3,9 @@ return {
     "stevearc/oil.nvim",
     lazy = false,
     priority = 80,
+    keys = {
+      { "-", function() require("oil").open() end, desc = "Open Oil Explorer (parent dir)" },
+    },
     opts = {
       columns = {},
       view_options = {
@@ -82,6 +85,18 @@ return {
       })
 
       require("oil").setup(opts)
+
+      -- Set up directory handling (moved from config/autocmds.lua)
+      vim.api.nvim_create_autocmd("BufEnter", {
+        group = vim.api.nvim_create_augroup("OilDirectoryHandler", { clear = true }),
+        callback = function()
+          local name = vim.api.nvim_buf_get_name(0)
+          if vim.fn.isdirectory(name) == 1 then
+            require("oil").open(name)
+          end
+        end,
+        desc = "Open directory path in Oil",
+      })
     end,
   },
   {
@@ -257,15 +272,7 @@ return {
     end,
     config = function(_, opts)
       require("nvim-tree").setup(opts)
-      -- Close Neovim if nvim-tree is the last window
-      vim.api.nvim_create_autocmd("BufEnter", {
-        nested = true,
-        callback = function()
-          if #vim.api.nvim_list_wins() == 1 and vim.bo.filetype == "NvimTree" then
-            vim.cmd("quit")
-          end
-        end,
-      })
+      -- Note: Auto-close is handled by lib/autoclose.lua
 
       -- Prevent floating nvim-tree from closing on focus loss
       -- vim.api.nvim_create_autocmd("FileType", {
@@ -281,17 +288,7 @@ return {
       --   end,
       -- })
 
-      local function setup_nvim_tree_highlights()
-        local colors = (_G.get_ui_colors and _G.get_ui_colors()) or {
-          bg = "NONE",
-          fg = "NONE",
-        }
-        vim.api.nvim_set_hl(0, "NvimTreeNormal", { bg = colors.bg, fg = colors.fg })
-        vim.api.nvim_set_hl(0, "NvimTreeEndOfBuffer", { bg = colors.bg, fg = colors.bg })
-      end
-
-      setup_nvim_tree_highlights()
-      vim.api.nvim_create_autocmd("ColorScheme", { callback = setup_nvim_tree_highlights })
+      -- Note: nvim-tree highlights are managed in config/ui.lua
     end,
   },
 }

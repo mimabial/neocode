@@ -54,22 +54,42 @@ function M.setup()
     desc = "Switch workspace layout",
   })
 
+  -- ========================================
+  -- Plugin Management
+  -- ========================================
+  -- Lazy-loaded terminal instance
+  local lazygit_term = nil
+
   vim.api.nvim_create_user_command("LazyGit", function()
-    if _G.toggle_lazygit then
-      _G.toggle_lazygit()
+    local ok, term = pcall(require, "toggleterm.terminal")
+    if ok then
+      if not lazygit_term then
+        local Terminal = term.Terminal or error("Toggleterm missing Terminal class")
+        lazygit_term = Terminal:new({
+          cmd = "lazygit",
+          direction = "float",
+          float_opts = { border = "single" },
+          on_exit = function()
+            -- Try to refresh gitsigns if available
+            pcall(function()
+              require("gitsigns").refresh()
+            end)
+          end,
+        })
+      end
+      lazygit_term:toggle()
     else
-      local Terminal = require("toggleterm.terminal").Terminal
-      _G.toggle_lazygit = Terminal:new({
-        cmd = "lazygit",
-        direction = "float",
-        float_opts = { border = "rounded" },
-        on_exit = function()
-          require("gitsigns").refresh()
-        end,
-      }).toggle
-      _G.toggle_lazygit()
+      vim.cmd("!lazygit")
     end
   end, { desc = "Open Lazygit" })
+
+  vim.api.nvim_create_user_command("UpdateAll", function()
+    vim.cmd("Lazy update")
+    if package.loaded["mason"] then
+      vim.cmd("MasonUpdate")
+    end
+    vim.notify("Updated plugins and Mason packages", vim.log.levels.INFO)
+  end, { desc = "Update all plugins and Mason packages" })
 
   vim.api.nvim_create_user_command("PluginCheck", function()
     local plugins = require("lazy.core.config").plugins
@@ -82,9 +102,9 @@ function M.setup()
     end
 
     if #errors == 0 then
-      vim.notify("No plugin issues detected!", vim.log.levels.INFO)
+      vim.notify("No plugin errors detected!", vim.log.levels.INFO, { title = "Plugin Check" })
     else
-      vim.notify("Found errors in " .. #errors .. " plugins", vim.log.levels.ERROR)
+      vim.notify("Found errors in " .. #errors .. " plugins", vim.log.levels.ERROR, { title = "Plugin Check" })
       for _, err in ipairs(errors) do
         vim.notify(err.name .. ": " .. err.error, vim.log.levels.ERROR)
       end
@@ -93,14 +113,17 @@ function M.setup()
 
   vim.api.nvim_create_user_command("ReloadConfig", function()
     for name, _ in pairs(package.loaded) do
-      if name:match("^config%.") or name:match("^plugins%.") then
+      if name:match("^(config)\\.") or name:match("^(plugins)\\.") then
         package.loaded[name] = nil
       end
     end
     dofile(vim.fn.stdpath("config") .. "/init.lua")
-    vim.notify("Configuration reloaded!", vim.log.levels.INFO)
+    vim.notify("Nvim configuration reloaded!", vim.log.levels.INFO, { title = "Config" })
   end, { desc = "Reload Neovim configuration" })
 
+  -- ========================================
+  -- Diagnostics
+  -- ========================================
   vim.api.nvim_create_user_command("DiagnosticsToggle", function()
     local current = vim.diagnostic.config()
     local new_config = {

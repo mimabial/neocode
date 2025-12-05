@@ -107,6 +107,8 @@ return {
             })
           end,
 
+          -- cssls uses default handler
+
           ["eslint"] = function()
             require("lspconfig").eslint.setup({
               capabilities = capabilities,
@@ -248,6 +250,16 @@ return {
                 "svelte",
                 "astro",
               },
+              root_dir = function(fname)
+                local root_pattern = require("lspconfig").util.root_pattern(
+                  "tailwind.config.js",
+                  "tailwind.config.cjs",
+                  "tailwind.config.mjs",
+                  "tailwind.config.ts"
+                )
+                -- Only activate if a tailwind config file is found
+                return root_pattern(fname)
+              end,
             })
           end,
 
@@ -272,14 +284,7 @@ return {
         },
       })
 
-      vim.diagnostic.config({
-        virtual_text = { prefix = " ", spacing = 4 },
-        float = { border = "single", source = "always" },
-        signs = true,
-        underline = true,
-        update_in_insert = false,
-        severity_sort = true,
-      })
+      -- Note: Diagnostic configuration is in config/autocmds.lua
 
       vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "single" })
       vim.lsp.handlers["textDocument/signatureHelp"] =
