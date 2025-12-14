@@ -63,6 +63,16 @@ function M.setup()
   -- Select all
   map("n", "<C-a>", "ggVG", { desc = "Select all" })
 
+  -- Open URL under cursor
+  map("n", "gx", function()
+    local url = vim.fn.expand("<cfile>")
+    if url:match("^https?://") then
+      vim.fn.jobstart({ "xdg-open", url }, { detach = true })
+    else
+      vim.notify("No URL under cursor", vim.log.levels.WARN)
+    end
+  end, { desc = "Open URL under cursor" })
+
   -- Clear search with <esc>
   map({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", { desc = "Escape and clear hlsearch" })
 

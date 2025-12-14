@@ -43,5 +43,6 @@ return {
   { "nyoom-engineering/oxocarbon.nvim", lazy = true, priority = 950 },
   { "rose-pine/neovim", name = "rose-pine", lazy = true, priority = 950 },
   { "maxmx03/solarized.nvim", lazy = true, priority = 950 },
+  { "jpwol/thorn.nvim", lazy = true, priority = 950 },
   { "folke/tokyonight.nvim", lazy = true, priority = 950 },
 }

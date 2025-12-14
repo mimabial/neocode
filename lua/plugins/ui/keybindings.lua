@@ -58,22 +58,6 @@ return {
       { "<leader>ar", desc = "Refresh Avante" },
     })
 
-    -- Buffer mappings (defined in config/keymaps.lua and plugins/ui/tabline.lua)
-    which_key.add({
-      { "<leader>bn", desc = "New Buffer" },
-      { "<leader>bb", desc = "Other Buffer" },
-      { "<leader>bd", desc = "Delete Buffer (pick)" },
-      { "<leader>bf", desc = "First Buffer" },
-      { "<leader>bl", desc = "Last Buffer" },
-      { "<leader>b]", desc = "Next Buffer" },
-      { "<leader>b[", desc = "Previous Buffer" },
-      { "<leader>bp", desc = "Pick Buffer" },
-      { "<leader>b<", desc = "Move Buffer Left" },
-      { "<leader>b>", desc = "Move Buffer Right" },
-      { "<leader>b.", desc = "Sort by Directory" },
-      { "<leader>b,", desc = "Sort by Extension" },
-    })
-
     -- Buffer number mappings (1-9, defined in tabline.lua)
     for i = 1, 9 do
       which_key.add({
