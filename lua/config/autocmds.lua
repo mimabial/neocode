@@ -177,6 +177,22 @@ function M.setup()
     desc = "Set filetype for Hyprland .theme files",
   })
 
+  -- GTK CSS files use @variable syntax which standard CSS LSP doesn't understand
+  vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+    pattern = {
+      "*/.config/swaync/*.css",
+      "*/.config/waybar/*.css",
+      "*/.config/rofi/*.css",
+      "*/.config/wofi/*.css",
+      "*/gtk-3.0/*.css",
+      "*/gtk-4.0/*.css",
+    },
+    callback = function()
+      vim.bo.filetype = "css.gtk"
+    end,
+    desc = "Set GTK CSS filetype to avoid standard CSS LSP errors",
+  })
+
   vim.api.nvim_create_autocmd("FileType", {
     pattern = "zsh",
     callback = function()

@@ -1,11 +1,11 @@
 -- Darkvoid Theme Definition
 return {
   icon = "",
-  variants = { "glow" },
-  setup = function(variant, transparency)
+  variants = { "default", "glow" },
+  setup = function(opts)
     require("darkvoid").setup({
-      transparent = transparency,
-      glow = (variant == "glow"),
+      transparent = opts.transparency,
+      glow = opts.variant == "glow",
       colors = {
         bg = "262626",
       },

@@ -1,8 +1,7 @@
 -- Gruvbox Theme Definition
 return {
   icon = "",
-  variants = { "dark", "light" },
-  setup = function(variant, transparency)
+  setup = function(opts)
     require("gruvbox").setup({
       terminal_colors = true,
       undercurl = true,
@@ -25,14 +24,9 @@ return {
       palette_overrides = {},
       overrides = {},
       dim_inactive = false,
-      transparent_mode = transparency,
+      transparent_mode = opts.transparency,
     })
-
-    if variant == "light" then
-      vim.o.background = "light"
-    else
-      vim.o.background = "dark"
-    end
+    vim.o.background = opts.background or "dark"
     vim.cmd("colorscheme gruvbox")
   end,
 }

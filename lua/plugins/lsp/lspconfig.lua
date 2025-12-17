@@ -107,7 +107,7 @@ return {
             })
           end,
 
-          -- cssls uses default handler
+          -- cssls uses default handler (GTK CSS excluded via filetype in autocmds.lua)
 
           ["eslint"] = function()
             require("lspconfig").eslint.setup({

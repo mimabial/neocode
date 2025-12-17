@@ -19,7 +19,11 @@ return {
       -- Kanagawa is loaded first (priority=1000, lazy=false), so it's available immediately
       if not manager.apply_system_theme(themes) then
         local settings = manager.load_settings()
-        manager.apply_theme(settings.theme, settings.variant, settings.transparency, themes)
+        -- Set vim.o.background before applying theme (for themes using backgrounds = true)
+        if settings.background then
+          vim.o.background = settings.background
+        end
+        manager.apply_theme(settings.theme, settings.variant, settings.transparency, themes, settings.background)
       end
 
       -- Setup focus-based theme sync (checks when you alt-tab back to Neovim)

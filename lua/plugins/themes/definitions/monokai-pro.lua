@@ -2,10 +2,10 @@
 return {
   icon = "",
   variants = { "pro", "classic", "machine", "octagon", "ristretto", "spectrum" },
-  setup = function(variant, transparency)
+  setup = function(opts)
     require("monokai-pro").setup({
-      filter = variant,
-      transparent_background = transparency,
+      filter = opts.variant,
+      transparent_background = opts.transparency,
     })
     vim.cmd("colorscheme monokai-pro")
   end,

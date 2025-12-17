@@ -265,28 +265,6 @@ return {
           -- make = {},  -- Usually skip formatting makefiles
         },
         formatters = {
-          -- Prettier (with prettierd as faster alternative)
-          prettier = {
-            prepend_args = function(self, ctx)
-              local args = { "--print-width", "100", "--trailing-comma", "none" }
-              local config = util.root_file({
-                ".prettierrc",
-                ".prettierrc.json",
-                ".prettierrc.yml",
-                ".prettierrc.yaml",
-                ".prettierrc.json5",
-                ".prettierrc.js",
-                "prettier.config.js",
-                ".prettierrc.toml",
-              })(ctx.buf)
-              if config then
-                table.insert(args, "--config")
-                table.insert(args, config)
-              end
-              return args
-            end,
-          },
-
           -- Lua
           stylua = {
             prepend_args = { "--search-parent-directories", "--respect-ignores" },

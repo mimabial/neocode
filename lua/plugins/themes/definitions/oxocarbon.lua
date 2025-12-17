@@ -1,10 +1,9 @@
 -- Oxocarbon Theme Definition
 return {
   icon = "",
-  variants = { "dark", "light" },
-  setup = function(variant, transparency)
-    vim.opt.background = variant
-    if transparency then
+  setup = function(opts)
+    vim.o.background = opts.background or "dark"
+    if opts.transparency then
       vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
       vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
       vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
