@@ -112,7 +112,10 @@ function M.setup()
   setup_highlights()
 
   vim.api.nvim_create_autocmd("ColorScheme", {
-    callback = setup_highlights,
+    callback = function()
+      -- Schedule to run after colorscheme has fully applied highlights
+      vim.schedule(setup_highlights)
+    end,
   })
 end
 

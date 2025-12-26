@@ -183,7 +183,6 @@ function M.setup()
   map("n", "<leader>uv", "<cmd>CycleColorVariant<cr>", { desc = "Cycle color variant" })
   map("n", "<leader>uV", "<cmd>ColorVariant<cr>", { desc = "Select color variant" })
   map("n", "<leader>ud", "<cmd>ToggleBackground<cr>", { desc = "Toggle dark/light mode" })
-  map("n", "<leader>ut", "<cmd>ToggleBackgroundTransparency<cr>", { desc = "Toggle transparency" })
   -- System theme integration
   map("n", "<leader>uy", "<cmd>SystemSync<cr>", { desc = "Sync with system theme" })
   map("n", "<leader>uY", "<cmd>ColorModeStatus<cr>", { desc = "Show color mode status" })

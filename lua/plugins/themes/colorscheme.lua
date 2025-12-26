@@ -23,10 +23,10 @@ return {
         if settings.background then
           vim.o.background = settings.background
         end
-        manager.apply_theme(settings.theme, settings.variant, settings.transparency, themes, settings.background)
+        manager.apply_theme(settings.theme, settings.variant, themes, settings.background)
       end
 
-      -- Setup focus-based theme sync (checks when you alt-tab back to Neovim)
+      -- Setup theme sync via file watchers
       manager.setup_focus_sync(themes)
     end,
   },

@@ -5,7 +5,6 @@ return {
   version = false,
   build = "make",
   dependencies = {
-    "stevearc/dressing.nvim",
     "nvim-lua/plenary.nvim",
     "MunifTanjim/nui.nvim",
     {

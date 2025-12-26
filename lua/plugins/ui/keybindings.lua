@@ -86,7 +86,6 @@ return {
       { "<leader>uv", desc = "Cycle color variant" },
       { "<leader>uV", desc = "Select color variant" },
       { "<leader>ud", desc = "Toggle dark/light mode" },
-      { "<leader>ut", desc = "Toggle transparency" },
       { "<leader>uy", desc = "Sync with system theme" },
       { "<leader>uY", desc = "Color mode status" },
       { "<leader>uz", desc = "Set system NVIM_SCHEME" },

@@ -26,16 +26,22 @@ function M.load_settings()
       if data.background == nil then
         data.background = "dark"
       end
+      data.transparency = nil
       return data
     end
   end
-  return { theme = "kanagawa", variant = nil, background = "dark", transparency = false }
+  return { theme = "kanagawa", variant = nil, background = "dark" }
 end
 
 -- Save theme settings to cache
 function M.save_settings(settings)
   vim.fn.mkdir(M.cache_dir, "p")
-  local content = vim.json.encode(settings)
+  local to_save = {
+    theme = settings.theme,
+    variant = settings.variant,
+    background = settings.background,
+  }
+  local content = vim.json.encode(to_save)
   vim.fn.writefile({ content }, M.settings_file)
 end
 
@@ -61,10 +67,9 @@ end
 -- Apply a theme
 -- @param theme_name string - Theme name
 -- @param variant string|nil - Variant name (optional)
--- @param transparency boolean - Enable transparency
 -- @param themes table - All loaded themes
 -- @param background string|nil - "dark" or "light" (optional, inferred from variant if not provided)
-function M.apply_theme(theme_name, variant, transparency, themes, background)
+function M.apply_theme(theme_name, variant, themes, background)
   local theme = themes[theme_name]
   if not theme then
     vim.notify("Theme '" .. theme_name .. "' not found", vim.log.levels.ERROR)
@@ -112,7 +117,7 @@ function M.apply_theme(theme_name, variant, transparency, themes, background)
   -- Apply theme with opts table for flexible parameter handling
   local ok, err = pcall(theme.setup, {
     variant = variant,
-    transparency = transparency,
+    transparency = false,
     background = background,
   })
   if not ok then
@@ -143,7 +148,6 @@ function M.apply_theme(theme_name, variant, transparency, themes, background)
     theme = theme_name,
     variant = actual_variant,
     background = vim.o.background or "dark",
-    transparency = transparency or false,
   })
 
   return true
@@ -184,7 +188,7 @@ local function read_theme_conf(var_name)
   end
   local content = vim.fn.readfile(M.system_theme_file)
   for _, line in ipairs(content) do
-    if line:match("^%$" .. var_name) then
+    if line:match("^%s*%$" .. var_name) then
       local match = line:match("=%s*(.+)")
       if match then
         local value = match:gsub("%s+$", "")
@@ -225,20 +229,21 @@ function M.apply_system_theme(themes)
   local conf_scheme = read_theme_conf("NVIM_SCHEME")
   local conf_variant = read_theme_conf("NVIM_VARIANT")
   local conf_background = read_theme_conf("NVIM_BACKGROUND")
-  local conf_transparency = read_theme_conf("NVIM_TRANSPARENCY")
 
-  local scheme, variant, background, transparency
+  local scheme, variant, background
 
   if color_mode == M.COLOR_MODE.THEME then
     -- Theme Mode: Use all values from theme.conf
-    -- If theme.conf doesn't have NVIM_SCHEME, fall back to saved settings
+    -- If theme.conf doesn't have NVIM_SCHEME, fall back to pywal
     if not conf_scheme then
-      return false -- Let colorscheme.lua use fallback
+      scheme = "pywal"
+      variant = nil
+      background = conf_background
+    else
+      scheme = conf_scheme
+      variant = conf_variant
+      background = conf_background  -- Let theme derive from variant if nil
     end
-    scheme = conf_scheme
-    variant = conf_variant
-    background = conf_background  -- Let theme derive from variant if nil
-    transparency = conf_transparency == "true"
 
   elseif color_mode == M.COLOR_MODE.AUTO_DETECT then
     -- Auto Detect Mode: Use auto_theme daemon's settings
@@ -252,11 +257,14 @@ function M.apply_system_theme(themes)
         background = state.current_mode
       end
     end
-    -- Use saved theme, but override background from daemon
-    scheme = settings.theme
-    variant = settings.variant
-    transparency = settings.transparency
-
+    -- If no NVIM_SCHEME, fall back to pywal; otherwise use saved theme
+    if not conf_scheme then
+      scheme = "pywal"
+      variant = nil
+    else
+      scheme = settings.theme
+      variant = settings.variant
+    end
   else
     -- Wallpaper Modes (Auto/Dark/Light): Follow system background mode
     local sys_background = read_staterc("BACKGROUND_MODE")
@@ -270,10 +278,14 @@ function M.apply_system_theme(themes)
       background = sys_background or "dark"
     end
 
-    -- Use saved theme settings, but override background
-    scheme = settings.theme
-    variant = settings.variant
-    transparency = settings.transparency
+    -- If no NVIM_SCHEME, fall back to pywal; otherwise use saved theme
+    if not conf_scheme then
+      scheme = "pywal"
+      variant = nil
+    else
+      scheme = settings.theme
+      variant = settings.variant
+    end
   end
 
   -- Validate scheme - if not found in themes, return false for fallback
@@ -287,7 +299,7 @@ function M.apply_system_theme(themes)
   end
 
   -- Apply the theme
-  return M.apply_theme(scheme, variant, transparency, themes, background)
+  return M.apply_theme(scheme, variant, themes, background)
 end
 
 -- Update Hyprland config with current theme
@@ -335,7 +347,7 @@ function M.update_hyprland_config(theme_name, variant)
   )
 end
 
--- Setup theme sync (file watcher + focus-based fallback)
+-- Setup theme sync (file watchers only)
 function M.setup_focus_sync(themes)
   local group = vim.api.nvim_create_augroup("ThemeSync", { clear = true })
 
@@ -405,31 +417,6 @@ function M.setup_focus_sync(themes)
   -- Store watchers to prevent garbage collection
   M._file_watchers = watchers
 
-  -- Method 2: Focus-based sync (fallback for terminals that don't support file watching)
-  vim.api.nvim_create_autocmd("FocusGained", {
-    group = group,
-    callback = sync_theme,
-    desc = "Sync with system theme when Neovim gains focus",
-  })
-
-  -- Method 3: Timer-based polling (fallback, only if file watchers failed)
-  -- Can be enabled via: vim.g.theme_sync_poll_interval = 5000 (ms)
-  local poll_interval = vim.g.theme_sync_poll_interval
-  if poll_interval and poll_interval > 0 then
-    local timer = vim.loop.new_timer()
-    if timer then
-      timer:start(poll_interval, poll_interval, vim.schedule_wrap(sync_theme))
-      M._sync_timer = timer
-    end
-  elseif #watchers == 0 then
-    -- No file watchers succeeded, enable polling as fallback
-    local timer = vim.loop.new_timer()
-    if timer then
-      timer:start(5000, 5000, vim.schedule_wrap(sync_theme))
-      M._sync_timer = timer
-    end
-  end
-
   -- Cleanup on exit
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = group,
@@ -467,11 +454,11 @@ function M.register_commands(themes)
         prompt = "Select variant:",
       }, function(choice)
         if choice then
-          M.apply_theme(theme_name, choice, settings.transparency, themes, settings.background)
+          M.apply_theme(theme_name, choice, themes, settings.background)
         end
       end)
     else
-      M.apply_theme(theme_name, nil, settings.transparency, themes, settings.background)
+      M.apply_theme(theme_name, nil, themes, settings.background)
     end
   end, {
     nargs = "?",
@@ -481,19 +468,12 @@ function M.register_commands(themes)
     desc = "Switch colorscheme theme",
   })
 
-  vim.api.nvim_create_user_command("ThemeTransparency", function()
-    local settings = M.load_settings()
-    settings.transparency = not settings.transparency
-    M.apply_theme(settings.theme, settings.variant, settings.transparency, themes, settings.background)
-    vim.notify("Transparency: " .. (settings.transparency and "ON" or "OFF"), vim.log.levels.INFO)
-  end, { desc = "Toggle theme transparency" })
-
   vim.api.nvim_create_user_command("SystemSetTheme", function(opts)
     local theme_name = opts.args ~= "" and opts.args or M.load_settings().theme
     local settings = M.load_settings()
 
     M.update_hyprland_config(theme_name, settings.variant)
-    M.apply_theme(theme_name, settings.variant, settings.transparency, themes, settings.background)
+    M.apply_theme(theme_name, settings.variant, themes, settings.background)
   end, {
     nargs = "?",
     complete = function()
@@ -534,7 +514,7 @@ function M.register_commands(themes)
     local next_theme = theme_names[next_idx]
 
     -- Pass background, let setup handle variant selection
-    M.apply_theme(next_theme, nil, settings.transparency, themes, settings.background)
+    M.apply_theme(next_theme, nil, themes, settings.background)
     vim.notify("Theme: " .. next_theme, vim.log.levels.INFO)
   end, { desc = "Cycle through color schemes" })
 
@@ -566,11 +546,11 @@ function M.register_commands(themes)
             prompt = "Select variant:",
           }, function(variant)
             if variant then
-              M.apply_theme(choice.name, variant, settings.transparency, themes, settings.background)
+              M.apply_theme(choice.name, variant, themes, settings.background)
             end
           end)
         else
-          M.apply_theme(choice.name, nil, settings.transparency, themes, settings.background)
+          M.apply_theme(choice.name, nil, themes, settings.background)
         end
       end
     end)
@@ -602,7 +582,7 @@ function M.register_commands(themes)
     local next_idx = (current_idx % #theme.variants) + 1
     local next_variant = theme.variants[next_idx]
 
-    M.apply_theme(settings.theme, next_variant, settings.transparency, themes, nil)
+    M.apply_theme(settings.theme, next_variant, themes, nil)
 
     -- Show actual applied variant (may differ from requested due to bidirectional sync)
     local new_settings = M.load_settings()
@@ -628,21 +608,13 @@ function M.register_commands(themes)
       prompt = "Select variant for " .. settings.theme .. ":",
     }, function(choice)
       if choice then
-        M.apply_theme(settings.theme, choice, settings.transparency, themes, nil)
+        M.apply_theme(settings.theme, choice, themes, nil)
         -- Show actual applied variant (may differ from requested due to bidirectional sync)
         local new_settings = M.load_settings()
         vim.notify("Variant: " .. (new_settings.variant or choice), vim.log.levels.INFO)
       end
     end)
   end, { desc = "Select variant for current theme" })
-
-  -- Toggle background transparency (alias for ThemeTransparency)
-  vim.api.nvim_create_user_command("ToggleBackgroundTransparency", function()
-    local settings = M.load_settings()
-    settings.transparency = not settings.transparency
-    M.apply_theme(settings.theme, settings.variant, settings.transparency, themes, settings.background)
-    vim.notify("Transparency: " .. (settings.transparency and "ON" or "OFF"), vim.log.levels.INFO)
-  end, { desc = "Toggle background transparency" })
 
   -- Toggle background mode (dark/light)
   vim.api.nvim_create_user_command("ToggleBackground", function()
@@ -651,7 +623,7 @@ function M.register_commands(themes)
     -- Use actual vim.o.background, not saved settings (which might be stale)
     local current_bg = vim.o.background or "dark"
     local new_bg = current_bg == "dark" and "light" or "dark"
-    M.apply_theme(settings.theme, settings.variant, settings.transparency, themes, new_bg)
+    M.apply_theme(settings.theme, settings.variant, themes, new_bg)
 
     vim.notify("Background: " .. new_bg, vim.log.levels.INFO)
   end, { desc = "Toggle background mode (dark/light)" })
@@ -695,8 +667,6 @@ function M.register_commands(themes)
     table.insert(lines, "Current Theme: " .. (settings.theme or "none"))
     table.insert(lines, "Variant: " .. (settings.variant or "none"))
     table.insert(lines, "Background: " .. (settings.background or vim.o.background))
-    table.insert(lines, "Transparency: " .. tostring(settings.transparency))
-
     vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
   end, { desc = "Show color mode status" })
 

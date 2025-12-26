@@ -2,9 +2,8 @@
 return {
   icon = "",
   setup = function(opts)
-    if opts.transparency then
-      vim.g.nord_disable_background = true
-    end
+    -- Must explicitly set to false to disable transparency (nil won't work)
+    vim.g.nord_disable_background = opts.transparency or false
     vim.cmd("colorscheme nord")
   end,
 }

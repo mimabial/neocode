@@ -5,7 +5,7 @@ A highly modular, performance-focused Neovim configuration designed for full-sta
 ## ✨ Features
 
 - 🚀 **Lightning fast startup** with lazy.nvim plugin management
-- 🎨 **Comprehensive theme support** - 15+ themes with variants and transparency
+- 🎨 **Comprehensive theme support** - 15+ themes with variants
 - 🤖 **AI-powered development** - Copilot and Codeium integration
 - 🔧 **Full LSP ecosystem** - Mason, formatting, linting, and diagnostics
 - 📁 **Modern file navigation** - Oil.nvim as primary explorer with Telescope
@@ -18,7 +18,7 @@ A highly modular, performance-focused Neovim configuration designed for full-sta
 
 ## 🎨 Supported Themes
 
-All themes include variant support and transparency options:
+All themes include variant support:
 
 - **ashen** - Minimalist dark theme
 - **catppuccin** - Latte, Frappé, Macchiato, Mocha variants
@@ -155,7 +155,7 @@ nvim
 | `<leader>us` | Cycle color scheme |
 | `<leader>uS` | Select color scheme |
 | `<leader>uv` | Cycle color variant |
-| `<leader>ub` | Toggle transparency |
+| `<leader>ud` | Toggle dark/light mode |
 | `<leader>uy` | Sync with system theme |
 
 ### Terminal

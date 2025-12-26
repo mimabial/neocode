@@ -23,7 +23,9 @@ return {
     "nvim-lua/plenary.nvim",
     "nvim-tree/nvim-web-devicons",
     { "nvim-telescope/telescope-fzf-native.nvim", build = "make", cond = vim.fn.executable("make") == 1 },
+    "nvim-telescope/telescope-ui-select.nvim",
   },
+  event = "VeryLazy",
   cmd = "Telescope",
   keys = function()
     local builtin = require("telescope.builtin")
@@ -132,6 +134,7 @@ return {
     local layout_strategies = require("telescope.pickers.layout_strategies")
     local telescope = require("telescope")
     local actions = require("telescope.actions")
+    local themes = require("telescope.themes")
 
     -- Custom vertical layout with full screen usage and preview on top
     layout_strategies.ebony = function(picker, max_columns, max_lines)
@@ -210,6 +213,18 @@ return {
           layout.results.height = max_lines - layout.results.line + 1
           layout.results.width = max_columns
         end
+      end
+      return layout
+    end
+
+    -- Add a small visual gap between the prompt title bar and the results list.
+    layout_strategies.ui_select_gap = function(picker, max_columns, max_lines, layout_config)
+      local layout = layout_strategies.center(picker, max_columns, max_lines, layout_config)
+      if layout.prompt then
+        layout.prompt.height = 1
+      end
+      if layout.prompt and layout.results then
+        layout.results.line = layout.prompt.line + layout.prompt.height + 2
       end
       return layout
     end
@@ -402,6 +417,16 @@ return {
           override_file_sorter = true,
           case_mode = "smart_case",
         },
+        ["ui-select"] = themes.get_dropdown({
+          previewer = false,
+          layout_strategy = "ui_select_gap",
+          layout_config = { width = 0.5, height = 0.4 },
+          borderchars = {
+            prompt = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+            results = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+            preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+          },
+        }),
       },
     })
 
@@ -466,6 +491,9 @@ return {
     -- Load fzf extension if available
     pcall(function()
       telescope.load_extension("fzf")
+    end)
+    pcall(function()
+      telescope.load_extension("ui-select")
     end)
   end,
 }

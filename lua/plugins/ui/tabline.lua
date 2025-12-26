@@ -57,6 +57,15 @@ return {
     require("mini.icons").setup()
     require("bufferline").setup(opts)
 
+    -- Refresh bufferline on colorscheme change
+    vim.api.nvim_create_autocmd("ColorScheme", {
+      callback = function()
+        vim.schedule(function()
+          require("bufferline").setup(opts)
+        end)
+      end,
+    })
+
     -- Buffer navigation keymaps
     -- Owner of <leader>b* namespace (shared with core keymaps.lua)
     local map = function(mode, lhs, rhs, desc)
