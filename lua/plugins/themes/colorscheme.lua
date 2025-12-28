@@ -38,6 +38,7 @@ return {
   { "catppuccin/nvim", name = "catppuccin", lazy = true, priority = 950 },
   { "aliqyan-21/darkvoid.nvim", lazy = true, priority = 950 },
   { "decaycs/decay.nvim", lazy = true, priority = 950 },
+  { "Mofiqul/dracula.nvim", lazy = true, priority = 950 },
   { "sainnhe/everforest", lazy = true, priority = 950 },
   { "ellisonleao/gruvbox.nvim", lazy = true, priority = 950 },
   { "sainnhe/gruvbox-material", lazy = true, priority = 950 },
