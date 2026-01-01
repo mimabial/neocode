@@ -125,6 +125,35 @@ return {
             })
           end,
 
+          ["intelephense"] = function()
+            require("lspconfig").intelephense.setup({
+              capabilities = capabilities,
+              on_attach = on_attach,
+              settings = {
+                intelephense = {
+                  telemetry = { enabled = false },
+                  files = {
+                    maxSize = 1000000,
+                    exclude = {
+                      "**/.git/**",
+                      "**/.svn/**",
+                      "**/.hg/**",
+                      "**/node_modules/**",
+                      "**/vendor/**",
+                      "**/storage/**",
+                      "**/var/**",
+                      "**/cache/**",
+                      "**/tmp/**",
+                      "**/build/**",
+                      "**/dist/**",
+                      "**/coverage/**",
+                    },
+                  },
+                },
+              },
+            })
+          end,
+
           -- Go
           ["gopls"] = function()
             require("lspconfig").gopls.setup({

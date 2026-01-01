@@ -201,6 +201,23 @@ local function read_theme_conf(var_name)
   return nil
 end
 
+local function normalize_background(value)
+  if not value then
+    return nil
+  end
+  local v = tostring(value):gsub('^["\']', ""):gsub('["\']$', ""):lower()
+  if v == "dark" or v == "light" then
+    return v
+  end
+  if v == "prefer-dark" then
+    return "dark"
+  end
+  if v == "prefer-light" then
+    return "light"
+  end
+  return nil
+end
+
 -- Get current color mode from staterc
 function M.get_color_mode()
   local mode = read_staterc("enableWallDcol")
@@ -228,7 +245,8 @@ function M.apply_system_theme(themes)
   -- Read theme.conf values (used in Theme mode, fallback in others)
   local conf_scheme = read_theme_conf("NVIM_SCHEME")
   local conf_variant = read_theme_conf("NVIM_VARIANT")
-  local conf_background = read_theme_conf("NVIM_BACKGROUND")
+  local conf_background = normalize_background(read_theme_conf("NVIM_BACKGROUND"))
+  local conf_color_scheme = normalize_background(read_theme_conf("COLOR_SCHEME"))
 
   local scheme, variant, background
 
@@ -238,11 +256,11 @@ function M.apply_system_theme(themes)
     if not conf_scheme then
       scheme = "pywal"
       variant = nil
-      background = conf_background
+      background = conf_background or conf_color_scheme
     else
       scheme = conf_scheme
       variant = conf_variant
-      background = conf_background  -- Let theme derive from variant if nil
+      background = conf_background or conf_color_scheme -- Let theme derive from variant if nil
     end
 
   elseif color_mode == M.COLOR_MODE.AUTO_DETECT then
