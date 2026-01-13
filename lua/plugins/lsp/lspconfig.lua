@@ -64,6 +64,56 @@ return {
       -- Always add these (work without specific runtime)
       vim.list_extend(ensure_installed, { "taplo", "lemminx" })
 
+      local is_nvim_0_11 = vim.fn.has("nvim-0.11") == 1
+      local tailwind_filetypes = {
+        "html",
+        "css",
+        "scss",
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact",
+        "vue",
+        "svelte",
+        "astro",
+      }
+      local tailwind_root_files = {
+        "tailwind.config.js",
+        "tailwind.config.cjs",
+        "tailwind.config.mjs",
+        "tailwind.config.ts",
+      }
+
+      local function tailwind_root_dir_legacy(fname)
+        local root_pattern = require("lspconfig").util.root_pattern(unpack(tailwind_root_files))
+        return root_pattern(fname)
+      end
+
+      local function tailwind_root_dir(bufnr, on_dir)
+        local fname = vim.api.nvim_buf_get_name(bufnr)
+        if fname == "" then
+          on_dir(nil)
+          return
+        end
+
+        local root = vim.fs.find(tailwind_root_files, { path = fname, upward = true })[1]
+        if root then
+          on_dir(vim.fs.dirname(root))
+        else
+          on_dir(nil)
+        end
+      end
+
+      if is_nvim_0_11 then
+        vim.lsp.config("tailwindcss", {
+          capabilities = capabilities,
+          on_attach = on_attach,
+          filetypes = tailwind_filetypes,
+          root_dir = tailwind_root_dir,
+          workspace_required = true,
+        })
+      end
+
       require("mason-lspconfig").setup({
         ensure_installed = ensure_installed,
         automatic_installation = false, -- Don't auto-install to avoid errors
@@ -267,28 +317,11 @@ return {
             require("lspconfig").tailwindcss.setup({
               capabilities = capabilities,
               on_attach = on_attach,
-              filetypes = {
-                "html",
-                "css",
-                "scss",
-                "javascript",
-                "javascriptreact",
-                "typescript",
-                "typescriptreact",
-                "vue",
-                "svelte",
-                "astro",
-              },
-              root_dir = function(fname)
-                local root_pattern = require("lspconfig").util.root_pattern(
-                  "tailwind.config.js",
-                  "tailwind.config.cjs",
-                  "tailwind.config.mjs",
-                  "tailwind.config.ts"
-                )
-                -- Only activate if a tailwind config file is found
-                return root_pattern(fname)
-              end,
+              filetypes = tailwind_filetypes,
+              -- Only activate if a tailwind config file is found
+              root_dir = tailwind_root_dir_legacy,
+              -- Prevent attaching to standalone CSS files outside Tailwind projects.
+              single_file_support = false,
             })
           end,
 
