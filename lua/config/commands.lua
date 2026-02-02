@@ -57,32 +57,6 @@ function M.setup()
   -- ========================================
   -- Plugin Management
   -- ========================================
-  -- Lazy-loaded terminal instance
-  local lazygit_term = nil
-
-  vim.api.nvim_create_user_command("LazyGit", function()
-    local ok, term = pcall(require, "toggleterm.terminal")
-    if ok then
-      if not lazygit_term then
-        local Terminal = term.Terminal or error("Toggleterm missing Terminal class")
-        lazygit_term = Terminal:new({
-          cmd = "lazygit",
-          direction = "float",
-          float_opts = { border = "single" },
-          on_exit = function()
-            -- Try to refresh gitsigns if available
-            pcall(function()
-              require("gitsigns").refresh()
-            end)
-          end,
-        })
-      end
-      lazygit_term:toggle()
-    else
-      vim.cmd("!lazygit")
-    end
-  end, { desc = "Open Lazygit" })
-
   vim.api.nvim_create_user_command("UpdateAll", function()
     vim.cmd("Lazy update")
     if package.loaded["mason"] then
@@ -124,15 +98,30 @@ function M.setup()
   -- ========================================
   -- Diagnostics
   -- ========================================
+  local function diagnostic_base_config()
+    local ok, autocmds = pcall(require, "config.autocmds")
+    if ok and autocmds.diagnostic_config then
+      return autocmds.diagnostic_config
+    end
+    return vim.diagnostic.config()
+  end
+
   vim.api.nvim_create_user_command("DiagnosticsToggle", function()
     local current = vim.diagnostic.config()
-    local new_config = {
-      virtual_text = not current.virtual_text,
-      signs = not current.signs,
-      underline = not current.underline,
-    }
+    local diagnostics_enabled = current.virtual_text ~= false
+      or current.signs ~= false
+      or current.underline ~= false
+
+    local base = diagnostic_base_config()
+    local new_config = vim.deepcopy(base)
+    if diagnostics_enabled then
+      new_config.virtual_text = false
+      new_config.signs = false
+      new_config.underline = false
+    end
+
     vim.diagnostic.config(new_config)
-    vim.notify("Diagnostics " .. (new_config.virtual_text and "enabled" or "disabled"), vim.log.levels.INFO)
+    vim.notify("Diagnostics " .. (diagnostics_enabled and "disabled" or "enabled"), vim.log.levels.INFO)
   end, { desc = "Toggle diagnostic display" })
 end
 

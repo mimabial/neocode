@@ -41,6 +41,7 @@ local core_modules = {
   "config.keymaps",
   "config.commands",
   "config.autocmds",
+  "config.django",
 }
 
 for _, module in ipairs(core_modules) do

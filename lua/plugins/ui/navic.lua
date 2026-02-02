@@ -62,8 +62,15 @@ return {
     -- Set winbar for all buffers when navic is available
     vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
       callback = function(event)
+        local buf = event.buf
+
+        -- Skip non-file buffers (terminal, help, prompt, etc.)
+        if vim.bo[buf].buftype ~= "" then
+          return
+        end
+
         -- Skip for certain filetypes
-        local ft = vim.bo[event.buf].filetype
+        local ft = vim.bo[buf].filetype
         if vim.tbl_contains({ "oil", "NvimTree", "neo-tree", "Trouble", "lazy", "mason", "TelescopePrompt" }, ft) then
           return
         end
@@ -81,7 +88,7 @@ return {
           return
         end
 
-        -- Always set winbar (will be empty if navic not available)
+        -- Always set winbar (avoid navic not available on opening)
         vim.wo.winbar = "%{%v:lua.require('nvim-navic').get_location()%}"
       end,
     })

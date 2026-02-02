@@ -82,25 +82,6 @@ function M.setup()
       reset_packpath = true,
       reset_rtp = false,
     },
-    -- Priority overrides for key plugins
-    priorities = {
-      -- Load UI elements early
-      ["nvim-web-devicons"] = 100,
-      ["plenary.nvim"] = 100,
-      ["nui.nvim"] = 100,
-
-      -- Theme plugins
-      ["gruvbox-material"] = 90,
-
-      -- Core functionality plugins
-      ["telescope.nvim"] = 80, -- Primary picker
-      ["which-key.nvim"] = 80,
-      ["oil.nvim"] = 80, -- Primary file explorer
-
-      -- Stack-specific plugins
-      ["go.nvim"] = 70,
-      ["typescript-tools.nvim"] = 70,
-    },
     -- Enhanced debugging for troubleshooting
     debug = false,
   })

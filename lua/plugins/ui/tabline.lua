@@ -84,8 +84,8 @@ return {
 
     -- Buffer management
     map("n", "<leader>bp", "<cmd>BufferLinePick<cr>", "Pick buffer")
-    map("n", "<leader>bo", "<cmd>BufferLineCloseOthers<cr>", "Delete buffer")
-    map("n", "<leader>bD", "<cmd>BufferLinePickClose<cr>", "Delete buffer (pick)")
+    map("n", "<leader>bo", "<cmd>BufferLineCloseOthers<cr>", "Delete buffer (others)")
+    map("n", "<leader>bc", "<cmd>BufferLinePickClose<cr>", "Delete buffer (pick)")
     map("n", "<leader>b<", "<cmd>BufferLineMovePrev<cr>", "Move buffer left")
     map("n", "<leader>b>", "<cmd>BufferLineMoveNext<cr>", "Move buffer right")
 

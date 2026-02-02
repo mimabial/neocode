@@ -72,7 +72,6 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "BufferLineError", { fg = colors.red, bg = colors.bg })
   vim.api.nvim_set_hl(0, "BufferLineErrorSelected", { fg = colors.red, bg = colors.bg, bold = true })
   vim.api.nvim_set_hl(0, "BufferLineWarning", { fg = colors.yellow, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineIndicatorSelected", { fg = colors.blue, bg = colors.bg })
   vim.api.nvim_set_hl(0, "BufferLineFill", { fg = colors.fg, bg = colors.bg })
 
   -- Bufferline offset highlights (for nvim-tree/oil sections)

@@ -162,13 +162,7 @@ return {
           ["eslint"] = function()
             require("lspconfig").eslint.setup({
               capabilities = capabilities,
-              on_attach = function(client, bufnr)
-                vim.api.nvim_create_autocmd("BufWritePre", {
-                  buffer = bufnr,
-                  command = "EslintFixAll",
-                })
-                on_attach(client, bufnr)
-              end,
+              on_attach = on_attach,
               settings = {
                 packageManager = "npm",
               },
@@ -365,25 +359,6 @@ return {
     "williamboman/mason-lspconfig.nvim",
     dependencies = { "williamboman/mason.nvim" },
     lazy = true,
-  },
-
-  -- TypeScript tools (optional enhancement)
-  {
-    "pmizio/typescript-tools.nvim",
-    ft = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
-    dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
-    enabled = function()
-      return vim.fn.executable("node") == 1
-    end,
-    opts = {
-      settings = {
-        expose_as_code_action = { "fix_all", "add_missing_imports", "remove_unused" },
-        tsserver_file_preferences = {
-          includeInlayParameterNameHints = "all",
-          includeInlayFunctionParameterTypeHints = true,
-        },
-      },
-    },
   },
 
   -- Inlay hints for older Neovim

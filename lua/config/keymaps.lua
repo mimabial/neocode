@@ -30,7 +30,22 @@ function M.setup()
       map("n", "<leader>cr", vim.lsp.buf.rename, vim.tbl_extend("force", opts, { desc = "Rename symbol" }))
 
       -- Diagnostics
-      map("n", "<leader>cd", vim.diagnostic.open_float, vim.tbl_extend("force", opts, { desc = "Show diagnostics" }))
+      local function open_diagnostics_float()
+        local float_opts = vim.diagnostic.config().float
+        if float_opts == false then
+          float_opts = {}
+        end
+
+        vim.diagnostic.open_float(nil, vim.tbl_extend("force", float_opts, {
+          focus_id = "diagnostic",
+          focusable = true,
+          focus = true,
+          scope = "cursor",
+          close_events = { "InsertEnter", "FocusLost" },
+        }))
+      end
+
+      map("n", "<leader>cd", open_diagnostics_float, vim.tbl_extend("force", opts, { desc = "Show diagnostics" }))
       map("n", "[d", vim.diagnostic.goto_prev, vim.tbl_extend("force", opts, { desc = "Previous diagnostic" }))
       map("n", "]d", vim.diagnostic.goto_next, vim.tbl_extend("force", opts, { desc = "Next diagnostic" }))
       map(
@@ -152,10 +167,6 @@ function M.setup()
   map("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to Other Buffer" })
   map("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Delete Buffer" })
 
-  -- Note: Buffer navigation (<leader>b]/[, <S-h>/<S-l>) defined in tabline.lua
-  -- Note: Buffer deletion (<leader>bd) uses BufferLine in tabline.lua
-  -- Note: First/Last buffer (<leader>bf/bl) uses BufferLine in tabline.lua
-
   -- ========================================
   -- Tab Management (LazyVim style)
   -- ========================================
@@ -200,8 +211,7 @@ function M.setup()
   -- ========================================
   -- Navic & Outline
   -- ========================================
-  map("n", "<leader>nb", "<cmd>DropbarToggle<cr>", { desc = "Toggle breadcrumbs" })
-  map("n", "<leader>o", "<cmd>Outline<cr>", { desc = "Toggle outline" })
+  map("n", "<leader>nb", "<cmd>NavicToggle<cr>", { desc = "Toggle breadcrumbs" })
 
   -- ========================================
   -- Layout Presets
@@ -214,10 +224,6 @@ function M.setup()
   -- ========================================
   -- Diagnostics
   -- ========================================
-  map("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", { desc = "Diagnostics (Trouble)" })
-  map("n", "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", { desc = "Buffer Diagnostics (Trouble)" })
-  map("n", "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", { desc = "Quickfix List (Trouble)" })
-  map("n", "<leader>xL", "<cmd>Trouble loclist toggle<cr>", { desc = "Location List (Trouble)" })
 end
 
 return M

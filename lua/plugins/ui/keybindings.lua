@@ -92,12 +92,9 @@ return {
       { "<leader>uL", desc = "List available system themes" },
     })
 
-    -- Navic & Outline
+    -- Navic
     which_key.add({
-      { "<leader>nb", desc = "Toggle dropbar" },
-      { "<leader>o", desc = "Toggle outline" },
-      { "]]", desc = "Next reference" },
-      { "[[", desc = "Prev reference" },
+      { "<leader>nb", desc = "Toggle breadcrumbs" },
     })
 
     -- Layouts
@@ -115,14 +112,6 @@ return {
       { "<leader>cf", desc = "Format" },
       { "<leader>cr", desc = "Rename Symbol" },
       { "<leader>cs", desc = "Symbols (Trouble)" },
-    })
-
-    -- Trouble/Diagnostics
-    which_key.add({
-      { "<leader>xx", desc = "Diagnostics (Trouble)" },
-      { "<leader>xX", desc = "Buffer Diagnostics (Trouble)" },
-      { "<leader>xQ", desc = "Quickfix List (Trouble)" },
-      { "<leader>xL", desc = "Location List (Trouble)" },
     })
 
     -- Note: Fold commands (z*) are built-in Vim commands, not custom keybindings

@@ -1,71 +1,166 @@
+local function resolve_root_dir(cwd)
+  local git_dir = vim.fs.find({ ".git" }, { path = cwd, upward = true })[1]
+  if git_dir then
+    return vim.fs.dirname(git_dir)
+  end
+
+  local root_markers = {
+    "go.mod",
+    "go.work",
+    "package.json",
+    "pyproject.toml",
+    "requirements.txt",
+    "Cargo.toml",
+    "pom.xml",
+    "build.gradle",
+    "build.gradle.kts",
+    "composer.json",
+    "Gemfile",
+    "CMakeLists.txt",
+    "compile_commands.json",
+    ".terraform.lock.hcl",
+  }
+  local marker = vim.fs.find(root_markers, { path = cwd, upward = true })[1]
+  if marker then
+    return vim.fs.dirname(marker)
+  end
+
+  return cwd
+end
+
+local function build_mason_tools_opts(cwd)
+  cwd = cwd or vim.fn.getcwd()
+  local root_dir = resolve_root_dir(cwd)
+  local tools = {}
+
+  local function add(list)
+    for _, tool in ipairs(list) do
+      tools[tool] = true
+    end
+  end
+
+  local function has_any(names)
+    for _, name in ipairs(names) do
+      if name:find("[*?[]") then
+        if #vim.fn.glob(root_dir .. "/" .. name, 0, 1) > 0 then
+          return true
+        end
+      else
+        local path = root_dir .. "/" .. name
+        if vim.fn.filereadable(path) == 1 or vim.fn.isdirectory(path) == 1 then
+          return true
+        end
+      end
+    end
+    return false
+  end
+
+  -- Baseline tools
+  add({
+    "stylua",
+    "shfmt",
+    "shellcheck",
+  })
+
+  if has_any({ "package.json", "pnpm-lock.yaml", "yarn.lock" }) then
+    add({ "prettierd", "prettier" })
+  end
+
+  if has_any({ "pyproject.toml", "requirements.txt", "poetry.lock", "Pipfile", "setup.py" }) then
+    add({ "ruff", "black", "isort" })
+  end
+
+  if has_any({ "go.mod", "go.work" }) then
+    add({ "gofumpt", "goimports", "golines" })
+  end
+
+  if has_any({ "Cargo.toml" }) then
+    add({ "rustfmt" })
+  end
+
+  if has_any({ "CMakeLists.txt", "Makefile", "compile_commands.json" }) then
+    add({ "clang-format" })
+  end
+
+  if has_any({ "pom.xml", "build.gradle", "build.gradle.kts" }) then
+    add({ "google-java-format" })
+  end
+
+  if has_any({ "Gemfile", ".rubocop.yml" }) then
+    add({ "rubocop" })
+  end
+
+  if has_any({ "composer.json" }) then
+    add({ "php-cs-fixer" })
+  end
+
+  if has_any({ "*.tf", ".terraform.lock.hcl" }) then
+    add({ "terraform-fmt" })
+  end
+
+  if has_any({ "*.sql", "dbt_project.yml" }) then
+    add({ "sqlfluff", "sql-formatter" })
+  end
+
+  if has_any({ "*.toml" }) then
+    add({ "taplo" })
+  end
+
+  if has_any({ "*.yaml", "*.yml", ".yamllint", ".yamllint.yml" }) then
+    add({ "yamlfmt" })
+  end
+
+  if has_any({ "*.md", "README.md", "readme.md" }) then
+    add({ "markdownlint" })
+  end
+
+  if has_any({ "buf.yaml", "buf.gen.yaml", "buf.work.yaml" }) then
+    add({ "buf" })
+  end
+
+  local ensure_installed = vim.tbl_keys(tools)
+  table.sort(ensure_installed)
+
+  return {
+    ensure_installed = ensure_installed,
+    run_on_start = true,
+  }
+end
+
 return {
   {
     "WhoIsSethDaniel/mason-tool-installer.nvim",
     dependencies = { "williamboman/mason.nvim" },
-    opts = {
-      ensure_installed = {
-        -- Lua
-        "stylua",
-
-        -- Shell
-        "shfmt",
-        "shellcheck",
-
-        -- Web Development
-        "prettierd",
-        "prettier",
-
-        -- Python
-        "ruff",
-        "black",
-        "isort",
-
-        -- Go
-        "gofumpt",
-        "goimports",
-        "golines",
-
-        -- Rust
-        "rustfmt",
-
-        -- C/C++
-        "clang-format",
-
-        -- Java
-        "google-java-format",
-
-        -- PHP
-        "php-cs-fixer",
-
-        -- Ruby
-        "rubocop",
-
-        -- SQL
-        "sqlfluff",
-        "sql-formatter",
-
-        -- TOML
-        "taplo",
-
-        -- YAML
-        "yamlfmt",
-
-        -- Markdown
-        "markdownlint",
-
-        -- Swift
-        "swiftformat",
-
-        -- Terraform
-        "terraform-fmt",
-
-        -- Proto
-        "buf",
-      },
-      run_on_start = true,
-    },
+    opts = build_mason_tools_opts,
     config = function(_, opts)
-      require("mason-tool-installer").setup(opts)
+      local installer = require("mason-tool-installer")
+      installer.setup(opts)
+
+      local last_signature = table.concat(opts.ensure_installed or {}, "\n")
+      local function refresh(cwd)
+        local new_opts = build_mason_tools_opts(cwd)
+        local new_signature = table.concat(new_opts.ensure_installed or {}, "\n")
+        if new_signature == last_signature then
+          return
+        end
+        last_signature = new_signature
+        installer.setup(new_opts)
+        installer.check_install(false)
+      end
+
+      if vim.fn.exists(":MasonToolsRefresh") == 0 then
+        vim.api.nvim_create_user_command("MasonToolsRefresh", function()
+          refresh()
+        end, { desc = "Refresh tools for current project" })
+      end
+
+      vim.api.nvim_create_autocmd("DirChanged", {
+        group = vim.api.nvim_create_augroup("MasonToolInstallerRefresh", { clear = true }),
+        callback = function(event)
+          refresh(event.cwd)
+        end,
+        desc = "Refresh Mason tools when the working directory changes",
+      })
     end,
   },
 
@@ -122,7 +217,7 @@ return {
             return
           end
           local ft = vim.bo[bufnr].filetype
-          if vim.tbl_contains({ "sql", "diff", "gitcommit", "oil" }, ft) then
+          if vim.tbl_contains({ "sql", "diff", "gitcommit", "oil", "htmldjango" }, ft) then
             return
           end
           local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(bufnr))
@@ -141,7 +236,7 @@ return {
             return
           end
           local ft = vim.bo[bufnr].filetype
-          if vim.tbl_contains({ "sql", "diff", "gitcommit", "oil" }, ft) then
+          if vim.tbl_contains({ "sql", "diff", "gitcommit", "oil", "htmldjango" }, ft) then
             return
           end
           local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(bufnr))

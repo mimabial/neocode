@@ -1,42 +1,44 @@
 local M = {}
 
+M.diagnostic_config = {
+  virtual_text = {
+    prefix = " ",
+    spacing = 4,
+    source = "if_many",
+  },
+  float = {
+    border = "single",
+    severity_sort = true,
+    source = true,
+    header = "",
+    prefix = function(diagnostic)
+      local icons = {
+        [vim.diagnostic.severity.ERROR] = " ", -- nf-fa-times_circle
+        [vim.diagnostic.severity.WARN] = " ",  -- nf-fa-exclamation_triangle
+        [vim.diagnostic.severity.INFO] = " ",  -- nf-fa-info_circle
+        [vim.diagnostic.severity.HINT] = " ",  -- nf-mdi-lightbulb_outline
+      }
+      return icons[diagnostic.severity] or ""
+    end,
+  },
+  signs = {
+    text = {
+      [vim.diagnostic.severity.ERROR] = "",
+      [vim.diagnostic.severity.WARN] = "",
+      [vim.diagnostic.severity.INFO] = "",
+      [vim.diagnostic.severity.HINT] = "",
+    },
+  },
+  underline = true,
+  update_in_insert = false,
+  severity_sort = true,
+}
+
 function M.setup()
   -- ========================================
   -- Diagnostics Configuration
   -- ========================================
-  vim.diagnostic.config({
-    virtual_text = {
-      prefix = " ",
-      spacing = 4,
-      source = "if_many",
-    },
-    float = {
-      border = "single",
-      severity_sort = true,
-      source = true,
-      header = "",
-      prefix = function(diagnostic)
-        local icons = {
-          [vim.diagnostic.severity.ERROR] = " ", -- nf-fa-times_circle
-          [vim.diagnostic.severity.WARN] = " ",  -- nf-fa-exclamation_triangle
-          [vim.diagnostic.severity.INFO] = " ",  -- nf-fa-info_circle
-          [vim.diagnostic.severity.HINT] = " ",  -- nf-mdi-lightbulb_outline
-        }
-        return icons[diagnostic.severity] or ""
-      end,
-    },
-    signs = {
-      text = {
-        [vim.diagnostic.severity.ERROR] = "",
-        [vim.diagnostic.severity.WARN] = "",
-        [vim.diagnostic.severity.INFO] = "",
-        [vim.diagnostic.severity.HINT] = "",
-      }
-    },
-    underline = true,
-    update_in_insert = false,
-    severity_sort = true,
-  })
+  vim.diagnostic.config(vim.deepcopy(M.diagnostic_config))
 
   -- Diagnostic events
   local diag_grp = vim.api.nvim_create_augroup("DiagnosticEvents", { clear = true })
@@ -57,7 +59,7 @@ function M.setup()
   })
 
   vim.api.nvim_create_user_command("DiagnosticsReset", function()
-    vim.diagnostic.config(vim.diagnostic.config())
+    vim.diagnostic.config(vim.deepcopy(M.diagnostic_config))
     vim.notify("Diagnostics reset and reapplied", vim.log.levels.INFO)
   end, { desc = "Reset and reapply diagnostics" })
 
@@ -196,11 +198,16 @@ function M.setup()
   vim.api.nvim_create_autocmd("FileType", {
     pattern = "zsh",
     callback = function()
+      local bufname = vim.api.nvim_buf_get_name(0)
+      local start_dir = bufname ~= "" and vim.fs.dirname(bufname) or vim.fn.getcwd()
+      local git_dir = vim.fs.find({ ".git" }, { upward = true, path = start_dir })[1]
+      local root_dir = git_dir and vim.fs.dirname(git_dir) or start_dir
+
       vim.lsp.start({
         name = "bashls",
         cmd = { "bash-language-server", "start" },
         filetypes = { "sh", "bash", "zsh" },
-        root_dir = vim.fs.dirname(vim.fs.find({ ".git" }, { upward = true })[1]),
+        root_dir = root_dir,
       })
     end,
     desc = "Force bashls to attach to zsh files",
