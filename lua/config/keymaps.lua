@@ -41,7 +41,7 @@ function M.setup()
           focusable = true,
           focus = true,
           scope = "cursor",
-          close_events = { "InsertEnter", "FocusLost" },
+          close_events = { "CursorMoved", "InsertEnter", "FocusLost" },
         }))
       end
 
@@ -61,6 +61,17 @@ function M.setup()
   -- General/Plugin Management
   -- ========================================
   map("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy Plugin Manager" })
+
+  -- ========================================
+  -- Diagnostics
+  -- ========================================
+  if vim.g.diagnostics_hover == nil then
+    vim.g.diagnostics_hover = true
+  end
+  map("n", "<leader>cH", function()
+    vim.g.diagnostics_hover = not vim.g.diagnostics_hover
+    vim.notify("Diagnostics hover " .. (vim.g.diagnostics_hover and "enabled" or "disabled"), vim.log.levels.INFO)
+  end, { desc = "Toggle diagnostics hover popup" })
 
   -- ========================================
   -- General Improvements (LazyVim style)
