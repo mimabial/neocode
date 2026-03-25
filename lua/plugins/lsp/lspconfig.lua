@@ -341,10 +341,7 @@ return {
       })
 
       -- Note: Diagnostic configuration is in config/autocmds.lua
-
-      vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "single" })
-      vim.lsp.handlers["textDocument/signatureHelp"] =
-        vim.lsp.with(vim.lsp.handlers.signature_help, { border = "single" })
+      -- Note: Hover border configured in config/keymaps.lua (K mapping)
     end,
   },
 

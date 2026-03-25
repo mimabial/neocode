@@ -3,47 +3,14 @@ return {
   event = "VeryLazy",
   dependencies = { "nvim-tree/nvim-web-devicons" },
 
-  -- Pass options to setup
   opts = {
-    position = "bottom",
-    height = 10,
-    width = 50,
-    use_icons = true,
-    mode = "workspace_diagnostics",
-    fold_open = "v",
-    fold_closed = ">",
-    group = true,
-    padding = true,
-    action_keys = {
-      close = "q",
-      cancel = "<esc>",
-      refresh = "r",
-      jump = { "<cr>", "<tab>" },
-      open_split = { "<c-x>" },
-      open_vsplit = { "<c-v>" },
-      open_tab = { "<c-t>" },
-      jump_close = { "o" },
-      toggle_mode = "m",
-      toggle_preview = "P",
-      hover = "K",
-      preview = "p",
-      close_folds = { "zM", "zm" },
-      open_folds = { "zR", "zr" },
-      toggle_fold = { "zA", "za" },
-      previous = "k",
-      next = "j",
-    },
-    indent_lines = true,
-    auto_open = false,
     auto_close = false,
     auto_preview = true,
-    auto_fold = false,
-    auto_jump = { "lsp_definitions" },
-    signs = { error = "", warning = "", hint = "", information = "" },
-    use_diagnostic_signs = false,
-    win_config = {
+    focus = true,
+    win = {
+      position = "bottom",
+      size = { height = 10 },
       border = "single",
-      persist = false, -- Keep trouble window open
     },
   },
   config = function(_, opts)
@@ -104,8 +71,7 @@ return {
       function()
         local trou = require("trouble")
         if trou.is_open() then
-          ---@diagnostic disable-next-line
-          trou.previous({ skip_groups = true, jump = true })
+          trou.prev({ skip_groups = true, jump = true })
         else
           vim.cmd.cprev()
         end
@@ -117,7 +83,6 @@ return {
       function()
         local trou = require("trouble")
         if trou.is_open() then
-          ---@diagnostic disable-next-line
           trou.next({ skip_groups = true, jump = true })
         else
           vim.cmd.cnext()

@@ -220,7 +220,7 @@ end
 
 -- Get current color mode from staterc
 function M.get_color_mode()
-  local mode = read_staterc("enableWallDcol")
+  local mode = read_staterc("selected_color_mode") or read_staterc("enableWallDcol")
   return tonumber(mode) or 0
 end
 
@@ -379,7 +379,7 @@ function M.setup_focus_sync(themes)
   -- Track modification times
   local mtimes = {}
   for _, file in ipairs(watch_files) do
-    local stat = vim.loop.fs_stat(file)
+    local stat = vim.uv.fs_stat(file)
     if stat then
       mtimes[file] = stat.mtime.sec
     end
@@ -389,7 +389,7 @@ function M.setup_focus_sync(themes)
   local function check_for_changes()
     local changed = false
     for _, file in ipairs(watch_files) do
-      local stat = vim.loop.fs_stat(file)
+      local stat = vim.uv.fs_stat(file)
       if stat then
         if mtimes[file] ~= stat.mtime.sec then
           mtimes[file] = stat.mtime.sec
@@ -416,7 +416,7 @@ function M.setup_focus_sync(themes)
   local watchers = {}
   for _, file in ipairs(watch_files) do
     if vim.fn.filereadable(file) == 1 then
-      local watcher = vim.loop.new_fs_event()
+      local watcher = vim.uv.new_fs_event()
       if watcher then
         local ok = pcall(function()
           watcher:start(file, {}, vim.schedule_wrap(function(err, filename, events)

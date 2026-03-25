@@ -28,15 +28,6 @@ end
 function M.sync_terminals()
   local colors = colors_lib.extract_basic()
 
-  -- Debug logging
-  local log = io.open("/tmp/terminal-sync-debug.log", "a")
-  if log then
-    log:write(os.date("%Y-%m-%d %H:%M:%S") .. " - Syncing terminal colors\n")
-    log:write("  FG: " .. colors.fg .. "\n")
-    log:write("  BG: " .. colors.bg .. "\n")
-    log:close()
-  end
-
   -- OSC 10: Set foreground color
   send_osc(10, colors.fg)
 

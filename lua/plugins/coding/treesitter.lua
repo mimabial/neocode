@@ -101,7 +101,7 @@ return {
 
     -- Register filetypes to parsers mapping
     vim.treesitter.language.register('tsx', 'typescriptreact')
-    vim.treesitter.language.register('jsx', 'javascriptreact')
+    vim.treesitter.language.register('javascript', 'javascriptreact')
 
     -- Main TS setup
     require("nvim-treesitter.configs").setup(opts)

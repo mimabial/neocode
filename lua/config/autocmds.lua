@@ -62,7 +62,7 @@ function M.setup()
         focusable = false,
         close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
         border = "single",
-        source = "always",
+        source = true,
         prefix = " ",
         scope = "cursor",
       })
@@ -83,7 +83,8 @@ function M.setup()
     group = num_grp,
     callback = function()
       local ft = vim.bo.filetype
-      if not ft:match("^(oil|terminal|help|lazy|Trouble|trouble|notify)$") then
+      local skip = { oil = true, terminal = true, help = true, lazy = true, Trouble = true, trouble = true, notify = true }
+      if not skip[ft] then
         vim.wo.number = true
         vim.wo.relativenumber = not vim.g.disable_relative_number
       end

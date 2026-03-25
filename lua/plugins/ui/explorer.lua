@@ -127,7 +127,7 @@ return {
         sync_root_with_cwd = true,
         respect_buf_cwd = true,
         log = {
-          enable = true,
+          enable = false,
           truncate = true,
           types = {
             all = false,

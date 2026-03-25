@@ -220,7 +220,7 @@ return {
           if vim.tbl_contains({ "sql", "diff", "gitcommit", "oil", "htmldjango" }, ft) then
             return
           end
-          local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(bufnr))
+          local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(bufnr))
           if ok and stats and stats.size > 1000000 then
             return
           end
@@ -239,7 +239,7 @@ return {
           if vim.tbl_contains({ "sql", "diff", "gitcommit", "oil", "htmldjango" }, ft) then
             return
           end
-          local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(bufnr))
+          local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(bufnr))
           if ok and stats and stats.size > 1000000 then
             return
           end

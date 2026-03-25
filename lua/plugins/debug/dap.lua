@@ -240,7 +240,7 @@ return {
     "mfussenegger/nvim-dap-python",
     {
       "microsoft/vscode-js-debug",
-      opt = true,
+      lazy = true,
       build = function()
         vim.env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
         vim.cmd("!npm install --legacy-peer-deps && npx gulp vsDebugServerBundle && mv dist out")

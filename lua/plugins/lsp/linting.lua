@@ -70,7 +70,7 @@ return {
       end,
     })
 
-    vim.keymap.set("n", "<leader>cl", function()
+    vim.keymap.set("n", "<leader>cL", function()
       lint.try_lint()
       vim.notify("Triggered linting", vim.log.levels.INFO)
     end, { desc = "Trigger linting" })

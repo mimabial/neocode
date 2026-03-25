@@ -382,11 +382,7 @@ return {
               style = "minimal",
             })
 
-            vim.api.nvim_win_set_option(
-              win,
-              "winhighlight",
-              "Normal:StarterHelpNormal,FloatBorder:StarterHelpBorder,FloatTitle:StarterHelpTitle"
-            )
+            vim.wo[win].winhighlight = "Normal:StarterHelpNormal,FloatBorder:StarterHelpBorder,FloatTitle:StarterHelpTitle"
 
             -- Close on any key
             vim.keymap.set("n", "<CR>", function()

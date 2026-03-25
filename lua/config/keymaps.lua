@@ -22,7 +22,7 @@ function M.setup()
       map("n", "gt", vim.lsp.buf.type_definition, vim.tbl_extend("force", opts, { desc = "Go to type definition" }))
 
       -- Information
-      map("n", "K", vim.lsp.buf.hover, vim.tbl_extend("force", opts, { desc = "Show hover information" }))
+      map("n", "K", function() vim.lsp.buf.hover({ border = "single" }) end, vim.tbl_extend("force", opts, { desc = "Show hover information" }))
       -- Note: <C-k> signature help handled by lsp_signature.nvim plugin
 
       -- Actions
@@ -46,8 +46,8 @@ function M.setup()
       end
 
       map("n", "<leader>cd", open_diagnostics_float, vim.tbl_extend("force", opts, { desc = "Show diagnostics" }))
-      map("n", "[d", vim.diagnostic.goto_prev, vim.tbl_extend("force", opts, { desc = "Previous diagnostic" }))
-      map("n", "]d", vim.diagnostic.goto_next, vim.tbl_extend("force", opts, { desc = "Next diagnostic" }))
+      map("n", "[d", function() vim.diagnostic.jump({ count = -1 }) end, vim.tbl_extend("force", opts, { desc = "Previous diagnostic" }))
+      map("n", "]d", function() vim.diagnostic.jump({ count = 1 }) end, vim.tbl_extend("force", opts, { desc = "Next diagnostic" }))
       map(
         "n",
         "<leader>cq",

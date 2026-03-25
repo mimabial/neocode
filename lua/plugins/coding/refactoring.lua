@@ -176,7 +176,7 @@ return {
         placeholders = {
           enabled = false, -- Removes all placeholder text
         },
-        extraArgs = "--glob=!.git/*"
+        extraArgs = "--glob=!.git/* "
           .. "--glob=!**/.viminfo* "
           .. "--glob=!**/.zcompdump* "
           .. "--glob=!**/Trash/** "
