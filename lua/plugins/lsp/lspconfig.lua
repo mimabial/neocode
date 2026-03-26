@@ -357,23 +357,4 @@ return {
     dependencies = { "williamboman/mason.nvim" },
     lazy = true,
   },
-
-  -- Inlay hints for older Neovim
-  {
-    "lvimuser/lsp-inlayhints.nvim",
-    event = "LspAttach",
-    enabled = vim.fn.has("nvim-0.10") == 0,
-    opts = {},
-    config = function(_, opts)
-      require("lsp-inlayhints").setup(opts)
-      vim.api.nvim_create_autocmd("LspAttach", {
-        callback = function(args)
-          local client = vim.lsp.get_client_by_id(args.data.client_id)
-          if client and client.server_capabilities.inlayHintProvider then
-            require("lsp-inlayhints").on_attach(client, args.buf)
-          end
-        end,
-      })
-    end,
-  },
 }

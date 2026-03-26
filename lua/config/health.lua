@@ -42,10 +42,31 @@ end
 -- Check LSP health
 M.check_lsp = function()
   local issues = {}
-  local clients = vim.lsp.get_clients()
+  local file_buffers = {}
 
-  if #clients == 0 then
-    table.insert(issues, "⚠️  No LSP clients attached")
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(bufnr) then
+      local bo = vim.bo[bufnr]
+      local name = vim.api.nvim_buf_get_name(bufnr)
+      if bo.buftype == "" and name ~= "" then
+        table.insert(file_buffers, bufnr)
+      end
+    end
+  end
+
+  if #file_buffers == 0 then
+    return issues
+  end
+
+  local attached_buffers = 0
+  for _, bufnr in ipairs(file_buffers) do
+    if #vim.lsp.get_clients({ bufnr = bufnr }) > 0 then
+      attached_buffers = attached_buffers + 1
+    end
+  end
+
+  if attached_buffers == 0 then
+    table.insert(issues, "⚠️  No LSP clients attached to open file buffers")
   end
 
   return issues

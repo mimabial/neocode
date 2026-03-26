@@ -211,7 +211,6 @@ return {
       local util = require("conform.util")
 
       return {
-        log_level = vim.log.levels.DEBUG,
         format_on_save = function(bufnr)
           if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
             return

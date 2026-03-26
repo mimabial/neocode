@@ -50,7 +50,7 @@ return {
       { "onsails/lspkind.nvim" },
       { "L3MON4D3/LuaSnip" },
       { "zbirenbaum/copilot-cmp",   optional = true },
-      { "Exafunction/codeium.nvim", optional = true },
+      { "Exafunction/windsurf.nvim", optional = true },
     },
 
     config = function()

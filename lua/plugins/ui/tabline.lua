@@ -54,7 +54,6 @@ return {
     },
   },
   config = function(_, opts)
-    require("mini.icons").setup()
     require("bufferline").setup(opts)
 
     -- Refresh bufferline on colorscheme change

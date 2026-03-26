@@ -139,20 +139,12 @@ return {
         term:toggle()
       end, { desc = term_opts.desc or ("Toggle " .. name) })
 
-      -- Create keymap if provided
-      if opts and opts.keymap then
-        vim.keymap.set("n", opts.keymap, function()
-          term:toggle()
-        end, { desc = term_opts.desc or ("Toggle " .. name) })
-      end
-
       return term
     end
 
     -- Generic terminals
     create_term_cmd("FloatTerm", vim.o.shell, {
       display_name = "Shell",
-      keymap = "<leader>tf",
     })
 
     -- Note: LazyGit keybinding (<leader>gg) is defined in plugins/git/lazygit.lua

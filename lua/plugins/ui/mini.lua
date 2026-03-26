@@ -177,6 +177,21 @@ return {
       local starter = require("mini.starter")
       starter.setup(opts)
 
+      local function get_section_starts()
+        local items = starter.config.items or opts.items or {}
+        local starts = {}
+        local previous_section = nil
+
+        for idx, item in ipairs(items) do
+          if item.section ~= previous_section then
+            table.insert(starts, idx)
+            previous_section = item.section
+          end
+        end
+
+        return starts
+      end
+
       -- Create :Starter command and <leader>d mapping
       vim.api.nvim_create_user_command("Starter", function()
         starter.open()
@@ -219,17 +234,12 @@ return {
 
           -- Page navigation (section-based)
           vim.keymap.set("n", "<C-f>", function()
-            -- Jump to next section based on known section boundaries
-            -- Telescope: 1-7, Files: 8-10, Sessions: 11-12, Git: 13-15, System: 16-19
-            local section_starts = { 1, 8, 11, 13, 16 }
-
-            -- Get current item index (Mini.starter uses 1-based indexing)
+            local section_starts = get_section_starts()
             local current_idx = vim.b.ministarter_current or 1
 
             -- Find next section start
             for _, start_idx in ipairs(section_starts) do
               if start_idx > current_idx then
-                -- Jump to this section start
                 local jumps = start_idx - current_idx
                 for _ = 1, jumps do
                   starter.update_current_item("next")
@@ -243,10 +253,7 @@ return {
           end, { buffer = true, desc = "Next section" })
 
           vim.keymap.set("n", "<C-b>", function()
-            -- Jump to previous section based on known section boundaries
-            local section_starts = { 1, 8, 11, 13, 16 }
-
-            -- Get current item index
+            local section_starts = get_section_starts()
             local current_idx = vim.b.ministarter_current or 1
 
             -- Find previous section start

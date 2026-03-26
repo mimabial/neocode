@@ -64,6 +64,32 @@ function M.load_themes()
   return themes
 end
 
+local function theme_supports_variant(theme)
+  return theme and theme.variants and #theme.variants > 0
+end
+
+local function variant_is_valid(theme, variant)
+  if not theme_supports_variant(theme) or not variant or variant == "" then
+    return false
+  end
+
+  for _, candidate in ipairs(theme.variants) do
+    if candidate == variant then
+      return true
+    end
+  end
+
+  return false
+end
+
+local function sanitize_variant(theme, variant)
+  if variant_is_valid(theme, variant) then
+    return variant
+  end
+
+  return nil
+end
+
 -- Apply a theme
 -- @param theme_name string - Theme name
 -- @param variant string|nil - Variant name (optional)
@@ -75,6 +101,8 @@ function M.apply_theme(theme_name, variant, themes, background)
     vim.notify("Theme '" .. theme_name .. "' not found", vim.log.levels.ERROR)
     return false
   end
+
+  variant = sanitize_variant(theme, variant)
 
   -- Don't default background here - let themes handle nil
   -- They can derive from variant or use vim.o.background as fallback
@@ -149,6 +177,11 @@ function M.apply_theme(theme_name, variant, themes, background)
     variant = actual_variant,
     background = vim.o.background or "dark",
   })
+
+  local sync_ok, terminal_sync = pcall(require, "config.terminal_sync")
+  if sync_ok and type(terminal_sync.sync_terminals) == "function" then
+    pcall(terminal_sync.sync_terminals)
+  end
 
   return true
 end
@@ -296,14 +329,9 @@ function M.apply_system_theme(themes)
       background = sys_background or "dark"
     end
 
-    -- If no NVIM_SCHEME, fall back to pywal; otherwise use saved theme
-    if not conf_scheme then
-      scheme = "pywal"
-      variant = nil
-    else
-      scheme = settings.theme
-      variant = settings.variant
-    end
+    -- Wallpaper modes always use the generated pywal palette.
+    scheme = "pywal"
+    variant = nil
   end
 
   -- Validate scheme - if not found in themes, return false for fallback
@@ -365,7 +393,20 @@ function M.update_hyprland_config(theme_name, variant)
   )
 end
 
--- Setup theme sync (file watchers only)
+local function read_watch_snapshot(file)
+  if vim.fn.filereadable(file) ~= 1 then
+    return "__missing__"
+  end
+
+  local ok, content = pcall(vim.fn.readfile, file)
+  if not ok then
+    return "__unreadable__"
+  end
+
+  return table.concat(content, "\n")
+end
+
+-- Setup theme sync (directory watchers + focus repair)
 function M.setup_focus_sync(themes)
   local group = vim.api.nvim_create_augroup("ThemeSync", { clear = true })
 
@@ -376,25 +417,20 @@ function M.setup_focus_sync(themes)
     M.auto_theme_state,
   }
 
-  -- Track modification times
-  local mtimes = {}
+  -- Track exact file snapshots so same-second writes and atomic replaces are detected.
+  local snapshots = {}
   for _, file in ipairs(watch_files) do
-    local stat = vim.uv.fs_stat(file)
-    if stat then
-      mtimes[file] = stat.mtime.sec
-    end
+    snapshots[file] = read_watch_snapshot(file)
   end
 
   -- Check if any watched file changed
   local function check_for_changes()
     local changed = false
     for _, file in ipairs(watch_files) do
-      local stat = vim.uv.fs_stat(file)
-      if stat then
-        if mtimes[file] ~= stat.mtime.sec then
-          mtimes[file] = stat.mtime.sec
-          changed = true
-        end
+      local snapshot = read_watch_snapshot(file)
+      if snapshots[file] ~= snapshot then
+        snapshots[file] = snapshot
+        changed = true
       end
     end
     return changed
@@ -412,28 +448,53 @@ function M.setup_focus_sync(themes)
     end
   end
 
-  -- Method 1: File watcher using libuv (real-time updates)
+  local sync_pending = false
+  local function request_sync()
+    if sync_pending then
+      return
+    end
+
+    sync_pending = true
+    vim.schedule(function()
+      sync_pending = false
+      sync_theme()
+    end)
+  end
+
+  -- Watch parent directories so atomic file replacement still produces events.
   local watchers = {}
+  local watch_dirs = {}
   for _, file in ipairs(watch_files) do
-    if vim.fn.filereadable(file) == 1 then
-      local watcher = vim.uv.new_fs_event()
-      if watcher then
-        local ok = pcall(function()
-          watcher:start(file, {}, vim.schedule_wrap(function(err, filename, events)
-            if not err then
-              sync_theme()
-            end
-          end))
-        end)
-        if ok then
-          table.insert(watchers, watcher)
-        end
+    local dir = vim.fs.dirname(file)
+    if dir and vim.fn.isdirectory(dir) == 1 then
+      watch_dirs[dir] = true
+    end
+  end
+
+  for dir, _ in pairs(watch_dirs) do
+    local watcher = vim.uv.new_fs_event()
+    if watcher then
+      local ok = pcall(function()
+        watcher:start(dir, {}, vim.schedule_wrap(function(err)
+          if not err then
+            request_sync()
+          end
+        end))
+      end)
+      if ok then
+        table.insert(watchers, watcher)
       end
     end
   end
 
   -- Store watchers to prevent garbage collection
   M._file_watchers = watchers
+
+  vim.api.nvim_create_autocmd("FocusGained", {
+    group = group,
+    callback = request_sync,
+    desc = "Repair theme sync after focus returns",
+  })
 
   -- Cleanup on exit
   vim.api.nvim_create_autocmd("VimLeavePre", {
@@ -444,15 +505,26 @@ function M.setup_focus_sync(themes)
           pcall(function() w:stop() end)
         end
       end
-      if M._sync_timer then
-        pcall(function() M._sync_timer:stop() end)
-      end
     end,
   })
 end
 
 -- Register user commands
 function M.register_commands(themes)
+  local function notify_available_themes()
+    local available = {}
+    for name, theme in pairs(themes) do
+      local icon = theme.icon or ""
+      local variant_info = theme.variants and #theme.variants > 0
+        and (" - variants: " .. table.concat(theme.variants, ", "))
+        or ""
+      table.insert(available, icon .. " " .. name .. variant_info)
+    end
+    table.sort(available)
+
+    vim.notify("Available themes:\n" .. table.concat(available, "\n"), vim.log.levels.INFO)
+  end
+
   vim.api.nvim_create_user_command("Theme", function(opts)
     local theme_name = opts.args
     if theme_name == "" then
@@ -489,9 +561,18 @@ function M.register_commands(themes)
   vim.api.nvim_create_user_command("SystemSetTheme", function(opts)
     local theme_name = opts.args ~= "" and opts.args or M.load_settings().theme
     local settings = M.load_settings()
+    local theme = themes[theme_name]
 
-    M.update_hyprland_config(theme_name, settings.variant)
-    M.apply_theme(theme_name, settings.variant, themes, settings.background)
+    if not theme then
+      vim.notify("Theme not found: " .. theme_name, vim.log.levels.ERROR)
+      return
+    end
+
+    local requested_variant = sanitize_variant(theme, settings.variant)
+    if M.apply_theme(theme_name, requested_variant, themes, settings.background) then
+      local applied = M.load_settings()
+      M.update_hyprland_config(applied.theme, applied.variant)
+    end
   end, {
     nargs = "?",
     complete = function()
@@ -500,19 +581,9 @@ function M.register_commands(themes)
     desc = "Set system theme in Hyprland config",
   })
 
-  vim.api.nvim_create_user_command("ThemeList", function()
-    local available = {}
-    for name, theme in pairs(themes) do
-      local icon = theme.icon or ""
-      local variant_info = theme.variants and #theme.variants > 0
-        and (" - variants: " .. table.concat(theme.variants, ", "))
-        or ""
-      table.insert(available, icon .. " " .. name .. variant_info)
-    end
-    table.sort(available)
-
-    vim.notify("Available themes:\n" .. table.concat(available, "\n"), vim.log.levels.INFO)
-  end, { desc = "List all available themes" })
+  vim.api.nvim_create_user_command("ThemeList", notify_available_themes, {
+    desc = "List all available themes",
+  })
 
   -- Cycle through color schemes
   vim.api.nvim_create_user_command("CycleColorScheme", function()
@@ -726,19 +797,9 @@ function M.register_commands(themes)
     end
   end, { desc = "Detect system theme" })
 
-  vim.api.nvim_create_user_command("SystemListThemes", function()
-    local available = {}
-    for name, theme in pairs(themes) do
-      local icon = theme.icon or ""
-      local variant_info = theme.variants and #theme.variants > 0
-        and (" - variants: " .. table.concat(theme.variants, ", "))
-        or ""
-      table.insert(available, icon .. " " .. name .. variant_info)
-    end
-    table.sort(available)
-
-    vim.notify("Available themes:\n" .. table.concat(available, "\n"), vim.log.levels.INFO)
-  end, { desc = "List available themes for system" })
+  vim.api.nvim_create_user_command("SystemListThemes", notify_available_themes, {
+    desc = "List available themes for system",
+  })
 end
 
 return M

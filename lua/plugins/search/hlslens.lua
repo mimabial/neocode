@@ -11,6 +11,7 @@ return {
   },
   config = function()
     local hlslens = require("hlslens")
+    local colors_lib = require("lib.colors")
 
     hlslens.setup({
       calm_down = true,
@@ -40,14 +41,33 @@ return {
     map("n", "g#", "g#<Cmd>lua require('hlslens').start()<CR>", opts)
     map("n", "<Esc>", "<Cmd>noh<CR><Esc>", opts)
 
+    local function set_hlslens_highlights()
+      local colors = colors_lib.extract_all()
+
+      vim.api.nvim_set_hl(0, "HlSearchNear", {
+        bg = colors.select_bg,
+        fg = colors.select_fg,
+        bold = true,
+      })
+      vim.api.nvim_set_hl(0, "HlSearchLens", {
+        fg = colors.blue,
+        bold = true,
+      })
+      vim.api.nvim_set_hl(0, "HlSearchLensNear", {
+        bg = colors.select_bg,
+        fg = colors.select_fg,
+        bold = true,
+      })
+      vim.api.nvim_set_hl(0, "HlSearchFloat", {
+        bg = colors.popup_bg,
+        fg = colors.yellow,
+      })
+    end
+
+    set_hlslens_highlights()
+
     vim.api.nvim_create_autocmd("ColorScheme", {
-      callback = function()
-        if vim.g.colors_name == "gruvbox-material" then
-          vim.api.nvim_set_hl(0, "HlSearchNear", { bg = "#4e3e43", fg = "#d8a657", bold = true })
-          vim.api.nvim_set_hl(0, "HlSearchLens", { fg = "#7daea3", bold = true })
-          vim.api.nvim_set_hl(0, "HlSearchFloat", { bg = "#32302f", fg = "#d8a657" })
-        end
-      end,
+      callback = set_hlslens_highlights,
     })
   end,
 }
