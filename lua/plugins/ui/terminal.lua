@@ -86,10 +86,6 @@ return {
       local map_opts = { buffer = buf, noremap = true, silent = true }
       vim.keymap.set("t", "<esc>", [[<C-\><C-n>]], map_opts)
       vim.keymap.set("t", "jk", [[<C-\><C-n>]], map_opts)
-      vim.keymap.set("t", "<C-h>", [[<Cmd>wincmd h<CR>]], map_opts)
-      vim.keymap.set("t", "<C-j>", [[<Cmd>wincmd j<CR>]], map_opts)
-      vim.keymap.set("t", "<C-k>", [[<Cmd>wincmd k<CR>]], map_opts)
-      vim.keymap.set("t", "<C-l>", [[<Cmd>wincmd l<CR>]], map_opts)
       vim.keymap.set("t", "<C-w>", [[<C-\><C-n><C-w>]], map_opts)
 
       -- Normal mode mapping for q to close

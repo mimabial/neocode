@@ -45,6 +45,9 @@ return {
         max_height = 40,
       },
       keymaps = {
+        ["<C-h>"] = false,
+        ["<C-l>"] = false,
+
         ["g?"] = "actions.show_help",
         ["<CR>"] = "actions.select",
         ["<C-v>"] = "actions.select_vsplit",
@@ -52,10 +55,8 @@ return {
         ["<C-t>"] = "actions.select_tab",
         ["<C-p>"] = "actions.preview",
         ["<C-r>"] = "actions.refresh",
-
         ["<C-c>"] = "actions.close",
         ["q"] = "actions.close",
-
         ["-"] = "actions.parent",
         ["_"] = "actions.open_cwd",
         ["`"] = "actions.cd",

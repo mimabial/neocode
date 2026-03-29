@@ -34,18 +34,6 @@ return {
       })
 
       -- Keymaps
-      vim.keymap.set({ "i", "s" }, "<C-l>", function()
-        if luasnip.expand_or_jumpable() then
-          luasnip.expand_or_jump()
-        end
-      end, { desc = "Expand or jump snippet" })
-
-      vim.keymap.set({ "i", "s" }, "<C-h>", function()
-        if luasnip.jumpable(-1) then
-          luasnip.jump(-1)
-        end
-      end, { desc = "Jump back in snippet" })
-
       vim.keymap.set("i", "<C-k>", function()
         if luasnip.choice_active() then
           luasnip.change_choice(1)

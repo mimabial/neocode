@@ -23,7 +23,10 @@ return {
         if settings.background then
           vim.o.background = settings.background
         end
-        manager.apply_theme(settings.theme, settings.variant, themes, settings.background)
+        manager.apply_theme(settings.theme, settings.variant, themes, {
+          background = settings.background,
+          transparency = settings.transparency,
+        })
       end
 
       -- Setup theme sync via file watchers
