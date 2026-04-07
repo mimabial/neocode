@@ -14,7 +14,7 @@ return {
 
       local function on_attach(client, bufnr)
         -- Enable inlay hints if supported
-        if vim.fn.has("nvim-0.10") == 1 and client.server_capabilities.inlayHintProvider then
+        if client.server_capabilities.inlayHintProvider then
           vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
         end
       end
@@ -64,7 +64,6 @@ return {
       -- Always add these (work without specific runtime)
       vim.list_extend(ensure_installed, { "taplo", "lemminx" })
 
-      local is_nvim_0_11 = vim.fn.has("nvim-0.11") == 1
       local tailwind_filetypes = {
         "html",
         "css",
@@ -84,34 +83,9 @@ return {
         "tailwind.config.ts",
       }
 
-      local function tailwind_root_dir_legacy(fname)
-        local root_pattern = require("lspconfig").util.root_pattern(unpack(tailwind_root_files))
-        return root_pattern(fname)
-      end
-
-      local function tailwind_root_dir(bufnr, on_dir)
-        local fname = vim.api.nvim_buf_get_name(bufnr)
-        if fname == "" then
-          on_dir(nil)
-          return
-        end
-
+      local function tailwind_root_dir(fname)
         local root = vim.fs.find(tailwind_root_files, { path = fname, upward = true })[1]
-        if root then
-          on_dir(vim.fs.dirname(root))
-        else
-          on_dir(nil)
-        end
-      end
-
-      if is_nvim_0_11 then
-        vim.lsp.config("tailwindcss", {
-          capabilities = capabilities,
-          on_attach = on_attach,
-          filetypes = tailwind_filetypes,
-          root_dir = tailwind_root_dir,
-          workspace_required = true,
-        })
+        return root and vim.fs.dirname(root) or nil
       end
 
       require("mason-lspconfig").setup({
@@ -313,7 +287,7 @@ return {
               on_attach = on_attach,
               filetypes = tailwind_filetypes,
               -- Only activate if a tailwind config file is found
-              root_dir = tailwind_root_dir_legacy,
+              root_dir = tailwind_root_dir,
               -- Prevent attaching to standalone CSS files outside Tailwind projects.
               single_file_support = false,
             })

@@ -172,7 +172,7 @@ return {
       {
         "<leader>cf",
         function()
-          require("conform").format({ async = true, lsp_fallback = true })
+          require("conform").format({ async = true, lsp_format = "fallback" })
         end,
         mode = { "n", "v" },
         desc = "Format buffer",
@@ -227,7 +227,7 @@ return {
           if vim.api.nvim_buf_line_count(bufnr) > 1000 then
             return
           end
-          return { timeout_ms = 1000, lsp_fallback = true, quiet = false }
+          return { timeout_ms = 1000, lsp_format = "fallback", quiet = false }
         end,
         -- Asynchronous format after save for larger files
         format_after_save = function(bufnr)
@@ -244,7 +244,7 @@ return {
           end
           -- Only format large files (>1000 lines) asynchronously after save
           if vim.api.nvim_buf_line_count(bufnr) > 1000 then
-            return { lsp_fallback = true, quiet = false }
+            return { lsp_format = "fallback", quiet = false }
           end
         end,
         formatters_by_ft = {
@@ -442,7 +442,7 @@ return {
               ["end"] = { args.line2, 999999 },
             }
           or nil
-        conform.format({ async = true, lsp_fallback = true, range = range })
+        conform.format({ async = true, lsp_format = "fallback", range = range })
       end, { range = true, desc = "Format buffer or range" })
 
       vim.api.nvim_create_user_command("FormatWith", function(args)

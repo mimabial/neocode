@@ -128,11 +128,16 @@ function M.setup()
   -- Vertical scroll and center
   map("n", "<C-d>", "<C-d>zz", { desc = "Scroll down (centered)" })
   map("n", "<C-u>", "<C-u>zz", { desc = "Scroll up (centered)" })
+  map("n", "<C-f>", "<C-f>zz", { desc = "Page down (centered)" })
+  map("n", "<C-b>", "<C-b>zz", { desc = "Page up (centered)" })
 
   -- Keep cursor centered when joining lines or searching
   map("n", "J", "mzJ`z", { desc = "Join lines (keep cursor)" })
   map("n", "n", "nzzzv", { desc = "Next search result (centered)" })
   map("n", "N", "Nzzzv", { desc = "Previous search result (centered)" })
+  map("n", "*", "*zzzv", { desc = "Search word forward (centered)" })
+  map("n", "#", "#zzzv", { desc = "Search word backward (centered)" })
+  map("n", "%", "%zz", { desc = "Match pair (centered)" })
 
   -- ========================================
   -- Navigation

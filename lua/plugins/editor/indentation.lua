@@ -27,6 +27,16 @@ return {
 
       -- Now setup rainbow delimiters with the highlights
       vim.g.rainbow_delimiters = {
+        condition = function(bufnr)
+          local bt = vim.bo[bufnr].buftype
+          local ft = vim.bo[bufnr].filetype
+
+          if bt == "terminal" or bt == "nofile" or bt == "quickfix" or bt == "prompt" then
+            return false
+          end
+
+          return ft ~= "notify" and ft ~= "noice"
+        end,
         strategy = {
           [""] = rainbow_delimiters.strategy.global,
           vim = rainbow_delimiters.strategy["local"],

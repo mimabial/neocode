@@ -11,7 +11,7 @@ function M.setup()
   opt.relativenumber = true -- Show relative line numbers
   opt.numberwidth = 4 -- Set number column width to 2
   opt.cursorline = true -- Highlight current line
-  opt.termguicolors = true -- True color support
+  opt.termguicolors = true -- Required by nvim-colorizer (default since 0.10, but plugin checks explicitly)
   opt.background = "dark" -- Dark background
   opt.signcolumn = "yes:1" -- Always show sign column with fixed width
   opt.showtabline = 2 -- Show tab line if there are at least two tabs

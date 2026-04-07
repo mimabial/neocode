@@ -10,11 +10,6 @@ vim.g.default_picker = "telescope"  -- Used by plugins to determine picker prefe
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
--- Version check
-if vim.fn.has("nvim-0.8") == 0 then
-  error("Neovim 0.8+ required for this configuration")
-end
-
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if vim.fn.isdirectory(lazypath) == 0 then
