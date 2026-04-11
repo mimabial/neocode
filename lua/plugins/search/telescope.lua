@@ -17,6 +17,14 @@
 --   <leader>fk  → Keymaps
 --   q: / q? / q/ → Command/search history (replaces command-line window)
 
+local telescope_layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
+
+local function save_telescope_layout(layout)
+  local data = vim.fn.json_encode({ layout = layout })
+  vim.fn.mkdir(vim.fn.fnamemodify(telescope_layout_file, ":h"), "p")
+  vim.fn.writefile({ data }, telescope_layout_file)
+end
+
 return {
   "nvim-telescope/telescope.nvim",
   dependencies = {
@@ -31,12 +39,11 @@ return {
     local builtin = require("telescope.builtin")
 
     -- Load saved layout preference or use default
-    local layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
     local layout_data = { layout = "ivory" }
 
     -- Try to read saved layout
-    if vim.fn.filereadable(layout_file) == 1 then
-      local file_content = vim.fn.readfile(layout_file)
+    if vim.fn.filereadable(telescope_layout_file) == 1 then
+      local file_content = vim.fn.readfile(telescope_layout_file)
       if file_content and #file_content > 0 then
         local ok, data = pcall(vim.fn.json_decode, file_content[1])
         if ok and data and data.layout then
@@ -45,21 +52,15 @@ return {
       end
     end
 
-    local function save_layout(layout)
-      local data = vim.fn.json_encode({ layout = layout })
-      vim.fn.mkdir(vim.fn.fnamemodify(layout_file, ":h"), "p")
-      vim.fn.writefile({ data }, layout_file)
-    end
-
     vim.g.telescope_layout = layout_data.layout
 
     local max_columns = vim.o.columns
     if max_columns < 120 and vim.g.telescope_layout ~= "ebony" then
       vim.g.telescope_layout = "ebony"
-      save_layout("ebony")
+      save_telescope_layout("ebony")
     elseif max_columns >= 120 and vim.g.telescope_layout ~= "ivory" then
       vim.g.telescope_layout = "ivory"
-      save_layout("ivory")
+      save_telescope_layout("ivory")
     end
 
     -- Define border styles
@@ -91,11 +92,8 @@ return {
           local config = require("telescope.config")
           config.values.layout_strategy = layout
           config.values.borderchars = vim.g.telescope_borders[layout]
-          config.values.layout_config[layout] = config.values.layout_config[layout] -- Ensure layout_config exists
 
-          -- Save preference
-          local data = vim.fn.json_encode({ layout = layout })
-          vim.fn.writefile({ data }, vim.fn.stdpath("data") .. "/telescope_layout.json")
+          save_telescope_layout(layout)
 
           vim.notify("Telescope: " .. layout)
         end,
@@ -451,11 +449,7 @@ return {
           config.values.layout_strategy = target_layout
           config.values.borderchars = vim.g.telescope_borders[target_layout]
 
-          -- Save preference
-          local layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
-          local data = vim.fn.json_encode({ layout = target_layout })
-          vim.fn.mkdir(vim.fn.fnamemodify(layout_file, ":h"), "p")
-          vim.fn.writefile({ data }, layout_file)
+          save_telescope_layout(target_layout)
 
           vim.notify("Telescope auto-switched to " .. target_layout .. " layout", vim.log.levels.INFO)
         end
@@ -466,11 +460,8 @@ return {
     vim.api.nvim_create_user_command("TelescopeToggleLayout", function()
       vim.g.telescope_layout = (vim.g.telescope_layout == "ivory") and "ebony" or "ivory"
       local layout = vim.g.telescope_layout
-      local layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
-      local data = vim.fn.json_encode({ layout = layout })
-      vim.fn.mkdir(vim.fn.fnamemodify(layout_file, ":h"), "p")
-      vim.fn.writefile({ data }, layout_file)
-      vim.notify("Telescope layout: " .. (layout == "ivory" and "ivory" or "ebony") .. " (saved)")
+      save_telescope_layout(layout)
+      vim.notify("Telescope layout: " .. layout .. " (saved)")
     end, {})
 
     -- Enhanced preview settings

@@ -168,7 +168,7 @@ local function setup_dap()
         webRoot = "${workspaceFolder}",
         sourceMaps = true,
         userDataDir = false,
-        runtimeExecutable = "/usr/bin/google-chrome-stable", -- Adjust path as needed
+        runtimeExecutable = vim.fn.exepath("google-chrome-stable"),
       },
       -- Debug Jest tests
       {

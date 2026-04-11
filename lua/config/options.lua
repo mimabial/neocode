@@ -9,7 +9,7 @@ function M.setup()
   -- Basic UI
   opt.number = true -- Show absolute line numbers
   opt.relativenumber = true -- Show relative line numbers
-  opt.numberwidth = 4 -- Set number column width to 2
+  opt.numberwidth = 4 -- Set number column width to 4
   opt.cursorline = true -- Highlight current line
   opt.termguicolors = true -- Required by nvim-colorizer (default since 0.10, but plugin checks explicitly)
   opt.background = "dark" -- Dark background
@@ -123,6 +123,14 @@ function M.setup()
   opt.foldlevelstart = 99
   opt.foldenable = true
   opt.fillchars = { eob = " " } -- Hide end-of-buffer tildes
+
+  -- Start a listen server so external tools (theme sync) can send commands
+  if not vim.g.started_server and vim.fn.serverlist()[1] == nil then
+    local runtime_dir = vim.env.XDG_RUNTIME_DIR or ("/run/user/" .. vim.uv.getuid())
+    local socket = runtime_dir .. "/nvim." .. vim.fn.getpid() .. ".0"
+    pcall(vim.fn.serverstart, socket)
+    vim.g.started_server = true
+  end
 end
 
 return M

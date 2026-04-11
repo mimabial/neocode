@@ -49,11 +49,7 @@ return {
       end,
     },
     init = function()
-      -- Add failsafe initialization to prevent startup errors
       vim.o.foldcolumn = "0"
-      vim.o.foldlevel = 99
-      vim.o.foldlevelstart = 99
-      vim.o.foldenable = true
     end,
     config = function(_, opts)
       -- Safer configuration with error handling

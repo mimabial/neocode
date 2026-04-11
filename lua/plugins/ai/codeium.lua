@@ -10,7 +10,7 @@ return {
 
     -- Disable Codeium in special buffers
     vim.api.nvim_create_autocmd("FileType", {
-      pattern = { "spectre_panel", "TelescopePrompt", "oil" },
+      pattern = { "TelescopePrompt", "oil" },
       callback = function()
         vim.b.codeium_enabled = false
       end,

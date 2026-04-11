@@ -6,13 +6,6 @@ local i = ls.insert_node
 local f = ls.function_node
 
 local snippets = {
-  -- Next.js API handler
-  s("napi", {
-    t({"export async function GET(request: Request) {", "  "}),
-    i(1, "// Handle GET request"),
-    t({"", "  return Response.json({ message: 'Hello from API route!' });", "}", ""}),
-  }),
-  
   -- Next.js API handler with multiple HTTP methods
   s("napi-methods", {
     t({"export async function GET(request: Request) {", "  "}),

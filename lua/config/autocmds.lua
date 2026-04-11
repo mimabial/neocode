@@ -51,14 +51,11 @@ function M.setup()
         return
       end
       local bufnr = vim.api.nvim_get_current_buf()
-      local existing = vim.b[bufnr].lsp_floating_preview
+      local existing = vim.b[bufnr].diag_float_win
       if existing and vim.api.nvim_win_is_valid(existing) then
-        local ok, val = pcall(vim.api.nvim_win_get_var, existing, "diagnostic")
-        if ok and val == bufnr then
-          return
-        end
+        return
       end
-      vim.diagnostic.open_float(nil, {
+      local _, win = vim.diagnostic.open_float(nil, {
         focusable = false,
         close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
         border = "single",
@@ -66,6 +63,9 @@ function M.setup()
         prefix = " ",
         scope = "cursor",
       })
+      if win then
+        vim.b[bufnr].diag_float_win = win
+      end
     end,
   })
 

@@ -71,8 +71,10 @@ return {
     opts = function()
       -- Helper to make header
       local function header()
+        local hour = tonumber(os.date("%H"))
+        local greeting = hour < 12 and "Good morning" or hour < 18 and "Good afternoon" or "Good evening"
         return table.concat({
-          "Good morning, " .. vim.fn.expand("$USER"),
+          greeting .. ", " .. vim.fn.expand("$USER"),
           "",
         }, "\n")
       end
@@ -176,6 +178,18 @@ return {
     config = function(_, opts)
       local starter = require("mini.starter")
       starter.setup(opts)
+
+      local function set_starter_highlights()
+        local colors = require("config.ui").get_colors()
+        vim.api.nvim_set_hl(0, "MiniStarterHeader", { fg = colors.green, bold = true })
+        vim.api.nvim_set_hl(0, "MiniStarterFooter", { fg = colors.gray, italic = true })
+        vim.api.nvim_set_hl(0, "MiniStarterSection", { fg = colors.yellow, bold = true })
+        vim.api.nvim_set_hl(0, "MiniStarterItemBullet", { fg = colors.blue })
+        vim.api.nvim_set_hl(0, "MiniStarterItemPrefix", { fg = colors.purple })
+        vim.api.nvim_set_hl(0, "MiniStarterItem", { fg = colors.fg })
+        vim.api.nvim_set_hl(0, "MiniStarterCurrent", { fg = colors.orange, bold = true })
+        vim.api.nvim_set_hl(0, "MiniStarterQuery", { fg = colors.red, bold = true })
+      end
 
       local function get_section_starts()
         local items = starter.config.items or opts.items or {}
@@ -415,17 +429,7 @@ return {
           end, { buffer = true, desc = "Show help" })
 
           -- Update highlights based on colorscheme
-          local colors = require("config.ui").get_colors()
-
-          -- Set highlight groups
-          vim.api.nvim_set_hl(0, "MiniStarterHeader", { fg = colors.green, bold = true })
-          vim.api.nvim_set_hl(0, "MiniStarterFooter", { fg = colors.gray, italic = true })
-          vim.api.nvim_set_hl(0, "MiniStarterSection", { fg = colors.yellow, bold = true })
-          vim.api.nvim_set_hl(0, "MiniStarterItemBullet", { fg = colors.blue })
-          vim.api.nvim_set_hl(0, "MiniStarterItemPrefix", { fg = colors.purple })
-          vim.api.nvim_set_hl(0, "MiniStarterItem", { fg = colors.fg })
-          vim.api.nvim_set_hl(0, "MiniStarterCurrent", { fg = colors.orange, bold = true })
-          vim.api.nvim_set_hl(0, "MiniStarterQuery", { fg = colors.red, bold = true })
+          set_starter_highlights()
 
           -- Clean up tabline
           vim.opt_local.showtabline = 0
@@ -454,16 +458,7 @@ return {
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
           if vim.bo.filetype == "starter" then
-            local colors = require("config.ui").get_colors()
-
-            vim.api.nvim_set_hl(0, "MiniStarterHeader", { fg = colors.green, bold = true })
-            vim.api.nvim_set_hl(0, "MiniStarterFooter", { fg = colors.gray, italic = true })
-            vim.api.nvim_set_hl(0, "MiniStarterSection", { fg = colors.yellow, bold = true })
-            vim.api.nvim_set_hl(0, "MiniStarterItemBullet", { fg = colors.blue })
-            vim.api.nvim_set_hl(0, "MiniStarterItemPrefix", { fg = colors.purple })
-            vim.api.nvim_set_hl(0, "MiniStarterItem", { fg = colors.fg })
-            vim.api.nvim_set_hl(0, "MiniStarterCurrent", { fg = colors.orange, bold = true })
-            vim.api.nvim_set_hl(0, "MiniStarterQuery", { fg = colors.red, bold = true })
+            set_starter_highlights()
           end
         end,
       })

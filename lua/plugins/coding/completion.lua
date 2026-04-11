@@ -88,12 +88,11 @@ return {
 
       local cmp_config = {
         enabled = function()
-          local buftype = vim.api.nvim_get_option_value("buftype", { buf = 0 })
-          local filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 })
+          local buftype = vim.bo[0].buftype
+          local filetype = vim.bo[0].filetype
           return filetype ~= "oil"
               and buftype ~= "prompt"
               and filetype ~= "TelescopePrompt"
-              and filetype ~= "spectre_panel"
         end,
         snippet = {
           expand = function(args)

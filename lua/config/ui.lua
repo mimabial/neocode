@@ -61,9 +61,9 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "BufferLineSeparatorVisible", { fg = colors.bg, bg = colors.bg })
 
   -- Icon highlights
-  vim.api.nvim_set_hl(0, "BufferLineIcon", { fg = colors.blue, bg = colors.blue })
-  vim.api.nvim_set_hl(0, "BufferLineIconSelected", { fg = colors.blue, bg = colors.blue })
-  vim.api.nvim_set_hl(0, "BufferLineIconVisible", { fg = colors.blue, bg = colors.blue })
+  vim.api.nvim_set_hl(0, "BufferLineIcon", { fg = colors.blue, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "BufferLineIconSelected", { fg = colors.blue, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "BufferLineIconVisible", { fg = colors.blue, bg = colors.bg })
 
   -- Indicator highlights
   vim.api.nvim_set_hl(0, "BufferLineIndicator", { fg = colors.border, bg = colors.bg })

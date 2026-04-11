@@ -62,7 +62,6 @@ function M.setup()
     if package.loaded["mason"] then
       vim.cmd("MasonUpdate")
     end
-    vim.notify("Updated plugins and Mason packages", vim.log.levels.INFO)
   end, { desc = "Update all plugins and Mason packages" })
 
   vim.api.nvim_create_user_command("PluginCheck", function()

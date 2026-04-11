@@ -38,7 +38,7 @@ return {
       { "<leader>g", group = "Git" },
       { "<leader>go", group = "Git Operations (Octo)" },
       { "<leader>L", group = "Layouts" },
-      { "<leader>n", group = "Notifications" },
+      { "<leader>n", group = "Notifications/Navic" },
       { "<leader>q", group = "Quit" },
       { "<leader>r", group = "Refactoring" },
       { "<leader>s", group = "Search/Replace" },

@@ -200,11 +200,6 @@ function M.apply_theme(theme_name, variant, themes, options)
     transparency = options.transparency,
   })
 
-  local sync_ok, terminal_sync = pcall(require, "config.terminal_sync")
-  if sync_ok and type(terminal_sync.sync_terminals) == "function" then
-    pcall(terminal_sync.sync_terminals)
-  end
-
   return true
 end
 

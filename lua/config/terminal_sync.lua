@@ -72,15 +72,7 @@ end
 function M.setup()
   local group = vim.api.nvim_create_augroup("TerminalSync", { clear = true })
 
-  -- Explicit theme application owns sync timing.
-  -- FocusGained stays as a repair path if another program resets terminal colors.
-  vim.api.nvim_create_autocmd("FocusGained", {
-    group = group,
-    callback = M.sync_terminals,
-    desc = "Sync terminal colors when Neovim gains focus",
-  })
-
-  -- Reset colors on VimLeave (when Neovim exits completely)
+  -- Reset colors on VimLeave in case :TerminalSync was used manually.
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = group,
     callback = M.reset_terminals,

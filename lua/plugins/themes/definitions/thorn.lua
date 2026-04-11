@@ -1,4 +1,5 @@
 return {
+  icon = "",
   variants = { "warm", "cold" },
   setup = function(opts)
     -- Use current vim.o.background if not specified (preserves background when cycling variants)
