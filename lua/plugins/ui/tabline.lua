@@ -5,54 +5,96 @@ return {
     "nvim-tree/nvim-web-devicons",
   },
   version = "*",
-  opts = {
-    options = {
-      mode = "buffers",
-      themable = true,
-      numbers = "none",
-      close_command = "bdelete! %d",
-      right_mouse_command = "bdelete! %d",
-      left_mouse_command = "buffer %d",
-      indicator = {
-        icon = "│",
-        style = "icon",
-      },
-      left_trunc_marker = "",
-      right_trunc_marker = "",
-      max_name_length = 30,
-      diagnostics = "nvim_lsp",
-      diagnostics_update_in_insert = false,
-      diagnostics_indicator = function(count, level)
-        local icon = level:match("error") and "" or ""
-        return " " .. icon .. count
-      end,
-      offsets = {
-        {
-          filetype = "NvimTree",
-          text = "",
-          text_align = "center",
-          separator = true,
+  opts = function()
+    local colors = require("config.ui").get_colors()
+    local ok_tm, theme_manager = pcall(require, "lib.theme_manager")
+    local transparent = ok_tm and theme_manager.load_settings().transparency or false
+    local bar_bg = transparent and "NONE" or colors.bg
+
+    local function hl(fg, extras)
+      local h = { fg = fg, bg = bar_bg }
+      if extras then
+        for k, v in pairs(extras) do h[k] = v end
+      end
+      return h
+    end
+
+    return {
+      options = {
+        mode = "buffers",
+        themable = true,
+        numbers = "none",
+        close_command = "bdelete! %d",
+        right_mouse_command = "bdelete! %d",
+        left_mouse_command = "buffer %d",
+        indicator = {
+          icon = "│",
+          style = "icon",
         },
-        {
-          filetype = "oil",
-          text = "",
-          text_align = "center",
-          separator = true,
+        left_trunc_marker = "",
+        right_trunc_marker = "",
+        max_name_length = 30,
+        diagnostics = "nvim_lsp",
+        diagnostics_update_in_insert = false,
+        diagnostics_indicator = function(count, level)
+          local icon = level:match("error") and "" or ""
+          return " " .. icon .. count
+        end,
+        offsets = {
+          {
+            filetype = "NvimTree",
+            text = "",
+            text_align = "center",
+            separator = true,
+          },
+          {
+            filetype = "oil",
+            text = "",
+            text_align = "center",
+            separator = true,
+          },
+        },
+        show_buffer_icons = false,
+        show_buffer_close_icons = true,
+        show_close_icon = true,
+        show_tab_indicators = true,
+        separator_style = "thin",
+        always_show_bufferline = true,
+        hover = {
+          enabled = true,
+          delay = 200,
+          reveal = { "close" },
         },
       },
-      show_buffer_icons = false,
-      show_buffer_close_icons = true,
-      show_close_icon = true,
-      show_tab_indicators = true,
-      separator_style = "thin",
-      always_show_bufferline = true,
-      hover = {
-        enabled = true,
-        delay = 200,
-        reveal = { "close" },
+      highlights = {
+        fill = hl(colors.fg),
+        background = hl(colors.gray),
+        buffer_visible = hl(colors.fg),
+        buffer_selected = hl(colors.fg, { bold = true }),
+        close_button = hl(colors.gray),
+        close_button_visible = hl(colors.gray),
+        close_button_selected = hl(colors.red),
+        modified = hl(colors.green),
+        modified_visible = hl(colors.green),
+        modified_selected = hl(colors.green),
+        separator = hl(bar_bg),
+        separator_visible = hl(bar_bg),
+        separator_selected = hl(bar_bg),
+        offset_separator = hl(bar_bg),
+        indicator_visible = hl(colors.border),
+        indicator_selected = hl(colors.blue, { underline = true }),
+        tab = hl(colors.fg),
+        tab_selected = hl(colors.fg, { bold = true }),
+        tab_close = hl(colors.red),
+        error = hl(colors.red),
+        error_visible = hl(colors.red),
+        error_selected = hl(colors.red, { bold = true }),
+        warning = hl(colors.yellow),
+        warning_visible = hl(colors.yellow),
+        warning_selected = hl(colors.yellow),
       },
-    },
-  },
+    }
+  end,
   config = function(_, opts)
     require("bufferline").setup(opts)
 
@@ -60,7 +102,8 @@ return {
     vim.api.nvim_create_autocmd("ColorScheme", {
       callback = function()
         vim.schedule(function()
-          require("bufferline").setup(opts)
+          local new_opts = require("plugins.ui.tabline").opts()
+          require("bufferline").setup(new_opts)
         end)
       end,
     })

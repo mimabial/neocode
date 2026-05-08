@@ -18,18 +18,23 @@ M.config = {
 
 local function setup_highlights()
   local colors = colors_lib.extract_all()
+  local ok_tm, theme_manager = pcall(require, "lib.theme_manager")
+  local transparent = ok_tm and theme_manager.load_settings().transparency or false
+  -- Bar chrome (statusline, winbar, bufferline) follows the global transparency flag.
+  -- Floats/popups/tree are intentionally left opaque for readability.
+  local bar_bg = transparent and "NONE" or colors.bg
 
   -- Float window
   vim.api.nvim_set_hl(0, "FloatBorder", { fg = colors.border })
   vim.api.nvim_set_hl(0, "NormalFloat", { bg = colors.bg })
 
   -- Winbar highlights
-  vim.api.nvim_set_hl(0, "WinBar", { bg = colors.bg, fg = colors.fg })
-  vim.api.nvim_set_hl(0, "WinBarNC", { bg = colors.bg, fg = colors.gray })
+  vim.api.nvim_set_hl(0, "WinBar", { bg = bar_bg, fg = colors.fg })
+  vim.api.nvim_set_hl(0, "WinBarNC", { bg = bar_bg, fg = colors.gray })
 
   -- Window separators
-  vim.api.nvim_set_hl(0, "StatusLine", { fg = colors.bg, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "StatusLineNC", { fg = colors.gray, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "StatusLine", { fg = bar_bg, bg = bar_bg })
+  vim.api.nvim_set_hl(0, "StatusLineNC", { fg = colors.gray, bg = bar_bg })
 
   -- Completion menu
   vim.api.nvim_set_hl(0, "CmpNormal", { bg = colors.bg })
@@ -44,39 +49,39 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = colors.green })
 
   -- Bufferline highlights
-  vim.api.nvim_set_hl(0, "BufferLineBackground", { fg = colors.gray, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineBufferSelected", { fg = colors.fg, bg = colors.bg, bold = true })
-  vim.api.nvim_set_hl(0, "BufferLineBufferVisible", { fg = colors.fg, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineModified", { fg = colors.green, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineModifiedSelected", { fg = colors.green, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "BufferLineBackground", { fg = colors.gray, bg = bar_bg })
+  vim.api.nvim_set_hl(0, "BufferLineBufferSelected", { fg = colors.fg, bg = bar_bg, bold = true })
+  vim.api.nvim_set_hl(0, "BufferLineBufferVisible", { fg = colors.fg, bg = bar_bg })
+  vim.api.nvim_set_hl(0, "BufferLineModified", { fg = colors.green, bg = bar_bg })
+  vim.api.nvim_set_hl(0, "BufferLineModifiedSelected", { fg = colors.green, bg = bar_bg })
 
   -- Close button highlights
-  vim.api.nvim_set_hl(0, "BufferLineCloseButton", { fg = colors.gray, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineCloseButtonSelected", { fg = colors.red, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineCloseButtonVisible", { fg = colors.gray, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "BufferLineCloseButton", { fg = colors.gray, bg = bar_bg })
+  vim.api.nvim_set_hl(0, "BufferLineCloseButtonSelected", { fg = colors.red, bg = bar_bg })
+  vim.api.nvim_set_hl(0, "BufferLineCloseButtonVisible", { fg = colors.gray, bg = bar_bg })
 
   -- Separator highlights
-  vim.api.nvim_set_hl(0, "BufferLineSeparator", { fg = colors.bg, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineSeparatorSelected", { fg = colors.bg, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineSeparatorVisible", { fg = colors.bg, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "BufferLineSeparator", { fg = bar_bg, bg = bar_bg })
+  vim.api.nvim_set_hl(0, "BufferLineSeparatorSelected", { fg = bar_bg, bg = bar_bg })
+  vim.api.nvim_set_hl(0, "BufferLineSeparatorVisible", { fg = bar_bg, bg = bar_bg })
 
   -- Icon highlights
-  vim.api.nvim_set_hl(0, "BufferLineIcon", { fg = colors.blue, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineIconSelected", { fg = colors.blue, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineIconVisible", { fg = colors.blue, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "BufferLineIcon", { fg = colors.blue, bg = bar_bg })
+  vim.api.nvim_set_hl(0, "BufferLineIconSelected", { fg = colors.blue, bg = bar_bg })
+  vim.api.nvim_set_hl(0, "BufferLineIconVisible", { fg = colors.blue, bg = bar_bg })
 
   -- Indicator highlights
-  vim.api.nvim_set_hl(0, "BufferLineIndicator", { fg = colors.border, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineIndicatorSelected", { fg = colors.blue, bg = colors.bg, underline = true })
+  vim.api.nvim_set_hl(0, "BufferLineIndicator", { fg = colors.border, bg = bar_bg })
+  vim.api.nvim_set_hl(0, "BufferLineIndicatorSelected", { fg = colors.blue, bg = bar_bg, underline = true })
 
-  vim.api.nvim_set_hl(0, "BufferLineError", { fg = colors.red, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineErrorSelected", { fg = colors.red, bg = colors.bg, bold = true })
-  vim.api.nvim_set_hl(0, "BufferLineWarning", { fg = colors.yellow, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineFill", { fg = colors.fg, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "BufferLineError", { fg = colors.red, bg = bar_bg })
+  vim.api.nvim_set_hl(0, "BufferLineErrorSelected", { fg = colors.red, bg = bar_bg, bold = true })
+  vim.api.nvim_set_hl(0, "BufferLineWarning", { fg = colors.yellow, bg = bar_bg })
+  vim.api.nvim_set_hl(0, "BufferLineFill", { fg = colors.fg, bg = bar_bg })
 
   -- Bufferline offset highlights (for nvim-tree/oil sections)
-  vim.api.nvim_set_hl(0, "BufferLineOffsetSeparator", { fg = colors.bg, bg = colors.bg })
-  vim.api.nvim_set_hl(0, "BufferLineOffset", { fg = colors.fg, bg = colors.bg })
+  vim.api.nvim_set_hl(0, "BufferLineOffsetSeparator", { fg = bar_bg, bg = bar_bg })
+  vim.api.nvim_set_hl(0, "BufferLineOffset", { fg = colors.fg, bg = bar_bg })
 
   -- Floating window highlights
   vim.api.nvim_set_hl(0, "FloatTitle", { fg = colors.red, bg = colors.bg, bold = true })

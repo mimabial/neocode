@@ -19,6 +19,9 @@ return {
 
   opts = function()
     local colors = require("config.ui").get_colors()
+    local ok_tm, theme_manager = pcall(require, "lib.theme_manager")
+    local transparent = ok_tm and theme_manager.load_settings().transparency or false
+    local bar_bg = transparent and "NONE" or colors.bg
 
     local icons = {
       diagnostics = {
@@ -52,52 +55,52 @@ return {
 
     local custom_theme = {
       normal = {
-        a = { bg = colors.bg, fg = colors.green, gui = "bold" },
-        b = { bg = colors.bg, fg = colors.fg },
-        c = { bg = colors.bg, fg = colors.fg },
-        x = { bg = colors.bg, fg = colors.fg },
-        y = { bg = colors.bg, fg = colors.fg },
-        z = { bg = colors.bg, fg = colors.fg },
+        a = { bg = bar_bg, fg = colors.green, gui = "bold" },
+        b = { bg = bar_bg, fg = colors.fg },
+        c = { bg = bar_bg, fg = colors.fg },
+        x = { bg = bar_bg, fg = colors.fg },
+        y = { bg = bar_bg, fg = colors.fg },
+        z = { bg = bar_bg, fg = colors.fg },
       },
       insert = {
-        a = { bg = colors.bg, fg = colors.blue, gui = "bold" },
-        b = { bg = colors.bg, fg = colors.fg },
-        c = { bg = colors.bg, fg = colors.fg },
-        x = { bg = colors.bg, fg = colors.fg },
-        y = { bg = colors.bg, fg = colors.fg },
-        z = { bg = colors.bg, fg = colors.fg },
+        a = { bg = bar_bg, fg = colors.blue, gui = "bold" },
+        b = { bg = bar_bg, fg = colors.fg },
+        c = { bg = bar_bg, fg = colors.fg },
+        x = { bg = bar_bg, fg = colors.fg },
+        y = { bg = bar_bg, fg = colors.fg },
+        z = { bg = bar_bg, fg = colors.fg },
       },
       visual = {
-        a = { bg = colors.bg, fg = colors.purple, gui = "bold" },
-        b = { bg = colors.bg, fg = colors.fg },
-        c = { bg = colors.bg, fg = colors.fg },
-        x = { bg = colors.bg, fg = colors.fg },
-        y = { bg = colors.bg, fg = colors.fg },
-        z = { bg = colors.bg, fg = colors.fg },
+        a = { bg = bar_bg, fg = colors.purple, gui = "bold" },
+        b = { bg = bar_bg, fg = colors.fg },
+        c = { bg = bar_bg, fg = colors.fg },
+        x = { bg = bar_bg, fg = colors.fg },
+        y = { bg = bar_bg, fg = colors.fg },
+        z = { bg = bar_bg, fg = colors.fg },
       },
       command = {
-        a = { bg = colors.bg, fg = colors.orange, gui = "bold" },
-        b = { bg = colors.bg, fg = colors.fg },
-        c = { bg = colors.bg, fg = colors.fg },
-        x = { bg = colors.bg, fg = colors.fg },
-        y = { bg = colors.bg, fg = colors.fg },
-        z = { bg = colors.bg, fg = colors.fg },
+        a = { bg = bar_bg, fg = colors.orange, gui = "bold" },
+        b = { bg = bar_bg, fg = colors.fg },
+        c = { bg = bar_bg, fg = colors.fg },
+        x = { bg = bar_bg, fg = colors.fg },
+        y = { bg = bar_bg, fg = colors.fg },
+        z = { bg = bar_bg, fg = colors.fg },
       },
       terminal = {
-        a = { bg = colors.bg, fg = colors.green, gui = "bold" },
-        b = { bg = colors.bg, fg = colors.fg },
-        c = { bg = colors.bg, fg = colors.fg },
-        x = { bg = colors.bg, fg = colors.fg },
-        y = { bg = colors.bg, fg = colors.fg },
-        z = { bg = colors.bg, fg = colors.fg },
+        a = { bg = bar_bg, fg = colors.green, gui = "bold" },
+        b = { bg = bar_bg, fg = colors.fg },
+        c = { bg = bar_bg, fg = colors.fg },
+        x = { bg = bar_bg, fg = colors.fg },
+        y = { bg = bar_bg, fg = colors.fg },
+        z = { bg = bar_bg, fg = colors.fg },
       },
       inactive = {
-        a = { bg = colors.bg, fg = colors.gray },
-        b = { bg = colors.bg, fg = colors.gray },
-        c = { bg = colors.bg, fg = colors.gray },
-        x = { bg = colors.bg, fg = colors.gray },
-        y = { bg = colors.bg, fg = colors.gray },
-        z = { bg = colors.bg, fg = colors.gray },
+        a = { bg = bar_bg, fg = colors.gray },
+        b = { bg = bar_bg, fg = colors.gray },
+        c = { bg = bar_bg, fg = colors.gray },
+        x = { bg = bar_bg, fg = colors.gray },
+        y = { bg = bar_bg, fg = colors.gray },
+        z = { bg = bar_bg, fg = colors.gray },
       },
     }
 
@@ -116,7 +119,7 @@ return {
     --       return filename
     --       -- end
     --     end,
-    --     color = { bg = colors.bg },
+    --     color = { bg = bar_bg },
     --     cond = function()
     --       return vim.fn.expand("%:t") ~= ""
     --     end,
@@ -131,7 +134,7 @@ return {
           local disp = cwd:sub(1, #home) == home and "~" .. cwd:sub(#home + 1) or cwd
           return "" .. vim.fn.fnamemodify(disp, ":t")
         end,
-        color = { fg = colors.yellow, bg = colors.bg },
+        color = { fg = colors.yellow, bg = bar_bg },
         cond = function()
           return not vim.b.no_root_dir
         end,
@@ -160,7 +163,7 @@ return {
 
           return "" .. names_str
         end,
-        color = { fg = colors.blue, bg = colors.bg },
+        color = { fg = colors.blue, bg = bar_bg },
       }
     end
 
@@ -173,7 +176,7 @@ return {
           end
           return ""
         end,
-        color = { fg = colors.purple, bg = colors.bg }, -- Windsurf green
+        color = { fg = colors.purple, bg = bar_bg }, -- Windsurf green
       }
     end
 
@@ -197,7 +200,7 @@ return {
           end
           return string.format("%.1f%s", size, units[idx])
         end,
-        color = { bg = colors.bg },
+        color = { bg = bar_bg },
       }
     end
 
@@ -205,7 +208,7 @@ return {
       return {
         "encoding",
         fmt = string.upper,
-        color = { fg = colors.green, bg = colors.bg },
+        color = { fg = colors.green, bg = bar_bg },
         cond = function()
           return vim.bo.fileencoding ~= "utf-8"
         end,
@@ -220,7 +223,7 @@ return {
           dos = "",
           mac = "",
         },
-        color = { fg = colors.green, bg = colors.bg },
+        color = { fg = colors.green, bg = bar_bg },
         cond = function()
           return vim.bo.fileformat ~= "unix"
         end,
@@ -243,7 +246,7 @@ return {
             "mode",
             color = function()
               local m = vim.api.nvim_get_mode().mode
-              return { fg = mode_color[m] or colors.blue, bg = colors.bg, gui = "bold" }
+              return { fg = mode_color[m] or colors.blue, bg = bar_bg, gui = "bold" }
             end,
             padding = { left = 1, right = 1 },
           },
@@ -257,7 +260,7 @@ return {
               return package.loaded["lazy.status"] and require("lazy.status").has_updates()
             end,
             color = function()
-              return { fg = colors.fg, bg = colors.bg }
+              return { fg = colors.fg, bg = bar_bg }
             end,
           },
         },
@@ -265,7 +268,7 @@ return {
           {
             "branch",
             icon = "",
-            color = { fg = colors.orange, bg = colors.bg },
+            color = { fg = colors.orange, bg = bar_bg },
           },
         },
         lualine_c = {
@@ -280,7 +283,7 @@ return {
           --     hint = icons.diagnostics.hint,
           --   },
           --   colored = true,
-          --   color = { bg = colors.bg },
+          --   color = { bg = bar_bg },
           -- },
         },
         lualine_x = {
@@ -288,7 +291,7 @@ return {
             "filetype",
             colored = true,
             icons_enabled = false,
-            color = { fg = colors.fg, bg = colors.bg },
+            color = { fg = colors.fg, bg = bar_bg },
           },
           lsp_status(),
         },
@@ -338,8 +341,8 @@ return {
         },
         lualine_z = {
           ai_indicators(),
-          { "progress", color = { fg = colors.fg, bg = colors.bg } },
-          { "location", color = { fg = colors.fg, bg = colors.bg } },
+          { "progress", color = { fg = colors.fg, bg = bar_bg } },
+          { "location", color = { fg = colors.fg, bg = bar_bg } },
         },
       },
       inactive_sections = {

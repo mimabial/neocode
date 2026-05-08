@@ -34,7 +34,7 @@ return {
     end
 
     -- Enable better treesitter integration if available
-    local ts_ok, _ = pcall(require, "nvim-treesitter.configs")
+    local ts_ok, _ = pcall(require, "nvim-treesitter")
     if ts_ok then
       local Rule = require("nvim-autopairs.rule")
       local ts_conds = require("nvim-autopairs.ts-conds")

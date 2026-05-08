@@ -268,6 +268,19 @@ normalize_background = function(value)
   return nil
 end
 
+local function parse_conf_transparency(value)
+  if value == nil then
+    return nil
+  end
+  local v = tostring(value):gsub('^["\']', ""):gsub('["\']$', ""):gsub("%s+", ""):lower()
+  if v == "true" or v == "1" or v == "on" or v == "yes" then
+    return true
+  elseif v == "false" or v == "0" or v == "off" or v == "no" then
+    return false
+  end
+  return nil
+end
+
 -- Get current color mode from staterc
 function M.get_color_mode()
   local mode = read_staterc("selected_color_mode") or read_staterc("enableWallDcol")
@@ -297,6 +310,7 @@ function M.apply_system_theme(themes)
   local conf_variant = read_theme_conf("NVIM_VARIANT")
   local conf_background = normalize_background(read_theme_conf("NVIM_BACKGROUND"))
   local conf_color_scheme = normalize_background(read_theme_conf("COLOR_SCHEME"))
+  local conf_transparency = parse_conf_transparency(read_theme_conf("NVIM_TRANSPARENCY"))
 
   local scheme, variant, background
 
@@ -362,7 +376,11 @@ function M.apply_system_theme(themes)
   end
 
   -- Apply the theme
-  return M.apply_theme(scheme, variant, themes, theme_options(settings, background))
+  local opts = theme_options(settings, background)
+  if conf_transparency ~= nil then
+    opts.transparency = conf_transparency
+  end
+  return M.apply_theme(scheme, variant, themes, opts)
 end
 
 -- Update Hyprland config with current theme
