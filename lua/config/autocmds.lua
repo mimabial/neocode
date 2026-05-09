@@ -56,8 +56,12 @@ function M.setup()
         return
       end
       local _, win = vim.diagnostic.open_float(nil, {
-        focusable = false,
-        close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
+        focus_id = "diagnostic",
+        focusable = true,
+        -- BufLeave intentionally omitted: vim.lsp.util registers its own
+        -- smart BufLeave that skips the close when we focus into the float.
+        -- Adding our own here would close the float on focus-in (breaking cj).
+        close_events = { "CursorMoved", "InsertEnter", "FocusLost", "WinScrolled" },
         border = "single",
         source = true,
         prefix = " ",
@@ -117,7 +121,7 @@ function M.setup()
   -- ========================================
   vim.api.nvim_create_autocmd("TextYankPost", {
     callback = function()
-      vim.highlight.on_yank({ timeout = 300 })
+      vim.hl.on_yank({ timeout = 300 })
     end,
     desc = "Highlight yanked text",
   })
@@ -155,26 +159,21 @@ function M.setup()
   -- Filetype Settings
   -- ========================================
   local indent_grp = vim.api.nvim_create_augroup("FileTypeIndent", { clear = true })
-
-  vim.api.nvim_create_autocmd("FileType", {
-    group = indent_grp,
-    pattern = { "lua", "javascript", "typescript", "json", "html", "css", "yaml", "markdown", "tsx", "jsx" },
-    callback = function()
-      vim.bo.tabstop = 2
-      vim.bo.shiftwidth = 2
-    end,
-    desc = "Set 2-space indent for web languages",
-  })
-
-  vim.api.nvim_create_autocmd("FileType", {
-    group = indent_grp,
-    pattern = { "go", "python", "rust", "c", "cpp" },
-    callback = function()
-      vim.bo.tabstop = 4
-      vim.bo.shiftwidth = 4
-    end,
-    desc = "Set 4-space indent for compiled languages",
-  })
+  local indent_groups = {
+    [2] = { "lua", "javascript", "typescript", "json", "html", "css", "yaml", "markdown", "tsx", "jsx" },
+    [4] = { "go", "python", "rust", "c", "cpp" },
+  }
+  for width, fts in pairs(indent_groups) do
+    vim.api.nvim_create_autocmd("FileType", {
+      group = indent_grp,
+      pattern = fts,
+      callback = function()
+        vim.bo.tabstop = width
+        vim.bo.shiftwidth = width
+      end,
+      desc = "Set " .. width .. "-space indent",
+    })
+  end
 
   vim.api.nvim_create_autocmd("FileType", {
     callback = function()
@@ -207,23 +206,7 @@ function M.setup()
     desc = "Set GTK CSS filetype to avoid standard CSS LSP errors",
   })
 
-  vim.api.nvim_create_autocmd("FileType", {
-    pattern = "zsh",
-    callback = function()
-      local bufname = vim.api.nvim_buf_get_name(0)
-      local start_dir = bufname ~= "" and vim.fs.dirname(bufname) or vim.fn.getcwd()
-      local git_dir = vim.fs.find({ ".git" }, { upward = true, path = start_dir })[1]
-      local root_dir = git_dir and vim.fs.dirname(git_dir) or start_dir
-
-      vim.lsp.start({
-        name = "bashls",
-        cmd = { "bash-language-server", "start" },
-        filetypes = { "sh", "bash", "zsh" },
-        root_dir = root_dir,
-      })
-    end,
-    desc = "Force bashls to attach to zsh files",
-  })
+  -- bashls zsh attachment is configured via vim.lsp.config in plugins/lsp/lspconfig.lua
 
   vim.api.nvim_create_autocmd("FileType", {
     pattern = { "Trouble", "trouble", "qf", "help", "grug-far", "grug-far-history", "grug-far-help" },

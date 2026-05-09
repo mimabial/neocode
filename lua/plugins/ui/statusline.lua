@@ -19,29 +19,7 @@ return {
 
   opts = function()
     local colors = require("config.ui").get_colors()
-    local ok_tm, theme_manager = pcall(require, "lib.theme_manager")
-    local transparent = ok_tm and theme_manager.load_settings().transparency or false
-    local bar_bg = transparent and "NONE" or colors.bg
-
-    local icons = {
-      diagnostics = {
-        error = "",
-        warn = "",
-        info = "",
-        hint = "",
-      },
-      diff = {
-        added = "",
-        modified = "",
-        removed = "",
-      },
-      file = {
-        modified = "",
-      },
-      ai = {
-        codeium = "󰚩",
-      },
-    }
+    local bar_bg = require("lib.theme_manager").bar_bg(colors.bg)
 
     local mode_color = {
       n = colors.green,
@@ -103,28 +81,6 @@ return {
         z = { bg = bar_bg, fg = colors.gray },
       },
     }
-
-    -- local function pretty_path()
-    --   return {
-    --     function()
-    --       -- local path = vim.fn.expand("%:p:~:.")
-    --       local filename = vim.fn.expand("%:t:r")
-    --       -- local extension = vim.fn.expand("%:e")
-    --       -- local icon = require("nvim-web-devicons").get_icon(filename, extension)
-    --       -- if vim.fn.winwidth(0) > 90 then
-    --       --   return (icon and icon .. " " or "") .. path
-    --       -- return path
-    --       -- else
-    --       --   return (icon and icon .. " " or "") .. filename
-    --       return filename
-    --       -- end
-    --     end,
-    --     color = { bg = bar_bg },
-    --     cond = function()
-    --       return vim.fn.expand("%:t") ~= ""
-    --     end,
-    --   }
-    -- end
 
     local function root_dir()
       return {
@@ -230,6 +186,28 @@ return {
       }
     end
 
+    local function pretty_path()
+      return {
+        function()
+          -- local path = vim.fn.expand("%:p:~:.")
+          local filename = vim.fn.expand("%:t:r")
+          -- local extension = vim.fn.expand("%:e")
+          -- local icon = require("nvim-web-devicons").get_icon(filename, extension)
+          -- if vim.fn.winwidth(0) > 90 then
+          --   return (icon and icon .. " " or "") .. path
+          -- return path
+          -- else
+          --   return (icon and icon .. " " or "") .. filename
+          return filename
+          -- end
+        end,
+        color = { bg = bar_bg },
+        cond = function()
+          return vim.fn.expand("%:t") ~= ""
+        end,
+      }
+    end
+
     return {
       options = {
         component_separators = { left = "", right = "" },
@@ -273,18 +251,7 @@ return {
         },
         lualine_c = {
           root_dir(),
-          -- pretty_path(),
-          -- {
-          --   "diagnostics",
-          --   symbols = {
-          --     error = icons.diagnostics.error,
-          --     warn = icons.diagnostics.warn,
-          --     info = icons.diagnostics.info,
-          --     hint = icons.diagnostics.hint,
-          --   },
-          --   colored = true,
-          --   color = { bg = bar_bg },
-          -- },
+          pretty_path(),
         },
         lualine_x = {
           {

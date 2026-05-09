@@ -191,11 +191,11 @@ return {
         },
         popup = {
           position = {
-            row = "100%",
+            row = "90%",
             col = "50%",
           },
           size = {
-            width = "95%",
+            width = "99%",
             height = "50%",
           },
           border = {

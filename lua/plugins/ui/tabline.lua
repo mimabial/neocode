@@ -7,9 +7,7 @@ return {
   version = "*",
   opts = function()
     local colors = require("config.ui").get_colors()
-    local ok_tm, theme_manager = pcall(require, "lib.theme_manager")
-    local transparent = ok_tm and theme_manager.load_settings().transparency or false
-    local bar_bg = transparent and "NONE" or colors.bg
+    local bar_bg = require("lib.theme_manager").bar_bg(colors.bg)
 
     local function hl(fg, extras)
       local h = { fg = fg, bg = bar_bg }

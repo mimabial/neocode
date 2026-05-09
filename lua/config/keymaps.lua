@@ -14,6 +14,12 @@ function M.setup()
     callback = function(args)
       local opts = { buffer = args.buf, silent = true }
 
+      -- Inlay hints (when supported by the attaching client)
+      local client = vim.lsp.get_client_by_id(args.data.client_id)
+      if client and client.server_capabilities.inlayHintProvider then
+        vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
+      end
+
       -- Navigation
       map("n", "gd", vim.lsp.buf.definition, vim.tbl_extend("force", opts, { desc = "Go to definition" }))
       map("n", "gD", vim.lsp.buf.declaration, vim.tbl_extend("force", opts, { desc = "Go to declaration" }))
@@ -22,38 +28,48 @@ function M.setup()
       map("n", "gt", vim.lsp.buf.type_definition, vim.tbl_extend("force", opts, { desc = "Go to type definition" }))
 
       -- Information
-      map("n", "K", function() vim.lsp.buf.hover({ border = "single" }) end, vim.tbl_extend("force", opts, { desc = "Show hover information" }))
+      map("n", "K", function()
+        vim.lsp.buf.hover({ border = "single" })
+      end, vim.tbl_extend("force", opts, { desc = "Show hover information" }))
       -- Note: <C-k> signature help handled by lsp_signature.nvim plugin
 
       -- Actions
       map("n", "<leader>ca", vim.lsp.buf.code_action, vim.tbl_extend("force", opts, { desc = "Code actions" }))
       map("n", "<leader>cr", vim.lsp.buf.rename, vim.tbl_extend("force", opts, { desc = "Rename symbol" }))
 
-      -- Diagnostics
-      local function open_diagnostics_float()
-        local float_opts = vim.diagnostic.config().float
-        if float_opts == false then
-          float_opts = {}
-        end
-
-        vim.diagnostic.open_float(nil, vim.tbl_extend("force", float_opts, {
+      local function open_diagnostics_float(focus)
+        vim.diagnostic.open_float(nil, {
           focus_id = "diagnostic",
           focusable = true,
-          focus = true,
+          focus = focus,
           scope = "cursor",
-          close_events = { "CursorMoved", "InsertEnter", "FocusLost" },
-        }))
+          border = "single",
+          source = true,
+          prefix = " ",
+          close_events = {},
+        })
+        if not focus then
+          return
+        end
+        -- open_floating_preview only auto-focuses an *existing* float; for a
+        -- fresh open it returns the winid without switching. Switch manually.
+        local bufnr = vim.api.nvim_get_current_buf()
+        local floatwin = vim.b[bufnr].lsp_floating_preview
+        if floatwin and vim.api.nvim_win_is_valid(floatwin) and vim.api.nvim_get_current_win() ~= floatwin then
+          vim.api.nvim_set_current_win(floatwin)
+        end
       end
 
-      map("n", "<leader>cd", open_diagnostics_float, vim.tbl_extend("force", opts, { desc = "Show diagnostics" }))
-      map("n", "[d", function() vim.diagnostic.jump({ count = -1 }) end, vim.tbl_extend("force", opts, { desc = "Previous diagnostic" }))
-      map("n", "]d", function() vim.diagnostic.jump({ count = 1 }) end, vim.tbl_extend("force", opts, { desc = "Next diagnostic" }))
-      map(
-        "n",
-        "<leader>cq",
-        vim.diagnostic.setloclist,
-        vim.tbl_extend("force", opts, { desc = "Diagnostics to loclist" })
-      )
+      map("n", "<leader>cd", vim.diagnostic.open_float, vim.tbl_extend("force", opts, { desc = "Show diagnostics" }))
+      map("n", "<leader>cj", function()
+        open_diagnostics_float(true)
+      end, vim.tbl_extend("force", opts, { desc = "Show diagnostics + jump in" }))
+      map("n", "[d", function()
+        vim.diagnostic.jump({ count = -1 })
+      end, vim.tbl_extend("force", opts, { desc = "Previous diagnostic" }))
+      map("n", "]d", function()
+        vim.diagnostic.jump({ count = 1 })
+      end, vim.tbl_extend("force", opts, { desc = "Next diagnostic" }))
     end,
   })
 
@@ -68,7 +84,7 @@ function M.setup()
   if vim.g.diagnostics_hover == nil then
     vim.g.diagnostics_hover = true
   end
-  map("n", "<leader>cH", function()
+  map("n", "<leader>ch", function()
     vim.g.diagnostics_hover = not vim.g.diagnostics_hover
     vim.notify("Diagnostics hover " .. (vim.g.diagnostics_hover and "enabled" or "disabled"), vim.log.levels.INFO)
   end, { desc = "Toggle diagnostics hover popup" })

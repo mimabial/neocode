@@ -69,9 +69,9 @@ return {
     -- bottom_right, bottom_left }
     vim.g.telescope_borders = {
       ivory = {
-        prompt = { "─", " ", "─", " ", " ", " ", "─", "─" },
-        results = { "─", "│", " ", " ", " ", " ", "│", " " },
-        preview = { "─", " ", " ", " ", "─", "─", " ", " " },
+        prompt = { "─", " ", " ", " ", "╶", "╴", " ", " " },
+        results = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+        preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
       },
       ebony = {
         preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
@@ -187,28 +187,34 @@ return {
 
       if layout.prompt then
         layout.prompt.height = 1
-        layout.prompt.line = math.floor(max_lines * 0.55)
-        layout.prompt.width = max_columns
+        layout.prompt.col = 2
+        layout.prompt.line = math.floor(max_lines * 0.4)
+        layout.prompt.width = max_columns - 2
+      end
+
+      -- bottom_pane suppresses the results' top border (`{0, 1, 1, 1}`) because
+      -- it stacks results flush against the prompt. Ivory adds a gap, so we
+      -- need the full four-sided border back.
+      if layout.results then
+        layout.results.border = { 1, 1, 1, 1 }
       end
 
       if has_previewer then
         if layout.prompt and layout.results then
           layout.results.line = layout.prompt.line + layout.prompt.height + 1
-          layout.results.height = max_lines - layout.results.line + 1
+          layout.results.height = max_lines - layout.results.line
           layout.results.width = math.floor(max_columns * 0.4)
         end
-
-        -- Make preview take full remaining height
         if layout.prompt and layout.preview then
-          layout.preview.col = layout.results.width + 1
+          layout.preview.col = layout.results.width + 4
           layout.preview.line = layout.prompt.line + layout.prompt.height + 1
-          layout.preview.height = max_lines - layout.preview.line + 1
-          layout.preview.width = max_columns - layout.results.width - 1
+          layout.preview.height = max_lines - layout.preview.line
+          layout.preview.width = max_columns - layout.results.width - 4
         end
       else
         if layout.results and layout.prompt then
           layout.results.line = layout.prompt.line + layout.prompt.height + 1
-          layout.results.height = max_lines - layout.results.line + 1
+          layout.results.height = max_lines - layout.results.line
           layout.results.width = max_columns
         end
       end
@@ -242,6 +248,23 @@ return {
 
         prompt_prefix = " ",
         selection_caret = "  ",
+        -- Right-pad the "showing / total" counter so it doesn't sit flush
+        -- against the prompt border (rendered as right-aligned virt_text).
+        get_status_text = function(self, opts)
+          local multi = #(self:get_multi_selection())
+          local showing = (self.stats.processed or 0) - (self.stats.filtered or 0)
+          local total = self.stats.processed or 0
+          local icon = (opts and not opts.completed) and "*" or ""
+          local text
+          if showing == 0 and total == 0 then
+            text = icon
+          elseif multi == 0 then
+            text = string.format("%s %s / %s", icon, showing, total)
+          else
+            text = string.format("%s %s/%s (%s)", icon, multi, showing, total)
+          end
+          return text == "" and text or text .. " "
+        end,
         path_display = { "filename_first" },
         selection_strategy = "reset",
         sorting_strategy = "ascending",
@@ -263,9 +286,9 @@ return {
 
         -- Static default borderchars (overridden by with_layout helper)
         borderchars = {
-          prompt = { "─", " ", "─", " ", " ", " ", "─", "─" },
-          results = { "─", "│", " ", " ", " ", " ", "│", " " },
-          preview = { "─", " ", " ", " ", "─", "─", " ", " " },
+          prompt = { "─", " ", " ", " ", "╶", "╴", " ", " " },
+          results = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+          preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
         },
 
         -- Preview configuration with line numbers

@@ -45,6 +45,12 @@ local function normalize_apply_options(options)
   }
 end
 
+-- Resolve the background colour bar chrome (statusline/tabline/winbar) should
+-- use given the current transparency setting. Returns "NONE" when transparent.
+function M.bar_bg(default_bg)
+  return M.load_settings().transparency and "NONE" or default_bg
+end
+
 -- Load theme settings from cache
 function M.load_settings()
   local ok, content = pcall(vim.fn.readfile, M.settings_file)

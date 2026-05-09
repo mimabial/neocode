@@ -12,27 +12,12 @@ return {
     config = function()
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-      local function on_attach(client, bufnr)
-        -- Enable inlay hints if supported
-        if client.server_capabilities.inlayHintProvider then
-          vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
-        end
-      end
-
       -- Build ensure_installed list based on available languages
       local ensure_installed = {
         -- Always install (don't require runtime)
-        "lua_ls",         -- Lua
-        "bashls",         -- Bash
-        "jsonls",         -- JSON
-        "yamlls",         -- YAML
-        "marksman",       -- Markdown
-
+        "lua_ls", "bashls", "jsonls", "yamlls", "marksman",
         -- Web Development (usually available via npm)
-        "html",           -- HTML
-        "cssls",          -- CSS
-        "ts_ls",          -- TypeScript/JavaScript
-        "eslint",         -- ESLint
+        "html", "cssls", "ts_ls", "eslint",
       }
 
       -- Conditionally add servers based on available runtimes
@@ -61,274 +46,132 @@ return {
         end
       end
 
-      -- Always add these (work without specific runtime)
       vim.list_extend(ensure_installed, { "taplo", "lemminx" })
 
-      local tailwind_filetypes = {
-        "html",
-        "css",
-        "scss",
-        "javascript",
-        "javascriptreact",
-        "typescript",
-        "typescriptreact",
-        "vue",
-        "svelte",
-        "astro",
-      }
-      local tailwind_root_files = {
-        "tailwind.config.js",
-        "tailwind.config.cjs",
-        "tailwind.config.mjs",
-        "tailwind.config.ts",
-      }
+      -- Defaults applied to every server (merged with bundled nvim-lspconfig configs)
+      vim.lsp.config("*", { capabilities = capabilities })
 
-      local function tailwind_root_dir(fname)
-        local root = vim.fs.find(tailwind_root_files, { path = fname, upward = true })[1]
-        return root and vim.fs.dirname(root) or nil
-      end
-
-      require("mason-lspconfig").setup({
-        ensure_installed = ensure_installed,
-        automatic_installation = false, -- Don't auto-install to avoid errors
-        handlers = {
-          -- Default handler for all servers
-          function(server_name)
-            require("lspconfig")[server_name].setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-            })
-          end,
-
-          -- Custom configurations
-          ["lua_ls"] = function()
-            require("lspconfig").lua_ls.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              settings = {
-                Lua = {
-                  runtime = { version = "LuaJIT" },
-                  diagnostics = { globals = { "vim" } },
-                  workspace = {
-                    library = vim.api.nvim_get_runtime_file("", true),
-                    checkThirdParty = false,
-                  },
-                  telemetry = { enable = false },
-                  hint = { enable = true },
-                },
-              },
-            })
-          end,
-
-          ["jsonls"] = function()
-            require("lspconfig").jsonls.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              filetypes = { "json", "jsonc" },
-              settings = {
-                json = { schemas = require("schemastore").json.schemas() },
-              },
-            })
-          end,
-
-          -- cssls uses default handler (GTK CSS excluded via filetype in autocmds.lua)
-
-          ["eslint"] = function()
-            require("lspconfig").eslint.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              settings = {
-                packageManager = "npm",
-              },
-            })
-          end,
-
-          ["intelephense"] = function()
-            require("lspconfig").intelephense.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              settings = {
-                intelephense = {
-                  telemetry = { enabled = false },
-                  files = {
-                    maxSize = 1000000,
-                    exclude = {
-                      "**/.git/**",
-                      "**/.svn/**",
-                      "**/.hg/**",
-                      "**/node_modules/**",
-                      "**/vendor/**",
-                      "**/storage/**",
-                      "**/var/**",
-                      "**/cache/**",
-                      "**/tmp/**",
-                      "**/build/**",
-                      "**/dist/**",
-                      "**/coverage/**",
-                    },
-                  },
-                },
-              },
-            })
-          end,
-
-          -- Go
-          ["gopls"] = function()
-            require("lspconfig").gopls.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              settings = {
-                gopls = {
-                  gofumpt = true,
-                  codelenses = {
-                    gc_details = false,
-                    generate = true,
-                    regenerate_cgo = true,
-                    run_govulncheck = true,
-                    test = true,
-                    tidy = true,
-                    upgrade_dependency = true,
-                    vendor = true,
-                  },
-                  hints = {
-                    assignVariableTypes = true,
-                    compositeLiteralFields = true,
-                    compositeLiteralTypes = true,
-                    constantValues = true,
-                    functionTypeParameters = true,
-                    parameterNames = true,
-                    rangeVariableTypes = true,
-                  },
-                  analyses = {
-                    fieldalignment = true,
-                    nilness = true,
-                    unusedparams = true,
-                    unusedwrite = true,
-                    useany = true,
-                  },
-                  usePlaceholders = true,
-                  completeUnimported = true,
-                  staticcheck = true,
-                  directoryFilters = { "-.git", "-.vscode", "-.idea", "-.vscode-test", "-node_modules" },
-                  semanticTokens = true,
-                },
-              },
-            })
-          end,
-
-          -- Rust
-          ["rust_analyzer"] = function()
-            require("lspconfig").rust_analyzer.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              settings = {
-                ["rust-analyzer"] = {
-                  imports = {
-                    granularity = {
-                      group = "module",
-                    },
-                    prefix = "self",
-                  },
-                  cargo = {
-                    buildScripts = {
-                      enable = true,
-                    },
-                  },
-                  procMacro = {
-                    enable = true,
-                  },
-                  checkOnSave = {
-                    command = "clippy",
-                  },
-                },
-              },
-            })
-          end,
-
-          -- Python (Pyright)
-          ["pyright"] = function()
-            require("lspconfig").pyright.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              settings = {
-                python = {
-                  analysis = {
-                    autoSearchPaths = true,
-                    diagnosticMode = "workspace",
-                    useLibraryCodeForTypes = true,
-                    typeCheckingMode = "basic",
-                  },
-                },
-              },
-            })
-          end,
-
-          -- YAML
-          ["yamlls"] = function()
-            require("lspconfig").yamlls.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              settings = {
-                yaml = {
-                  schemas = require("schemastore").yaml.schemas(),
-                  schemaStore = {
-                    enable = false,
-                    url = "",
-                  },
-                },
-              },
-            })
-          end,
-
-          -- TailwindCSS
-          ["tailwindcss"] = function()
-            require("lspconfig").tailwindcss.setup({
-              capabilities = capabilities,
-              on_attach = on_attach,
-              filetypes = tailwind_filetypes,
-              -- Only activate if a tailwind config file is found
-              root_dir = tailwind_root_dir,
-              -- Prevent attaching to standalone CSS files outside Tailwind projects.
-              single_file_support = false,
-            })
-          end,
-
-          -- C/C++
-          ["clangd"] = function()
-            require("lspconfig").clangd.setup({
-              capabilities = vim.tbl_deep_extend("force", capabilities, {
-                offsetEncoding = { "utf-16" },
-              }),
-              on_attach = on_attach,
-              cmd = {
-                "clangd",
-                "--background-index",
-                "--clang-tidy",
-                "--header-insertion=iwyu",
-                "--completion-style=detailed",
-                "--function-arg-placeholders",
-                "--fallback-style=llvm",
-              },
-            })
-          end,
+      vim.lsp.config("lua_ls", {
+        settings = {
+          Lua = {
+            runtime = { version = "LuaJIT" },
+            diagnostics = { globals = { "vim" } },
+            workspace = {
+              library = vim.api.nvim_get_runtime_file("", true),
+              checkThirdParty = false,
+            },
+            telemetry = { enable = false },
+            hint = { enable = true },
+          },
         },
       })
 
-      -- Note: Diagnostic configuration is in config/autocmds.lua
-      -- Note: Hover border configured in config/keymaps.lua (K mapping)
+      vim.lsp.config("jsonls", {
+        filetypes = { "json", "jsonc" },
+        settings = { json = { schemas = require("schemastore").json.schemas() } },
+      })
+
+      vim.lsp.config("eslint", { settings = { packageManager = "npm" } })
+
+      vim.lsp.config("intelephense", {
+        settings = {
+          intelephense = {
+            telemetry = { enabled = false },
+            files = {
+              maxSize = 1000000,
+              exclude = {
+                "**/.git/**", "**/.svn/**", "**/.hg/**",
+                "**/node_modules/**", "**/vendor/**", "**/storage/**",
+                "**/var/**", "**/cache/**", "**/tmp/**",
+                "**/build/**", "**/dist/**", "**/coverage/**",
+              },
+            },
+          },
+        },
+      })
+
+      vim.lsp.config("gopls", {
+        settings = {
+          gopls = {
+            gofumpt = true,
+            codelenses = {
+              gc_details = false, generate = true, regenerate_cgo = true,
+              run_govulncheck = true, test = true, tidy = true,
+              upgrade_dependency = true, vendor = true,
+            },
+            hints = {
+              assignVariableTypes = true, compositeLiteralFields = true,
+              compositeLiteralTypes = true, constantValues = true,
+              functionTypeParameters = true, parameterNames = true,
+              rangeVariableTypes = true,
+            },
+            analyses = {
+              fieldalignment = true, nilness = true, unusedparams = true,
+              unusedwrite = true, useany = true,
+            },
+            usePlaceholders = true, completeUnimported = true, staticcheck = true,
+            directoryFilters = { "-.git", "-.vscode", "-.idea", "-.vscode-test", "-node_modules" },
+            semanticTokens = true,
+          },
+        },
+      })
+
+      vim.lsp.config("rust_analyzer", {
+        settings = {
+          ["rust-analyzer"] = {
+            imports = { granularity = { group = "module" }, prefix = "self" },
+            cargo = { buildScripts = { enable = true } },
+            procMacro = { enable = true },
+            checkOnSave = { command = "clippy" },
+          },
+        },
+      })
+
+      vim.lsp.config("pyright", {
+        settings = {
+          python = {
+            analysis = {
+              autoSearchPaths = true,
+              diagnosticMode = "workspace",
+              useLibraryCodeForTypes = true,
+              typeCheckingMode = "basic",
+            },
+          },
+        },
+      })
+
+      vim.lsp.config("yamlls", {
+        settings = {
+          yaml = {
+            schemas = require("schemastore").yaml.schemas(),
+            schemaStore = { enable = false, url = "" },
+          },
+        },
+      })
+
+      vim.lsp.config("clangd", {
+        capabilities = { offsetEncoding = { "utf-16" } },
+        cmd = {
+          "clangd",
+          "--background-index",
+          "--clang-tidy",
+          "--header-insertion=iwyu",
+          "--completion-style=detailed",
+          "--function-arg-placeholders",
+          "--fallback-style=llvm",
+        },
+      })
+
+      -- Bashls handles zsh via filetype override (replaces standalone autocmd)
+      vim.lsp.config("bashls", { filetypes = { "sh", "bash", "zsh" } })
+
+      require("mason-lspconfig").setup({
+        ensure_installed = ensure_installed,
+        automatic_enable = true,
+      })
+
+      -- Note: Diagnostic configuration in config/autocmds.lua
+      -- Note: Hover border + LSP keymaps in config/keymaps.lua (LspAttach autocmd)
     end,
-  },
-
-  -- Schema support
-  {
-    "b0o/schemastore.nvim",
-    lazy = true,
-  },
-
-  -- Mason-lspconfig bridge
-  {
-    "williamboman/mason-lspconfig.nvim",
-    dependencies = { "williamboman/mason.nvim" },
-    lazy = true,
   },
 }

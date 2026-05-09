@@ -27,8 +27,24 @@ if vim.fn.isdirectory(lazypath) == 0 then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- Load and call .setup() on a module, reporting failures at the given level.
+local function safe_setup(name, level)
+  level = level or vim.log.levels.ERROR
+  local ok, mod = pcall(require, name)
+  if not ok then
+    vim.notify("Failed to load " .. name .. ": " .. tostring(mod), level)
+    return
+  end
+  if type(mod) == "table" and mod.setup then
+    local setup_ok, err = pcall(mod.setup)
+    if not setup_ok then
+      vim.notify("Failed to setup " .. name .. ": " .. tostring(err), level)
+    end
+  end
+end
+
 -- Load core configuration (order matters)
-local core_modules = {
+for _, module in ipairs({
   "config.options",
   "config.ui",
   "config.terminal_sync",
@@ -37,30 +53,12 @@ local core_modules = {
   "config.commands",
   "config.autocmds",
   "config.django",
-}
-
-for _, module in ipairs(core_modules) do
-  local ok, mod = pcall(require, module)
-  if ok and type(mod) == "table" and mod.setup then
-    local setup_ok, err = pcall(mod.setup)
-    if not setup_ok then
-      vim.notify("Failed to setup " .. module .. ": " .. tostring(err), vim.log.levels.ERROR)
-    end
-  elseif not ok then
-    vim.notify("Failed to load " .. module .. ": " .. tostring(mod), vim.log.levels.ERROR)
-  end
+}) do
+  safe_setup(module)
 end
 
--- Setup smart auto-close for special windows
-local autoclose_ok, autoclose = pcall(require, "lib.autoclose")
-if autoclose_ok and autoclose.setup then
-  local setup_ok, err = pcall(autoclose.setup)
-  if not setup_ok then
-    vim.notify("Failed to setup autoclose: " .. tostring(err), vim.log.levels.WARN)
-  end
-else
-  vim.notify("Failed to load autoclose library", vim.log.levels.WARN)
-end
+-- Smart auto-close for special windows
+safe_setup("lib.autoclose", vim.log.levels.WARN)
 
 -- Load health check module (provides :ConfigHealth command)
 pcall(require, "config.health")

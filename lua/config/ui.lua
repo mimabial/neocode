@@ -18,11 +18,9 @@ M.config = {
 
 local function setup_highlights()
   local colors = colors_lib.extract_all()
-  local ok_tm, theme_manager = pcall(require, "lib.theme_manager")
-  local transparent = ok_tm and theme_manager.load_settings().transparency or false
   -- Bar chrome (statusline, winbar, bufferline) follows the global transparency flag.
   -- Floats/popups/tree are intentionally left opaque for readability.
-  local bar_bg = transparent and "NONE" or colors.bg
+  local bar_bg = require("lib.theme_manager").bar_bg(colors.bg)
 
   -- Float window
   vim.api.nvim_set_hl(0, "FloatBorder", { fg = colors.border })

@@ -6,6 +6,8 @@ return {
   config = function()
     vim.treesitter.language.register("tsx", "typescriptreact")
     vim.treesitter.language.register("javascript", "javascriptreact")
+    -- jsonc has no dedicated parser on the nvim-treesitter main branch; reuse json.
+    vim.treesitter.language.register("json", "jsonc")
 
     require("nvim-treesitter").setup()
 
@@ -17,7 +19,6 @@ return {
       "hyprlang",
       "javascript",
       "json",
-      "jsonc",
       "lua",
       "markdown",
       "python",

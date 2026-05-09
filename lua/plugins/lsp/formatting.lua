@@ -359,11 +359,6 @@ return {
           -- make = {},  -- Usually skip formatting makefiles
         },
         formatters = {
-          -- Lua
-          stylua = {
-            prepend_args = { "--search-parent-directories", "--respect-ignores" },
-          },
-
           -- Python
           ruff_format = {
             command = "ruff",
