@@ -14,6 +14,7 @@ return {
       "notify",
       "toggleterm",
       "TelescopePrompt",
+      "bigfile",
     },
     large_file_cutoff = nil,
     min_count_to_highlight = 1,

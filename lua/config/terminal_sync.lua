@@ -1,5 +1,6 @@
--- Terminal color sync module
--- Syncs Neovim background/foreground to terminals using OSC escape sequences
+-- Sync Neovim background/foreground to the host terminal via OSC sequences.
+-- Wraps in tmux passthrough when inside tmux.
+
 local M = {}
 local colors_lib = require("lib.colors")
 
@@ -9,77 +10,57 @@ local function has_terminal_ui()
       return true
     end
   end
-
   return false
 end
 
--- Send OSC escape sequence to terminal
--- Wraps in tmux passthrough if running inside tmux
 local function send_osc(code, value)
   if not has_terminal_ui() then
     return false
   end
 
-  -- Kitty prefers ST terminator, most others use BEL
-  local terminator = "\007"  -- BEL
+  -- Kitty needs ST; everything else accepts BEL.
+  local terminator = "\007"
   if vim.env.TERM == "xterm-kitty" or vim.env.KITTY_WINDOW_ID then
-    terminator = "\027\\"  -- ST (String Terminator)
+    terminator = "\027\\"
   end
 
   local osc = string.format("\027]%s;%s%s", code, value, terminator)
-
-  -- If inside tmux, wrap in passthrough sequence
   if os.getenv("TMUX") then
     osc = string.format("\027Ptmux;\027%s\027\\", osc:gsub("\027", "\027\027"))
   end
 
-  -- Use vim.api.nvim_chan_send to send directly to terminal
-  -- Channel 2 is stderr which goes to the terminal
   vim.api.nvim_chan_send(2, osc)
   return true
 end
 
--- Sync colors to terminal
 function M.sync_terminals()
   if not has_terminal_ui() then
     return false
   end
-
   local colors = colors_lib.extract_basic()
-
-  -- OSC 10: Set foreground color
   send_osc(10, colors.fg)
-
-  -- OSC 11: Set background color
   send_osc(11, colors.bg)
   return true
 end
 
--- Reset terminal colors to defaults
 function M.reset_terminals()
   if not has_terminal_ui() then
     return false
   end
-
-  -- OSC 110: Reset foreground
   send_osc(110, "")
-  -- OSC 111: Reset background
   send_osc(111, "")
   return true
 end
 
--- Setup autocommands for terminal sync
 function M.setup()
   local group = vim.api.nvim_create_augroup("TerminalSync", { clear = true })
 
-  -- Reset colors on VimLeave in case :TerminalSync was used manually.
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = group,
     callback = M.reset_terminals,
     desc = "Reset terminal colors on Neovim exit",
   })
 
-  -- User commands
   vim.api.nvim_create_user_command("TerminalSync", function()
     if M.sync_terminals() then
       vim.notify("Terminal colors synced", vim.log.levels.INFO)

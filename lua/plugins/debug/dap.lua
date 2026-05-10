@@ -123,7 +123,6 @@ local function setup_dap()
 
   for _, language in ipairs({ "typescript", "javascript", "typescriptreact", "javascriptreact" }) do
     dap.configurations[language] = {
-      -- Launch single file
       {
         type = "pwa-node",
         request = "launch",
@@ -134,7 +133,6 @@ local function setup_dap()
         protocol = "inspector",
         console = "integratedTerminal",
       },
-      -- Attach to process
       {
         type = "pwa-node",
         request = "attach",
@@ -144,7 +142,6 @@ local function setup_dap()
         sourceMaps = true,
         protocol = "inspector",
       },
-      -- Debug Next.js dev server
       {
         type = "pwa-node",
         request = "launch",
@@ -159,7 +156,6 @@ local function setup_dap()
         protocol = "inspector",
         console = "integratedTerminal",
       },
-      -- Debug Next.js in Chrome
       {
         type = "pwa-chrome",
         request = "launch",
@@ -170,7 +166,6 @@ local function setup_dap()
         userDataDir = false,
         runtimeExecutable = vim.fn.exepath("google-chrome-stable"),
       },
-      -- Debug Jest tests
       {
         type = "pwa-node",
         request = "launch",
@@ -182,7 +177,6 @@ local function setup_dap()
         console = "integratedTerminal",
         sourceMaps = true,
       },
-      -- Debug npm script
       {
         type = "pwa-node",
         request = "launch",
@@ -217,7 +211,6 @@ local function setup_dap()
     numhl = ''
   })
 
-  -- Setup colors
   local function setup_dap_highlights()
     local colors = require("config.ui").get_colors()
     vim.api.nvim_set_hl(0, 'DapBreakpoint', { fg = colors.red })

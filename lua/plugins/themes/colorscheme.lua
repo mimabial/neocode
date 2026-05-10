@@ -1,9 +1,7 @@
--- Colorscheme Plugin Configuration
--- Theme definitions are in themes/definitions/
--- Theme management logic is in themes/manager.lua
+-- Theme definitions live in themes/definitions/, manager logic in lib/theme_manager.lua.
 
 return {
-  -- Primary theme - Kanagawa (loaded eagerly)
+  -- Kanagawa loads eagerly so a theme is ready before lazy plugins finish.
   {
     "rebelot/kanagawa.nvim",
     lazy = false,
@@ -12,14 +10,10 @@ return {
       local manager = require("lib.theme_manager")
       local themes = manager.load_themes()
 
-      -- Register commands
       manager.register_commands(themes)
 
-      -- Apply theme once: try system theme, fallback to saved theme
-      -- Kanagawa is loaded first (priority=1000, lazy=false), so it's available immediately
       if not manager.apply_system_theme(themes) then
         local settings = manager.load_settings()
-        -- Set vim.o.background before applying theme (for themes using backgrounds = true)
         if settings.background then
           vim.o.background = settings.background
         end
@@ -29,12 +23,10 @@ return {
         })
       end
 
-      -- Setup theme sync via file watchers
       manager.setup_focus_sync(themes)
     end,
   },
 
-  -- Additional themes (lazy loaded)
   { "ficcdaf/ashen.nvim", lazy = true, priority = 950 },
   { "Shatur/neovim-ayu", lazy = true, priority = 950 },
   { "ribru17/bamboo.nvim", lazy = true, priority = 950 },

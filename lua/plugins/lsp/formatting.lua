@@ -1,36 +1,6 @@
-local function resolve_root_dir(cwd)
-  local git_dir = vim.fs.find({ ".git" }, { path = cwd, upward = true })[1]
-  if git_dir then
-    return vim.fs.dirname(git_dir)
-  end
-
-  local root_markers = {
-    "go.mod",
-    "go.work",
-    "package.json",
-    "pyproject.toml",
-    "requirements.txt",
-    "Cargo.toml",
-    "pom.xml",
-    "build.gradle",
-    "build.gradle.kts",
-    "composer.json",
-    "Gemfile",
-    "CMakeLists.txt",
-    "compile_commands.json",
-    ".terraform.lock.hcl",
-  }
-  local marker = vim.fs.find(root_markers, { path = cwd, upward = true })[1]
-  if marker then
-    return vim.fs.dirname(marker)
-  end
-
-  return cwd
-end
-
 local function build_mason_tools_opts(cwd)
   cwd = cwd or vim.fn.getcwd()
-  local root_dir = resolve_root_dir(cwd)
+  local root_dir = require("lib.root").get(cwd)
   local tools = {}
 
   local function add(list)
@@ -55,7 +25,6 @@ local function build_mason_tools_opts(cwd)
     return false
   end
 
-  -- Baseline tools
   add({
     "stylua",
     "shfmt",
@@ -223,13 +192,12 @@ return {
           if ok and stats and stats.size > 1000000 then
             return
           end
-          -- For large files (>1000 lines), skip sync formatting and use format_after_save instead
+          -- Files >1000 lines: skip sync format here, defer to format_after_save.
           if vim.api.nvim_buf_line_count(bufnr) > 1000 then
             return
           end
           return { timeout_ms = 1000, lsp_format = "fallback", quiet = false }
         end,
-        -- Asynchronous format after save for larger files
         format_after_save = function(bufnr)
           if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
             return
@@ -242,7 +210,6 @@ return {
           if ok and stats and stats.size > 1000000 then
             return
           end
-          -- Only format large files (>1000 lines) asynchronously after save
           if vim.api.nvim_buf_line_count(bufnr) > 1000 then
             return { lsp_format = "fallback", quiet = false }
           end
@@ -429,7 +396,6 @@ return {
       local conform = require("conform")
       conform.setup(opts)
 
-      -- Create Format command with LSP fallback
       vim.api.nvim_create_user_command("Format", function(args)
         local range = args.range > 0
             and {

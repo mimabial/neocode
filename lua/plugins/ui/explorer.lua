@@ -14,12 +14,10 @@ return {
           return name == ".." or name == ".git"
         end,
       },
-      -- Buffer-local options to disable global confirm for oil buffers
       buf_options = {
         buflisted = false,
         bufhidden = "hide",
       },
-      -- Window-local options
       win_options = {
         wrap = false,
         signcolumn = "no",
@@ -68,9 +66,8 @@ return {
       use_default_keymaps = true,
     },
     config = function(_, opts)
-      local detail = false -- State variable
+      local detail = false
 
-      -- Merge keymap with detail toggle
       opts.keymaps = vim.tbl_extend("force", opts.keymaps or {}, {
         ["gd"] = {
           desc = "Toggle file detail view",
@@ -87,7 +84,6 @@ return {
 
       require("oil").setup(opts)
 
-      -- Set up directory handling (moved from config/autocmds.lua)
       vim.api.nvim_create_autocmd("BufEnter", {
         group = vim.api.nvim_create_augroup("OilDirectoryHandler", { clear = true }),
         callback = function()
@@ -252,7 +248,6 @@ return {
             return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
           end
 
-          -- Default mappings
           vim.keymap.set("n", "<CR>", api.node.open.edit, opts("Open"))
           vim.keymap.set("n", "o", api.node.open.edit, opts("Open"))
           vim.keymap.set("n", "h", api.node.navigate.parent_close, opts("Close Directory"))
@@ -273,23 +268,7 @@ return {
     end,
     config = function(_, opts)
       require("nvim-tree").setup(opts)
-      -- Note: Auto-close is handled by lib/autoclose.lua
-
-      -- Prevent floating nvim-tree from closing on focus loss
-      -- vim.api.nvim_create_autocmd("FileType", {
-      --   pattern = "NvimTree",
-      --   callback = function(args)
-      --     local bufnr = args.buf
-      --     vim.api.nvim_create_autocmd("WinLeave", {
-      --       buffer = bufnr,
-      --       callback = function()
-      --         return true -- Prevent default behavior
-      --       end,
-      --     })
-      --   end,
-      -- })
-
-      -- Note: nvim-tree highlights are managed in config/ui.lua
+      -- Note: highlights in config/ui.lua, auto-close in lib/autoclose.lua.
     end,
   },
 }

@@ -9,24 +9,19 @@ return {
       return
     end
 
-    -- Setup which-key
     which_key.setup({
-      win = {
-        title = false,
-      },
-      -- show mappings with a description or group label
+      win = { title = false },
       filter = function(mapping)
         return (mapping.desc and mapping.desc ~= "") or (mapping.group and mapping.group ~= "")
       end,
       show_help = false,
       show_keys = false,
       disable = {
-        bt = {}, -- options: terminal, nofile,...
+        bt = {},
         ft = { "TelescopePrompt", "TelescopeResults", "neo-tree", "lazy" },
       },
     })
 
-    -- Group definitions using v3 API
     which_key.add({
       { "<leader>a", group = "Avante" },
       { "<leader>ai", group = "AI (NeoCodeium)" },
@@ -51,27 +46,18 @@ return {
       { "<leader>x", group = "Diagnostics/Trouble" },
     })
 
-    -- Avante
     which_key.add({
       { "<leader>aa", desc = "Ask Avante" },
       { "<leader>ae", desc = "Edit with Avante" },
       { "<leader>ar", desc = "Refresh Avante" },
     })
 
-    -- Buffer number mappings (1-9, defined in tabline.lua)
     for i = 1, 9 do
       which_key.add({
         { "<leader>b" .. i, desc = "Go to buffer " .. i },
       })
     end
 
-    -- Note: Actual git keybindings are defined in their respective plugin files:
-    -- <leader>gg  → plugins/ui/terminal.lua (LazyGit)
-    -- <leader>go* → plugins/git/octo.lua (Octo commands)
-    -- <leader>gh* → plugins/git/gitsigns.lua (hunk operations)
-    -- <leader>fg* → plugins/search/telescope.lua (git searches)
-
-    -- Terminal
     which_key.add({
       { "<leader>tf", desc = "Terminal (float)" },
       { "<leader>th", desc = "Terminal (horizontal)" },
@@ -79,7 +65,6 @@ return {
       { "<leader>tt", desc = "Toggle Terminal" },
     })
 
-    -- UI/Settings
     which_key.add({
       { "<leader>us", desc = "Cycle color scheme" },
       { "<leader>uS", desc = "Select color scheme" },
@@ -92,12 +77,10 @@ return {
       { "<leader>uL", desc = "List available system themes" },
     })
 
-    -- Navic
     which_key.add({
       { "<leader>nb", desc = "Toggle breadcrumbs" },
     })
 
-    -- Layouts
     which_key.add({
       { "<leader>L1", desc = "Coding Layout" },
       { "<leader>L2", desc = "Terminal Layout" },
@@ -105,7 +88,6 @@ return {
       { "<leader>L4", desc = "Debug Layout" },
     })
 
-    -- LSP mappings
     which_key.add({
       { "<leader>ca", desc = "Code Action" },
       { "<leader>cd", desc = "Show Diagnostics" },
@@ -114,10 +96,6 @@ return {
       { "<leader>cs", desc = "Symbols (Trouble)" },
     })
 
-    -- Note: Fold commands (z*) are built-in Vim commands, not custom keybindings
-    -- zR = open all folds, zM = close all folds, za = toggle fold, etc.
-
-    -- Register LSP-specific keymaps when LSP attaches
     vim.api.nvim_create_autocmd("LspAttach", {
       callback = function(args)
         which_key.add({

@@ -1,6 +1,5 @@
 local M = {}
 
--- Check if required external tools are available
 M.check_external_tools = function()
   local tools = {
     { name = "git", required = true, desc = "Version control" },
@@ -25,7 +24,6 @@ M.check_external_tools = function()
   return issues
 end
 
--- Check plugin health
 M.check_plugins = function()
   local issues = {}
   local plugins = require("lazy.core.config").plugins
@@ -39,7 +37,6 @@ M.check_plugins = function()
   return issues
 end
 
--- Check LSP health
 M.check_lsp = function()
   local issues = {}
   local file_buffers = {}
@@ -72,7 +69,6 @@ M.check_lsp = function()
   return issues
 end
 
--- Check keybinding conflicts
 M.check_keybindings = function()
   local issues = {}
   local keymaps = vim.api.nvim_get_keymap("n")
@@ -88,27 +84,14 @@ M.check_keybindings = function()
   return issues
 end
 
--- Main health check function
 M.check = function()
   print("🏥 Running Configuration Health Check...\n")
 
   local all_issues = {}
-
-  -- Check external tools
-  local tool_issues = M.check_external_tools()
-  vim.list_extend(all_issues, tool_issues)
-
-  -- Check plugins
-  local plugin_issues = M.check_plugins()
-  vim.list_extend(all_issues, plugin_issues)
-
-  -- Check LSP
-  local lsp_issues = M.check_lsp()
-  vim.list_extend(all_issues, lsp_issues)
-
-  -- Check keybindings
-  local keymap_issues = M.check_keybindings()
-  vim.list_extend(all_issues, keymap_issues)
+  vim.list_extend(all_issues, M.check_external_tools())
+  vim.list_extend(all_issues, M.check_plugins())
+  vim.list_extend(all_issues, M.check_lsp())
+  vim.list_extend(all_issues, M.check_keybindings())
 
   if #all_issues == 0 then
     print("✅ All health checks passed!")
@@ -122,7 +105,6 @@ M.check = function()
   return #all_issues == 0
 end
 
--- Create health check command
 vim.api.nvim_create_user_command("ConfigHealth", M.check, {
   desc = "Run configuration health checks",
 })

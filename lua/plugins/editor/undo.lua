@@ -1,35 +1,25 @@
--- lua/plugins/undo.lua
 return {
-  -- Promise dependency - Added to fix nvim-ufo error
-  {
-    "kevinhwang91/promise-async",
-    lazy = true,
-  },
+  { "kevinhwang91/promise-async", lazy = true },
 
-  -- Folding
   {
     "kevinhwang91/nvim-ufo",
-    dependencies = {
-      "kevinhwang91/promise-async",
-    },
+    dependencies = { "kevinhwang91/promise-async" },
     event = "BufReadPost",
     opts = {
       provider_selector = function()
         return { "treesitter", "indent" }
       end,
       fold_virt_text_handler = function(virtText, lnum, endLnum, width, truncate)
-        -- Keep existing handler but optimize performance
         local newVirtText = {}
         local suffix = (" 󰁂 %d "):format(endLnum - lnum)
         local sufWidth = vim.fn.strdisplaywidth(suffix)
         local targetWidth = width - sufWidth
         local curWidth = 0
 
-        -- Process fewer items to improve performance
         for i, chunk in ipairs(virtText) do
           if i > 10 then
             break
-          end -- Limit processing to first 10 chunks
+          end
           local chunkText, chunkWidth = chunk[1], vim.fn.strdisplaywidth(chunk[1])
           if targetWidth > curWidth + chunkWidth then
             table.insert(newVirtText, chunk)
@@ -52,7 +42,6 @@ return {
       vim.o.foldcolumn = "0"
     end,
     config = function(_, opts)
-      -- Safer configuration with error handling
       local status_ok, ufo = pcall(require, "ufo")
       if not status_ok then
         vim.notify("UFO plugin not loaded properly", vim.log.levels.WARN)
@@ -99,7 +88,6 @@ return {
     },
   },
 
-  -- Visual undo tree (undo configuration is in lua/config/options.lua)
   {
     "mbbill/undotree",
     cmd = "UndotreeToggle",
@@ -107,9 +95,6 @@ return {
       { "<leader>U", "<cmd>UndotreeToggle<cr>", desc = "Toggle Undotree" },
     },
     config = function()
-      -- Note: Undo directory and settings are configured in lua/config/options.lua
-      -- This plugin just provides the visual interface
-
       vim.g.undotree_SetFocusWhenToggle = 1
       vim.g.undotree_WindowLayout = 2
     end,

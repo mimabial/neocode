@@ -10,6 +10,10 @@ vim.g.default_picker = "telescope"  -- Used by plugins to determine picker prefe
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
+-- Bigfile detection: register before lazy bootstrap so the filetype matcher
+-- catches files opened on startup (e.g. `nvim huge.log`).
+pcall(function() require("lib.bigfile").setup() end)
+
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if vim.fn.isdirectory(lazypath) == 0 then

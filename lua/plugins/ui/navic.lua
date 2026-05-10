@@ -23,11 +23,9 @@ return {
     local function setup_highlights()
       local colors = require("config.ui").get_colors()
 
-      -- Main navic highlights
       vim.api.nvim_set_hl(0, "NavicText", { fg = colors.fg, bg = colors.bg })
       vim.api.nvim_set_hl(0, "NavicSeparator", { fg = colors.border, bg = colors.bg })
 
-      -- Navic icon highlights
       vim.api.nvim_set_hl(0, "NavicIconsFile", { fg = colors.blue, bg = colors.bg })
       vim.api.nvim_set_hl(0, "NavicIconsModule", { fg = colors.orange, bg = colors.bg })
       vim.api.nvim_set_hl(0, "NavicIconsNamespace", { fg = colors.purple, bg = colors.bg })
@@ -59,41 +57,26 @@ return {
     setup_highlights()
     vim.api.nvim_create_autocmd("ColorScheme", { callback = setup_highlights })
 
-    -- Set winbar for all buffers when navic is available
     vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
       callback = function(event)
         local buf = event.buf
-
-        -- Skip non-file buffers (terminal, help, prompt, etc.)
         if vim.bo[buf].buftype ~= "" then
           return
         end
-
-        -- Skip for certain filetypes
         local ft = vim.bo[buf].filetype
         if vim.tbl_contains({ "oil", "NvimTree", "neo-tree", "Trouble", "lazy", "mason", "TelescopePrompt" }, ft) then
           return
         end
-
-        -- Skip for floating windows (telescope popups)
-        local win_config = vim.api.nvim_win_get_config(0)
-        if win_config.relative ~= "" then
+        if vim.api.nvim_win_get_config(0).relative ~= "" then
           return
         end
-
-        -- Skip for very small windows
-        local win_height = vim.api.nvim_win_get_height(0)
-        local win_width = vim.api.nvim_win_get_width(0)
-        if win_height < 5 or win_width < 20 then
+        if vim.api.nvim_win_get_height(0) < 5 or vim.api.nvim_win_get_width(0) < 20 then
           return
         end
-
-        -- Always set winbar (avoid navic not available on opening)
         vim.wo.winbar = "%{%v:lua.require('nvim-navic').get_location()%}"
       end,
     })
 
-    -- Create command to toggle navic in winbar
     vim.api.nvim_create_user_command("NavicToggle", function()
       if vim.wo.winbar and vim.wo.winbar:find("navic") then
         vim.wo.winbar = ""

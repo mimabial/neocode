@@ -33,6 +33,9 @@ return {
     -- main no longer wires highlight/indent on its own.
     vim.api.nvim_create_autocmd("FileType", {
       callback = function(args)
+        if vim.b[args.buf].bigfile then
+          return
+        end
         if pcall(vim.treesitter.start, args.buf) then
           vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
         end

@@ -1,5 +1,7 @@
 local M = {}
 
+local icons = require("lib.icons")
+
 M.diagnostic_config = {
   virtual_text = {
     prefix = " ",
@@ -12,23 +14,10 @@ M.diagnostic_config = {
     source = true,
     header = "",
     prefix = function(diagnostic)
-      local icons = {
-        [vim.diagnostic.severity.ERROR] = " ", -- nf-fa-times_circle
-        [vim.diagnostic.severity.WARN] = " ",  -- nf-fa-exclamation_triangle
-        [vim.diagnostic.severity.INFO] = " ",  -- nf-fa-info_circle
-        [vim.diagnostic.severity.HINT] = " ",  -- nf-mdi-lightbulb_outline
-      }
-      return icons[diagnostic.severity] or ""
+      return icons.diagnostic_signs[diagnostic.severity] or ""
     end,
   },
-  signs = {
-    text = {
-      [vim.diagnostic.severity.ERROR] = "",
-      [vim.diagnostic.severity.WARN] = "",
-      [vim.diagnostic.severity.INFO] = "",
-      [vim.diagnostic.severity.HINT] = "",
-    },
-  },
+  signs = { text = icons.diagnostic_signs },
   underline = true,
   update_in_insert = false,
   severity_sort = true,
@@ -36,11 +25,10 @@ M.diagnostic_config = {
 
 function M.setup()
   -- ========================================
-  -- Diagnostics Configuration
+  -- Diagnostics
   -- ========================================
   vim.diagnostic.config(vim.deepcopy(M.diagnostic_config))
 
-  -- Diagnostic events
   local diag_grp = vim.api.nvim_create_augroup("DiagnosticEvents", { clear = true })
 
   vim.api.nvim_create_autocmd("CursorHold", {
@@ -206,8 +194,6 @@ function M.setup()
     desc = "Set GTK CSS filetype to avoid standard CSS LSP errors",
   })
 
-  -- bashls zsh attachment is configured via vim.lsp.config in plugins/lsp/lspconfig.lua
-
   vim.api.nvim_create_autocmd("FileType", {
     pattern = { "Trouble", "trouble", "qf", "help", "grug-far", "grug-far-history", "grug-far-help" },
     callback = function()
@@ -217,23 +203,17 @@ function M.setup()
   })
 
   -- ========================================
-  -- Directory & File Browser
-  -- ========================================
-  -- Note: Directory handling is now in lua/plugins/ui/explorer.lua (Oil config)
-
-  -- ========================================
   -- Terminal
   -- ========================================
+  -- Note: <C-h/j/k/l> navigation lives in plugins/ui/terminal.lua;
+  -- directory-browsing in plugins/ui/explorer.lua (Oil).
   vim.api.nvim_create_autocmd("TermOpen", {
     callback = function()
       vim.opt_local.number = false
       vim.opt_local.relativenumber = false
       vim.cmd("startinsert")
-
-      -- Escape key to exit terminal mode
       local buf = vim.api.nvim_get_current_buf()
       vim.keymap.set("t", "<Esc>", "<C-\\><C-n>", { buffer = buf, silent = true })
-      -- Note: <C-h/j/k/l> terminal navigation configured in plugins/ui/terminal.lua
     end,
     desc = "Configure terminal settings",
   })

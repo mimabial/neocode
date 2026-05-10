@@ -1,5 +1,4 @@
 return {
-  -- Text objects
   {
     "echasnovski/mini.ai",
     event = "VeryLazy",
@@ -25,14 +24,10 @@ return {
     "echasnovski/mini.icons",
     lazy = true,
     config = function()
-      local icons = require("mini.icons")
-      icons.setup()
+      require("mini.icons").setup()
 
-      -- Update icons with theme colors
       local function update_icon_colors()
         local colors = require("config.ui").get_colors()
-
-        -- Apply colors to icon groups
         local icon_hl_groups = {
           MiniIconsDevicons = { fg = colors.blue },
           MiniIconsFiletype = { fg = colors.purple },
@@ -41,19 +36,12 @@ return {
           MiniIconsGit = { fg = colors.orange },
           MiniIconsConceal = { fg = colors.blue },
         }
-
-        -- Set highlight groups
         for group, attrs in pairs(icon_hl_groups) do
           vim.api.nvim_set_hl(0, group, attrs)
         end
       end
 
-      -- Update on theme change
-      vim.api.nvim_create_autocmd("ColorScheme", {
-        callback = update_icon_colors,
-      })
-
-      -- Initial color setup
+      vim.api.nvim_create_autocmd("ColorScheme", { callback = update_icon_colors })
       update_icon_colors()
     end,
   },
@@ -61,15 +49,13 @@ return {
     "echasnovski/mini.starter",
     version = false,
     event = function()
-      -- Load for empty buffers at startup
       if vim.fn.argc() == 0 and vim.fn.line2byte("$") == -1 then
         return "VimEnter"
       end
     end,
-    cmd = "Starter", -- Also load on command
+    cmd = "Starter",
     enabled = true,
     opts = function()
-      -- Helper to make header
       local function header()
         local hour = tonumber(os.date("%H"))
         local greeting = hour < 12 and "Good morning" or hour < 18 and "Good afternoon" or "Good evening"
@@ -82,7 +68,6 @@ return {
       local function footer()
         local stats = require("lazy").stats()
         local v = vim.version()
-
         return table.concat({
           "",
           string.format("⚡ %d/%d plugins loaded in %.2fms", stats.loaded, stats.count, stats.startuptime),
@@ -92,12 +77,10 @@ return {
         }, "\n")
       end
 
-      -- Build all items
       local function build_items()
         local all_items = {}
 
-        -- Telescope items
-        local telescope_items = {
+        vim.list_extend(all_items, {
           { action = "Telescope find_files", name = "Find Files",   section = "Telescope" },
           { action = "Telescope live_grep",  name = "Find Text",    section = "Telescope" },
           { action = "Telescope oldfiles",   name = "Recent Files", section = "Telescope" },
@@ -105,19 +88,15 @@ return {
           { action = "Telescope help_tags",  name = "Help Tags",    section = "Telescope" },
           { action = "Telescope commands",   name = "Commands",     section = "Telescope" },
           { action = "Telescope keymaps",    name = "Keymaps",      section = "Telescope" },
-        }
-        vim.list_extend(all_items, telescope_items)
+        })
 
-        -- File items
-        local file_items = {
+        vim.list_extend(all_items, {
           { action = "ene | startinsert", name = "New File",      section = "Files" },
           { action = "Oil",               name = "File Explorer", section = "Files" },
           { action = "e $MYVIMRC",        name = "Edit Config",   section = "Files" },
-        }
-        vim.list_extend(all_items, file_items)
+        })
 
-        -- Session items
-        local session_items = {
+        vim.list_extend(all_items, {
           ---@diagnostic disable-next-line: different-requires
           {
             action = function()
@@ -133,37 +112,29 @@ return {
             name = "Last Session",
             section = "Sessions",
           },
-        }
-        vim.list_extend(all_items, session_items)
+        })
 
-        -- Git items
-        local git_items = {
+        vim.list_extend(all_items, {
           { action = "LazyGit",      name = "LazyGit",    section = "Git" },
           { action = "Git status",   name = "Git Status", section = "Git" },
           { action = "DiffviewOpen", name = "Diff View",  section = "Git" },
-        }
-        vim.list_extend(all_items, git_items)
+        })
 
-        -- System items
-        local system_items = {
+        vim.list_extend(all_items, {
           { action = "Lazy",        name = "Lazy Plugins",   section = "System" },
           { action = "Mason",       name = "Mason Packages", section = "System" },
           { action = "checkhealth", name = "Check Health",   section = "System" },
           { action = "qa",          name = "Quit Neovim",    section = "System" },
-        }
-        vim.list_extend(all_items, system_items)
+        })
 
         local items = {}
         for i, item in ipairs(all_items) do
-          local prefix = string.format("%d", i)
-          local formatted_item = {
+          table.insert(items, {
             action = item.action,
-            name = string.format("%s. %s", prefix, item.name),
+            name = string.format("%d. %s", i, item.name),
             section = item.section,
-          }
-          table.insert(items, formatted_item)
+          })
         end
-
         return items
       end
 
@@ -174,7 +145,6 @@ return {
       }
     end,
 
-    -- Apply configuration and set up behavior
     config = function(_, opts)
       local starter = require("mini.starter")
       starter.setup(opts)
@@ -195,24 +165,20 @@ return {
         local items = starter.config.items or opts.items or {}
         local starts = {}
         local previous_section = nil
-
         for idx, item in ipairs(items) do
           if item.section ~= previous_section then
             table.insert(starts, idx)
             previous_section = item.section
           end
         end
-
         return starts
       end
 
-      -- Create :Starter command and <leader>d mapping
       vim.api.nvim_create_user_command("Starter", function()
         starter.open()
       end, { desc = "Open Mini Starter" })
       vim.keymap.set("n", "<leader>d", "<cmd>Starter<cr>", { desc = "Open Dashboard" })
 
-      -- Refresh stats in footer
       local function refresh()
         local stats = require("lazy").stats()
         local v = vim.version()
@@ -226,11 +192,9 @@ return {
         starter.refresh()
       end
 
-      -- When dashboard opens
       vim.api.nvim_create_autocmd("User", {
         pattern = "MiniStarterOpened",
         callback = function()
-          -- Set buffer options
           vim.opt_local.number = false
           vim.opt_local.relativenumber = false
           vim.opt_local.signcolumn = "no"
@@ -246,31 +210,23 @@ return {
             require("mini.starter").update_current_item("prev")
           end, { buffer = true, desc = "Previous item" })
 
-          -- Page navigation (section-based)
           vim.keymap.set("n", "<C-f>", function()
             local section_starts = get_section_starts()
             local current_idx = vim.b.ministarter_current or 1
-
-            -- Find next section start
             for _, start_idx in ipairs(section_starts) do
               if start_idx > current_idx then
-                local jumps = start_idx - current_idx
-                for _ = 1, jumps do
+                for _ = 1, start_idx - current_idx do
                   starter.update_current_item("next")
                 end
                 return
               end
             end
-
-            -- If no next section, go to last item
             starter.update_current_item("last")
           end, { buffer = true, desc = "Next section" })
 
           vim.keymap.set("n", "<C-b>", function()
             local section_starts = get_section_starts()
             local current_idx = vim.b.ministarter_current or 1
-
-            -- Find previous section start
             local prev_start = 1
             for _, start_idx in ipairs(section_starts) do
               if start_idx >= current_idx then
@@ -278,32 +234,23 @@ return {
               end
               prev_start = start_idx
             end
-
-            -- Jump to previous section start
             if prev_start < current_idx then
-              local jumps = current_idx - prev_start
-              for _ = 1, jumps do
+              for _ = 1, current_idx - prev_start do
                 starter.update_current_item("prev")
               end
             else
-              -- If already at first section, go to first item
               starter.update_current_item("first")
             end
           end, { buffer = true, desc = "Previous section" })
 
-          -- Since sections vary from 2-7 items,
-          -- jumping by 4 items will reliably
-          -- cross most section boundaries
-
+          -- Sections vary 2-7 items, so 4 reliably crosses most boundaries.
           vim.keymap.set("n", "<C-d>", function()
-            -- Jump forward by 4 items
             for _ = 1, 4 do
               starter.update_current_item("next")
             end
           end, { buffer = true, desc = "Half page down" })
 
           vim.keymap.set("n", "<C-u>", function()
-            -- Jump backward by 4 items
             for _ = 1, 4 do
               starter.update_current_item("prev")
             end
@@ -321,12 +268,10 @@ return {
           vim.keymap.set("n", "q", "<cmd>qa<cr>", { buffer = true, desc = "Quit Neovim" })
 
           vim.keymap.set("n", "<Esc>", function()
-            -- Close starter and return to previous buffer or quit if none
             local buffers = vim.fn.getbufinfo({ buflisted = 1 })
             local normal_buffers = vim.tbl_filter(function(buf)
               return buf.name ~= "" and vim.bo[buf.bufnr].filetype ~= "starter"
             end, buffers)
-
             if #normal_buffers > 0 then
               vim.cmd("buffer " .. normal_buffers[1].bufnr)
             else
@@ -335,10 +280,7 @@ return {
           end, { buffer = true, desc = "Close starter" })
 
           vim.keymap.set("n", "?", function()
-            -- Get current theme colors
             local colors = require("config.ui").get_colors()
-
-            -- Create help highlight groups
             vim.api.nvim_set_hl(0, "StarterHelpNormal", { bg = colors.bg, fg = colors.fg })
             vim.api.nvim_set_hl(0, "StarterHelpBorder", { fg = colors.border })
             vim.api.nvim_set_hl(0, "StarterHelpTitle", { fg = colors.blue, bold = true })
@@ -347,7 +289,6 @@ return {
             vim.api.nvim_set_hl(0, "StarterHelpKey", { fg = colors.purple })
             vim.api.nvim_set_hl(0, "StarterHelpAngleBracket", { fg = colors.purple })
 
-            -- Create a temporary buffer for help display
             local help_text = {
               "  Navigation:",
               "    j/k       - Move down/up",
@@ -371,21 +312,15 @@ return {
               "  Press 'q' to close...",
             }
 
-            -- Create help popup
             local buf = vim.api.nvim_create_buf(false, true)
             vim.api.nvim_buf_set_lines(buf, 0, -1, false, help_text)
             vim.bo[buf].modifiable = false
             vim.bo[buf].readonly = true
 
-            -- Set up syntax highlighting for the help text
             vim.api.nvim_buf_call(buf, function()
-              -- Headers (lines ending with :)
               vim.cmd([[syntax match StarterHelpHeader /^  \w\+:$/]])
-              -- Bullet points (•)
               vim.cmd([[syntax match StarterHelpBullet /•/]])
-              -- Keys/commands (everything before " - ")
               vim.cmd([[syntax match StarterHelpKey /\s\+\zs[^-]\+\ze\s\+-/]])
-              -- Angle bracket keys like <C-f>, <CR>, <Esc>
               vim.cmd([[syntax match StarterHelpAngleBracket /<[^>]*>/]])
             end)
 
@@ -405,18 +340,12 @@ return {
 
             vim.wo[win].winhighlight = "Normal:StarterHelpNormal,FloatBorder:StarterHelpBorder,FloatTitle:StarterHelpTitle"
 
-            -- Close on any key
-            vim.keymap.set("n", "<CR>", function()
-              vim.api.nvim_win_close(win, true)
-            end, { buffer = buf })
-            vim.keymap.set("n", "<Esc>", function()
-              vim.api.nvim_win_close(win, true)
-            end, { buffer = buf })
-            vim.keymap.set("n", "q", function()
-              vim.api.nvim_win_close(win, true)
-            end, { buffer = buf })
+            for _, key in ipairs({ "<CR>", "<Esc>", "q" }) do
+              vim.keymap.set("n", key, function()
+                vim.api.nvim_win_close(win, true)
+              end, { buffer = buf })
+            end
 
-            -- Auto-close on any key
             vim.api.nvim_create_autocmd("BufLeave", {
               buffer = buf,
               once = true,
@@ -428,33 +357,18 @@ return {
             })
           end, { buffer = true, desc = "Show help" })
 
-          -- Update highlights based on colorscheme
           set_starter_highlights()
-
-          -- Clean up tabline
           vim.opt_local.showtabline = 0
-
-          -- Re-enable multi-key sequences in dashboard
           vim.opt_local.timeout = true
           vim.opt_local.timeoutlen = 300
 
-          -- Buffer-local <leader> mappings
-          vim.keymap.set(
-            "n",
-            "<leader>ff",
-            "<cmd>Telescope find_files<cr>",
-            { buffer = true, desc = "Find files from Dashboard" }
-          )
-          vim.keymap.set(
-            "n",
-            "<leader>fg",
-            "<cmd>Telescope live_grep<cr>",
-            { buffer = true, desc = "Grep in files from Dashboard" }
-          )
+          vim.keymap.set("n", "<leader>ff", "<cmd>Telescope find_files<cr>",
+            { buffer = true, desc = "Find files from Dashboard" })
+          vim.keymap.set("n", "<leader>fg", "<cmd>Telescope live_grep<cr>",
+            { buffer = true, desc = "Grep in files from Dashboard" })
         end,
       })
 
-      -- Update colors on colorscheme change
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
           if vim.bo.filetype == "starter" then
@@ -463,4 +377,5 @@ return {
         end,
       })
     end,
-  } }
+  },
+}

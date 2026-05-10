@@ -8,7 +8,8 @@ return {
   },
 
   init = function()
-    -- Preserve laststatus and hide until ready
+    -- Hide statusline until lualine is ready; remember the user's laststatus
+    -- so we can restore it on LazyLoad.
     vim.g.lualine_laststatus = vim.o.laststatus
     if vim.fn.argc(-1) > 0 then
       vim.o.statusline = " "
@@ -126,13 +127,12 @@ return {
     local function ai_indicators()
       return {
         function()
-          -- Check if Codeium is loaded
           if package.loaded["codeium"] then
             return "windsurf"
           end
           return ""
         end,
-        color = { fg = colors.purple, bg = bar_bg }, -- Windsurf green
+        color = { fg = colors.purple, bg = bar_bg },
       }
     end
 
@@ -228,7 +228,6 @@ return {
             end,
             padding = { left = 1, right = 1 },
           },
-          -- lazy updates
           {
             function()
               local lazy_status = require("lazy.status")
@@ -266,8 +265,6 @@ return {
           file_size(),
           file_encoding(),
           file_format(),
-
-          -- noice command status
           {
             function()
               return require("noice").api.status.command.get()
@@ -279,7 +276,6 @@ return {
               return { fg = colors.fg }
             end,
           },
-          -- noice mode status
           {
             function()
               return require("noice").api.status.mode.get()
@@ -291,7 +287,6 @@ return {
               return { fg = colors.fg }
             end,
           },
-          -- dap status
           {
             function()
               ---@diagnostic disable-next-line: different-requires
@@ -336,7 +331,6 @@ return {
     require("lualine").setup(opts)
 
     local function rebuild_lualine()
-      -- Rebuild the config with new colors
       local new_opts = require("plugins.ui.statusline").opts()
       require("lualine").setup(new_opts)
     end
@@ -347,7 +341,7 @@ return {
       end,
     })
 
-    -- Set autocmd to restore user's laststatus when lualine unloads
+    -- Restore the user's laststatus if lualine ever unloads.
     vim.api.nvim_create_autocmd("User", {
       pattern = "LazyLoad",
       callback = function(event)

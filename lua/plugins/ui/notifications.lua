@@ -10,29 +10,25 @@ return {
         desc = "Dismiss all Notifications",
       },
     },
-    opts = {
-      background_colour = "#000000",
-      timeout = 1000,
-      stages = "fade",
-      render = "wrapped-compact",
-      minimum_width = 30,
-      max_width = 80,
-      max_height = 20,
-      top_down = true,
-      icons = {
-        ERROR = "",
-        WARN = "",
-        INFO = "",
-        DEBUG = "",
-        TRACE = "",
-      },
-      on_open = function(win)
-        vim.api.nvim_win_set_config(win, { zindex = 100, border = "single" })
-      end,
-    },
+    opts = function()
+      return {
+        background_colour = "#000000",
+        timeout = 1000,
+        stages = "fade",
+        render = "wrapped-compact",
+        minimum_width = 30,
+        max_width = 80,
+        max_height = 20,
+        top_down = true,
+        icons = require("lib.icons").notify,
+        on_open = function(win)
+          vim.api.nvim_win_set_config(win, { zindex = 100, border = "single" })
+        end,
+      }
+    end,
     init = function()
       local notify = require("notify")
-      -- Filter Codeium network errors
+      ---@diagnostic disable-next-line: duplicate-set-field
       vim.notify = function(msg, level, opts)
         if type(msg) == "string" and msg:match("Codeium.*request failed") then
           return

@@ -1,4 +1,3 @@
--- lua/plugins/toggleterm.lua
 return {
   "akinsho/toggleterm.nvim",
   version = "*",
@@ -30,7 +29,6 @@ return {
     close_on_exit = true,
     shell = vim.o.shell,
     auto_scroll = true,
-    -- Float options
     float_opts = {
       border = "single",
       winblend = 0,
@@ -45,18 +43,16 @@ return {
         return math.floor(vim.o.lines * 0.8)
       end,
     },
-    -- Winbar to show current process
     winbar = {
       enabled = true,
       name_formatter = function(term)
         if not term or not term.cmd then
-          return " Terminal" -- Default fallback name
+          return " Terminal"
         end
 
         local title = term.display_name or term.name
         local icon = ""
 
-        -- Determine icon based on cmd
         if term.cmd:match("go") then
           icon = ""
         elseif term.cmd:match("npm") or term.cmd:match("yarn") or term.cmd:match("pnpm") then
@@ -80,7 +76,6 @@ return {
   config = function(_, opts)
     require("toggleterm").setup(opts)
 
-    -- Terminal mode keymaps
     local function set_terminal_keymaps()
       local buf = vim.api.nvim_get_current_buf()
       local map_opts = { buffer = buf, noremap = true, silent = true }
@@ -88,7 +83,6 @@ return {
       vim.keymap.set("t", "jk", [[<C-\><C-n>]], map_opts)
       vim.keymap.set("t", "<C-w>", [[<C-\><C-n><C-w>]], map_opts)
 
-      -- Normal mode mapping for q to close
       vim.keymap.set("n", "q", function()
         local term = require("toggleterm.terminal").get_focused_id()
         if term then
@@ -104,48 +98,35 @@ return {
       callback = set_terminal_keymaps,
     })
 
-    -- Custom terminal factory
     local Terminal = require("toggleterm.terminal").Terminal
 
-    -- Helper to create terminal commands
     local function create_term_cmd(name, cmd, opts)
       local term_opts = vim.tbl_deep_extend("force", {
         cmd = cmd,
         hidden = true,
         direction = "float",
-        float_opts = {
-          border = "single",
-        },
+        float_opts = { border = "single" },
         on_open = function(term)
           vim.cmd("startinsert!")
         end,
         on_exit = function(_)
-          -- Refresh git status if this was a git command
           if cmd:match("git") and package.loaded["gitsigns"] then
             require("gitsigns").refresh()
           end
         end,
       }, opts or {})
 
-      -- Create the terminal
       local term = Terminal:new(term_opts)
-
-      -- Create user command
       vim.api.nvim_create_user_command(name, function()
         term:toggle()
       end, { desc = term_opts.desc or ("Toggle " .. name) })
-
       return term
     end
 
-    -- Generic terminals
-    create_term_cmd("FloatTerm", vim.o.shell, {
-      display_name = "Shell",
-    })
+    create_term_cmd("FloatTerm", vim.o.shell, { display_name = "Shell" })
 
-    -- Note: LazyGit keybinding (<leader>gg) is defined in plugins/git/lazygit.lua
+    -- Note: LazyGit keybinding (<leader>gg) lives in plugins/git/lazygit.lua.
 
-    -- Create dynamic menu command to list available terminals
     vim.api.nvim_create_user_command("Terminals", function()
       local terms = require("toggleterm.terminal").get_all(true)
       if #terms == 0 then

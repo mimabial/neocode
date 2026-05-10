@@ -28,6 +28,9 @@ return {
       -- Now setup rainbow delimiters with the highlights
       vim.g.rainbow_delimiters = {
         condition = function(bufnr)
+          if vim.b[bufnr].bigfile then
+            return false
+          end
           local bt = vim.bo[bufnr].buftype
           local ft = vim.bo[bufnr].filetype
 
@@ -119,6 +122,7 @@ return {
             "NvimTree",
             "packer",
             "oil",
+            "bigfile",
           },
           buftypes = {
             "terminal",

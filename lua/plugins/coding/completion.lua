@@ -3,37 +3,9 @@ return {
     "onsails/lspkind.nvim",
     lazy = true,
     priority = 75,
-    opts = {
-      mode = "symbol_text",
-      symbol_map = {
-        Text = "󰉿",
-        Method = "󰆧",
-        Function = "󰊕",
-        Constructor = "󰆧",
-        Field = "󰜢",
-        Variable = "󰀫",
-        Class = "󰠱",
-        Interface = "󰕘",
-        Module = "󰏗",
-        Property = "󰜢",
-        Unit = "󰑭",
-        Value = "󰎠",
-        Enum = "󰒻",
-        Keyword = "󰌋",
-        Snippet = "󰅪",
-        Color = "󰏘",
-        File = "󰈙",
-        Reference = "󰈇",
-        Folder = "󰉋",
-        EnumMember = "󰒻",
-        Constant = "󰏿",
-        Struct = "󰙅",
-        Event = "󰉁",
-        Operator = "󰆕",
-        TypeParameter = "󰅲",
-        Codeium = "󰚩",
-      },
-    },
+    opts = function()
+      return { mode = "symbol_text", symbol_map = require("lib.icons").kinds }
+    end,
   },
   {
     "hrsh7th/nvim-cmp",
@@ -68,16 +40,13 @@ return {
           { name = "emoji",    group_index = 3, priority = 30 },
         }
 
-        -- Add Codeium only if loaded
-        local has_codeium = pcall(require, "codeium")
-        if has_codeium then
+        if pcall(require, "codeium") then
           table.insert(sources, 1, { name = "codeium", group_index = 0, priority = 100 })
         end
 
         return sources
       end
 
-      -- Get UI config if available
       local ui_config = require("config.ui").get_config() or {}
       local float_config = ui_config.float
 
@@ -111,7 +80,6 @@ return {
           ["<C-p>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
           ["<C-u>"] = cmp.mapping.scroll_docs(-4),
           ["<C-d>"] = cmp.mapping.scroll_docs(4),
-          -- Jump to the next snippet placeholder
           ["<C-f>"] = cmp.mapping(function(fallback)
             if luasnip.jumpable(1) then
               luasnip.jump(1)
@@ -119,7 +87,6 @@ return {
               fallback()
             end
           end, { "i", "s" }),
-          -- Jump to the previous snippet placeholder
           ["<C-b>"] = cmp.mapping(function(fallback)
             if luasnip.jumpable(-1) then
               luasnip.jump(-1)
@@ -152,7 +119,6 @@ return {
         sources = cmp.config.sources(build_sources()),
         formatting = {
           format = function(entry, vim_item)
-            -- Get menu icons for different sources
             local menu_icons = {
               buffer = " Buffer",
               nvim_lsp = " LSP",
@@ -163,7 +129,6 @@ return {
               codeium = " Codeium",
             }
 
-            -- Format using lspkind with improved styling
             local formatted_item = lspkind.cmp_format({
               mode = "symbol_text",
               maxwidth = 50,
@@ -183,10 +148,8 @@ return {
         },
       }
 
-      -- Initial setup
       cmp.setup(cmp_config)
 
-      -- Cmdline completions
       cmp.setup.cmdline(":", {
         mapping = cmp.mapping.preset.cmdline(),
         sources = cmp.config.sources({ { name = "path" } }, { { name = "cmdline" } }),

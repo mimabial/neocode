@@ -1,21 +1,5 @@
--- Telescope - Fuzzy Finder
--- Owner of the <leader>f* namespace for find/search operations
---
--- Keybindings defined here:
---   <leader>ff  → Find files
---   <leader>ft  → Find text (live grep)
---   <leader>fb  → Find buffers
---   <leader>fr  → Recent files
---   <leader>fh  → Find help
---   <leader>fw  → Find word under cursor
---   <leader>fc  → Command history
---   <leader>f/  → Search history
---   <leader>fg* → Git searches (commits, branches, status, files)
---   <leader>fd  → Document diagnostics
---   <leader>fD  → Workspace diagnostics
---   <leader>fs  → Symbols (treesitter)
---   <leader>fk  → Keymaps
---   q: / q? / q/ → Command/search history (replaces command-line window)
+-- Telescope: owner of the <leader>f* namespace for find/search.
+-- Also remaps q: / q/ / q? to picker-based history.
 
 local telescope_layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
 
@@ -38,10 +22,7 @@ return {
   keys = function()
     local builtin = require("telescope.builtin")
 
-    -- Load saved layout preference or use default
     local layout_data = { layout = "ivory" }
-
-    -- Try to read saved layout
     if vim.fn.filereadable(telescope_layout_file) == 1 then
       local file_content = vim.fn.readfile(telescope_layout_file)
       if file_content and #file_content > 0 then
@@ -63,10 +44,7 @@ return {
       save_telescope_layout("ivory")
     end
 
-    -- Define border styles
-    -- { top, right, bottom, left,
-    -- top_left, top_right,
-    -- bottom_right, bottom_left }
+    -- Order: { top, right, bottom, left, top_left, top_right, bottom_right, bottom_left }
     vim.g.telescope_borders = {
       ivory = {
         prompt = { "─", " ", " ", " ", "╶", "╴", " ", " " },
@@ -81,47 +59,36 @@ return {
     }
 
     return {
-      -- Layout toggle
       {
         "<leader>fl",
         function()
           local layout = vim.g.telescope_layout == "ivory" and "ebony" or "ivory"
           vim.g.telescope_layout = layout
-
-          -- Update Telescope's live config
           local config = require("telescope.config")
           config.values.layout_strategy = layout
           config.values.borderchars = vim.g.telescope_borders[layout]
-
           save_telescope_layout(layout)
-
           vim.notify("Telescope: " .. layout)
         end,
         desc = "Toggle Layout",
       },
-      -- Core finder functions - using our layout wrapper
       { "<leader>ff", builtin.find_files, desc = "Find Files" },
       { "<leader>ft", builtin.live_grep, desc = "Find Text (Grep)" },
       { "<leader>fb", builtin.buffers, desc = "Find Buffers" },
       { "<leader>fr", builtin.oldfiles, desc = "Recent Files" },
       { "<leader>fh", builtin.help_tags, desc = "Find Help" },
-      -- Extended search functionality
       { "<leader>fw", builtin.grep_string, desc = "Find Current Word" },
       { "<leader>fc", builtin.command_history, desc = "Command History" },
       { "<leader>f/", builtin.search_history, desc = "Search History" },
-      -- Redirect command-line window to Telescope
       { "q:", builtin.command_history, desc = "Command History" },
       { "q/", builtin.search_history, desc = "Search History" },
       { "q?", builtin.search_history, desc = "Search History" },
-      -- Git integration
       { "<leader>fgc", builtin.git_commits, desc = "Git Commits" },
       { "<leader>fgb", builtin.git_branches, desc = "Git Branches" },
       { "<leader>fgs", builtin.git_status, desc = "Git Status" },
       { "<leader>fgf", builtin.git_files, desc = "Git Files" },
-      -- LSP integration
       { "<leader>fd", "<cmd>Telescope diagnostics bufnr=0<cr>", desc = "Document Diagnostics" },
       { "<leader>fD", builtin.diagnostics, desc = "Workspace Diagnostics" },
-      -- Other useful pickers
       { "<leader>fs", builtin.treesitter, desc = "Symbols" },
       { "<leader>fk", builtin.keymaps, desc = "Keymaps" },
     }
@@ -233,9 +200,7 @@ return {
       return layout
     end
 
-    -- Basic configuration with both layout options predefined
     telescope.setup({
-
       defaults = {
         prompt_title = false,
         preview_title = false,
@@ -277,21 +242,19 @@ return {
             preview_cutoff = 120,
           },
           ebony = {
-            width = 1.0, -- Full width
-            height = 1.0, -- Full height
-            preview_cutoff = 0, -- Always show preview
+            width = 1.0,
+            height = 1.0,
+            preview_cutoff = 0,
             prompt_position = "top",
           },
         },
 
-        -- Static default borderchars (overridden by with_layout helper)
         borderchars = {
           prompt = { "─", " ", " ", " ", "╶", "╴", " ", " " },
           results = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
           preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
         },
 
-        -- Preview configuration with line numbers
         preview = {
           timeout = 1000,
           hide_on_startup = false,
@@ -451,7 +414,6 @@ return {
       },
     })
 
-    -- Auto-update borders and layout on window resize
     vim.api.nvim_create_autocmd("VimResized", {
       callback = function()
         local max_columns = vim.o.columns
@@ -466,20 +428,15 @@ return {
 
         if target_layout then
           vim.g.telescope_layout = target_layout
-
-          -- Update Telescope's live config
           local config = require("telescope.config")
           config.values.layout_strategy = target_layout
           config.values.borderchars = vim.g.telescope_borders[target_layout]
-
           save_telescope_layout(target_layout)
-
           vim.notify("Telescope auto-switched to " .. target_layout .. " layout", vim.log.levels.INFO)
         end
       end,
     })
 
-    -- Command for toggling layouts
     vim.api.nvim_create_user_command("TelescopeToggleLayout", function()
       vim.g.telescope_layout = (vim.g.telescope_layout == "ivory") and "ebony" or "ivory"
       local layout = vim.g.telescope_layout
@@ -487,7 +444,6 @@ return {
       vim.notify("Telescope layout: " .. layout .. " (saved)")
     end, {})
 
-    -- Enhanced preview settings
     vim.api.nvim_create_autocmd("User", {
       pattern = "TelescopePreviewerLoaded",
       callback = function()
@@ -502,7 +458,6 @@ return {
       end,
     })
 
-    -- Load fzf extension if available
     pcall(function()
       telescope.load_extension("fzf")
     end)

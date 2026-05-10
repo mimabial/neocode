@@ -1,10 +1,5 @@
--- Gitsigns - Git Hunk Operations
--- Part of the git namespace (see plugins/git/lazygit.lua for organization)
---
--- Keybindings defined here:
---   <leader>h*  → Hunk operations (stage, reset, preview, blame, etc.)
---   ]c / [c     → Navigate to next/previous hunk
---   ih          → Text object for selecting hunks
+-- Gitsigns: <leader>h* hunk operations, ]c/[c hunk nav, ih text object.
+-- Part of the git namespace; see plugins/git/lazygit.lua for the org map.
 
 return {
   "lewis6991/gitsigns.nvim",
@@ -36,7 +31,6 @@ return {
           vim.keymap.set(mode, lhs, rhs, opts)
         end
 
-        -- Navigation
         map("n", "]c", function()
           if vim.wo.diff then
             return "]c"
@@ -57,7 +51,6 @@ return {
           return "<Ignore>"
         end, { expr = true, desc = "Previous git hunk" })
 
-        -- Actions
         map("n", "<leader>hs", gs.stage_hunk, { desc = "Stage hunk" })
         map("n", "<leader>hr", gs.reset_hunk, { desc = "Reset hunk" })
         map("v", "<leader>hs", function()
