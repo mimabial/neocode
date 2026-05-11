@@ -1,5 +1,4 @@
 ---@diagnostic disable: missing-fields
----@diagnostic disable: undefined-global
 
 local function toggle_dap_breakpoint()
   require("dap").toggle_breakpoint()

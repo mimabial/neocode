@@ -64,7 +64,7 @@ local function detect_django(root)
   }
 
   for _, pattern in ipairs(patterns) do
-    local matches = vim.fn.glob(root .. "/" .. pattern, 0, 1)
+    local matches = vim.fn.glob(root .. "/" .. pattern, false, true)
     for _, match in ipairs(matches) do
       table.insert(files, match)
     end
@@ -72,7 +72,7 @@ local function detect_django(root)
 
   local req_dir = root .. "/requirements"
   if vim.fn.isdirectory(req_dir) == 1 then
-    local req_files = vim.fn.glob(req_dir .. "/*.txt", 0, 1)
+    local req_files = vim.fn.glob(req_dir .. "/*.txt", false, true)
     for _, match in ipairs(req_files) do
       table.insert(files, match)
     end

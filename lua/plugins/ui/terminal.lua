@@ -100,13 +100,13 @@ return {
 
     local Terminal = require("toggleterm.terminal").Terminal
 
-    local function create_term_cmd(name, cmd, opts)
+    local function create_term_cmd(name, cmd, overrides)
       local term_opts = vim.tbl_deep_extend("force", {
         cmd = cmd,
         hidden = true,
         direction = "float",
         float_opts = { border = "single" },
-        on_open = function(term)
+        on_open = function(_)
           vim.cmd("startinsert!")
         end,
         on_exit = function(_)
@@ -114,7 +114,7 @@ return {
             require("gitsigns").refresh()
           end
         end,
-      }, opts or {})
+      }, overrides or {})
 
       local term = Terminal:new(term_opts)
       vim.api.nvim_create_user_command(name, function()

@@ -289,11 +289,9 @@ return {
           },
           {
             function()
-              ---@diagnostic disable-next-line: different-requires
               return "  " .. require("dap").status()
             end,
             cond = function()
-              ---@diagnostic disable-next-line: different-requires
               return package.loaded["dap"] and require("dap").status() ~= ""
             end,
             color = function()

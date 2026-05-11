@@ -134,12 +134,12 @@ return {
               maxwidth = 50,
               ellipsis_char = "...",
               menu = menu_icons,
-              before = function(entry, vim_item)
-                if entry.source.name == "codeium" then
-                  vim_item.kind = "Codeium"
-                  vim_item.kind_hl_group = "CmpItemKindCodeium"
+              before = function(item_entry, item)
+                if item_entry.source.name == "codeium" then
+                  item.kind = "Codeium"
+                  item.kind_hl_group = "CmpItemKindCodeium"
                 end
-                return vim_item
+                return item
               end,
             })(entry, vim_item)
 

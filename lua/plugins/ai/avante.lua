@@ -16,7 +16,8 @@ return {
     },
   },
   opts = {
-    ---@alias Provider "claude" | "openai" | "azure" | "gemini" | "cohere" | "copilot" | string
+    ---@alias AvanteProvider "claude" | "openai" | "azure" | "gemini" | "cohere" | "copilot" | string
+    ---@type AvanteProvider
     provider = "claude",
     auto_suggestions_provider = "claude",
     providers = {

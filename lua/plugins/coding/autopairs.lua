@@ -41,32 +41,32 @@ return {
 
       -- Add spaces between parentheses
       npairs.add_rules({
-        Rule(" ", " "):with_pair(function(opts)
-          local pair = opts.line:sub(opts.col - 1, opts.col)
+        Rule(" ", " "):with_pair(function(rule)
+          local pair = rule.line:sub(rule.col - 1, rule.col)
           return vim.tbl_contains({ "()", "[]", "{}" }, pair)
         end):with_move(ts_conds.is_not_ts_node),
         Rule("( ", " )")
           :with_pair(function()
             return false
           end)
-          :with_move(function(opts)
-            return ts_conds.is_not_ts_node(opts)
+          :with_move(function(rule)
+            return ts_conds.is_not_ts_node(rule)
           end)
           :use_key(")"),
         Rule("{ ", " }")
           :with_pair(function()
             return false
           end)
-          :with_move(function(opts)
-            return ts_conds.is_not_ts_node(opts)
+          :with_move(function(rule)
+            return ts_conds.is_not_ts_node(rule)
           end)
           :use_key("}"),
         Rule("[ ", " ]")
           :with_pair(function()
             return false
           end)
-          :with_move(function(opts)
-            return ts_conds.is_not_ts_node(opts)
+          :with_move(function(rule)
+            return ts_conds.is_not_ts_node(rule)
           end)
           :use_key("]"),
       })

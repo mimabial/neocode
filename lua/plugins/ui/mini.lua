@@ -97,7 +97,6 @@ return {
         })
 
         vim.list_extend(all_items, {
-          ---@diagnostic disable-next-line: different-requires
           {
             action = function()
               require("persistence").load()

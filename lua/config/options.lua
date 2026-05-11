@@ -1,4 +1,3 @@
----@diagnostic disable: missing-fields
 local M = {}
 
 function M.setup()
@@ -52,20 +51,22 @@ function M.setup()
   opt.updatetime = 250
   opt.timeoutlen = 300
 
-  -- Backup, swap, undo: keep crash recovery, write to cache to avoid disk noise.
+  -- Backup/swap/undo live under stdpath("state") so lua_ls (which scans
+  -- stdpath("data") via the rtp library) doesn't index *.lua~ backup files
+  -- and double-count @alias / @class annotations.
   opt.backup = true
   opt.writebackup = true
-  opt.backupdir = fn.stdpath("data") .. "/backup//"
+  opt.backupdir = fn.stdpath("state") .. "/backup//"
   opt.swapfile = true
-  opt.directory = fn.stdpath("data") .. "/swap//"
+  opt.directory = fn.stdpath("state") .. "/swap//"
   opt.fsync = false
   opt.undofile = true
-  opt.undodir = fn.stdpath("data") .. "/undo//"
+  opt.undodir = fn.stdpath("state") .. "/undo//"
   opt.undolevels = 1000
   opt.undoreload = 10000
 
   for _, dir in ipairs({ "backup", "swap", "undo" }) do
-    local path = fn.stdpath("data") .. "/" .. dir
+    local path = fn.stdpath("state") .. "/" .. dir
     if fn.isdirectory(path) == 0 then
       fn.mkdir(path, "p")
     end

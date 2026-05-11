@@ -12,7 +12,7 @@ local function build_mason_tools_opts(cwd)
   local function has_any(names)
     for _, name in ipairs(names) do
       if name:find("[*?[]") then
-        if #vim.fn.glob(root_dir .. "/" .. name, 0, 1) > 0 then
+        if #vim.fn.glob(root_dir .. "/" .. name, false, true) > 0 then
           return true
         end
       else
@@ -125,8 +125,8 @@ return {
 
       vim.api.nvim_create_autocmd("DirChanged", {
         group = vim.api.nvim_create_augroup("MasonToolInstallerRefresh", { clear = true }),
-        callback = function(event)
-          refresh(event.cwd)
+        callback = function()
+          refresh(vim.v.event.cwd)
         end,
         desc = "Refresh Mason tools when the working directory changes",
       })
@@ -338,7 +338,7 @@ return {
 
           -- Go
           goimports = {
-            prepend_args = function(self, ctx)
+            prepend_args = function(_, ctx)
               local go_mod = util.root_file({ "go.mod" })(ctx.buf)
               if go_mod then
                 return { "-local", "." }

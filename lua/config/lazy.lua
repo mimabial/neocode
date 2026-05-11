@@ -1,12 +1,7 @@
 local M = {}
 
 function M.setup()
-  local lazy_ok, lazy = pcall(require, "lazy")
-  if not lazy_ok then
-    vim.notify("Failed to load lazy.nvim. Check installation.", vim.log.levels.ERROR)
-    return
-  end
-
+  local lazy = require("lazy") ---@type Lazy
   lazy.setup({
     spec = {
       { import = "plugins.ai" },

@@ -26,14 +26,12 @@ end
 
 M.check_plugins = function()
   local issues = {}
-  local plugins = require("lazy.core.config").plugins
-
-  for name, plugin in pairs(plugins) do
-    if plugin._.error then
-      table.insert(issues, "❌ Plugin error: " .. name .. " - " .. plugin._.error)
+  local Plugin = require("lazy.core.plugin")
+  for name, plugin in pairs(require("lazy.core.config").plugins) do
+    if Plugin.has_errors(plugin) then
+      table.insert(issues, "❌ Plugin has errors: " .. name)
     end
   end
-
   return issues
 end
 

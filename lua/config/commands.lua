@@ -65,22 +65,22 @@ function M.setup()
   end, { desc = "Update all plugins and Mason packages" })
 
   vim.api.nvim_create_user_command("PluginCheck", function()
-    local plugins = require("lazy.core.config").plugins
-    local errors = {}
-
-    for name, plugin in pairs(plugins) do
-      if plugin._.error then
-        table.insert(errors, { name = name, error = plugin._.error })
+    local Plugin = require("lazy.core.plugin")
+    local failed = {}
+    for name, plugin in pairs(require("lazy.core.config").plugins) do
+      if Plugin.has_errors(plugin) then
+        table.insert(failed, name)
       end
     end
 
-    if #errors == 0 then
+    if #failed == 0 then
       vim.notify("No plugin errors detected!", vim.log.levels.INFO, { title = "Plugin Check" })
     else
-      vim.notify("Found errors in " .. #errors .. " plugins", vim.log.levels.ERROR, { title = "Plugin Check" })
-      for _, err in ipairs(errors) do
-        vim.notify(err.name .. ": " .. err.error, vim.log.levels.ERROR)
-      end
+      vim.notify(
+        ("Found errors in %d plugins:\n  %s\nRun :Lazy for details."):format(#failed, table.concat(failed, ", ")),
+        vim.log.levels.ERROR,
+        { title = "Plugin Check" }
+      )
     end
   end, { desc = "Check for plugin errors" })
 
@@ -106,7 +106,7 @@ function M.setup()
   end
 
   vim.api.nvim_create_user_command("DiagnosticsToggle", function()
-    local current = vim.diagnostic.config()
+    local current = vim.diagnostic.config() or {}
     local diagnostics_enabled = current.virtual_text ~= false
       or current.signs ~= false
       or current.underline ~= false
