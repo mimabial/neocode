@@ -33,17 +33,19 @@ function M.setup()
         vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
       end
 
-      bind_if("definition",     "n", "gd", vim.lsp.buf.definition,      "Go to definition")
-      bind_if("declaration",    "n", "gD", vim.lsp.buf.declaration,     "Go to declaration")
-      bind_if("references",     "n", "gr", vim.lsp.buf.references,      "Find references")
-      bind_if("implementation", "n", "gi", vim.lsp.buf.implementation,  "Go to implementation")
+      bind_if("definition", "n", "gd", vim.lsp.buf.definition, "Go to definition")
+      bind_if("declaration", "n", "gD", vim.lsp.buf.declaration, "Go to declaration")
+      bind_if("references", "n", "gr", vim.lsp.buf.references, "Find references")
+      bind_if("implementation", "n", "gi", vim.lsp.buf.implementation, "Go to implementation")
       bind_if("typeDefinition", "n", "gt", vim.lsp.buf.type_definition, "Go to type definition")
 
       -- Note: <C-k> signature help handled by lsp_signature.nvim plugin
-      bind_if("hover", "n", "K", function() vim.lsp.buf.hover({ border = "single" }) end, "Show hover information")
+      bind_if("hover", "n", "K", function()
+        vim.lsp.buf.hover({ border = "single" })
+      end, "Show hover information")
 
       bind_if("codeAction", "n", "<leader>ca", vim.lsp.buf.code_action, "Code actions")
-      bind_if("rename",     "n", "<leader>cr", vim.lsp.buf.rename,      "Rename symbol")
+      bind_if("rename", "n", "<leader>cr", vim.lsp.buf.rename, "Rename symbol")
 
       local function open_diagnostics_float(focus)
         vim.diagnostic.open_float(nil, {
@@ -130,7 +132,6 @@ function M.setup()
   -- Editing
   -- ========================================
   map("n", "x", '"_x', { desc = "Don't copy deleted character" })
-  map("v", "p", '"_dp', { desc = "Keep yanked text when pasting" })
 
   map("v", ">", ">gv", { desc = "Indent and keep selection" })
   map("v", "<", "<gv", { desc = "Outdent and keep selection" })

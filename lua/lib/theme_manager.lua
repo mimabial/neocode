@@ -16,6 +16,11 @@ M.system_theme_file = vim.env.HYPR_THEME_CONF
   or vim.env.XDG_CONFIG_HOME and (vim.env.XDG_CONFIG_HOME .. "/hypr/themes/theme.conf")
   or vim.fn.expand("~/.config/hypr/themes/theme.conf")
 
+M.active_palette_file = vim.env.HYPR_STATE_HOME
+    and (vim.env.HYPR_STATE_HOME .. "/active-palette.json")
+  or vim.env.XDG_STATE_HOME and (vim.env.XDG_STATE_HOME .. "/hypr/active-palette.json")
+  or vim.fn.expand("~/.local/state/hypr/active-palette.json")
+
 local normalize_background
 
 local function normalize_transparency(value)
@@ -43,6 +48,23 @@ local function normalize_apply_options(options)
     background = options and options.background or nil,
     transparency = normalize_transparency(options and options.transparency),
   }
+end
+
+local function read_json_file(path)
+  if vim.fn.filereadable(path) ~= 1 then
+    return nil
+  end
+
+  local ok, content = pcall(vim.fn.readfile, path)
+  if not ok or not content[1] then
+    return nil
+  end
+
+  local success, data = pcall(vim.json.decode, table.concat(content, "\n"))
+  if success then
+    return data
+  end
+  return nil
 end
 
 -- Resolve the background colour bar chrome (statusline/tabline/winbar) should
@@ -209,34 +231,6 @@ function M.apply_theme(theme_name, variant, themes, options)
   return true
 end
 
--- State file for reading color mode
-M.staterc_file = vim.fn.expand("~/.local/state/hypr/staterc")
-M.auto_theme_state = vim.fn.expand("~/.local/state/hypr/auto_theme_state.json")
-
--- Color modes: 0=Theme, 1=Auto(wallpaper), 2=Dark(wallpaper), 3=Light(wallpaper), 4=AutoDetect(daemon)
-M.COLOR_MODE = {
-  THEME = 0,
-  WALLPAPER_AUTO = 1,
-  WALLPAPER_DARK = 2,
-  WALLPAPER_LIGHT = 3,
-  AUTO_DETECT = 4,
-}
-
--- Read a variable from staterc
-local function read_staterc(var_name)
-  if vim.fn.filereadable(M.staterc_file) ~= 1 then
-    return nil
-  end
-  local content = vim.fn.readfile(M.staterc_file)
-  for _, line in ipairs(content) do
-    local match = line:match("^" .. var_name .. '="?([^"]*)"?')
-    if match then
-      return match
-    end
-  end
-  return nil
-end
-
 -- Read variables from theme.conf (Hyprland format: $VAR = value)
 local function read_theme_conf(var_name)
   if vim.fn.filereadable(M.system_theme_file) ~= 1 then
@@ -287,106 +281,61 @@ local function parse_conf_transparency(value)
   return nil
 end
 
--- Get current color mode from staterc
-function M.get_color_mode()
-  local mode = read_staterc("selected_color_mode") or read_staterc("enableWallDcol")
-  return tonumber(mode) or 0
+local function is_light_color(hex)
+  if not hex or not hex:match("^#%x%x%x%x%x%x$") then
+    return false
+  end
+
+  local r = tonumber(hex:sub(2, 3), 16)
+  local g = tonumber(hex:sub(4, 5), 16)
+  local b = tonumber(hex:sub(6, 7), 16)
+  return ((0.299 * r + 0.587 * g + 0.114 * b) / 255) > 0.5
+end
+
+function M.load_active_palette()
+  local palette = read_json_file(M.active_palette_file)
+  if not palette or not palette.bg or not palette.fg or type(palette.colors) ~= "table" then
+    return nil
+  end
+  return palette
+end
+
+local function active_palette_background(palette)
+  return normalize_background(palette.background) or (is_light_color(palette.bg) and "light" or "dark")
 end
 
 -- Check if HyDE/Hyprland theming is available
 function M.is_hyde_available()
-  return vim.fn.filereadable(M.system_theme_file) == 1
-    or vim.fn.filereadable(M.staterc_file) == 1
+  return vim.fn.filereadable(M.active_palette_file) == 1
 end
 
--- Apply system theme based on current color mode
--- Returns true if system theme was applied, false to use fallback
+-- Apply the active system palette.
+-- Returns true if the active palette was applied.
 function M.apply_system_theme(themes)
   local settings = M.load_settings()
 
-  -- If no HyDE integration, return false to use fallback
+  -- System sync has one source of truth: the active palette file.
   if not M.is_hyde_available() then
     return false
   end
 
-  local color_mode = M.get_color_mode()
-
-  -- Read theme.conf values (used in Theme mode, fallback in others)
-  local conf_scheme = read_theme_conf("NVIM_SCHEME")
-  local conf_variant = read_theme_conf("NVIM_VARIANT")
-  local conf_background = normalize_background(read_theme_conf("NVIM_BACKGROUND"))
-  local conf_color_scheme = normalize_background(read_theme_conf("COLOR_SCHEME"))
-  local conf_transparency = parse_conf_transparency(read_theme_conf("NVIM_TRANSPARENCY"))
-
-  local scheme, variant, background
-
-  if color_mode == M.COLOR_MODE.THEME then
-    -- Theme Mode: Use all values from theme.conf
-    -- If theme.conf doesn't have NVIM_SCHEME, fall back to pywal
-    if not conf_scheme then
-      scheme = "pywal"
-      variant = nil
-      background = conf_background or conf_color_scheme
-    else
-      scheme = conf_scheme
-      variant = conf_variant
-      background = conf_background or conf_color_scheme -- Let theme derive from variant if nil
-    end
-
-  elseif color_mode == M.COLOR_MODE.AUTO_DETECT then
-    -- Auto Detect Mode: Use auto_theme daemon's settings
-    background = "dark" -- default
-    if vim.fn.filereadable(M.auto_theme_state) == 1 then
-      local ok, state = pcall(function()
-        local content = vim.fn.readfile(M.auto_theme_state)
-        return vim.json.decode(content[1] or "{}")
-      end)
-      if ok and state and state.current_mode then
-        background = state.current_mode
-      end
-    end
-    -- If no NVIM_SCHEME, fall back to pywal; otherwise use saved theme
-    if not conf_scheme then
-      scheme = "pywal"
-      variant = nil
-    else
-      scheme = settings.theme
-      variant = settings.variant
-    end
-  else
-    -- Wallpaper Modes (Auto/Dark/Light): Follow system background mode
-    local sys_background = read_staterc("BACKGROUND_MODE")
-
-    if color_mode == M.COLOR_MODE.WALLPAPER_DARK then
-      background = "dark"
-    elseif color_mode == M.COLOR_MODE.WALLPAPER_LIGHT then
-      background = "light"
-    else
-      -- Auto mode - use pywal's detection or BACKGROUND_MODE from staterc
-      background = sys_background or "dark"
-    end
-
-    -- Wallpaper modes always use the generated pywal palette.
-    scheme = "pywal"
-    variant = nil
-  end
-
-  -- Validate scheme - if not found in themes, return false for fallback
-  if not scheme or not themes[scheme] then
+  local active_palette = M.load_active_palette()
+  if not active_palette or not themes.pywal then
     return false
   end
 
-  -- Set vim.o.background before applying theme
+  local conf_transparency = parse_conf_transparency(read_theme_conf("NVIM_TRANSPARENCY"))
+
+  local background = active_palette_background(active_palette)
   if background then
     vim.o.background = background
   end
 
-  -- Apply the theme
   local opts = theme_options(settings, background)
   if conf_transparency ~= nil then
     opts.transparency = conf_transparency
   end
-  return M.apply_theme(scheme, variant, themes, opts)
+  return M.apply_theme("pywal", nil, themes, opts)
 end
 
 -- Update Hyprland config with current theme
@@ -453,9 +402,8 @@ function M.setup_focus_sync(themes)
 
   -- Files to watch for changes (external config files only, not our cache)
   local watch_files = {
+    M.active_palette_file,
     M.system_theme_file,
-    M.staterc_file,
-    M.auto_theme_state,
   }
 
   -- Track exact file snapshots so same-second writes and atomic replaces are detected.
@@ -480,11 +428,6 @@ function M.setup_focus_sync(themes)
   -- Apply theme if files changed
   local function sync_theme()
     if check_for_changes() then
-      -- Reload settings and apply
-      local settings = M.load_settings()
-      if settings.background then
-        vim.o.background = settings.background
-      end
       M.apply_system_theme(themes)
     end
   end
@@ -781,29 +724,16 @@ function M.register_commands(themes)
     local settings = M.load_settings()
     local lines = {}
 
-    if not M.is_hyde_available() then
-      table.insert(lines, "HyDE Integration: not available (standalone mode)")
+    local palette = M.load_active_palette()
+
+    if not palette then
+      table.insert(lines, "System Palette: not available")
       table.insert(lines, "")
     else
-      local mode = M.get_color_mode()
-      local mode_names = { [0] = "Theme", [1] = "Auto (Wallpaper)", [2] = "Dark (Wallpaper)", [3] = "Light (Wallpaper)", [4] = "Auto Detect (Daemon)" }
-      local mode_name = mode_names[mode] or "Unknown"
-      table.insert(lines, "Color Mode: " .. mode_name .. " (enableWallDcol=" .. mode .. ")")
-
-      if mode == M.COLOR_MODE.AUTO_DETECT then
-        if vim.fn.filereadable(M.auto_theme_state) == 1 then
-          local ok, state = pcall(function()
-            local content = vim.fn.readfile(M.auto_theme_state)
-            return vim.json.decode(content[1] or "{}")
-          end)
-          if ok and state then
-            table.insert(lines, "Daemon Mode: " .. (state.current_mode or "unknown"))
-            table.insert(lines, "Last Change: " .. (state.last_change or "never"))
-          end
-        else
-          table.insert(lines, "Daemon: not running")
-        end
-      end
+      table.insert(lines, "System Palette: " .. M.active_palette_file)
+      table.insert(lines, "Source: " .. (palette.source or "unknown"))
+      table.insert(lines, "Mode: " .. (palette.mode or "unknown"))
+      table.insert(lines, "Palette Background: " .. (palette.bg or "unknown"))
       table.insert(lines, "")
     end
 
