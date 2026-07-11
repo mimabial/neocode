@@ -2,7 +2,6 @@
 -- Wraps in tmux passthrough when inside tmux.
 
 local M = {}
-local colors_lib = require("lib.colors")
 
 local function has_terminal_ui()
   for _, ui in ipairs(vim.api.nvim_list_uis()) do
@@ -37,9 +36,23 @@ function M.sync_terminals()
   if not has_terminal_ui() then
     return false
   end
-  local colors = colors_lib.extract_basic()
-  send_osc(10, colors.fg)
-  send_osc(11, colors.bg)
+  local normal = vim.api.nvim_get_hl(0, { name = "Normal", link = false })
+  if normal.fg then
+    send_osc(10, string.format("#%06x", normal.fg))
+  else
+    send_osc(110, "")
+  end
+  if normal.bg then
+    send_osc(11, string.format("#%06x", normal.bg))
+  else
+    send_osc(111, "")
+  end
+  local cursor = vim.api.nvim_get_hl(0, { name = "Cursor", link = false })
+  if cursor.fg then
+    send_osc(21, string.format("cursor_text=#%06x", cursor.fg))
+  else
+    send_osc(21, "cursor_text=")
+  end
   return true
 end
 
@@ -49,11 +62,21 @@ function M.reset_terminals()
   end
   send_osc(110, "")
   send_osc(111, "")
+  send_osc(112, "")
+  send_osc(21, "cursor_text=")
   return true
 end
 
 function M.setup()
   local group = vim.api.nvim_create_augroup("TerminalSync", { clear = true })
+
+  vim.api.nvim_create_autocmd({ "UIEnter", "ColorScheme" }, {
+    group = group,
+    callback = function()
+      vim.schedule(M.sync_terminals)
+    end,
+    desc = "Sync terminal colors on startup and colorscheme change",
+  })
 
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = group,

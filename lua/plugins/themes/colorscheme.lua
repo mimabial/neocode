@@ -37,7 +37,9 @@ return {
   { "sainnhe/everforest", lazy = true, priority = 950 },
   { "ellisonleao/gruvbox.nvim", lazy = true, priority = 950 },
   { "sainnhe/gruvbox-material", lazy = true, priority = 950 },
+  { "savq/melange-nvim", name = "melange", lazy = true, priority = 950 },
   { "loctvl842/monokai-pro.nvim", lazy = true, priority = 950 },
+  { "bluz71/vim-moonfly-colors", name = "moonfly", lazy = true, priority = 950 },
   { "shaunsingh/nord.nvim", lazy = true, priority = 950 },
   { "navarasu/onedark.nvim", lazy = true, priority = 950 },
   { "nyoom-engineering/oxocarbon.nvim", lazy = true, priority = 950 },
@@ -45,4 +47,5 @@ return {
   { "maxmx03/solarized.nvim", lazy = true, priority = 950 },
   { "jpwol/thorn.nvim", lazy = true, priority = 950 },
   { "folke/tokyonight.nvim", lazy = true, priority = 950 },
+  { "zenbones-theme/zenbones.nvim", name = "zenbones", dependencies = "rktjmp/lush.nvim", lazy = true, priority = 950 },
 }

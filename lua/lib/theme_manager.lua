@@ -2,9 +2,9 @@
 -- Handles theme persistence, application, and system integration
 --
 -- Configuration via environment variables:
---   HYPR_THEME_CONF - Path to Hyprland theme config file (highest priority)
---   XDG_CONFIG_HOME - If set, uses $XDG_CONFIG_HOME/hypr/themes/theme.conf
---   Default: ~/.config/hypr/themes/theme.conf
+--   HYPR_THEME_CONF - Path to Hyprland theme metadata file (highest priority)
+--   XDG_CONFIG_HOME - If set, uses $XDG_CONFIG_HOME/hypr/themes/theme.meta
+--   Default: ~/.config/hypr/themes/theme.meta
 
 local M = {}
 
@@ -13,8 +13,8 @@ M.settings_file = M.cache_dir .. "/theme_settings.json"
 
 -- System theme configuration (can be overridden via environment variables)
 M.system_theme_file = vim.env.HYPR_THEME_CONF
-  or vim.env.XDG_CONFIG_HOME and (vim.env.XDG_CONFIG_HOME .. "/hypr/themes/theme.conf")
-  or vim.fn.expand("~/.config/hypr/themes/theme.conf")
+  or vim.env.XDG_CONFIG_HOME and (vim.env.XDG_CONFIG_HOME .. "/hypr/themes/theme.meta")
+  or vim.fn.expand("~/.config/hypr/themes/theme.meta")
 
 M.active_palette_file = vim.env.HYPR_STATE_HOME
     and (vim.env.HYPR_STATE_HOME .. "/active-palette.json")
@@ -25,6 +25,17 @@ local normalize_background
 
 local function normalize_transparency(value)
   return value == true
+end
+
+local function normalize_conf_string(value)
+  if value == nil then
+    return nil
+  end
+  local v = tostring(value):gsub("^%s+", ""):gsub("%s+$", ""):gsub('^["\']', ""):gsub('["\']$', "")
+  if v == "" then
+    return nil
+  end
+  return v
 end
 
 local function normalize_settings(data)
@@ -150,7 +161,14 @@ function M.apply_theme(theme_name, variant, themes, options)
     return false
   end
 
-  variant = sanitize_variant(theme, variant)
+  if variant ~= nil and not variant_is_valid(theme, variant) then
+    local valid = theme.variants and table.concat(theme.variants, ", ") or "none"
+    vim.notify(
+      ("Invalid variant '%s' for theme '%s' (valid: %s)"):format(variant, theme_name, valid),
+      vim.log.levels.ERROR
+    )
+    return false
+  end
   options = normalize_apply_options(options)
 
   -- Don't default background here - let themes handle nil
@@ -231,7 +249,7 @@ function M.apply_theme(theme_name, variant, themes, options)
   return true
 end
 
--- Read variables from theme.conf (Hyprland format: $VAR = value)
+-- Read variables from theme.meta (Hyprland format: $VAR = value)
 local function read_theme_conf(var_name)
   if vim.fn.filereadable(M.system_theme_file) ~= 1 then
     return nil
@@ -309,24 +327,20 @@ function M.is_hyde_available()
   return vim.fn.filereadable(M.active_palette_file) == 1
 end
 
--- Apply the active system palette.
--- Returns true if the active palette was applied.
+-- Apply the active system theme.
+-- Theme metadata may pin a Neovim colorscheme/variant; otherwise the active
+-- Hypr palette is applied through the pywal definition.
 function M.apply_system_theme(themes)
   local settings = M.load_settings()
 
-  -- System sync has one source of truth: the active palette file.
-  if not M.is_hyde_available() then
-    return false
-  end
-
   local active_palette = M.load_active_palette()
-  if not active_palette or not themes.pywal then
-    return false
-  end
-
+  local system_scheme = normalize_conf_string(read_theme_conf("NVIM_SCHEME"))
+  local system_variant = normalize_conf_string(read_theme_conf("NVIM_VARIANT"))
+  local conf_background = normalize_background(read_theme_conf("NVIM_BACKGROUND"))
+    or normalize_background(read_theme_conf("COLOR_SCHEME"))
   local conf_transparency = parse_conf_transparency(read_theme_conf("NVIM_TRANSPARENCY"))
 
-  local background = active_palette_background(active_palette)
+  local background = conf_background or active_palette and active_palette_background(active_palette) or settings.background
   if background then
     vim.o.background = background
   end
@@ -335,6 +349,18 @@ function M.apply_system_theme(themes)
   if conf_transparency ~= nil then
     opts.transparency = conf_transparency
   end
+
+  if system_scheme then
+    if themes[system_scheme] then
+      return M.apply_theme(system_scheme, system_variant, themes, opts)
+    end
+    vim.notify("System NVIM_SCHEME not found: " .. system_scheme .. "; falling back to pywal", vim.log.levels.WARN)
+  end
+
+  if not active_palette or not themes.pywal then
+    return false
+  end
+
   return M.apply_theme("pywal", nil, themes, opts)
 end
 
@@ -750,25 +776,8 @@ function M.register_commands(themes)
       return
     end
 
-    local content = vim.fn.readfile(M.system_theme_file)
-    local scheme, variant
-
-    for _, line in ipairs(content) do
-      if line:match("^%$NVIM_SCHEME") then
-        local match = line:match("=%s*(.+)")
-        if match then
-          scheme = match:gsub("%s+$", "")
-        end
-      elseif line:match("^%$NVIM_VARIANT") then
-        local match = line:match("=%s*(.+)")
-        if match then
-          variant = match:gsub("%s+$", "")
-          if variant == "" then
-            variant = nil
-          end
-        end
-      end
-    end
+    local scheme = normalize_conf_string(read_theme_conf("NVIM_SCHEME"))
+    local variant = normalize_conf_string(read_theme_conf("NVIM_VARIANT"))
 
     if scheme then
       local msg = "System theme: " .. scheme

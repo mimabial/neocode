@@ -9,6 +9,7 @@ function M.setup()
   opt.relativenumber = true
   opt.numberwidth = 4
   opt.cursorline = true
+  opt.guicursor = "n-v-c-sm:block-Cursor,i-ci-ve:ver25-Cursor,r-cr-o:hor20-Cursor,t:block-blinkon500-blinkoff500-TermCursor"
   opt.termguicolors = true
   opt.background = "dark"
   opt.signcolumn = "yes:1"

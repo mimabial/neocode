@@ -1,16 +1,13 @@
 return {
   icon = "",
-  variants = { "warm", "cold" },
+  variants = { "forest", "field" },
   setup = function(opts)
-    -- Use current vim.o.background if not specified (preserves background when cycling variants)
-    local bg = opts.background or vim.o.background or "dark"
+    local variant = opts.variant
+      or ((opts.background or vim.o.background or "dark") == "light" and "field" or "forest")
     require("thorn").setup({
-      theme = bg,
-      background = opts.variant or "warm",
+      theme = variant,
       transparent = opts.transparency,
     })
-    vim.o.background = bg
     vim.cmd("colorscheme thorn")
   end,
 }
-
