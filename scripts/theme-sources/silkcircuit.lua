@@ -3,6 +3,8 @@
 -- Requires the silkcircuit plugin to be installed.
 return {
   all_variants = { "neon", "vibrant", "soft", "glow", "dawn" },
+  -- Variants to (re)capture on bootstrap, independent of which a pack uses now.
+  bootstrap_variants = { "soft", "vibrant" },
   -- Highlight groups to drop from the snapshot (their orphaned palette colors
   -- vanish too). Excluded groups fall back to the plugin's / nvim's defaults.
   exclude = {
