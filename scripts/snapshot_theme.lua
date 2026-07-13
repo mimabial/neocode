@@ -113,6 +113,11 @@ local function excluded(group)
 end
 
 local function capture(variant, opts)
+  -- Clean slate: reset every group and the terminal palette before applying, so
+  -- nothing leaks from the startup theme or plugins that set globals eagerly
+  -- (a scheme that doesn't define terminal colors would otherwise inherit them).
+  vim.cmd("highlight clear")
+  for i = 0, 15 do vim.g["terminal_color_" .. i] = nil end
   source.apply(variant, opts)
 
   -- Enumerate names from the bulk map, then query each by name with the
@@ -317,7 +322,9 @@ for _, variant in ipairs(variant_names) do
   for _, e in ipairs(pal) do w(("  %s = %q,\n"):format(e.name, e.hex)) end
   w("}\n\n")
 
-  w("M." .. variant .. " = {\n")
+  local mkey = variant:match("^[%a_][%w_]*$") and ("M." .. variant)
+    or ("M[" .. string.format("%q", variant) .. "]")
+  w(mkey .. " = {\n")
   w(("  background = %q,\n"):format(snap.background or "dark"))
   w("  palette = " .. pvar .. ",\n")
   w("  terminal = {\n")

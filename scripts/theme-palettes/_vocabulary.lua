@@ -33,13 +33,17 @@ local function add(list)
 end
 
 -- ANSI neutrals + foregrounds.
-add({ "black", "white", "black_bright", "white_bright",
-      "gray", "gray_dim", "gray_dark", "gray_muted", "gray_light",
-      "fg", "fg_dim", "fg_alt", "comment" })
+add({ "black", "white", "black_bright", "white_bright", "white_dim",
+      "gray", "gray_dim", "gray_dark", "gray_darker", "gray_muted", "gray_light",
+      "fg", "fg_bright", "fg_dim", "fg_muted", "fg_alt", "comment" })
 
--- Editor surfaces: background tiers + special surfaces.
+-- Editor surfaces: background tiers + special surfaces. surface/panel tiers
+-- give deep dark themes (which stack many elevated surfaces above a near-black
+-- bg) enough distinct names without abusing the darker-than-bg bg_* tiers.
 add({ "bg", "bg_alt", "bg_dim", "bg_dark", "bg_darker", "bg_darkest",
-      "surface", "overlay", "selection", "cursorline", "float", "shadow",
+      "surface", "surface_dim", "surface_bright",
+      "panel", "panel_dim", "panel_bright",
+      "overlay", "selection", "cursorline", "float", "shadow",
       "indent", "indent_scope" })
 
 -- Neovim semantic highlight roles (colors a theme designs for a purpose).

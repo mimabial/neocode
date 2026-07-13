@@ -1,9 +1,5 @@
--- Moonfly Theme Definition
-return {
-  icon = "",
-  setup = function(opts)
-    vim.o.background = "dark"
-      vim.g.moonflyTransparent = opts.transparency == true
-    vim.cmd("colorscheme moonfly")
-  end,
-}
+-- moonfly — frozen snapshot (no plugin dependency).
+-- Data in definitions/data/moonfly.lua by scripts/snapshot_theme.lua.
+local snapshot = require("lib.snapshot")
+local data = require("plugins.themes.definitions.data.moonfly")
+return snapshot.definition("moonfly", "", data)

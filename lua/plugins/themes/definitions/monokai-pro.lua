@@ -1,12 +1,5 @@
--- Monokai Pro Theme Definition
-return {
-  icon = "",
-  variants = { "pro", "classic", "machine", "octagon", "ristretto", "spectrum" },
-  setup = function(opts)
-    require("monokai-pro").setup({
-      filter = opts.variant,
-      transparent_background = opts.transparency,
-    })
-    vim.cmd("colorscheme monokai-pro")
-  end,
-}
+-- monokai-pro — frozen snapshot (no plugin dependency).
+-- Data in definitions/data/monokai-pro.lua by scripts/snapshot_theme.lua.
+local snapshot = require("lib.snapshot")
+local data = require("plugins.themes.definitions.data.monokai-pro")
+return snapshot.definition("monokai-pro", "", data)

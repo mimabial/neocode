@@ -1,24 +1,5 @@
--- Darkvoid Theme Definition
-return {
-  icon = "",
-  variants = { "default", "glow" },
-  setup = function(opts)
-    require("darkvoid").setup({
-      transparent = opts.transparency,
-      glow = opts.variant == "glow",
-      plugins = {
-        gitsigns = true,
-        nvim_cmp = true,
-        treesitter = true,
-        nvimtree = true,
-        telescope = true,
-        lualine = true,
-        bufferline = true,
-        oil = true,
-        whichkey = true,
-        nvim_notify = true,
-      },
-    })
-    vim.cmd("colorscheme darkvoid")
-  end,
-}
+-- darkvoid — frozen snapshot (no plugin dependency).
+-- Data in definitions/data/darkvoid.lua by scripts/snapshot_theme.lua.
+local snapshot = require("lib.snapshot")
+local data = require("plugins.themes.definitions.data.darkvoid")
+return snapshot.definition("darkvoid", "", data)
