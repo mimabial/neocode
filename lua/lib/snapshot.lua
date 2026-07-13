@@ -17,6 +17,8 @@ function M.definition(name, icon, data)
   return {
     icon = icon,
     variants = variants,
+    -- Self-contained: apply_theme must not load the origin plugin for these.
+    snapshot = true,
     setup = function(opts)
       local variant = opts.variant
       if variant == nil or data[variant] == nil then
@@ -43,7 +45,11 @@ function M.definition(name, icon, data)
       -- Applying via set_hl (not :colorscheme) skips the ColorScheme event, so
       -- fire it for downstream listeners (terminal_sync's OSC bg/cursor push to
       -- kitty, bufferline re-setup, etc.) — exactly as a hand-written scheme does.
-      vim.api.nvim_exec_autocmds("ColorScheme", { pattern = name })
+      -- Fire under a sentinel pattern, not `name`: lazy.nvim keys a ColorScheme
+      -- handler on each plugin's colorscheme name, so firing `name` would load
+      -- the very plugin this snapshot exists to replace. Our listeners register
+      -- with `*` and read vim.g.colors_name, so they still run.
+      vim.api.nvim_exec_autocmds("ColorScheme", { pattern = "snapshot:" .. name })
     end,
   }
 end

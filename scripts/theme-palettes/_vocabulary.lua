@@ -34,7 +34,8 @@ end
 
 -- ANSI neutrals + foregrounds.
 add({ "black", "white", "black_bright", "white_bright",
-      "gray", "gray_dim", "gray_light", "fg", "fg_dim", "fg_alt", "comment" })
+      "gray", "gray_dim", "gray_dark", "gray_muted", "gray_light",
+      "fg", "fg_dim", "fg_alt", "comment" })
 
 -- Editor surfaces: background tiers + special surfaces.
 add({ "bg", "bg_alt", "bg_dim", "bg_dark", "bg_darker", "bg_darkest",

@@ -174,11 +174,12 @@ function M.apply_theme(theme_name, variant, themes, options)
   -- Don't default background here - let themes handle nil
   -- They can derive from variant or use vim.o.background as fallback
 
-  -- Ensure lazy.nvim loads the plugin before applying
-  -- This is needed for lazy-loaded colorscheme plugins
+  -- Ensure lazy.nvim loads the plugin before applying (plugin-backed defs only).
+  -- Snapshot defs are self-contained; loading their origin plugin is needless
+  -- and defeats the point, so skip it.
   pcall(require, "lazy")
   local lazy_config = package.loaded["lazy.core.config"]
-  if lazy_config then
+  if lazy_config and not theme.snapshot then
     -- Map of theme names to their plugin names (for special cases)
     local theme_to_plugin = {
       ayu = "neovim-ayu",

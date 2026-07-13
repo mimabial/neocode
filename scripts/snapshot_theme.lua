@@ -93,7 +93,15 @@ do
 end
 
 local function to_hex(v)
-  return type(v) == "number" and string.format("#%06x", v) or v
+  if type(v) == "number" then
+    return string.format("#%06x", v)
+  end
+  -- Some schemes set colors as hex strings; normalize case so #AABBCC and
+  -- #aabbcc don't become two palette entries for one color.
+  if type(v) == "string" then
+    return v:lower()
+  end
+  return v
 end
 
 local exclude = source.exclude or {}
@@ -127,7 +135,8 @@ local function capture(variant, opts)
 
   local terminal = {}
   for i = 0, 15 do
-    terminal[i] = vim.g["terminal_color_" .. i]
+    local tc = vim.g["terminal_color_" .. i]
+    if tc then terminal[i] = to_hex(tc) end
   end
 
   return { background = vim.o.background, terminal = terminal, highlights = highlights }

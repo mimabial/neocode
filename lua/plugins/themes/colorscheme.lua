@@ -1,31 +1,9 @@
 -- Theme definitions live in themes/definitions/, manager logic in lib/theme_manager.lua.
 
 return {
-  -- Kanagawa loads eagerly so a theme is ready before lazy plugins finish.
-  {
-    "rebelot/kanagawa.nvim",
-    lazy = false,
-    priority = 1000,
-    config = function()
-      local manager = require("lib.theme_manager")
-      local themes = manager.load_themes()
-
-      manager.register_commands(themes)
-
-      if not manager.apply_system_theme(themes) then
-        local settings = manager.load_settings()
-        if settings.background then
-          vim.o.background = settings.background
-        end
-        manager.apply_theme(settings.theme, settings.variant, themes, {
-          background = settings.background,
-          transparency = settings.transparency,
-        })
-      end
-
-      manager.setup_focus_sync(themes)
-    end,
-  },
+  -- Theme bootstrap lives in config/theme.lua now; kanagawa is a plain snapshot
+  -- source like the others (dormant plugin, kept for regeneration).
+  { "rebelot/kanagawa.nvim", lazy = true, priority = 950 },
 
   { "ficcdaf/ashen.nvim", lazy = true, priority = 950 },
   { "Shatur/neovim-ayu", lazy = true, priority = 950 },
