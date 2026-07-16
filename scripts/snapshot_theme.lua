@@ -2,12 +2,12 @@
 -- editable data module (named palette + highlight groups that reference it),
 -- so it renders with no plugin dependency at runtime.
 --
---   SNAPSHOT_SCHEME=<scheme> [SNAPSHOT_VARIANTS="v1 v2"] \
+--   SNAPSHOT_SCHEME=<scheme> [SNAPSHOT_VARIANTS="v1 v2"] [SNAPSHOT_BACKGROUND=dark|light] \
 --     nvim --headless -c "luafile scripts/snapshot_theme.lua" -c "qa"
 --
 -- Runs under --headless (not -l) so the full config + lazy are available.
--- With no SNAPSHOT_VARIANTS, scans the Hypr theme packs for every pack whose
--- $NVIM_SCHEME == <scheme> and captures the union of their $NVIM_VARIANT.
+-- With neither env set, captures the (variant, background) of every Hypr theme
+-- pack whose $NVIM_SCHEME == <scheme> -- including packs with no $NVIM_VARIANT.
 -- Names come from scripts/theme-palettes/<scheme>.lua (hex -> name) when it
 -- exists; unlisted colors get a stable nearest-ANSI fallback name.
 
@@ -36,28 +36,41 @@ local function conf_value(file, key)
   return nil
 end
 
--- Requested variants: SNAPSHOT_VARIANTS, else scan packs for actual usage.
+-- Captured opaque; lib/snapshot.lua applies transparency at runtime.
 local requested = {}
-local variants_env = os.getenv("SNAPSHOT_VARIANTS")
-if variants_env and variants_env ~= "" then
-  for v in variants_env:gmatch("%S+") do
-    requested[v] = {}
+do
+  local seen = {}
+  local function request(variant, background)
+    local key = tostring(variant) .. "\0" .. tostring(background)
+    if seen[key] then return end
+    seen[key] = true
+    requested[#requested + 1] = { variant = variant, background = background }
   end
-else
-  for _, f in ipairs(vim.fn.glob(themes_dir .. "/*/hypr.theme", false, true)) do
-    if conf_value(f, "NVIM_SCHEME") == scheme then
-      local variant = conf_value(f, "NVIM_VARIANT")
-      if variant and variant ~= "" then
-        local b = conf_value(f, "NVIM_BACKGROUND")
-        requested[variant] = {
-          transparency = conf_value(f, "NVIM_TRANSPARENCY") == "true",
-          background = (b and b ~= "") and b or nil,
-        }
+
+  local function nonempty(v)
+    return (v and v ~= "") and v or nil
+  end
+
+  local variants_env = nonempty(os.getenv("SNAPSHOT_VARIANTS"))
+  local bg_env = nonempty(os.getenv("SNAPSHOT_BACKGROUND"))
+  local explicitly_requested = variants_env or bg_env
+  if explicitly_requested then
+    if variants_env then
+      for v in variants_env:gmatch("%S+") do
+        request(v, bg_env)
+      end
+    else
+      request(nil, bg_env)
+    end
+  else
+    for _, f in ipairs(vim.fn.glob(themes_dir .. "/*/hypr.theme", false, true)) do
+      if conf_value(f, "NVIM_SCHEME") == scheme then
+        request(nonempty(conf_value(f, "NVIM_VARIANT")), nonempty(conf_value(f, "NVIM_BACKGROUND")))
       end
     end
   end
 end
-if not next(requested) then
+if #requested == 0 then
   io.stderr:write("no packs reference " .. scheme .. " and no variants given\n")
   os.exit(0)
 end
@@ -65,29 +78,40 @@ end
 -- Capturing multiple variants in one process leaks state: a plugin's variant
 -- switch may not fully re-apply within a session, contaminating later captures.
 -- Dispatch one fresh nvim per variant (each preserves the others in the data file).
-do
-  local list = {}
-  for v in pairs(requested) do list[#list + 1] = v end
-  if #list > 1 then
-    table.sort(list)
-    for _, v in ipairs(list) do
-      print("dispatch " .. scheme .. " / " .. v .. " (fresh process)")
-      os.execute(("SNAPSHOT_SCHEME=%s SNAPSHOT_VARIANTS=%s nvim --headless -c 'luafile %s' -c 'qa'")
-        :format(scheme, v, nvim_config .. "/scripts/snapshot_theme.lua"))
+if #requested > 1 then
+  table.sort(requested, function(a, b)
+    if tostring(a.variant) ~= tostring(b.variant) then
+      return tostring(a.variant) < tostring(b.variant)
     end
-    os.exit(0)
+    return tostring(a.background) < tostring(b.background)
+  end)
+  for _, r in ipairs(requested) do
+    print(("dispatch %s / %s / %s (fresh process)"):format(scheme, r.variant or "-", r.background or "-"))
+    os.execute(("SNAPSHOT_SCHEME=%s SNAPSHOT_VARIANTS=%s SNAPSHOT_BACKGROUND=%s nvim --headless -c 'luafile %s' -c 'qa'")
+      :format(scheme, r.variant or "", r.background or "", nvim_config .. "/scripts/snapshot_theme.lua"))
   end
+  os.exit(0)
 end
 
 local source = dofile(source_path)
 
--- Preserve previously captured variants.
+-- Keyed so re-running one capture leaves the scheme's others intact.
 local captured = {}
+local function capture_key(variant, background)
+  return tostring(variant) .. "\0" .. tostring(background)
+end
+local function put(entry)
+  captured[capture_key(entry.variant, entry.background)] = entry
+end
 do
   local ok, existing = pcall(dofile, data_path)
   if ok and type(existing) == "table" then
-    for variant, snap in pairs(existing) do
-      captured[variant] = snap
+    for _, entry in ipairs(existing) do
+      if type(entry) == "table" and entry.highlights and entry.background then
+        put(entry)
+      else
+        io.stderr:write(("ignoring unrecognised entry in %s -- recapture it\n"):format(scheme))
+      end
     end
   end
 end
@@ -147,13 +171,15 @@ local function capture(variant, opts)
   return { background = vim.o.background, terminal = terminal, highlights = highlights }
 end
 
-for variant, opts in pairs(requested) do
-  captured[variant] = capture(variant, opts)
-  print(("captured %s / %s (%d groups)"):format(scheme, variant,
-    vim.tbl_count(captured[variant].highlights)))
+for _, r in ipairs(requested) do
+  local snap = capture(r.variant, { background = r.background })
+  snap.variant = r.variant
+  put(snap)
+  print(("captured %s / %s / %s (%d groups)"):format(scheme, r.variant or "-", snap.background,
+    vim.tbl_count(snap.highlights)))
 end
 
--- ---------- structured emit: named palette + sectioned highlights ----------
+-- Structured emit: named palette + sectioned highlights.
 
 local palette_map = {}
 do
@@ -238,17 +264,23 @@ w(("-- GENERATED by scripts/snapshot_theme.lua.\n"
   .. "-- Frozen %s colorscheme, no plugin dependency. Edit a palette value below\n"
   .. "-- to recolor every group that references it. NOTE: regeneration overwrites\n"
   .. "-- this file, so stop regenerating once you hand-edit.\n"
+  .. "-- Shape: a list of { variant?, background, palette, terminal, highlights }.\n"
+  .. "-- background is always present; variant appears only for schemes that have a\n"
+  .. "-- variant axis, and both are named exactly as the plugin names them.\n"
   .. "-- Refresh: SNAPSHOT_SCHEME=%s nvim --headless -c 'luafile scripts/snapshot_theme.lua' -c 'qa'\n\n"
   .. "local M = {}\n\n"):format(scheme, scheme))
 
-local variant_names = {}
-for v in pairs(captured) do variant_names[#variant_names + 1] = v end
-table.sort(variant_names)
+local entries = {}
+for _, entry in pairs(captured) do entries[#entries + 1] = entry end
+table.sort(entries, function(a, b)
+  if tostring(a.variant) ~= tostring(b.variant) then
+    return tostring(a.variant) < tostring(b.variant)
+  end
+  return a.background < b.background
+end)
 
-for _, variant in ipairs(variant_names) do
-  local snap = captured[variant]
-  local hl = snap.highlights
-  local term = snap.terminal
+local function emit_palette(variant, background, snap, pvar)
+  local hl, term = snap.highlights, snap.terminal
 
   local color_set = {}
   for _, spec in pairs(hl) do
@@ -283,22 +315,21 @@ for _, variant in ipairs(variant_names) do
     name_of[hex] = name; taken[name] = true
   end
 
-  -- Guard: two hexes sharing a name in one variant would collapse to one color
+  -- Guard: two hexes sharing a name in one capture would collapse to one color
   -- (silent nuance loss). Fail loudly instead.
   do
     local seen = {}
     for hex, name in pairs(name_of) do
       if seen[name] then
-        io.stderr:write(("collision in %s: %q maps both %s and %s -- give one a distinct name in theme-palettes/%s.lua\n")
-          :format(variant, name, seen[name], hex, scheme))
+        io.stderr:write(("collision in %s%s: %q maps both %s and %s -- give one a distinct name in theme-palettes/%s.lua\n")
+          :format(variant and (variant .. "/") or "", background, name, seen[name], hex, scheme))
         os.exit(1)
       end
       seen[name] = hex
     end
   end
 
-  -- Report curated names outside the canonical vocabulary (scheme-specific
-  -- one-offs or drift worth promoting).
+  -- Scheme-specific one-offs, or drift worth promoting into the vocabulary.
   if next(vocab) then
     local extras = {}
     for _, name in pairs(name_of) do
@@ -308,13 +339,12 @@ for _, variant in ipairs(variant_names) do
     for name in pairs(extras) do list[#list + 1] = name end
     if #list > 0 then
       table.sort(list)
-      print(("  %s: %d non-canonical name(s): %s"):format(variant, #list, table.concat(list, ", ")))
+      print(("  %s%s: %d non-canonical name(s): %s"):format(variant and (variant .. "/") or "",
+        background, #list, table.concat(list, ", ")))
     end
   end
 
-  local pvar = variant:gsub("[^%w_]", "_") .. "_p"
-
-  w("-- " .. variant .. "\n")
+  w(("-- %s%s\n"):format(variant and (variant .. " / ") or "", background))
   local pal = {}
   for hex, name in pairs(name_of) do pal[#pal + 1] = { name = name, hex = hex } end
   table.sort(pal, function(a, b) return a.name < b.name end)
@@ -322,10 +352,43 @@ for _, variant in ipairs(variant_names) do
   for _, e in ipairs(pal) do w(("  %s = %q,\n"):format(e.name, e.hex)) end
   w("}\n\n")
 
-  local mkey = variant:match("^[%a_][%w_]*$") and ("M." .. variant)
-    or ("M[" .. string.format("%q", variant) .. "]")
-  w(mkey .. " = {\n")
-  w(("  background = %q,\n"):format(snap.background or "dark"))
+  return name_of
+end
+
+local function emit_spec(spec, pvar, name_of)
+  local keys = {}
+  for k in pairs(spec) do keys[#keys + 1] = k end
+  table.sort(keys)
+  local parts = {}
+  for _, k in ipairs(keys) do
+    local v = spec[k]
+    local rhs
+    if (k == "fg" or k == "bg" or k == "sp") and type(v) == "string" then
+      rhs = pvar .. "." .. name_of[v]
+    elseif type(v) == "table" then
+      rhs = serialize(v)
+    elseif type(v) == "string" then
+      rhs = string.format("%q", v)
+    else
+      rhs = tostring(v)
+    end
+    parts[#parts + 1] = k .. " = " .. rhs
+  end
+  return "{ " .. table.concat(parts, ", ") .. " }"
+end
+
+for index, snap in ipairs(entries) do
+  local variant, background = snap.variant, snap.background
+  local pvar = ((variant and (variant .. "_") or "") .. background):gsub("[^%w_]", "_") .. "_p"
+  -- The palette local must be declared before the entry that references it.
+  local name_of = emit_palette(variant, background, snap, pvar)
+  local term, hl = snap.terminal, snap.highlights
+
+  w(("M[%d] = {\n"):format(index))
+  if variant then
+    w(("  variant = %q,\n"):format(variant))
+  end
+  w(("  background = %q,\n"):format(background))
   w("  palette = " .. pvar .. ",\n")
   w("  terminal = {\n")
   for i = 0, 15 do
@@ -333,28 +396,6 @@ for _, variant in ipairs(variant_names) do
   end
   w("  },\n")
   w("  highlights = {\n")
-
-  local function emit_spec(spec)
-    local keys = {}
-    for k in pairs(spec) do keys[#keys + 1] = k end
-    table.sort(keys)
-    local parts = {}
-    for _, k in ipairs(keys) do
-      local v = spec[k]
-      local rhs
-      if (k == "fg" or k == "bg" or k == "sp") and type(v) == "string" then
-        rhs = pvar .. "." .. name_of[v]
-      elseif type(v) == "table" then
-        rhs = serialize(v)
-      elseif type(v) == "string" then
-        rhs = string.format("%q", v)
-      else
-        rhs = tostring(v)
-      end
-      parts[#parts + 1] = k .. " = " .. rhs
-    end
-    return "{ " .. table.concat(parts, ", ") .. " }"
-  end
 
   local buckets = {}
   for g in pairs(hl) do
@@ -369,7 +410,7 @@ for _, variant in ipairs(variant_names) do
       w("    -- " .. sec .. "\n")
       for _, g in ipairs(gs) do
         local key = g:match("^[%a_][%w_]*$") and g or ("[" .. string.format("%q", g) .. "]")
-        w("    " .. key .. " = " .. emit_spec(hl[g]) .. ",\n")
+        w("    " .. key .. " = " .. emit_spec(hl[g], pvar, name_of) .. ",\n")
       end
       w("\n")
     end
@@ -384,4 +425,4 @@ vim.fn.mkdir(vim.fn.fnamemodify(data_path, ":h"), "p")
 local fh = assert(io.open(data_path, "w"))
 fh:write(table.concat(out))
 fh:close()
-print(("wrote %s (%d variant(s))"):format(data_path, #variant_names))
+print(("wrote %s (%d capture(s))"):format(data_path, #entries))

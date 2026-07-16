@@ -6,9 +6,7 @@ function M.setup()
     vim.keymap.set(mode, lhs, rhs, opts)
   end
 
-  -- ========================================
   -- LSP Keymaps (set up via autocmd)
-  -- ========================================
   vim.api.nvim_create_autocmd("LspAttach", {
     callback = function(args)
       if vim.b[args.buf].bigfile then
@@ -83,14 +81,10 @@ function M.setup()
     end,
   })
 
-  -- ========================================
   -- General/Plugin Management
-  -- ========================================
   map("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy Plugin Manager" })
 
-  -- ========================================
   -- Diagnostics
-  -- ========================================
   if vim.g.diagnostics_hover == nil then
     vim.g.diagnostics_hover = true
   end
@@ -99,9 +93,7 @@ function M.setup()
     vim.notify("Diagnostics hover " .. (vim.g.diagnostics_hover and "enabled" or "disabled"), vim.log.levels.INFO)
   end, { desc = "Toggle diagnostics hover popup" })
 
-  -- ========================================
   -- General Improvements
-  -- ========================================
   map("i", "jk", "<ESC>", { desc = "Exit insert mode" })
   map("i", "jj", "<ESC>", { desc = "Exit insert mode" })
 
@@ -128,9 +120,7 @@ function M.setup()
   map("t", "<C-/>", "<c-\\><c-n>", { desc = "Enter Normal Mode" })
   map("t", "<C-_>", "<c-\\><c-n>", { desc = "which_key_ignore" })
 
-  -- ========================================
   -- Editing
-  -- ========================================
   map("n", "x", '"_x', { desc = "Don't copy deleted character" })
 
   map("v", ">", ">gv", { desc = "Indent and keep selection" })
@@ -151,9 +141,7 @@ function M.setup()
   map("n", "#", "#zzzv", { desc = "Search word backward (centered)" })
   map("n", "%", "%zz", { desc = "Match pair (centered)" })
 
-  -- ========================================
   -- Navigation
-  -- ========================================
   -- Note: <C-h/j/k/l> window navigation handled by tmux-navigator (in tmux)
   -- and kitty-navigator (in kitty without tmux).
 
@@ -178,17 +166,13 @@ function M.setup()
   map("n", "<leader>|", "<C-W>v", { desc = "Split window right" })
   map("n", "<leader>wd", "<C-W>c", { desc = "Delete window" })
 
-  -- ========================================
   -- Buffer management
-  -- ========================================
   -- Note: BufferLine commands defined in plugins/ui/tabline.lua.
   map("n", "<leader>bn", "<cmd>enew<cr>", { desc = "New Buffer" })
   map("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to Other Buffer" })
   map("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Delete Buffer" })
 
-  -- ========================================
   -- Tab Management
-  -- ========================================
   map("n", "<leader><tab>l", "<cmd>tablast<cr>", { desc = "Last Tab" })
   map("n", "<leader><tab>f", "<cmd>tabfirst<cr>", { desc = "First Tab" })
   map("n", "<leader><tab><tab>", "<cmd>tabnew<cr>", { desc = "New Tab" })
@@ -199,9 +183,7 @@ function M.setup()
   -- Note: file explorer (-) keybinding lives in plugins/ui/explorer.lua;
   -- git keybindings live in plugins/git/* (see lazygit.lua for namespacing).
 
-  -- ========================================
   -- UI/Theme
-  -- ========================================
   map("n", "<leader>us", "<cmd>CycleColorScheme<cr>", { desc = "Cycle color scheme" })
   map("n", "<leader>uS", "<cmd>ColorScheme<cr>", { desc = "Select color scheme" })
   map("n", "<leader>uv", "<cmd>CycleColorVariant<cr>", { desc = "Cycle color variant" })
@@ -214,9 +196,7 @@ function M.setup()
   map("n", "<leader>uL", "<cmd>SystemListThemes<cr>", { desc = "List available system themes" })
   map("n", "<leader>tw", "<cmd>set wrap!<CR>", { desc = "Toggle line wrap" })
 
-  -- ========================================
   -- AI / Navic / Layouts
-  -- ========================================
   map("n", "<leader>as", "<cmd>AIStatus<cr>", { desc = "Show active AI provider" })
   map("n", "<leader>at", "<cmd>AIToggle<cr>", { desc = "Toggle AI provider" })
   map("n", "<leader>nb", "<cmd>NavicToggle<cr>", { desc = "Toggle breadcrumbs" })

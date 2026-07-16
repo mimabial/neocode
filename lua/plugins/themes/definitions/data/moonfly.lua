@@ -2,6 +2,9 @@
 -- Frozen moonfly colorscheme, no plugin dependency. Edit a palette value below
 -- to recolor every group that references it. NOTE: regeneration overwrites
 -- this file, so stop regenerating once you hand-edit.
+-- Shape: a list of { variant?, background, palette, terminal, highlights }.
+-- background is always present; variant appears only for schemes that have a
+-- variant axis, and both are named exactly as the plugin names them.
 -- Refresh: SNAPSHOT_SCHEME=moonfly nvim --headless -c 'luafile scripts/snapshot_theme.lua' -c 'qa'
 
 local M = {}
@@ -61,7 +64,7 @@ local dark_p = {
   yellow_muted = "#c6c684",
 }
 
-M.dark = {
+M[1] = {
   background = "dark",
   palette = dark_p,
   terminal = {
@@ -608,7 +611,7 @@ M.dark = {
     DashboardCenter = { link = "MoonflyViolet" },
     DashboardFooter = { link = "MoonflyCoral" },
     DashboardHeader = { link = "MoonflyBlue" },
-    DashboardShortCut = { link = "MoonflyTurquoise" },
+    DashboardShortcut = { link = "MoonflyTurquoise" },
     Dimmed = { link = "MoonflyGrey39" },
     FernBranchSymbol = { link = "MoonflyGrey58" },
     FernBranchText = { link = "MoonflyBlue" },

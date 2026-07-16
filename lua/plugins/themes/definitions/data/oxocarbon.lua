@@ -2,6 +2,9 @@
 -- Frozen oxocarbon colorscheme, no plugin dependency. Edit a palette value below
 -- to recolor every group that references it. NOTE: regeneration overwrites
 -- this file, so stop regenerating once you hand-edit.
+-- Shape: a list of { variant?, background, palette, terminal, highlights }.
+-- background is always present; variant appears only for schemes that have a
+-- variant axis, and both are named exactly as the plugin names them.
 -- Refresh: SNAPSHOT_SCHEME=oxocarbon nvim --headless -c 'luafile scripts/snapshot_theme.lua' -c 'qa'
 
 local M = {}
@@ -40,7 +43,7 @@ local dark_p = {
   yellow = "#fce094",
 }
 
-M.dark = {
+M[1] = {
   background = "dark",
   palette = dark_p,
   terminal = {
@@ -437,8 +440,6 @@ M.dark = {
     Delimeter = { fg = dark_p.white_bright },
     FlashLabel = { bg = dark_p.bg, bold = true, cterm = { bold = true }, fg = dark_p.white },
     FloatFooter = { link = "FloatTitle" },
-    HealthError = { fg = dark_p.red },
-    HealthWarning = { fg = dark_p.purple },
     HydraAmaranth = { fg = dark_p.red },
     HydraBlue = { fg = dark_p.blue },
     HydraHint = { bg = dark_p.bg_dark },
@@ -768,7 +769,9 @@ M.dark = {
     diffAdded = { fg = dark_p.teal },
     diffChanged = { fg = dark_p.blue },
     diffRemoved = { fg = dark_p.red },
+    healthError = { fg = dark_p.red },
     healthSuccess = { fg = dark_p.green },
+    healthWarning = { fg = dark_p.purple },
     helpHeader = { fg = dark_p.blue_light },
     helpHeadline = { fg = dark_p.red },
     helpHyperTextJump = { fg = dark_p.cyan },

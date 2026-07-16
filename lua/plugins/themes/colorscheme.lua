@@ -18,6 +18,7 @@ return {
   { "sainnhe/gruvbox-material", lazy = true, priority = 950 },
   { "blazkowolf/gruber-darker.nvim", lazy = true, priority = 950 },
   { "savq/melange-nvim", name = "melange", lazy = true, priority = 950 },
+  { "xero/miasma.nvim", lazy = true, priority = 950 },
   { "loctvl842/monokai-pro.nvim", lazy = true, priority = 950 },
   { "bluz71/vim-moonfly-colors", name = "moonfly", lazy = true, priority = 950 },
   { "shaunsingh/nord.nvim", lazy = true, priority = 950 },

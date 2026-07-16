@@ -2,11 +2,14 @@
 -- Frozen gruvbox-material colorscheme, no plugin dependency. Edit a palette value below
 -- to recolor every group that references it. NOTE: regeneration overwrites
 -- this file, so stop regenerating once you hand-edit.
+-- Shape: a list of { variant?, background, palette, terminal, highlights }.
+-- background is always present; variant appears only for schemes that have a
+-- variant axis, and both are named exactly as the plugin names them.
 -- Refresh: SNAPSHOT_SCHEME=gruvbox-material nvim --headless -c 'luafile scripts/snapshot_theme.lua' -c 'qa'
 
 local M = {}
 
--- medium-dark
+-- medium / dark
 local medium_dark_p = {
   aqua = "#8cf8f7",
   bg = "#282828",
@@ -41,7 +44,8 @@ local medium_dark_p = {
   yellow_light = "#fce094",
 }
 
-M["medium-dark"] = {
+M[1] = {
+  variant = "medium",
   background = "dark",
   palette = medium_dark_p,
   terminal = {
@@ -900,7 +904,7 @@ M["medium-dark"] = {
     DashboardCenter = { link = "Green" },
     DashboardFooter = { link = "Orange" },
     DashboardHeader = { link = "Yellow" },
-    DashboardShortCut = { link = "Red" },
+    DashboardShortcut = { link = "Red" },
     DefinitionCount = { link = "Grey" },
     DefinitionIcon = { link = "Blue" },
     DefinitionPreviewTitle = { bold = true, cterm = { bold = true }, ctermfg = 109, fg = medium_dark_p.blue },

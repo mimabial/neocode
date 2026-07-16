@@ -24,9 +24,7 @@ M.diagnostic_config = {
 }
 
 function M.setup()
-  -- ========================================
   -- Diagnostics
-  -- ========================================
   vim.diagnostic.config(vim.deepcopy(M.diagnostic_config))
 
   local diag_grp = vim.api.nvim_create_augroup("DiagnosticEvents", { clear = true })
@@ -66,9 +64,7 @@ function M.setup()
     vim.notify("Diagnostics reset and reapplied", vim.log.levels.INFO)
   end, { desc = "Reset and reapply diagnostics" })
 
-  -- ========================================
   -- Line Numbers
-  -- ========================================
   local num_grp = vim.api.nvim_create_augroup("NumberToggle", { clear = true })
 
   vim.api.nvim_create_autocmd("BufWinEnter", {
@@ -104,9 +100,7 @@ function M.setup()
     desc = "Enable relative numbers on normal/focus",
   })
 
-  -- ========================================
   -- Visual Feedback
-  -- ========================================
   vim.api.nvim_create_autocmd("TextYankPost", {
     callback = function()
       vim.hl.on_yank({ timeout = 300 })
@@ -114,9 +108,7 @@ function M.setup()
     desc = "Highlight yanked text",
   })
 
-  -- ========================================
   -- Window Management
-  -- ========================================
   vim.api.nvim_create_autocmd("VimResized", {
     callback = function()
       vim.cmd("tabdo wincmd =")
@@ -143,9 +135,7 @@ function M.setup()
     desc = "Set window title",
   })
 
-  -- ========================================
   -- Filetype Settings
-  -- ========================================
   local indent_grp = vim.api.nvim_create_augroup("FileTypeIndent", { clear = true })
   local indent_groups = {
     [2] = { "lua", "javascript", "typescript", "json", "html", "css", "yaml", "markdown", "tsx", "jsx" },
@@ -202,9 +192,7 @@ function M.setup()
     desc = "Prevent buffer replacement in special windows",
   })
 
-  -- ========================================
   -- Terminal
-  -- ========================================
   -- Note: <C-h/j/k/l> navigation lives in plugins/ui/terminal.lua;
   -- directory-browsing in plugins/ui/explorer.lua (Oil).
   vim.api.nvim_create_autocmd("TermOpen", {
@@ -228,9 +216,7 @@ function M.setup()
     desc = "Refresh gitsigns on lazygit exit",
   })
 
-  -- ========================================
   -- Command-line Window
-  -- ========================================
   vim.api.nvim_create_autocmd("CmdwinEnter", {
     callback = function()
       vim.keymap.set("n", "<Esc>", "<cmd>quit<cr>", { buffer = true, silent = true })

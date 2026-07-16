@@ -2,6 +2,9 @@
 -- Frozen nord colorscheme, no plugin dependency. Edit a palette value below
 -- to recolor every group that references it. NOTE: regeneration overwrites
 -- this file, so stop regenerating once you hand-edit.
+-- Shape: a list of { variant?, background, palette, terminal, highlights }.
+-- background is always present; variant appears only for schemes that have a
+-- variant axis, and both are named exactly as the plugin names them.
 -- Refresh: SNAPSHOT_SCHEME=nord nvim --headless -c 'luafile scripts/snapshot_theme.lua' -c 'qa'
 
 local M = {}
@@ -39,7 +42,7 @@ local dark_p = {
   yellow_light = "#fce094",
 }
 
-M.dark = {
+M[1] = {
   background = "dark",
   palette = dark_p,
   terminal = {
@@ -307,7 +310,7 @@ M.dark = {
     LspSagaCodeActionBorder = { bg = dark_p.bg, fg = dark_p.fg },
     LspSagaCodeActionContent = { fg = dark_p.fg },
     LspSagaCodeActionTitle = { link = "Title" },
-    LspSagaCodeActionTrunCateLine = { link = "LspSagaCodeActionBorder" },
+    LspSagaCodeActionTruncateLine = { link = "LspSagaCodeActionBorder" },
     LspSagaDefPreviewBorder = { bg = dark_p.bg, fg = dark_p.fg },
     LspSagaDiagnosticBorder = { bg = dark_p.bg, fg = dark_p.fg },
     LspSagaDiagnosticError = { link = "DiagnosticError" },
@@ -327,7 +330,7 @@ M.dark = {
     LspSagaLspFinderBorder = { bg = dark_p.bg, fg = dark_p.fg },
     LspSagaRenameBorder = { bg = dark_p.bg, fg = dark_p.fg },
     LspSagaRenameMatch = { bg = dark_p.blue, fg = dark_p.white },
-    LspSagaShTrunCateLine = { link = "LspSagaSignatureHelpBorder" },
+    LspSagaShTruncateLine = { link = "LspSagaSignatureHelpBorder" },
     LspSagaSignatureHelpBorder = { bg = dark_p.bg, fg = dark_p.fg },
     LspSagaWarnTrunCateLine = { link = "DiagnosticWarn" },
     LspSignatureActiveParameter = { link = "Visual" },
@@ -507,7 +510,7 @@ M.dark = {
     DashboardCenter = { fg = dark_p.cyan },
     DashboardFooter = { fg = dark_p.green, italic = true },
     DashboardHeader = { fg = dark_p.blue },
-    DashboardShortCut = { fg = dark_p.teal },
+    DashboardShortcut = { fg = dark_p.teal },
     DefinitionArrow = { fg = dark_p.cyan },
     DefinitionBorder = { bg = dark_p.bg, fg = dark_p.fg },
     DefinitionCount = { fg = dark_p.blue_dark },

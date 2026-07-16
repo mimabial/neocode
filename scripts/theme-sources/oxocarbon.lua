@@ -1,12 +1,12 @@
 -- Plugin-backed applier for oxocarbon, used ONLY by scripts/snapshot_theme.lua
 -- to capture snapshots. Not loaded at runtime. Requires oxocarbon.nvim installed.
+-- oxocarbon has no variant axis: light/dark is the background, and the plugin
+-- reads it straight off vim.o.background.
 return {
-  all_variants = { "dark", "light" },
-  bootstrap_variants = { "dark" },
   exclude = { "^RedrawDebug" }, -- nvim internal repaint debugger
-  apply = function(variant, opts)
+  apply = function(_, opts)
     require("lazy").load({ plugins = { "oxocarbon.nvim" } })
-    vim.o.background = (variant == "light") and "light" or "dark"
+    vim.o.background = opts.background or "dark"
     vim.cmd("colorscheme oxocarbon")
     if opts.transparency then
       for _, g in ipairs({ "Normal", "NormalFloat", "NormalNC" }) do

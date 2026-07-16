@@ -2,6 +2,9 @@
 -- Frozen ashen colorscheme, no plugin dependency. Edit a palette value below
 -- to recolor every group that references it. NOTE: regeneration overwrites
 -- this file, so stop regenerating once you hand-edit.
+-- Shape: a list of { variant?, background, palette, terminal, highlights }.
+-- background is always present; variant appears only for schemes that have a
+-- variant axis, and both are named exactly as the plugin names them.
 -- Refresh: SNAPSHOT_SCHEME=ashen nvim --headless -c 'luafile scripts/snapshot_theme.lua' -c 'qa'
 
 local M = {}
@@ -51,7 +54,7 @@ local dark_p = {
   yellow = "#e5a72a",
 }
 
-M.dark = {
+M[1] = {
   background = "dark",
   palette = dark_p,
   terminal = {

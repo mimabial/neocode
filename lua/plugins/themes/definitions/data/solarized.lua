@@ -2,6 +2,9 @@
 -- Frozen solarized colorscheme, no plugin dependency. Edit a palette value below
 -- to recolor every group that references it. NOTE: regeneration overwrites
 -- this file, so stop regenerating once you hand-edit.
+-- Shape: a list of { variant?, background, palette, terminal, highlights }.
+-- background is always present; variant appears only for schemes that have a
+-- variant axis, and both are named exactly as the plugin names them.
 -- Refresh: SNAPSHOT_SCHEME=solarized nvim --headless -c 'luafile scripts/snapshot_theme.lua' -c 'qa'
 
 local M = {}
@@ -38,7 +41,7 @@ local dark_p = {
   yellow = "#b58900",
 }
 
-M.dark = {
+M[1] = {
   background = "dark",
   palette = dark_p,
   terminal = {
@@ -490,16 +493,16 @@ M.dark = {
     NavicIconsVariable = { bg = dark_p.bg, fg = dark_p.red },
     NavicSeparator = { bg = dark_p.bg, fg = dark_p.comment },
     NavicText = { bg = dark_p.bg, fg = dark_p.fg },
-    NeoTreeDimText = { link = "NeoTreeDotfile" },
-    NeoTreeDotfile = { fg = dark_p.comment },
+    NeoTreeDimText = { link = "NeoTreeDotFile" },
+    NeoTreeDotFile = { fg = dark_p.comment },
     NeoTreeFileNameOpened = { link = "Directory" },
-    NeoTreeFileStats = { link = "NeoTreeDotfile" },
+    NeoTreeFileStats = { link = "NeoTreeDotFile" },
     NeoTreeFloatBorder = { link = "WinSeparator" },
     NeoTreeFloatTitle = { link = "Title" },
     NeoTreeGitAdded = { fg = dark_p.blue },
     NeoTreeGitConflict = { fg = dark_p.yellow },
     NeoTreeGitDeleted = { fg = dark_p.red },
-    NeoTreeGitIgnored = { link = "NeoTreeDotfile" },
+    NeoTreeGitIgnored = { link = "NeoTreeDotFile" },
     NeoTreeGitModified = { fg = dark_p.yellow },
     NeoTreeGitStaged = { fg = dark_p.blue },
     NeoTreeGitUnstaged = { fg = dark_p.yellow },

@@ -1,9 +1,9 @@
 -- Plugin-backed applier for decay, used ONLY by scripts/snapshot_theme.lua to
 -- capture snapshots. Not loaded at runtime. Requires decay.nvim.
--- "green" is an alias for decay's signature default palette (its green look).
+-- The variant is decay's own style name, passed through untranslated.
 return {
-  all_variants = { "green", "dark", "decayce" },
-  bootstrap_variants = { "green" },
+  all_variants = { "default", "dark", "decayce" },
+  bootstrap_variants = { "default", "decayce" },
   exclude = {
     '^RedrawDebug',
     '^Moonfly',
@@ -12,11 +12,13 @@ return {
     '^Fzf',
     '^Notify',
   },
+  -- decay's colorscheme files are named irregularly (decay-default.vim but
+  -- decayce.vim), and each just calls load(<style>). Go through load directly
+  -- so the variant is the plugin's own style name with no reconstruction.
   apply = function(variant, opts)
     require("lazy").load({ plugins = { "decay.nvim" } })
-    local style = (variant == "green") and "default" or variant
-    vim.o.background = "dark"
-    require("decay").setup({ style = style, transparent = opts.transparency })
-    vim.cmd("colorscheme decay-" .. style)
+    vim.o.background = opts.background or "dark"
+    require("decay").setup({ style = variant, transparent = opts.transparency })
+    require("decay").load(variant)
   end,
 }

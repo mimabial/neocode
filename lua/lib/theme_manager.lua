@@ -153,6 +153,24 @@ end
 -- @param theme_name string - Theme name
 -- @param variant string|nil - Variant name (optional)
 -- @param themes table - All loaded themes
+-- Clear the background on every group painted the scheme's base bg, so a theme
+-- obeys transparency whether or not its plugin has an option for it (snapshots
+-- and .vim schemes have none). Distinct surfaces -- floats, CursorLine, Visual --
+-- keep their colors. No-op once the scheme has already cleared Normal itself.
+local function apply_transparency()
+  local base = vim.api.nvim_get_hl(0, { name = "Normal" }).bg
+  if not base then
+    return
+  end
+  for group in pairs(vim.api.nvim_get_hl(0, {})) do
+    local spec = vim.api.nvim_get_hl(0, { name = group })
+    if spec.bg == base then
+      spec.bg = "NONE"
+      vim.api.nvim_set_hl(0, group, spec)
+    end
+  end
+end
+
 -- @param options table - { background = "dark"|"light"|nil, transparency = boolean }
 function M.apply_theme(theme_name, variant, themes, options)
   local theme = themes[theme_name]
@@ -219,6 +237,10 @@ function M.apply_theme(theme_name, variant, themes, options)
   if not ok then
     vim.notify("Error applying theme: " .. tostring(err), vim.log.levels.ERROR)
     return false
+  end
+
+  if options.transparency then
+    apply_transparency()
   end
 
   -- Save settings after setup

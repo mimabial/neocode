@@ -54,9 +54,7 @@ function M.setup()
     desc = "Switch workspace layout",
   })
 
-  -- ========================================
   -- Plugin Management
-  -- ========================================
   vim.api.nvim_create_user_command("UpdateAll", function()
     vim.cmd("Lazy update")
     if package.loaded["mason"] then
@@ -94,9 +92,7 @@ function M.setup()
     vim.notify("Nvim configuration reloaded!", vim.log.levels.INFO, { title = "Config" })
   end, { desc = "Reload Neovim configuration" })
 
-  -- ========================================
   -- Diagnostics
-  -- ========================================
   local function diagnostic_base_config()
     local ok, autocmds = pcall(require, "config.autocmds")
     if ok and autocmds.diagnostic_config then

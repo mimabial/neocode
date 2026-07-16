@@ -204,11 +204,6 @@ return {
         local width = vim.o.columns < 120 and vim.o.columns or math.min(math.floor(vim.o.columns * 0.5), 120)
         vim.cmd("vertical resize " .. width)
 
-        -- vim.opt_local.number = false
-        -- vim.opt_local.relativenumber = true
-        -- vim.opt_local.signcolumn = "no"
-        -- vim.opt_local.cursorline = true
-
         local bufnr = vim.api.nvim_get_current_buf()
         vim.keymap.set("n", "n", "<down>", { buffer = bufnr, remap = true, desc = "Next result" })
         vim.keymap.set("n", "N", "<up>", { buffer = bufnr, remap = true, desc = "Previous result" })

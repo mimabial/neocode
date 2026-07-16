@@ -2,11 +2,14 @@
 -- Frozen everforest colorscheme, no plugin dependency. Edit a palette value below
 -- to recolor every group that references it. NOTE: regeneration overwrites
 -- this file, so stop regenerating once you hand-edit.
+-- Shape: a list of { variant?, background, palette, terminal, highlights }.
+-- background is always present; variant appears only for schemes that have a
+-- variant axis, and both are named exactly as the plugin names them.
 -- Refresh: SNAPSHOT_SCHEME=everforest nvim --headless -c 'luafile scripts/snapshot_theme.lua' -c 'qa'
 
 local M = {}
 
--- hard-light
+-- hard / light
 local hard_light_p = {
   bg = "#fffbef",
   bg_alt = "#f8f5e4",
@@ -42,7 +45,8 @@ local hard_light_p = {
   yellow_dark = "#6b5300",
 }
 
-M["hard-light"] = {
+M[1] = {
+  variant = "hard",
   background = "light",
   palette = hard_light_p,
   terminal = {
@@ -932,7 +936,7 @@ M["hard-light"] = {
     DashboardCenter = { link = "Green" },
     DashboardFooter = { link = "Orange" },
     DashboardHeader = { link = "Yellow" },
-    DashboardShortCut = { link = "Red" },
+    DashboardShortcut = { link = "Red" },
     DefinitionCount = { link = "Grey" },
     DefinitionIcon = { link = "Blue" },
     DefinitionPreviewTitle = { bold = true, cterm = { bold = true }, ctermfg = 32, fg = hard_light_p.blue },
@@ -2816,7 +2820,7 @@ M["hard-light"] = {
   },
 }
 
--- soft-dark
+-- soft / dark
 local soft_dark_p = {
   aqua = "#8cf8f7",
   bg = "#333c43",
@@ -2850,7 +2854,8 @@ local soft_dark_p = {
   yellow_light = "#fce094",
 }
 
-M["soft-dark"] = {
+M[2] = {
+  variant = "soft",
   background = "dark",
   palette = soft_dark_p,
   terminal = {
@@ -3740,7 +3745,7 @@ M["soft-dark"] = {
     DashboardCenter = { link = "Green" },
     DashboardFooter = { link = "Orange" },
     DashboardHeader = { link = "Yellow" },
-    DashboardShortCut = { link = "Red" },
+    DashboardShortcut = { link = "Red" },
     DefinitionCount = { link = "Grey" },
     DefinitionIcon = { link = "Blue" },
     DefinitionPreviewTitle = { bold = true, cterm = { bold = true }, ctermfg = 109, fg = soft_dark_p.teal },

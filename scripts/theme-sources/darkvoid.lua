@@ -8,6 +8,7 @@ return {
     '^Oil',
     '^GitSignsStaged',
     '^lualine',
+    '^Notify',
   },
   apply = function(variant, opts)
     require("lazy").load({ plugins = { "darkvoid.nvim" } })
