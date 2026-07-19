@@ -1,11 +1,5 @@
--- Dracula Theme Definition
-return {
-  icon = "",
-  setup = function(opts)
-    vim.o.background = opts.background or "dark"
-    require("dracula").setup({
-      transparent_bg = opts.transparency,
-    })
-    vim.cmd("colorscheme dracula")
-  end,
-}
+-- dracula — frozen snapshot. Refresh: SNAPSHOT_SCHEME=dracula \
+--   SNAPSHOT_VARIANTS="default" nvim --headless -c "luafile scripts/snapshot_theme.lua" -c "qa"
+local snapshot = require("lib.snapshot")
+local data = require("plugins.themes.definitions.data.dracula")
+return snapshot.definition("dracula", "", data)

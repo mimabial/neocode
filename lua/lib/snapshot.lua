@@ -62,10 +62,11 @@ function M.definition(name, icon, captures)
         vim.api.nvim_set_hl(0, group, spec)
       end
 
-      if snap.terminal then
-        for i = 0, 15 do
-          vim.g["terminal_color_" .. i] = snap.terminal[i]
-        end
+      -- Write all 16 even if a hand-edited entry omits the table, so stale
+      -- terminal colors from the previous scheme are cleared (nil = cleared).
+      local terminal = snap.terminal or {}
+      for i = 0, 15 do
+        vim.g["terminal_color_" .. i] = terminal[i]
       end
 
       -- Applying via set_hl (not :colorscheme) skips the ColorScheme event, so

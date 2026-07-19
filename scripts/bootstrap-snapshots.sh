@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Regenerate the (gitignored) snapshot data files for every scheme that has a
-# source applier. Run after a fresh clone, or after editing a palette map.
+# Regenerate the committed snapshot data files for every scheme that has a
+# source applier, then commit the result. Run after editing a palette map or a
+# source applier -- a fresh clone already ships the data and needs no bootstrap.
 # Requires the source plugins installed (:Lazy install first if needed).
 #
 #   scripts/bootstrap-snapshots.sh
@@ -25,7 +26,8 @@ for src in "$here"/scripts/theme-sources/*.lua; do
   if [ -z "${variants// /}" ]; then
     while IFS= read -r f; do
       [ -n "$f" ] || continue
-      v="$(grep -oP '(?<=NVIM_VARIANT = ).*' "$f" 2>/dev/null)"
+      # Match the generator's parser: flexible whitespace, strip surrounding quotes.
+      v="$(sed -nE 's/^[[:space:]]*\$NVIM_VARIANT[[:space:]]*=[[:space:]]*//p' "$f" 2>/dev/null | head -n1 | tr -d "\"'" | xargs)"
       [ -n "$v" ] && variants="${variants} ${v}"
     done < <(grep -lE "^\\\$NVIM_SCHEME[[:space:]]*=[[:space:]]*${scheme}([[:space:]]|\$)" \
       "$themes"/*/hypr.theme 2>/dev/null)

@@ -2,7 +2,7 @@
 -- to capture snapshots. Not loaded at runtime. Requires kanagawa.nvim installed.
 -- Mirrors the definition's setup so the capture matches how it rendered.
 return {
-  all_variants = { "wave", "dragon", "lotus" },
+  all_variants = { "wave", "dragon" },
   bootstrap_variants = { "wave" },
   exclude = { "^RedrawDebug" },
   apply = function(variant, opts)

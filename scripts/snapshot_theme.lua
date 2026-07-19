@@ -10,6 +10,8 @@
 -- pack whose $NVIM_SCHEME == <scheme> -- including packs with no $NVIM_VARIANT.
 -- Names come from scripts/theme-palettes/<scheme>.lua (hex -> name) when it
 -- exists; unlisted colors get a stable nearest-ANSI fallback name.
+-- Set SNAPSHOT_RENAME_ONLY=1 to re-serialize the existing data with the current
+-- palette map WITHOUT re-capturing -- use after editing theme-palettes/<scheme>.lua.
 
 local scheme = os.getenv("SNAPSHOT_SCHEME")
 if not scheme or scheme == "" then
@@ -36,9 +38,11 @@ local function conf_value(file, key)
   return nil
 end
 
--- Captured opaque; lib/snapshot.lua applies transparency at runtime.
+-- Captured opaque; theme_manager applies transparency at runtime.
+local no_glob = (os.getenv("SNAPSHOT_NO_GLOB") or "") ~= ""
+local rename_only = (os.getenv("SNAPSHOT_RENAME_ONLY") or "") ~= ""
 local requested = {}
-do
+if not rename_only then
   local seen = {}
   local function request(variant, background)
     local key = tostring(variant) .. "\0" .. tostring(background)
@@ -62,6 +66,9 @@ do
     else
       request(nil, bg_env)
     end
+  elseif no_glob then
+    -- Dispatched child with no explicit axis: capture the scheme default once.
+    request(nil, nil)
   else
     for _, f in ipairs(vim.fn.glob(themes_dir .. "/*/hypr.theme", false, true)) do
       if conf_value(f, "NVIM_SCHEME") == scheme then
@@ -70,7 +77,7 @@ do
     end
   end
 end
-if #requested == 0 then
+if #requested == 0 and not rename_only then
   io.stderr:write("no packs reference " .. scheme .. " and no variants given\n")
   os.exit(0)
 end
@@ -78,17 +85,29 @@ end
 -- Capturing multiple variants in one process leaks state: a plugin's variant
 -- switch may not fully re-apply within a session, contaminating later captures.
 -- Dispatch one fresh nvim per variant (each preserves the others in the data file).
-if #requested > 1 then
+if #requested > 1 and not no_glob then
   table.sort(requested, function(a, b)
     if tostring(a.variant) ~= tostring(b.variant) then
       return tostring(a.variant) < tostring(b.variant)
     end
     return tostring(a.background) < tostring(b.background)
   end)
+  local script = nvim_config .. "/scripts/snapshot_theme.lua"
   for _, r in ipairs(requested) do
     print(("dispatch %s / %s / %s (fresh process)"):format(scheme, r.variant or "-", r.background or "-"))
-    os.execute(("SNAPSHOT_SCHEME=%s SNAPSHOT_VARIANTS=%s SNAPSHOT_BACKGROUND=%s nvim --headless -c 'luafile %s' -c 'qa'")
-      :format(scheme, r.variant or "", r.background or "", nvim_config .. "/scripts/snapshot_theme.lua"))
+    -- Arg list + env overlay: no shell, so variant/background never need quoting.
+    -- SNAPSHOT_NO_GLOB stops the child from re-expanding packs and re-dispatching.
+    local res = vim.system({ "nvim", "--headless", "-c", "luafile " .. script, "-c", "qa" }, {
+      env = {
+        SNAPSHOT_SCHEME = scheme,
+        SNAPSHOT_VARIANTS = r.variant or "",
+        SNAPSHOT_BACKGROUND = r.background or "",
+        SNAPSHOT_NO_GLOB = "1",
+      },
+      text = true,
+    }):wait()
+    io.write(res.stdout or "")
+    io.stderr:write(res.stderr or "")
   end
   os.exit(0)
 end
@@ -114,6 +133,11 @@ do
       end
     end
   end
+end
+
+if rename_only and next(captured) == nil then
+  io.stderr:write(("SNAPSHOT_RENAME_ONLY set but no existing data at %s\n"):format(data_path))
+  os.exit(1)
 end
 
 local function to_hex(v)
@@ -179,8 +203,6 @@ for _, r in ipairs(requested) do
     vim.tbl_count(snap.highlights)))
 end
 
--- Structured emit: named palette + sectioned highlights.
-
 local palette_map = {}
 do
   local ok, m = pcall(dofile, palette_path)
@@ -241,7 +263,6 @@ local function section_of(g)
   return "Plugins & extras"
 end
 
--- Serialize a nested value (cterm subtables, link targets, etc.).
 local function serialize(value)
   if type(value) == "string" then return string.format("%q", value) end
   if type(value) ~= "table" then return tostring(value) end
