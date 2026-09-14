@@ -1,5 +1,13 @@
--- zenbones — frozen snapshot (no plugin dependency).
--- Data in definitions/data/zenbones.lua by scripts/snapshot_theme.lua.
-local snapshot = require("lib.snapshot")
-local data = require("plugins.themes.definitions.data.zenbones")
-return snapshot.definition("zenbones", "", data)
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "zenbones",
+  variants = { "default" },
+  default = "default",
+  background = "dark",
+  apply = function(_, opts)
+    vim.g.zenbones_darkness = nil
+    vim.g.zenbones_transparent_background = opts.transparency
+    vim.cmd.colorscheme("zenbones")
+  end,
+})

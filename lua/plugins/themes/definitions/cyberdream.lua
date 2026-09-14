@@ -1,5 +1,19 @@
--- cyberdream — frozen snapshot. Refresh: SNAPSHOT_SCHEME=cyberdream \
---   SNAPSHOT_VARIANTS="default light" nvim --headless -c "luafile scripts/snapshot_theme.lua" -c "qa"
-local snapshot = require("lib.snapshot")
-local data = require("plugins.themes.definitions.data.cyberdream")
-return snapshot.definition("cyberdream", "", data)
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "cyberdream.nvim",
+  variants = { "default", "light" },
+  default = "default",
+  background = function(variant)
+    return variant == "light" and "light" or "dark"
+  end,
+  apply = function(variant, opts)
+    require("cyberdream").setup({
+      variant = variant,
+      transparent = opts.transparency,
+      terminal_colors = true,
+      cache = false,
+    })
+    vim.cmd.colorscheme("cyberdream")
+  end,
+})

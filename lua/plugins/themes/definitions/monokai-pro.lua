@@ -1,5 +1,15 @@
--- monokai-pro — frozen snapshot (no plugin dependency).
--- Data in definitions/data/monokai-pro.lua by scripts/snapshot_theme.lua.
-local snapshot = require("lib.snapshot")
-local data = require("plugins.themes.definitions.data.monokai-pro")
-return snapshot.definition("monokai-pro", "", data)
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "monokai-pro.nvim",
+  variants = { "pro", "classic", "machine", "octagon", "ristretto", "spectrum" },
+  default = "ristretto",
+  background = "dark",
+  apply = function(variant, opts)
+    require("monokai-pro").setup({
+      filter = variant,
+      transparent_background = opts.transparency,
+    })
+    vim.cmd.colorscheme("monokai-pro")
+  end,
+})

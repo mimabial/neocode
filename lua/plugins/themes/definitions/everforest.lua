@@ -1,5 +1,15 @@
--- everforest — frozen snapshot (no plugin dependency).
--- Data in definitions/data/everforest.lua by scripts/snapshot_theme.lua.
-local snapshot = require("lib.snapshot")
-local data = require("plugins.themes.definitions.data.everforest")
-return snapshot.definition("everforest", "", data)
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "everforest",
+  variants = { "hard", "medium", "soft" },
+  default = "hard",
+  background = function(_, opts)
+    return opts.background or vim.o.background
+  end,
+  apply = function(variant, opts)
+    vim.g.everforest_background = variant
+    vim.g.everforest_transparent_background = opts.transparency and 2 or 0
+    vim.cmd.colorscheme("everforest")
+  end,
+})

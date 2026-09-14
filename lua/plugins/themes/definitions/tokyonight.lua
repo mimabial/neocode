@@ -1,7 +1,17 @@
--- Tokyonight (storm) — frozen snapshot (no plugin dependency).
--- Data in definitions/data/tokyonight.lua by scripts/snapshot_theme.lua.
--- Only the storm variant is snapshotted; night/moon/day remain in the source's
--- all_variants for regeneration.
-local snapshot = require("lib.snapshot")
-local data = require("plugins.themes.definitions.data.tokyonight")
-return snapshot.definition("tokyonight", "", data)
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "tokyonight.nvim",
+  variants = { "night", "storm", "day", "moon" },
+  default = "storm",
+  background = function(variant)
+    return variant == "day" and "light" or "dark"
+  end,
+  apply = function(variant, opts)
+    require("tokyonight").setup({
+      style = variant,
+      transparent = opts.transparency,
+    })
+    vim.cmd.colorscheme("tokyonight-" .. variant)
+  end,
+})

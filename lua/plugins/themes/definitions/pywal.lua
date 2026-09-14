@@ -1,9 +1,11 @@
 -- System palette theme: reads the active Hypr palette.
+local set_background = require("lib.background").set
 
 local M = {}
 
 M.icon = ""
 M.variants = { "dark", "light" }
+M.variant_for_background = function(background) return background end
 
 local colors_file = vim.env.HYPR_STATE_HOME
     and (vim.env.HYPR_STATE_HOME .. "/active-palette.json")
@@ -485,7 +487,7 @@ function M.setup(opts)
     bg = is_light_color(colors.special.background) and "light" or "dark"
   end
 
-  vim.o.background = bg
+  set_background(bg)
   apply_highlights(colors, opts.transparency)
 
   -- Other themes get this for free via :colorscheme; we set vim.g.colors_name

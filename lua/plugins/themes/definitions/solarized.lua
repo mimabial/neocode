@@ -1,5 +1,14 @@
--- Solarized (dark) — frozen snapshot (no plugin dependency).
--- Data in definitions/data/solarized.lua by scripts/snapshot_theme.lua.
-local snapshot = require("lib.snapshot")
-local data = require("plugins.themes.definitions.data.solarized")
-return snapshot.definition("solarized", "", data)
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "solarized.nvim",
+  background = function(_, opts)
+    return opts.background or vim.o.background
+  end,
+  apply = function(_, opts)
+    require("solarized").setup({
+      transparent = { enabled = opts.transparency },
+    })
+    vim.cmd.colorscheme("solarized")
+  end,
+})

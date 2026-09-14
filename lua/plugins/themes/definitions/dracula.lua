@@ -1,5 +1,12 @@
--- dracula — frozen snapshot. Refresh: SNAPSHOT_SCHEME=dracula \
---   SNAPSHOT_VARIANTS="default" nvim --headless -c "luafile scripts/snapshot_theme.lua" -c "qa"
-local snapshot = require("lib.snapshot")
-local data = require("plugins.themes.definitions.data.dracula")
-return snapshot.definition("dracula", "", data)
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "dracula.nvim",
+  variants = { "default", "soft" },
+  default = "default",
+  background = "dark",
+  apply = function(variant, opts)
+    require("dracula").setup({ transparent_bg = opts.transparency })
+    vim.cmd.colorscheme(variant == "soft" and "dracula-soft" or "dracula")
+  end,
+})

@@ -1,5 +1,10 @@
--- nord — frozen snapshot (no plugin dependency).
--- Data in definitions/data/nord.lua by scripts/snapshot_theme.lua.
-local snapshot = require("lib.snapshot")
-local data = require("plugins.themes.definitions.data.nord")
-return snapshot.definition("nord", "", data)
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "nord.nvim",
+  background = "dark",
+  apply = function(_, opts)
+    vim.g.nord_disable_background = opts.transparency
+    vim.cmd.colorscheme("nord")
+  end,
+})

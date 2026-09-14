@@ -1,6 +1,5 @@
--- Snapshot generator: freeze a plugin colorscheme into a self-contained,
--- editable data module (named palette + highlight groups that reference it),
--- so it renders with no plugin dependency at runtime.
+-- Optional snapshot generator for custom themes that need fully frozen,
+-- editable highlights with no plugin dependency at runtime.
 --
 --   SNAPSHOT_SCHEME=<scheme> [SNAPSHOT_VARIANTS="v1 v2"] [SNAPSHOT_BACKGROUND=dark|light] \
 --     nvim --headless -c "luafile scripts/snapshot_theme.lua" -c "qa"

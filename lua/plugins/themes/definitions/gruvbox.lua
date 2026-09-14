@@ -1,7 +1,11 @@
--- Gruvbox Theme Definition
-return {
-  icon = "",
-  setup = function(opts)
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "gruvbox.nvim",
+  background = function(_, opts)
+    return opts.background or vim.o.background
+  end,
+  apply = function(_, opts)
     require("gruvbox").setup({
       terminal_colors = true,
       undercurl = true,
@@ -26,7 +30,6 @@ return {
       dim_inactive = false,
       transparent_mode = opts.transparency,
     })
-    vim.o.background = opts.background or "dark"
-    vim.cmd("colorscheme gruvbox")
+    vim.cmd.colorscheme("gruvbox")
   end,
-}
+})

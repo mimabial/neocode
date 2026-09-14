@@ -6,31 +6,16 @@ return {
   config = function()
     require("codeium").setup({
       enable_chat = true,
-    })
-
-    -- Disable Codeium in special buffers
-    vim.api.nvim_create_autocmd("FileType", {
-      pattern = { "TelescopePrompt", "oil" },
-      callback = function()
-        vim.b.codeium_enabled = false
-      end,
+      enable_cmp_source = false,
+      virtual_text = {
+        enabled = true,
+        idle_delay = 100,
+        accept_fallback = "<C-y>",
+        filetypes = { TelescopePrompt = false, bigfile = false, oil = false },
+        key_bindings = { accept = "<C-y>" },
+      },
     })
 
     vim.keymap.set("n", "<leader>ac", "<cmd>Codeium Chat<cr>", { desc = "Codeium: Open Chat" })
-    vim.keymap.set("i", "<C-y>", function()
-      return require("codeium").complete()
-    end, { expr = true, desc = "Codeium: Accept suggestion" })
-
-    vim.keymap.set("i", "<C-;>", function()
-      return require("codeium").cycle_completions(1)
-    end, { expr = true, desc = "Codeium: Next completion" })
-
-    vim.keymap.set("i", "<C-,>", function()
-      return require("codeium").cycle_completions(-1)
-    end, { expr = true, desc = "Codeium: Previous completion" })
-
-    vim.keymap.set("i", "<C-x>", function()
-      return require("codeium").clear()
-    end, { expr = true, desc = "Codeium: Clear suggestions" })
   end,
 }

@@ -6,10 +6,13 @@
 --   XDG_CONFIG_HOME - If set, uses $XDG_CONFIG_HOME/hypr/themes/theme.meta
 --   Default: ~/.config/hypr/themes/theme.meta
 
+local set_background = require("lib.background").set
+
 local M = {}
 
 M.cache_dir = vim.fn.stdpath("cache")
 M.settings_file = M.cache_dir .. "/theme_settings.json"
+M.system_theme_setter = vim.fn.expand("~/.local/lib/hypr/theme/theme.switch.sh")
 
 -- System theme configuration (can be overridden via environment variables)
 M.system_theme_file = vim.env.HYPR_THEME_CONF
@@ -78,6 +81,16 @@ local function read_json_file(path)
   return nil
 end
 
+local function atomic_write(path, lines)
+  local tmp = ("%s.%d.tmp"):format(path, vim.fn.getpid())
+  local ok, result = pcall(vim.fn.writefile, lines, tmp)
+  ok = ok and result == 0 and vim.fn.rename(tmp, path) == 0
+  if not ok then
+    vim.fn.delete(tmp)
+  end
+  return ok
+end
+
 -- Resolve the background colour bar chrome (statusline/tabline/winbar) should
 -- use given the current transparency setting. Returns "NONE" when transparent.
 function M.bar_bg(default_bg)
@@ -100,8 +113,11 @@ end
 function M.save_settings(settings)
   local normalized = normalize_settings(settings)
   vim.fn.mkdir(M.cache_dir, "p")
-  local content = vim.json.encode(normalized)
-  vim.fn.writefile({ content }, M.settings_file)
+  if not atomic_write(M.settings_file, { vim.json.encode(normalized) }) then
+    vim.notify("Failed to save theme settings", vim.log.levels.WARN)
+    return false
+  end
+  return true
 end
 
 -- Load all theme definitions
@@ -115,11 +131,15 @@ function M.load_themes()
   for _, file in ipairs(files) do
     local theme_name = vim.fn.fnamemodify(file, ":t:r")
     local ok, theme_def = pcall(require, "plugins.themes.definitions." .. theme_name)
-    if ok and theme_def then
+    if ok and type(theme_def) == "table" and type(theme_def.setup) == "function" then
       themes[theme_name] = theme_def
+    else
+      local reason = ok and "invalid definition" or tostring(theme_def)
+      vim.notify(("Failed to load theme '%s': %s"):format(theme_name, reason), vim.log.levels.ERROR)
     end
   end
 
+  M.themes = themes
   return themes
 end
 
@@ -192,50 +212,41 @@ function M.apply_theme(theme_name, variant, themes, options)
   -- Don't default background here - let themes handle nil
   -- They can derive from variant or use vim.o.background as fallback
 
-  -- Ensure lazy.nvim loads the plugin before applying (plugin-backed defs only).
-  -- Snapshot defs are self-contained; loading their origin plugin is needless
-  -- and defeats the point, so skip it.
-  pcall(require, "lazy")
+  -- Live definitions name their plugin explicitly. Snapshots and palette-driven
+  -- definitions omit it and remain self-contained.
+  local lazy_ok, lazy = pcall(require, "lazy")
   local lazy_config = package.loaded["lazy.core.config"]
-  if lazy_config and not theme.snapshot then
-    -- Map of theme names to their plugin names (for special cases)
-    local theme_to_plugin = {
-      ayu = "neovim-ayu",
-    }
-
-    local plugin_to_load = nil
-
-    -- Check special cases first
-    if theme_to_plugin[theme_name] then
-      plugin_to_load = theme_to_plugin[theme_name]
-    -- Try exact matches
-    elseif lazy_config.plugins[theme_name] then
-      plugin_to_load = theme_name
-    elseif lazy_config.plugins[theme_name .. ".nvim"] then
-      plugin_to_load = theme_name .. ".nvim"
-    else
-      -- Try partial match - find plugin whose name ends with our theme name
-      for plugin_name, _ in pairs(lazy_config.plugins) do
-        if plugin_name:match(theme_name .. "$") or plugin_name:match(theme_name .. "%.nvim$") then
-          plugin_to_load = plugin_name
-          break
-        end
-      end
+  if theme.plugin then
+    if not lazy_ok or not lazy_config then
+      vim.notify("lazy.nvim is unavailable for theme '" .. theme_name .. "'", vim.log.levels.ERROR)
+      return false
     end
-
-    if plugin_to_load and not lazy_config.plugins[plugin_to_load]._.loaded then
-      require("lazy").load({ plugins = { plugin_to_load } })
+    local plugin = lazy_config.plugins[theme.plugin]
+    if not plugin then
+      vim.notify(("Theme '%s' requires unknown plugin '%s'"):format(theme_name, theme.plugin), vim.log.levels.ERROR)
+      return false
+    end
+    if not plugin._.loaded then
+      local loaded, load_err = pcall(lazy.load, { plugins = { theme.plugin } })
+      if not loaded then
+        vim.notify("Error loading theme plugin: " .. tostring(load_err), vim.log.levels.ERROR)
+        return false
+      end
     end
   end
 
   -- Apply theme with opts table for flexible parameter handling
-  local ok, err = pcall(theme.setup, {
+  local ok, applied_variant = pcall(theme.setup, {
     variant = variant,
     transparency = options.transparency,
     background = options.background,
   })
   if not ok then
-    vim.notify("Error applying theme: " .. tostring(err), vim.log.levels.ERROR)
+    vim.notify("Error applying theme: " .. tostring(applied_variant), vim.log.levels.ERROR)
+    return false
+  end
+  if applied_variant == false then
+    vim.notify("Theme '" .. theme_name .. "' rejected its configuration", vim.log.levels.ERROR)
     return false
   end
 
@@ -245,7 +256,7 @@ function M.apply_theme(theme_name, variant, themes, options)
 
   -- Save settings after setup
   -- Try to detect actual variant from colors_name (e.g., "tokyonight-day" -> "day")
-  local actual_variant = variant
+  local actual_variant = type(applied_variant) == "string" and applied_variant or variant
   local colors_name = vim.g.colors_name or ""
   -- Escape special pattern characters in theme_name (especially hyphens like in "rose-pine")
   local theme_pattern = theme_name:gsub("([%-%.%+%[%]%(%)%$%^%%%?%*])", "%%%1")
@@ -262,14 +273,17 @@ function M.apply_theme(theme_name, variant, themes, options)
     end
   end
 
-  M.save_settings({
+  local settings = {
     theme = theme_name,
     variant = actual_variant,
     background = vim.o.background or "dark",
     transparency = options.transparency,
-  })
+  }
+  if not M.save_settings(settings) then
+    return false
+  end
 
-  return true
+  return true, settings
 end
 
 -- Read variables from theme.meta (Hyprland format: $VAR = value)
@@ -365,7 +379,7 @@ function M.apply_system_theme(themes)
 
   local background = conf_background or active_palette and active_palette_background(active_palette) or settings.background
   if background then
-    vim.o.background = background
+    set_background(background)
   end
 
   local opts = theme_options(settings, background)
@@ -373,10 +387,18 @@ function M.apply_system_theme(themes)
     opts.transparency = conf_transparency
   end
 
-  if system_scheme then
-    if themes[system_scheme] then
-      return M.apply_theme(system_scheme, system_variant, themes, opts)
+  if system_scheme and themes[system_scheme] then
+    if system_variant and not variant_is_valid(themes[system_scheme], system_variant) then
+      vim.notify(
+        ("System variant '%s' is invalid for '%s'; falling back to pywal"):format(system_variant, system_scheme),
+        vim.log.levels.WARN
+      )
+    elseif M.apply_theme(system_scheme, system_variant, themes, opts) then
+      return true
+    else
+      vim.notify("System theme failed; falling back to pywal", vim.log.levels.WARN)
     end
+  elseif system_scheme then
     vim.notify("System NVIM_SCHEME not found: " .. system_scheme .. "; falling back to pywal", vim.log.levels.WARN)
   end
 
@@ -387,49 +409,38 @@ function M.apply_system_theme(themes)
   return M.apply_theme("pywal", nil, themes, opts)
 end
 
--- Update Hyprland config with current theme
-function M.update_hyprland_config(theme_name, variant)
-  if vim.fn.filereadable(M.system_theme_file) ~= 1 then
-    vim.notify("Hyprland theme config not found", vim.log.levels.WARN)
-    return
+function M.update_system_theme(settings)
+  if vim.fn.executable(M.system_theme_setter) ~= 1 then
+    vim.notify("Hyprland theme setter not found", vim.log.levels.ERROR)
+    return false
   end
 
-  local content = vim.fn.readfile(M.system_theme_file)
-  local updated_scheme = false
-  local updated_variant = false
-
-  for i, line in ipairs(content) do
-    if line:match("^%$NVIM_SCHEME") then
-      content[i] = "$NVIM_SCHEME = " .. theme_name
-      updated_scheme = true
-    elseif line:match("^%$NVIM_VARIANT") then
-      content[i] = "$NVIM_VARIANT = " .. (variant or "")
-      updated_variant = true
-    end
+  local mapping = settings.theme .. (settings.variant and (":" .. settings.variant) or "")
+  local command = {
+    M.system_theme_setter,
+    "--nvim",
+    mapping,
+    "--nvim-background",
+    settings.background,
+    "--nvim-transparency",
+    tostring(settings.transparency),
+    "--quiet",
+  }
+  local job = vim.fn.jobstart(command, {
+    detach = true,
+    on_exit = function(_, code)
+      vim.schedule(function()
+        local level = code == 0 and vim.log.levels.INFO or vim.log.levels.ERROR
+        local message = code == 0 and "Updated system theme: " .. mapping or "System theme update failed"
+        vim.notify(message, level)
+      end)
+    end,
+  })
+  if job <= 0 then
+    vim.notify("Failed to start Hyprland theme setter", vim.log.levels.ERROR)
+    return false
   end
-
-  -- Add lines if they don't exist
-  if not updated_scheme then
-    table.insert(content, 1, "$NVIM_SCHEME = " .. theme_name)
-  end
-  if not updated_variant and variant then
-    for i, line in ipairs(content) do
-      if line:match("^%$NVIM_SCHEME") then
-        table.insert(content, i + 1, "$NVIM_VARIANT = " .. variant)
-        break
-      end
-    end
-  end
-
-  pcall(vim.fn.writefile, content, M.system_theme_file)
-
-  -- Notify other nvim instances to reload theme
-  vim.fn.jobstart(vim.fn.expand("~/.local/lib/hypr/util/nvim-theme-sync.sh"), { detach = true })
-
-  vim.notify(
-    "Updated system theme: " .. theme_name .. (variant and ("-" .. variant) or ""),
-    vim.log.levels.INFO
-  )
+  return true
 end
 
 local function read_watch_snapshot(file)
@@ -445,40 +456,49 @@ local function read_watch_snapshot(file)
   return table.concat(content, "\n")
 end
 
+function M.sync(force)
+  local changed = M._watch_snapshots == nil
+  M._watch_snapshots = M._watch_snapshots or {}
+  local snapshots = {}
+  for _, file in ipairs(M._watch_files or {}) do
+    local snapshot = read_watch_snapshot(file)
+    snapshots[file] = snapshot
+    if M._watch_snapshots[file] ~= snapshot then
+      changed = true
+    end
+  end
+  if not force and not changed then
+    return true
+  end
+  local applied = M.apply_system_theme(M.themes or M.load_themes())
+  if applied then
+    M._watch_snapshots = snapshots
+  end
+  return applied
+end
+
+local function close_watchers()
+  for _, watcher in ipairs(M._file_watchers or {}) do
+    pcall(function()
+      watcher:stop()
+      watcher:close()
+    end)
+  end
+  M._file_watchers = nil
+end
+
 -- Setup theme sync (directory watchers + focus repair)
-function M.setup_focus_sync(themes)
+function M.setup_focus_sync()
+  close_watchers()
   local group = vim.api.nvim_create_augroup("ThemeSync", { clear = true })
 
-  -- Files to watch for changes (external config files only, not our cache)
-  local watch_files = {
+  M._watch_files = {
     M.active_palette_file,
     M.system_theme_file,
   }
-
-  -- Track exact file snapshots so same-second writes and atomic replaces are detected.
-  local snapshots = {}
-  for _, file in ipairs(watch_files) do
-    snapshots[file] = read_watch_snapshot(file)
-  end
-
-  -- Check if any watched file changed
-  local function check_for_changes()
-    local changed = false
-    for _, file in ipairs(watch_files) do
-      local snapshot = read_watch_snapshot(file)
-      if snapshots[file] ~= snapshot then
-        snapshots[file] = snapshot
-        changed = true
-      end
-    end
-    return changed
-  end
-
-  -- Apply theme if files changed
-  local function sync_theme()
-    if check_for_changes() then
-      M.apply_system_theme(themes)
-    end
+  M._watch_snapshots = {}
+  for _, file in ipairs(M._watch_files) do
+    M._watch_snapshots[file] = read_watch_snapshot(file)
   end
 
   local sync_pending = false
@@ -490,14 +510,14 @@ function M.setup_focus_sync(themes)
     sync_pending = true
     vim.schedule(function()
       sync_pending = false
-      sync_theme()
+      M.sync(false)
     end)
   end
 
   -- Watch parent directories so atomic file replacement still produces events.
   local watchers = {}
   local watch_dirs = {}
-  for _, file in ipairs(watch_files) do
+  for _, file in ipairs(M._watch_files) do
     local dir = vim.fs.dirname(file)
     if dir and vim.fn.isdirectory(dir) == 1 then
       watch_dirs[dir] = true
@@ -532,13 +552,7 @@ function M.setup_focus_sync(themes)
   -- Cleanup on exit
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = group,
-    callback = function()
-      if M._file_watchers then
-        for _, w in ipairs(M._file_watchers) do
-          pcall(function() w:stop() end)
-        end
-      end
-    end,
+    callback = close_watchers,
   })
 end
 
@@ -602,9 +616,9 @@ function M.register_commands(themes)
     end
 
     local requested_variant = sanitize_variant(theme, settings.variant)
-    if M.apply_theme(theme_name, requested_variant, themes, theme_options(settings, settings.background)) then
-      local applied = M.load_settings()
-      M.update_hyprland_config(applied.theme, applied.variant)
+    local ok, applied = M.apply_theme(theme_name, requested_variant, themes, theme_options(settings, settings.background))
+    if ok then
+      M.update_system_theme(applied)
     end
   end, {
     nargs = "?",
@@ -745,9 +759,13 @@ function M.register_commands(themes)
     -- Use actual vim.o.background, not saved settings (which might be stale)
     local current_bg = vim.o.background or "dark"
     local new_bg = current_bg == "dark" and "light" or "dark"
-    M.apply_theme(settings.theme, settings.variant, themes, theme_options(settings, new_bg))
-
-    vim.notify("Background: " .. new_bg, vim.log.levels.INFO)
+    local theme = themes[settings.theme]
+    local variant = theme and theme.variant_for_background and theme.variant_for_background(new_bg) or settings.variant
+    if M.apply_theme(settings.theme, variant, themes, theme_options(settings, new_bg)) then
+      local actual = vim.o.background
+      local level = actual == new_bg and vim.log.levels.INFO or vim.log.levels.WARN
+      vim.notify(actual == new_bg and "Background: " .. actual or "Theme remains " .. actual, level)
+    end
   end, { desc = "Toggle background mode (dark/light)" })
 
   vim.api.nvim_create_user_command("ToggleTransparency", function()
@@ -765,7 +783,7 @@ function M.register_commands(themes)
 
   -- System theme sync commands
   vim.api.nvim_create_user_command("SystemSync", function()
-    M.apply_system_theme(themes)
+    M.sync(true)
   end, { desc = "Sync with system theme" })
 
   -- Color mode status command

@@ -21,31 +21,13 @@ return {
       { "saadparwaiz1/cmp_luasnip" },
       { "onsails/lspkind.nvim" },
       { "L3MON4D3/LuaSnip" },
-      { "zbirenbaum/copilot-cmp",   optional = true },
-      { "Exafunction/windsurf.nvim", optional = true },
     },
 
     config = function()
       local cmp = require("cmp")
       local luasnip = require("luasnip")
       local lspkind = require("lspkind")
-
-      local function build_sources()
-        local sources = {
-          { name = "nvim_lsp", group_index = 1, priority = 90 },
-          { name = "luasnip",  group_index = 1, priority = 80 },
-          { name = "nvim_lua", group_index = 1, priority = 70 },
-          { name = "buffer",   group_index = 2, priority = 50, keyword_length = 3 },
-          { name = "path",     group_index = 2, priority = 40 },
-          { name = "emoji",    group_index = 3, priority = 30 },
-        }
-
-        if pcall(require, "codeium") then
-          table.insert(sources, 1, { name = "codeium", group_index = 0, priority = 100 })
-        end
-
-        return sources
-      end
+      local disabled_filetypes = { bigfile = true, oil = true, TelescopePrompt = true }
 
       local ui_config = require("config.ui").get_config() or {}
       local float_config = ui_config.float
@@ -59,9 +41,7 @@ return {
         enabled = function()
           local buftype = vim.bo[0].buftype
           local filetype = vim.bo[0].filetype
-          return filetype ~= "oil"
-              and buftype ~= "prompt"
-              and filetype ~= "TelescopePrompt"
+          return not disabled_filetypes[filetype] and buftype ~= "prompt"
         end,
         snippet = {
           expand = function(args)
@@ -116,7 +96,17 @@ return {
             end
           end, { "i", "s" }),
         }),
-        sources = cmp.config.sources(build_sources()),
+        performance = { max_view_entries = 50 },
+        sources = cmp.config.sources({
+          { name = "nvim_lsp" },
+          { name = "luasnip" },
+          { name = "nvim_lua" },
+        }, {
+          { name = "path" },
+          { name = "buffer", keyword_length = 3 },
+        }, {
+          { name = "emoji" },
+        }),
         formatting = {
           format = function(entry, vim_item)
             local menu_icons = {
@@ -126,24 +116,14 @@ return {
               nvim_lua = " Lua",
               path = " Path",
               emoji = " Emoji",
-              codeium = " Codeium",
             }
 
-            local formatted_item = lspkind.cmp_format({
+            return lspkind.cmp_format({
               mode = "symbol_text",
               maxwidth = 50,
               ellipsis_char = "...",
               menu = menu_icons,
-              before = function(item_entry, item)
-                if item_entry.source.name == "codeium" then
-                  item.kind = "Codeium"
-                  item.kind_hl_group = "CmpItemKindCodeium"
-                end
-                return item
-              end,
             })(entry, vim_item)
-
-            return formatted_item
           end,
         },
       }

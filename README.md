@@ -1,12 +1,12 @@
 # neocode
 
-A Neovim configuration built directly on `lazy.nvim` — not a distribution. Designed to work standalone but syncs to my Hyprland theme pipeline (live in `~/dotfiles`) when present.
+A Neovim configuration built directly on `lazy.nvim` — not a distribution. Designed to work standalone but syncs to my Hyprland theme pipeline when present.
 
 ## ✨ Highlights
 
 - **Modular plugin layout** — one file per concern under `lua/plugins/<category>/`, plus per-language LSP/formatter wiring under `lua/plugins/lang/`.
 - **Hyprland theme sync** — picks up theme metadata from `~/.config/hypr/themes/theme.meta` and colors from `~/.local/state/hypr/active-palette.json`, then reapplies on focus/file change.
-- **20 bundled themes** with per-theme variant support, including a pywal theme that derives directly from the active Hypr palette.
+- **Hybrid theme catalog** — 30 lockfile-pinned colorscheme plugins load on demand, Aether's custom palettes stay frozen as snapshots, and pywal derives directly from the active Hypr palette.
 - **AI completions + chat** — `codeium.nvim` for inline completion, `avante.nvim` for chat (Claude / GPT / etc.).
 - **LSP via `vim.lsp.config()`** — Neovim 0.11+ native LSP API; `mason-lspconfig` is used only for `automatic_enable = true`. Per-language settings live in `lua/plugins/lang/<lang>.lua` and extend the spec via `opts.servers`.
 - **Bigfile handling** — files >1.5 MB or with single lines >1000 chars get the synthetic `bigfile` filetype: LSP, treesitter, indent guides, illuminate and rainbow delimiters all opt out automatically.
@@ -54,7 +54,9 @@ nvim                                     # plugins install on first launch
     │   ├── bigfile.lua                  # synthetic bigfile filetype
     │   ├── colors.lua                   # pull current theme bg/fg/etc. from highlights
     │   ├── icons.lua                    # central icon registry (diagnostics, kinds, …)
+    │   ├── live_theme.lua               # shared adapter for lazy-loaded colorschemes
     │   ├── root.lua                     # project-root resolver (.git → markers → cwd)
+    │   ├── snapshot.lua                 # runtime for frozen custom palettes
     │   └── theme_manager.lua            # Hyprland sync, theme commands
     ├── types/
     │   └── notify.lua                   # ---@meta stub for nvim-notify
@@ -147,7 +149,8 @@ LSP keymaps only bind when the server supports the capability.
 |---|---|
 | `<leader>aa` `<leader>ae` `<leader>ar` | Avante: ask / edit / refresh |
 | `<leader>ac` | Codeium: open chat |
-| `<leader>as` / `<leader>at` | AI status / toggle provider |
+| `<C-y>` | Accept Windsurf ghost-text completion (insert mode) |
+| `<M-[>` / `<M-]>` | Previous / next Windsurf completion (insert mode) |
 
 ### UI / Theme (`<leader>u*`)
 
@@ -187,7 +190,9 @@ LSP keymaps only bind when the server supports the capability.
 
 ## 🎨 Themes
 
-20 themes in `lua/plugins/themes/definitions/`, each with upstream variant support. Kanagawa is loaded eagerly (`priority = 1000`) as the bootstrap; the rest load on demand.
+Theme definitions live in `lua/plugins/themes/definitions/`. Standard schemes load their lockfile-pinned plugins on demand. Aether's injected palettes remain frozen snapshots, while pywal renders the active Hypr palette without a colorscheme plugin.
+
+Only Aether has a capture source under `scripts/theme-sources/`. Run `scripts/bootstrap-snapshots.sh` after changing its injected palettes or capture logic; ordinary plugin themes require no generated highlight data.
 
 ## 🎭 System theme integration
 
@@ -217,11 +222,13 @@ Tunable from `lua/lib/bigfile.lua`; thresholds are settable via `require("lib.bi
 
 - **Add a language**: drop a file in `lua/plugins/lang/<lang>.lua` that extends `nvim-lspconfig`'s `opts.servers` and `opts.ensure_installed`. Mirror an existing one (e.g. `python.lua`).
 - **Add a plugin**: any file in the matching `lua/plugins/<category>/` returning a lazy spec is picked up by the `{ import = "plugins.<category>" }` line in `lua/config/lazy.lua`.
+- **Add a theme**: register its plugin in `lua/plugins/themes/colorscheme.lua`, then add a small live definition using `lib.live_theme`.
 - **Change icons globally**: edit `lua/lib/icons.lua` — single source of truth for diagnostic / git / completion-kind / lazy / mason / notify icons.
 
 ## 📦 Notes on architecture
 
 - LSP servers are configured via `vim.lsp.config()` (Neovim 0.11 native API). Mason-lspconfig is used only for `automatic_enable = true` and `ensure_installed`. The main spec at `lua/plugins/lsp/lspconfig.lua` iterates `opts.servers` from the per-language files.
+- Ordinary themes follow their upstream plugins at the revisions pinned in `lazy-lock.json`; snapshots are reserved for custom palettes that need fully frozen highlights.
 - `vim.notify` is wrapped at startup to filter Codeium network errors.
 - Backup, swap, and undo dirs live under `stdpath("state")` so lua_ls (which scans the data tree) doesn't index `*.lua~` backup files and double-count type annotations.
 - `lua/types/notify.lua` is a `---@meta` stub that adds the `__call` overload nvim-notify installs at runtime but lua_ls can't infer.

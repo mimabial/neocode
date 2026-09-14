@@ -1,9 +1,11 @@
 -- Theme definitions live in themes/definitions/, manager logic in lib/theme_manager.lua.
 
 return {
-  -- Theme bootstrap lives in config/theme.lua now; kanagawa is a plain snapshot
-  -- source like the others (dormant plugin, kept for regeneration).
+  -- Standard colorschemes load on demand through lib.live_theme.
   { "rebelot/kanagawa.nvim", lazy = true, priority = 950 },
+
+  -- Aether remains a dormant capture source for frozen custom palettes.
+  { "bjarneo/aether.nvim", branch = "v2", lazy = true, priority = 950 },
 
   { "ficcdaf/ashen.nvim", lazy = true, priority = 950 },
   { "Shatur/neovim-ayu", lazy = true, priority = 950 },

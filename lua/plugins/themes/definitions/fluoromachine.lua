@@ -1,5 +1,16 @@
--- fluoromachine — frozen snapshot. Refresh: SNAPSHOT_SCHEME=fluoromachine \
---   SNAPSHOT_VARIANTS="default glow" nvim --headless -c "luafile scripts/snapshot_theme.lua" -c "qa"
-local snapshot = require("lib.snapshot")
-local data = require("plugins.themes.definitions.data.fluoromachine")
-return snapshot.definition("fluoromachine", "", data)
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "fluoromachine.nvim",
+  variants = { "default", "glow" },
+  default = "default",
+  background = "dark",
+  apply = function(variant, opts)
+    require("fluoromachine").setup({
+      theme = "fluoromachine",
+      glow = variant == "glow",
+      transparent = opts.transparency,
+    })
+    vim.cmd.colorscheme("fluoromachine")
+  end,
+})

@@ -95,13 +95,6 @@ function M.setup()
   opt.foldenable = true
   opt.fillchars = { eob = " " }
 
-  -- Listen server so external tools (theme sync) can send commands.
-  if not vim.g.started_server and vim.fn.serverlist()[1] == nil then
-    local runtime_dir = vim.env.XDG_RUNTIME_DIR or ("/run/user/" .. vim.uv.getuid())
-    local socket = runtime_dir .. "/nvim." .. vim.fn.getpid() .. ".0"
-    pcall(vim.fn.serverstart, socket)
-    vim.g.started_server = true
-  end
 end
 
 return M

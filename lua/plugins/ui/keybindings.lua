@@ -24,7 +24,6 @@ return {
 
     which_key.add({
       { "<leader>a", group = "Avante" },
-      { "<leader>ai", group = "AI (NeoCodeium)" },
       { "<leader>b", group = "Buffers" },
       { "<leader>c", group = "Code/LSP" },
       { "<leader>d", group = "Debug" },

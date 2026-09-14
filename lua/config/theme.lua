@@ -1,7 +1,6 @@
--- Theme bootstrap: initialize the theme manager and apply the active theme at
--- startup. Decoupled from any colorscheme plugin so themes are snapshot-driven
--- and no plugin needs to load eagerly just to host this. Loaded from init.lua
--- right after config.lazy (so lazy.load is available for any plugin-backed theme).
+-- Theme bootstrap: initialize the manager and apply the active live, snapshot,
+-- or palette-driven definition. Loaded after config.lazy so live themes can
+-- load their colorscheme plugin on demand.
 local M = {}
 
 function M.setup()
@@ -9,11 +8,13 @@ function M.setup()
   local themes = manager.load_themes()
 
   manager.register_commands(themes)
+  manager.setup_focus_sync()
+  vim.g.neocode_theme_sync = true
 
-  if not manager.apply_system_theme(themes) then
+  if not manager.sync(true) then
     local settings = manager.load_settings()
     if settings.background then
-      vim.o.background = settings.background
+      require("lib.background").set(settings.background)
     end
     manager.apply_theme(settings.theme, settings.variant, themes, {
       background = settings.background,
@@ -21,7 +22,6 @@ function M.setup()
     })
   end
 
-  manager.setup_focus_sync(themes)
 end
 
 return M

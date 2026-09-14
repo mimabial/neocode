@@ -19,13 +19,29 @@ return {
       opts.servers = opts.servers or {}
       opts.ensure_installed = opts.ensure_installed or {}
       vim.list_extend(opts.ensure_installed, {
-        "marksman", "html", "cssls", "ts_ls", "taplo", "lemminx",
+        "marksman",
+        "html",
+        "cssls",
+        "ts_ls",
+        "taplo",
+        "lemminx",
       })
       return opts
     end,
 
     config = function(_, opts)
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
+
+      -- cmp-nvim-lsp normally refreshes only on InsertEnter. Register servers
+      -- that finish attaching during the first insert session too.
+      vim.api.nvim_create_autocmd("LspAttach", {
+        group = vim.api.nvim_create_augroup("cmp_lsp_attach", { clear = true }),
+        callback = function()
+          if package.loaded.cmp then
+            require("cmp_nvim_lsp")._on_insert_enter()
+          end
+        end,
+      })
 
       -- Defaults applied to every server (merged with bundled nvim-lspconfig configs).
       vim.lsp.config("*", { capabilities = capabilities })

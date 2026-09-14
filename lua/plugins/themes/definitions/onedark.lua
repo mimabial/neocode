@@ -1,8 +1,17 @@
--- Onedark — frozen snapshot (dark style, no plugin dependency).
--- Data captured in definitions/data/onedark.lua by scripts/snapshot_theme.lua.
--- Refresh/add a style: ensure onedark.nvim is installed, then
---   SNAPSHOT_SCHEME=onedark SNAPSHOT_VARIANTS="dark" \
---     nvim --headless -c "luafile scripts/snapshot_theme.lua" -c "qa"
-local snapshot = require("lib.snapshot")
-local data = require("plugins.themes.definitions.data.onedark")
-return snapshot.definition("onedark", "", data)
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "onedark.nvim",
+  variants = { "dark", "darker", "cool", "deep", "warm", "warmer", "light" },
+  default = "dark",
+  background = function(variant)
+    return variant == "light" and "light" or "dark"
+  end,
+  apply = function(variant, opts)
+    require("onedark").setup({
+      style = variant,
+      transparent = opts.transparency,
+    })
+    vim.cmd.colorscheme("onedark")
+  end,
+})

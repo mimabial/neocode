@@ -1,14 +1,13 @@
--- Melange Theme Definition
--- Variants are backgrounds: melange picks dark/light via vim.o.background.
-return {
-  icon = "",
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "melange",
   variants = { "dark", "light" },
-  setup = function(opts)
-    local bg = opts.background or opts.variant
-    if bg ~= "dark" and bg ~= "light" then
-      bg = "dark"
-    end
-    vim.o.background = bg
-    vim.cmd("colorscheme melange")
+  default = "light",
+  background = function(variant, opts)
+    return opts.background or variant
   end,
-}
+  apply = function()
+    vim.cmd.colorscheme("melange")
+  end,
+})

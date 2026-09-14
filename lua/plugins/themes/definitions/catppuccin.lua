@@ -1,5 +1,19 @@
--- catppuccin — frozen snapshot (no plugin dependency).
--- Data in definitions/data/catppuccin.lua by scripts/snapshot_theme.lua.
-local snapshot = require("lib.snapshot")
-local data = require("plugins.themes.definitions.data.catppuccin")
-return snapshot.definition("catppuccin", "", data)
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "catppuccin",
+  variants = { "latte", "frappe", "macchiato", "mocha" },
+  default = "mocha",
+  background = function(variant)
+    return variant == "latte" and "light" or "dark"
+  end,
+  apply = function(variant, opts)
+    require("catppuccin").setup({
+      flavour = variant,
+      term_colors = true,
+      transparent_background = opts.transparency,
+    })
+    require("catppuccin").compile()
+    vim.cmd.colorscheme("catppuccin-" .. variant)
+  end,
+})

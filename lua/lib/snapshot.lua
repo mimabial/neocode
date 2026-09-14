@@ -2,6 +2,8 @@
 -- A snapshot captures a plugin's resolved highlights + terminal colors so the
 -- theme renders identically with no plugin dependency. Data lives in
 -- plugins/themes/definitions/data/<scheme>.lua.
+local set_background = require("lib.background").set
+
 local M = {}
 
 -- Build a theme definition from a snapshot data module.
@@ -25,6 +27,11 @@ function M.definition(name, icon, captures)
   end
   table.sort(variants)
   local has_variants = #variants > 0
+  local function find(match)
+    for _, capture in ipairs(captures) do
+      if match(capture) then return capture end
+    end
+  end
 
   return {
     icon = icon,
@@ -32,27 +39,23 @@ function M.definition(name, icon, captures)
     variants = has_variants and variants or nil,
     -- Self-contained: apply_theme must not load the origin plugin for these.
     snapshot = true,
+    variant_for_background = function(background)
+      local capture = find(function(c) return c.background == background end)
+      return capture and capture.variant
+    end,
     setup = function(opts)
-      local variant = nil
-      if has_variants then
-        variant = opts.variant
-        if variant == nil or not seen[variant] then
-          variant = variants[1]
-        end
+      local snap
+      if opts.background then
+        snap = find(function(c)
+          return (not opts.variant or c.variant == opts.variant) and c.background == opts.background
+        end)
       end
-
-      local function find(match)
-        for _, capture in ipairs(captures) do
-          if match(capture) then return capture end
-        end
+      if not snap and opts.variant then
+        snap = find(function(c) return c.variant == opts.variant end)
       end
-      local snap = find(function(c)
-        return c.variant == variant and c.background == opts.background
-      end) or find(function(c)
-        return c.variant == variant
-      end) or captures[1]
+      snap = snap or captures[1]
 
-      vim.o.background = snap.background
+      set_background(snap.background)
       if vim.g.colors_name then
         vim.cmd("highlight clear")
       end
@@ -77,6 +80,7 @@ function M.definition(name, icon, captures)
       -- the very plugin this snapshot exists to replace. Our listeners register
       -- with `*` and read vim.g.colors_name, so they still run.
       vim.api.nvim_exec_autocmds("ColorScheme", { pattern = "snapshot:" .. name })
+      return snap.variant
     end,
   }
 end

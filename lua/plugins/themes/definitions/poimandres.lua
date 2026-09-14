@@ -1,5 +1,13 @@
--- poimandres — frozen snapshot (no plugin dependency).
--- Data in definitions/data/poimandres.lua by scripts/snapshot_theme.lua.
-local snapshot = require("lib.snapshot")
-local data = require("plugins.themes.definitions.data.poimandres")
-return snapshot.definition("poimandres", "", data)
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "poimandres.nvim",
+  background = "dark",
+  apply = function(_, opts)
+    require("poimandres").setup({
+      disable_background = opts.transparency,
+      disable_float_background = opts.transparency,
+    })
+    vim.cmd.colorscheme("poimandres")
+  end,
+})

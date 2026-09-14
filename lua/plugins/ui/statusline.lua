@@ -127,10 +127,11 @@ return {
     local function ai_indicators()
       return {
         function()
-          if package.loaded["codeium"] then
-            return "windsurf"
+          local codeium = package.loaded.codeium
+          if not codeium then
+            return ""
           end
-          return ""
+          return codeium.s and codeium.s:is_healthy() and "windsurf" or "windsurf!"
         end,
         color = { fg = colors.purple, bg = bar_bg },
       }

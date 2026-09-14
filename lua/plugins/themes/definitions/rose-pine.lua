@@ -1,6 +1,17 @@
--- Rosé Pine — frozen snapshot (no plugin dependency).
--- Data in definitions/data/rose-pine.lua by scripts/snapshot_theme.lua.
--- main = dark, moon dropped (not snapshotted), dawn = light.
-local snapshot = require("lib.snapshot")
-local data = require("plugins.themes.definitions.data.rose-pine")
-return snapshot.definition("rose-pine", "", data)
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "rose-pine",
+  variants = { "main", "moon", "dawn" },
+  default = "main",
+  background = function(variant)
+    return variant == "dawn" and "light" or "dark"
+  end,
+  apply = function(variant, opts)
+    require("rose-pine").setup({
+      variant = variant,
+      disable_background = opts.transparency,
+    })
+    vim.cmd.colorscheme("rose-pine")
+  end,
+})

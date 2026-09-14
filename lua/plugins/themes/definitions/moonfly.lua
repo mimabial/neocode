@@ -1,5 +1,10 @@
--- moonfly — frozen snapshot (no plugin dependency).
--- Data in definitions/data/moonfly.lua by scripts/snapshot_theme.lua.
-local snapshot = require("lib.snapshot")
-local data = require("plugins.themes.definitions.data.moonfly")
-return snapshot.definition("moonfly", "", data)
+local live = require("lib.live_theme")
+
+return live.definition({
+  plugin = "moonfly",
+  background = "dark",
+  apply = function(_, opts)
+    vim.g.moonflyTransparent = opts.transparency == true
+    vim.cmd.colorscheme("moonfly")
+  end,
+})
