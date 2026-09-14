@@ -2,9 +2,8 @@
 -- to capture snapshots. Not loaded at runtime. Requires aether.nvim (v2) installed.
 --
 -- aether is a palette-injection theme: it ships one look but every colour is a
--- caller override. Imported palettes are the variant axis here. This is the one
--- source whose variants are not plugin-declared; aether declares none. Treat
--- all_variants as the palettes to freeze, and add an entry for each new palette.
+-- caller override. Imported palettes are the variant axis, derived below for
+-- snapshot generation because the plugin declares no variants itself.
 --
 -- "aether" is the stock palette and sorts first, so it is what
 -- snapshot.definition falls back to when a pack pins no $NVIM_VARIANT.
@@ -47,6 +46,11 @@ local palettes = {
   },
 }
 
+local backgrounds = { akaito = "light" }
+local bootstrap_variants = { "aether" }
+for variant in pairs(palettes) do bootstrap_variants[#bootstrap_variants + 1] = variant end
+table.sort(bootstrap_variants)
+
 local overrides = {
   ["sakura-mochi"] = function(hl, c)
     hl["@constant.builtin"] = { fg = c.orange }
@@ -74,12 +78,11 @@ local overrides = {
 }
 
 return {
-  all_variants = { "aether", "akaito", "sakura-mochi" },
-  bootstrap_variants = { "aether", "akaito", "sakura-mochi" },
+  bootstrap_variants = bootstrap_variants,
   exclude = { "^RedrawDebug" },
   apply = function(variant, opts)
     require("lazy").load({ plugins = { "aether.nvim" } })
-    vim.o.background = opts.background or "dark"
+    vim.o.background = opts.background or backgrounds[variant] or "dark"
     require("aether").setup({
       transparent = opts.transparency,
       colors = palettes[variant] or {},

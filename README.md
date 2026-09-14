@@ -192,7 +192,7 @@ LSP keymaps only bind when the server supports the capability.
 
 Theme definitions live in `lua/plugins/themes/definitions/`. Standard schemes load their lockfile-pinned plugins on demand. Aether's injected palettes remain frozen snapshots, while pywal renders the active Hypr palette without a colorscheme plugin.
 
-Only Aether has a capture source under `scripts/theme-sources/`. Run `scripts/bootstrap-snapshots.sh` after changing its injected palettes or capture logic; ordinary plugin themes require no generated highlight data.
+Only Aether has a capture source under `scripts/theme-sources/`. It and `scripts/theme-palettes/` are canonical; never edit generated snapshot data directly. Run `scripts/bootstrap-snapshots.sh` after changing those inputs or capture logic. Ordinary plugin themes require no generated highlight data.
 
 ## 🎭 System theme integration
 

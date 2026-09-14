@@ -5,8 +5,8 @@
 #
 #   scripts/bootstrap-snapshots.sh
 #
-# Each scheme captures the variants its packs reference; if no pack references
-# it, the scheme's first declared variant is used.
+# Each capture source declares its complete bootstrap variant set and resolves
+# the correct background when no explicit polarity is supplied.
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")/.." && pwd)"

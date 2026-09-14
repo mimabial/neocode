@@ -9,6 +9,7 @@
 local set_background = require("lib.background").set
 
 local M = {}
+local background_variants = {}
 
 M.cache_dir = vim.fn.stdpath("cache")
 M.settings_file = M.cache_dir .. "/theme_settings.json"
@@ -760,7 +761,12 @@ function M.register_commands(themes)
     local current_bg = vim.o.background or "dark"
     local new_bg = current_bg == "dark" and "light" or "dark"
     local theme = themes[settings.theme]
-    local variant = theme and theme.variant_for_background and theme.variant_for_background(new_bg) or settings.variant
+    local remembered = background_variants[settings.theme] or {}
+    background_variants[settings.theme] = remembered
+    remembered[current_bg] = settings.variant
+    local variant = remembered[new_bg]
+      or theme and theme.variant_for_background and theme.variant_for_background(new_bg)
+    variant = sanitize_variant(theme, variant)
     if M.apply_theme(settings.theme, variant, themes, theme_options(settings, new_bg)) then
       local actual = vim.o.background
       local level = actual == new_bg and vim.log.levels.INFO or vim.log.levels.WARN

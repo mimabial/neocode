@@ -3,5 +3,6 @@
 -- Variants are injected palettes, not plugin variants: aether = stock,
 -- while akaito and sakura-mochi are imported palettes.
 local snapshot = require("lib.snapshot")
-local data = require("plugins.themes.definitions.data.aether")
-return snapshot.definition("aether", "", data)
+return snapshot.definition("aether", "", function()
+  return require("plugins.themes.definitions.data.aether")
+end, { "aether", "akaito", "sakura-mochi" })
