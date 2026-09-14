@@ -54,6 +54,7 @@ for _, module in ipairs({
   "config.terminal_sync",
   "config.lazy",
   "config.theme",
+  "config.diagnostics",
   "config.keymaps",
   "config.commands",
   "config.autocmds",

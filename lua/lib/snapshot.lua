@@ -94,7 +94,7 @@ function M.definition(name, icon, source, variants)
       -- the very plugin this snapshot exists to replace. Our listeners register
       -- with `*` and read vim.g.colors_name, so they still run.
       vim.api.nvim_exec_autocmds("ColorScheme", { pattern = "snapshot:" .. name })
-      return snap.variant
+      return { variant = snap.variant, background = snap.background }
     end,
   }
 end

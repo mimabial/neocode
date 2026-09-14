@@ -18,6 +18,7 @@ return {
   { "Mofiqul/dracula.nvim", lazy = true, priority = 950 },
   { "kbraggins/duskhaven.nvim", lazy = true, priority = 950 },
   { "sainnhe/everforest", lazy = true, priority = 950 },
+  { "kepano/flexoki-neovim", name = "flexoki", lazy = true, priority = 950 },
   { "maxmx03/fluoromachine.nvim", lazy = true, priority = 950 },
   { "ellisonleao/gruvbox.nvim", lazy = true, priority = 950 },
   { "sainnhe/gruvbox-material", lazy = true, priority = 950 },
@@ -34,6 +35,7 @@ return {
   { "hyperb1iss/silkcircuit", lazy = true, priority = 950 },
   { "maxmx03/solarized.nvim", lazy = true, priority = 950 },
   { "jpwol/thorn.nvim", lazy = true, priority = 950 },
+  { "ThorstenRhau/token", lazy = true, priority = 950 },
   { "folke/tokyonight.nvim", lazy = true, priority = 950 },
   { "zenbones-theme/zenbones.nvim", name = "zenbones", dependencies = "rktjmp/lush.nvim", lazy = true, priority = 950 },
 }

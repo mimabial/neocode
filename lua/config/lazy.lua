@@ -20,7 +20,7 @@ function M.setup()
       version = false,
     },
     install = {
-      colorscheme = { "kanagawa" },
+      colorscheme = { "catppuccin-mocha" },
       missing = true,
     },
     pkg = { enabled = false },

@@ -474,8 +474,7 @@ end
 function M.setup(opts)
   local colors = load_pywal_colors()
   if not colors then
-    vim.notify("Active palette not found or invalid at " .. colors_file, vim.log.levels.WARN)
-    return false
+    return nil, "active palette not found or invalid at " .. colors_file
   end
 
   local bg = opts.background
@@ -495,7 +494,7 @@ function M.setup(opts)
   vim.g.colors_name = "pywal"
   vim.api.nvim_exec_autocmds("ColorScheme", { pattern = "pywal" })
 
-  return true
+  return { variant = opts.variant, background = bg }
 end
 
 return M

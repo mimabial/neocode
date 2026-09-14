@@ -1,3 +1,22 @@
+local format_excluded_filetypes = {
+  sql = true,
+  diff = true,
+  gitcommit = true,
+  oil = true,
+  htmldjango = true,
+}
+
+local function buffer_allows_formatting(bufnr)
+  if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+    return false
+  end
+  if format_excluded_filetypes[vim.bo[bufnr].filetype] then
+    return false
+  end
+  local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(bufnr))
+  return not (ok and stats and stats.size > 1000000)
+end
+
 local function build_mason_tools_opts(cwd)
   cwd = cwd or vim.fn.getcwd()
   local root_dir = require("lib.root").get(cwd)
@@ -181,38 +200,16 @@ return {
 
       return {
         format_on_save = function(bufnr)
-          if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
-            return
-          end
-          local ft = vim.bo[bufnr].filetype
-          if vim.tbl_contains({ "sql", "diff", "gitcommit", "oil", "htmldjango" }, ft) then
-            return
-          end
-          local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(bufnr))
-          if ok and stats and stats.size > 1000000 then
-            return
-          end
-          -- Files >1000 lines: skip sync format here, defer to format_after_save.
-          if vim.api.nvim_buf_line_count(bufnr) > 1000 then
+          if not buffer_allows_formatting(bufnr) or vim.api.nvim_buf_line_count(bufnr) > 1000 then
             return
           end
           return { timeout_ms = 1000, lsp_format = "fallback", quiet = false }
         end,
         format_after_save = function(bufnr)
-          if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+          if not buffer_allows_formatting(bufnr) or vim.api.nvim_buf_line_count(bufnr) <= 1000 then
             return
           end
-          local ft = vim.bo[bufnr].filetype
-          if vim.tbl_contains({ "sql", "diff", "gitcommit", "oil", "htmldjango" }, ft) then
-            return
-          end
-          local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(bufnr))
-          if ok and stats and stats.size > 1000000 then
-            return
-          end
-          if vim.api.nvim_buf_line_count(bufnr) > 1000 then
-            return { lsp_format = "fallback", quiet = false }
-          end
+          return { lsp_format = "fallback", quiet = false }
         end,
         formatters_by_ft = {
           -- Lua

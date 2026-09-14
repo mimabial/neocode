@@ -91,33 +91,6 @@ function M.setup()
     dofile(vim.fn.stdpath("config") .. "/init.lua")
     vim.notify("Nvim configuration reloaded!", vim.log.levels.INFO, { title = "Config" })
   end, { desc = "Reload Neovim configuration" })
-
-  -- Diagnostics
-  local function diagnostic_base_config()
-    local ok, autocmds = pcall(require, "config.autocmds")
-    if ok and autocmds.diagnostic_config then
-      return autocmds.diagnostic_config
-    end
-    return vim.diagnostic.config()
-  end
-
-  vim.api.nvim_create_user_command("DiagnosticsToggle", function()
-    local current = vim.diagnostic.config() or {}
-    local diagnostics_enabled = current.virtual_text ~= false
-      or current.signs ~= false
-      or current.underline ~= false
-
-    local base = diagnostic_base_config()
-    local new_config = vim.deepcopy(base)
-    if diagnostics_enabled then
-      new_config.virtual_text = false
-      new_config.signs = false
-      new_config.underline = false
-    end
-
-    vim.diagnostic.config(new_config)
-    vim.notify("Diagnostics " .. (diagnostics_enabled and "disabled" or "enabled"), vim.log.levels.INFO)
-  end, { desc = "Toggle diagnostic display" })
 end
 
 return M

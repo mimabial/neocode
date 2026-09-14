@@ -1,4 +1,5 @@
 local M = {}
+local diagnostics = require("config.diagnostics")
 
 function M.setup()
   local function map(mode, lhs, rhs, opts)
@@ -85,13 +86,7 @@ function M.setup()
   map("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy Plugin Manager" })
 
   -- Diagnostics
-  if vim.g.diagnostics_hover == nil then
-    vim.g.diagnostics_hover = true
-  end
-  map("n", "<leader>ch", function()
-    vim.g.diagnostics_hover = not vim.g.diagnostics_hover
-    vim.notify("Diagnostics hover " .. (vim.g.diagnostics_hover and "enabled" or "disabled"), vim.log.levels.INFO)
-  end, { desc = "Toggle diagnostics hover popup" })
+  map("n", "<leader>ch", diagnostics.toggle_hover, { desc = "Toggle diagnostics hover popup" })
 
   -- General Improvements
   map("i", "jk", "<ESC>", { desc = "Exit insert mode" })

@@ -12,9 +12,15 @@ local function hl_color(group, attr, fallback)
   return type(val) == "number" and string.format("#%06x", val) or tostring(val)
 end
 
+-- A transparent theme has no Normal bg; the Hypr palette bg is what shows behind the buffer.
+local function transparent_bg()
+  local palette = require("lib.theme_manager").load_active_palette()
+  return palette and palette.bg or "#1f1f28"
+end
+
 -- Extract all theme colors from current colorscheme
 function M.extract_all()
-  local bg = hl_color("Normal", "bg", "#1f1f28")
+  local bg = hl_color("Normal", "bg") or transparent_bg()
   local fg = hl_color("Normal", "fg", "#dcd7ba")
 
   return {
@@ -35,14 +41,6 @@ function M.extract_all()
     popup_bg = hl_color("Pmenu", "bg", bg),
 
     codeium = "#09B6A2",
-  }
-end
-
--- Extract only background and foreground (for terminal sync)
-function M.extract_basic()
-  return {
-    bg = hl_color("Normal", "bg", "#1f1f28"),
-    fg = hl_color("Normal", "fg", "#dcd7ba"),
   }
 end
 

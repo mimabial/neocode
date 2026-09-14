@@ -6,7 +6,7 @@ return {
   lazy = false,
   opts = {
     lsp = {
-      auto_attach = true
+      auto_attach = true,
     },
     highlight = true,
     separator = " ",
@@ -23,35 +23,35 @@ return {
     local function setup_highlights()
       local colors = require("config.ui").get_colors()
 
-      vim.api.nvim_set_hl(0, "NavicText", { fg = colors.fg, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicSeparator", { fg = colors.border, bg = colors.bg })
+      vim.api.nvim_set_hl(0, "NavicText", { fg = colors.fg })
+      vim.api.nvim_set_hl(0, "NavicSeparator", { fg = colors.border })
 
-      vim.api.nvim_set_hl(0, "NavicIconsFile", { fg = colors.blue, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsModule", { fg = colors.orange, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsNamespace", { fg = colors.purple, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsPackage", { fg = colors.yellow, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsClass", { fg = colors.orange, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsMethod", { fg = colors.blue, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsProperty", { fg = colors.green, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsField", { fg = colors.green, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsConstructor", { fg = colors.orange, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsEnum", { fg = colors.purple, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsInterface", { fg = colors.purple, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsFunction", { fg = colors.blue, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsVariable", { fg = colors.red, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsConstant", { fg = colors.yellow, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsString", { fg = colors.green, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsNumber", { fg = colors.orange, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsBoolean", { fg = colors.red, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsArray", { fg = colors.blue, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsObject", { fg = colors.purple, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsKey", { fg = colors.yellow, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsNull", { fg = colors.gray, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsEnumMember", { fg = colors.purple, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsStruct", { fg = colors.orange, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsEvent", { fg = colors.red, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsOperator", { fg = colors.blue, bg = colors.bg })
-      vim.api.nvim_set_hl(0, "NavicIconsTypeParameter", { fg = colors.green, bg = colors.bg })
+      vim.api.nvim_set_hl(0, "NavicIconsFile", { fg = colors.blue })
+      vim.api.nvim_set_hl(0, "NavicIconsModule", { fg = colors.orange })
+      vim.api.nvim_set_hl(0, "NavicIconsNamespace", { fg = colors.purple })
+      vim.api.nvim_set_hl(0, "NavicIconsPackage", { fg = colors.yellow })
+      vim.api.nvim_set_hl(0, "NavicIconsClass", { fg = colors.orange })
+      vim.api.nvim_set_hl(0, "NavicIconsMethod", { fg = colors.blue })
+      vim.api.nvim_set_hl(0, "NavicIconsProperty", { fg = colors.green })
+      vim.api.nvim_set_hl(0, "NavicIconsField", { fg = colors.green })
+      vim.api.nvim_set_hl(0, "NavicIconsConstructor", { fg = colors.orange })
+      vim.api.nvim_set_hl(0, "NavicIconsEnum", { fg = colors.purple })
+      vim.api.nvim_set_hl(0, "NavicIconsInterface", { fg = colors.purple })
+      vim.api.nvim_set_hl(0, "NavicIconsFunction", { fg = colors.blue })
+      vim.api.nvim_set_hl(0, "NavicIconsVariable", { fg = colors.red })
+      vim.api.nvim_set_hl(0, "NavicIconsConstant", { fg = colors.yellow })
+      vim.api.nvim_set_hl(0, "NavicIconsString", { fg = colors.green })
+      vim.api.nvim_set_hl(0, "NavicIconsNumber", { fg = colors.orange })
+      vim.api.nvim_set_hl(0, "NavicIconsBoolean", { fg = colors.red })
+      vim.api.nvim_set_hl(0, "NavicIconsArray", { fg = colors.blue })
+      vim.api.nvim_set_hl(0, "NavicIconsObject", { fg = colors.purple })
+      vim.api.nvim_set_hl(0, "NavicIconsKey", { fg = colors.yellow })
+      vim.api.nvim_set_hl(0, "NavicIconsNull", { fg = colors.gray })
+      vim.api.nvim_set_hl(0, "NavicIconsEnumMember", { fg = colors.purple })
+      vim.api.nvim_set_hl(0, "NavicIconsStruct", { fg = colors.orange })
+      vim.api.nvim_set_hl(0, "NavicIconsEvent", { fg = colors.red })
+      vim.api.nvim_set_hl(0, "NavicIconsOperator", { fg = colors.blue })
+      vim.api.nvim_set_hl(0, "NavicIconsTypeParameter", { fg = colors.green })
     end
 
     setup_highlights()

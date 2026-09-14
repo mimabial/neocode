@@ -1,6 +1,3 @@
--- Theme Manager Module
--- Handles theme persistence, application, and system integration
---
 -- Configuration via environment variables:
 --   HYPR_THEME_CONF - Path to Hyprland theme metadata file (highest priority)
 --   XDG_CONFIG_HOME - If set, uses $XDG_CONFIG_HOME/hypr/themes/theme.meta
@@ -44,14 +41,14 @@ end
 
 local function normalize_settings(data)
   return {
-    theme = data and data.theme or "kanagawa",
+    theme = data and data.theme or "catppuccin",
     variant = data and data.variant or nil,
     background = normalize_background(data and data.background) or "dark",
     transparency = normalize_transparency(data and data.transparency),
   }
 end
 
-local function theme_options(settings, background)
+local function options_from_settings(settings, background)
   return {
     background = background,
     transparency = settings.transparency,
@@ -60,7 +57,7 @@ end
 
 local function normalize_apply_options(options)
   return {
-    background = options and options.background or nil,
+    background = normalize_background(options and options.background),
     transparency = normalize_transparency(options and options.transparency),
   }
 end
@@ -121,27 +118,29 @@ function M.save_settings(settings)
   return true
 end
 
--- Load all theme definitions
-function M.load_themes()
-  local themes = {}
+function M.load_catalog()
+  local catalog = {}
   local def_path = vim.fn.stdpath("config") .. "/lua/plugins/themes/definitions"
 
-  -- Get all theme definition files
   local files = vim.fn.glob(def_path .. "/*.lua", false, true)
 
   for _, file in ipairs(files) do
     local theme_name = vim.fn.fnamemodify(file, ":t:r")
     local ok, theme_def = pcall(require, "plugins.themes.definitions." .. theme_name)
     if ok and type(theme_def) == "table" and type(theme_def.setup) == "function" then
-      themes[theme_name] = theme_def
+      catalog[theme_name] = theme_def
     else
       local reason = ok and "invalid definition" or tostring(theme_def)
       vim.notify(("Failed to load theme '%s': %s"):format(theme_name, reason), vim.log.levels.ERROR)
     end
   end
 
-  M.themes = themes
-  return themes
+  M.catalog = catalog
+  return catalog
+end
+
+local function get_catalog()
+  return M.catalog or M.load_catalog()
 end
 
 local function theme_supports_variant(theme)
@@ -170,10 +169,6 @@ local function sanitize_variant(theme, variant)
   return nil
 end
 
--- Apply a theme
--- @param theme_name string - Theme name
--- @param variant string|nil - Variant name (optional)
--- @param themes table - All loaded themes
 -- Clear the background on every group painted the scheme's base bg, so a theme
 -- obeys transparency whether or not its plugin has an option for it (snapshots
 -- and .vim schemes have none). Distinct surfaces -- floats, CursorLine, Visual --
@@ -192,9 +187,8 @@ local function apply_transparency()
   end
 end
 
--- @param options table - { background = "dark"|"light"|nil, transparency = boolean }
-function M.apply_theme(theme_name, variant, themes, options)
-  local theme = themes[theme_name]
+function M.apply_theme(theme_name, variant, options)
+  local theme = get_catalog()[theme_name]
   if not theme then
     vim.notify("Theme '" .. theme_name .. "' not found", vim.log.levels.ERROR)
     return false
@@ -209,9 +203,6 @@ function M.apply_theme(theme_name, variant, themes, options)
     return false
   end
   options = normalize_apply_options(options)
-
-  -- Don't default background here - let themes handle nil
-  -- They can derive from variant or use vim.o.background as fallback
 
   -- Live definitions name their plugin explicitly. Snapshots and palette-driven
   -- definitions omit it and remain self-contained.
@@ -236,18 +227,30 @@ function M.apply_theme(theme_name, variant, themes, options)
     end
   end
 
-  -- Apply theme with opts table for flexible parameter handling
-  local ok, applied_variant = pcall(theme.setup, {
+  local ok, result, setup_error = pcall(theme.setup, {
     variant = variant,
     transparency = options.transparency,
     background = options.background,
   })
   if not ok then
-    vim.notify("Error applying theme: " .. tostring(applied_variant), vim.log.levels.ERROR)
+    vim.notify("Error applying theme: " .. tostring(result), vim.log.levels.ERROR)
     return false
   end
-  if applied_variant == false then
-    vim.notify("Theme '" .. theme_name .. "' rejected its configuration", vim.log.levels.ERROR)
+  if type(result) ~= "table" then
+    local reason = setup_error or "definition returned no result"
+    vim.notify(("Theme '%s' rejected its configuration: %s"):format(theme_name, reason), vim.log.levels.ERROR)
+    return false
+  end
+
+  local actual_variant = result.variant
+  if actual_variant ~= nil and not variant_is_valid(theme, actual_variant) then
+    vim.notify(("Theme '%s' returned invalid variant '%s'"):format(theme_name, actual_variant), vim.log.levels.ERROR)
+    return false
+  end
+
+  local actual_background = normalize_background(result.background)
+  if result.background ~= nil and not actual_background then
+    vim.notify(("Theme '%s' returned invalid background '%s'"):format(theme_name, result.background), vim.log.levels.ERROR)
     return false
   end
 
@@ -255,29 +258,10 @@ function M.apply_theme(theme_name, variant, themes, options)
     apply_transparency()
   end
 
-  -- Save settings after setup
-  -- Try to detect actual variant from colors_name (e.g., "tokyonight-day" -> "day")
-  local actual_variant = type(applied_variant) == "string" and applied_variant or variant
-  local colors_name = vim.g.colors_name or ""
-  -- Escape special pattern characters in theme_name (especially hyphens like in "rose-pine")
-  local theme_pattern = theme_name:gsub("([%-%.%+%[%]%(%)%$%^%%%?%*])", "%%%1")
-  if colors_name:match("^" .. theme_pattern .. "%-") then
-    local detected = colors_name:gsub("^" .. theme_pattern .. "%-", "")
-    -- Only use detected variant if it's a known variant for this theme
-    if theme.variants then
-      for _, v in ipairs(theme.variants) do
-        if v == detected then
-          actual_variant = detected
-          break
-        end
-      end
-    end
-  end
-
   local settings = {
     theme = theme_name,
     variant = actual_variant,
-    background = vim.o.background or "dark",
+    background = actual_background or normalize_background(vim.o.background) or "dark",
     transparency = options.transparency,
   }
   if not M.save_settings(settings) then
@@ -360,15 +344,11 @@ local function active_palette_background(palette)
   return normalize_background(palette.background) or (is_light_color(palette.bg) and "light" or "dark")
 end
 
--- Check if HyDE/Hyprland theming is available
-function M.is_hyde_available()
-  return vim.fn.filereadable(M.active_palette_file) == 1
-end
-
 -- Apply the active system theme.
 -- Theme metadata may pin a Neovim colorscheme/variant; otherwise the active
 -- Hypr palette is applied through the pywal definition.
-function M.apply_system_theme(themes)
+function M.apply_system_theme()
+  local catalog = get_catalog()
   local settings = M.load_settings()
 
   local active_palette = M.load_active_palette()
@@ -383,18 +363,18 @@ function M.apply_system_theme(themes)
     set_background(background)
   end
 
-  local opts = theme_options(settings, background)
+  local opts = options_from_settings(settings, background)
   if conf_transparency ~= nil then
     opts.transparency = conf_transparency
   end
 
-  if system_scheme and themes[system_scheme] then
-    if system_variant and not variant_is_valid(themes[system_scheme], system_variant) then
+  if system_scheme and catalog[system_scheme] then
+    if system_variant and not variant_is_valid(catalog[system_scheme], system_variant) then
       vim.notify(
         ("System variant '%s' is invalid for '%s'; falling back to pywal"):format(system_variant, system_scheme),
         vim.log.levels.WARN
       )
-    elseif M.apply_theme(system_scheme, system_variant, themes, opts) then
+    elseif M.apply_theme(system_scheme, system_variant, opts) then
       return true
     else
       vim.notify("System theme failed; falling back to pywal", vim.log.levels.WARN)
@@ -403,11 +383,11 @@ function M.apply_system_theme(themes)
     vim.notify("System NVIM_SCHEME not found: " .. system_scheme .. "; falling back to pywal", vim.log.levels.WARN)
   end
 
-  if not active_palette or not themes.pywal then
+  if not active_palette or not catalog.pywal then
     return false
   end
 
-  return M.apply_theme("pywal", nil, themes, opts)
+  return M.apply_theme("pywal", nil, opts)
 end
 
 function M.update_system_theme(settings)
@@ -471,7 +451,7 @@ function M.sync(force)
   if not force and not changed then
     return true
   end
-  local applied = M.apply_system_theme(M.themes or M.load_themes())
+  local applied = M.apply_system_theme()
   if applied then
     M._watch_snapshots = snapshots
   end
@@ -558,7 +538,8 @@ function M.setup_focus_sync()
 end
 
 -- Register user commands
-function M.register_commands(themes)
+function M.register_commands()
+  local themes = get_catalog()
   local function notify_available_themes()
     local available = {}
     for name, theme in pairs(themes) do
@@ -592,11 +573,11 @@ function M.register_commands(themes)
         prompt = "Select variant:",
       }, function(choice)
         if choice then
-          M.apply_theme(theme_name, choice, themes, theme_options(settings, settings.background))
+          M.apply_theme(theme_name, choice, options_from_settings(settings, settings.background))
         end
       end)
     else
-      M.apply_theme(theme_name, nil, themes, theme_options(settings, settings.background))
+      M.apply_theme(theme_name, nil, options_from_settings(settings, settings.background))
     end
   end, {
     nargs = "?",
@@ -617,7 +598,7 @@ function M.register_commands(themes)
     end
 
     local requested_variant = sanitize_variant(theme, settings.variant)
-    local ok, applied = M.apply_theme(theme_name, requested_variant, themes, theme_options(settings, settings.background))
+    local ok, applied = M.apply_theme(theme_name, requested_variant, options_from_settings(settings, settings.background))
     if ok then
       M.update_system_theme(applied)
     end
@@ -651,7 +632,7 @@ function M.register_commands(themes)
     local next_theme = theme_names[next_idx]
 
     -- Pass background, let setup handle variant selection
-    M.apply_theme(next_theme, nil, themes, theme_options(settings, settings.background))
+    M.apply_theme(next_theme, nil, options_from_settings(settings, settings.background))
     vim.notify("Theme: " .. next_theme, vim.log.levels.INFO)
   end, { desc = "Cycle through color schemes" })
 
@@ -683,11 +664,11 @@ function M.register_commands(themes)
             prompt = "Select variant:",
           }, function(variant)
             if variant then
-              M.apply_theme(choice.name, variant, themes, theme_options(settings, settings.background))
+              M.apply_theme(choice.name, variant, options_from_settings(settings, settings.background))
             end
           end)
         else
-          M.apply_theme(choice.name, nil, themes, theme_options(settings, settings.background))
+          M.apply_theme(choice.name, nil, options_from_settings(settings, settings.background))
         end
       end
     end)
@@ -719,7 +700,7 @@ function M.register_commands(themes)
     local next_idx = (current_idx % #theme.variants) + 1
     local next_variant = theme.variants[next_idx]
 
-    M.apply_theme(settings.theme, next_variant, themes, theme_options(settings, nil))
+    M.apply_theme(settings.theme, next_variant, options_from_settings(settings, nil))
 
     -- Show actual applied variant (may differ from requested due to bidirectional sync)
     local new_settings = M.load_settings()
@@ -745,7 +726,7 @@ function M.register_commands(themes)
       prompt = "Select variant for " .. settings.theme .. ":",
     }, function(choice)
       if choice then
-        M.apply_theme(settings.theme, choice, themes, theme_options(settings, nil))
+        M.apply_theme(settings.theme, choice, options_from_settings(settings, nil))
         -- Show actual applied variant (may differ from requested due to bidirectional sync)
         local new_settings = M.load_settings()
         vim.notify("Variant: " .. (new_settings.variant or choice), vim.log.levels.INFO)
@@ -767,7 +748,7 @@ function M.register_commands(themes)
     local variant = remembered[new_bg]
       or theme and theme.variant_for_background and theme.variant_for_background(new_bg)
     variant = sanitize_variant(theme, variant)
-    if M.apply_theme(settings.theme, variant, themes, theme_options(settings, new_bg)) then
+    if M.apply_theme(settings.theme, variant, options_from_settings(settings, new_bg)) then
       local actual = vim.o.background
       local level = actual == new_bg and vim.log.levels.INFO or vim.log.levels.WARN
       vim.notify(actual == new_bg and "Background: " .. actual or "Theme remains " .. actual, level)
@@ -779,7 +760,7 @@ function M.register_commands(themes)
     local transparency = not settings.transparency
     local background = vim.o.background or settings.background or "dark"
 
-    if M.apply_theme(settings.theme, settings.variant, themes, {
+    if M.apply_theme(settings.theme, settings.variant, {
       background = background,
       transparency = transparency,
     }) then

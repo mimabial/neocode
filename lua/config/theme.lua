@@ -5,9 +5,9 @@ local M = {}
 
 function M.setup()
   local manager = require("lib.theme_manager")
-  local themes = manager.load_themes()
+  manager.load_catalog()
 
-  manager.register_commands(themes)
+  manager.register_commands()
   manager.setup_focus_sync()
   vim.g.neocode_theme_sync = true
 
@@ -16,7 +16,7 @@ function M.setup()
     if settings.background then
       require("lib.background").set(settings.background)
     end
-    manager.apply_theme(settings.theme, settings.variant, themes, {
+    manager.apply_theme(settings.theme, settings.variant, {
       background = settings.background,
       transparency = settings.transparency,
     })

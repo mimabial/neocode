@@ -44,7 +44,7 @@ function M.definition(spec)
       end
 
       spec.apply(variant, opts)
-      return variant
+      return { variant = variant, background = vim.o.background }
     end,
   }
 end

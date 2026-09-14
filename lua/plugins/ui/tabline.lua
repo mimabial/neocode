@@ -12,7 +12,9 @@ return {
     local function hl(fg, extras)
       local h = { fg = fg, bg = bar_bg }
       if extras then
-        for k, v in pairs(extras) do h[k] = v end
+        for k, v in pairs(extras) do
+          h[k] = v
+        end
       end
       return h
     end
@@ -25,10 +27,7 @@ return {
         close_command = "bdelete! %d",
         right_mouse_command = "bdelete! %d",
         left_mouse_command = "buffer %d",
-        indicator = {
-          icon = "│",
-          style = "icon",
-        },
+        indicator = { style = "none" },
         left_trunc_marker = "",
         right_trunc_marker = "",
         max_name_length = 30,
@@ -43,20 +42,20 @@ return {
             filetype = "NvimTree",
             text = "",
             text_align = "center",
-            separator = true,
+            separator = " ",
           },
           {
             filetype = "oil",
             text = "",
             text_align = "center",
-            separator = true,
+            separator = " ",
           },
         },
         show_buffer_icons = false,
         show_buffer_close_icons = true,
         show_close_icon = true,
         show_tab_indicators = true,
-        separator_style = "thin",
+        separator_style = { " ", " " },
         always_show_bufferline = true,
         hover = {
           enabled = true,
@@ -75,12 +74,12 @@ return {
         modified = hl(colors.green),
         modified_visible = hl(colors.green),
         modified_selected = hl(colors.green),
-        separator = hl(bar_bg),
-        separator_visible = hl(bar_bg),
-        separator_selected = hl(bar_bg),
-        offset_separator = hl(bar_bg),
-        indicator_visible = hl(colors.border),
-        indicator_selected = hl(colors.blue, { underline = true }),
+        separator = hl(),
+        separator_visible = hl(),
+        separator_selected = hl(),
+        offset_separator = hl(),
+        indicator_visible = hl(),
+        indicator_selected = hl(),
         tab = hl(colors.fg),
         tab_selected = hl(colors.fg, { bold = true }),
         tab_close = hl(colors.red),

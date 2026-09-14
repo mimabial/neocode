@@ -1,39 +1,15 @@
 local M = {}
 
-local icons = require("lib.icons")
-
-M.diagnostic_config = {
-  virtual_text = {
-    prefix = " ",
-    spacing = 4,
-    source = "if_many",
-  },
-  float = {
-    border = "single",
-    severity_sort = true,
-    source = true,
-    header = "",
-    prefix = function(diagnostic)
-      return icons.diagnostic_signs[diagnostic.severity] or ""
-    end,
-  },
-  signs = { text = icons.diagnostic_signs },
-  underline = true,
-  update_in_insert = false,
-  severity_sort = true,
-}
+local diagnostics = require("config.diagnostics")
 
 function M.setup()
-  -- Diagnostics
-  vim.diagnostic.config(vim.deepcopy(M.diagnostic_config))
-
   local diag_grp = vim.api.nvim_create_augroup("DiagnosticEvents", { clear = true })
 
   vim.api.nvim_create_autocmd("CursorHold", {
     group = diag_grp,
     desc = "Show diagnostics popup on cursor hold",
     callback = function()
-      if vim.g.diagnostics_hover == false then
+      if not diagnostics.hover_enabled then
         return
       end
       local bufnr = vim.api.nvim_get_current_buf()
@@ -58,11 +34,6 @@ function M.setup()
       end
     end,
   })
-
-  vim.api.nvim_create_user_command("DiagnosticsReset", function()
-    vim.diagnostic.config(vim.deepcopy(M.diagnostic_config))
-    vim.notify("Diagnostics reset and reapplied", vim.log.levels.INFO)
-  end, { desc = "Reset and reapply diagnostics" })
 
   -- Line Numbers
   local num_grp = vim.api.nvim_create_augroup("NumberToggle", { clear = true })

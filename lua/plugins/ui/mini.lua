@@ -1,3 +1,15 @@
+local function starter_footer()
+  local stats = require("lazy").stats()
+  local version = vim.version()
+  return table.concat({
+    "",
+    string.format("⚡ %d/%d plugins loaded in %.2fms", stats.loaded, stats.count, stats.startuptime),
+    string.format("Neovim v%d.%d.%d", version.major, version.minor, version.patch),
+    "",
+    "Press 'q' to quit • Press '?' for help",
+  }, "\n")
+end
+
 return {
   {
     "echasnovski/mini.ai",
@@ -65,18 +77,6 @@ return {
         }, "\n")
       end
 
-      local function footer()
-        local stats = require("lazy").stats()
-        local v = vim.version()
-        return table.concat({
-          "",
-          string.format("⚡ %d/%d plugins loaded in %.2fms", stats.loaded, stats.count, stats.startuptime),
-          string.format("Neovim v%d.%d.%d", v.major, v.minor, v.patch),
-          "",
-          "Press 'q' to quit • Press '?' for help",
-        }, "\n")
-      end
-
       local function build_items()
         local all_items = {}
 
@@ -140,7 +140,7 @@ return {
       return {
         header = header(),
         items = build_items(),
-        footer = footer(),
+        footer = starter_footer(),
       }
     end,
 
@@ -179,15 +179,7 @@ return {
       vim.keymap.set("n", "<leader>d", "<cmd>Starter<cr>", { desc = "Open Dashboard" })
 
       local function refresh()
-        local stats = require("lazy").stats()
-        local v = vim.version()
-        starter.config.footer = table.concat({
-          "",
-          string.format("⚡ %d/%d plugins loaded in %.2fms", stats.loaded, stats.count, stats.startuptime),
-          string.format("Neovim v%d.%d.%d", v.major, v.minor, v.patch),
-          "",
-          "Press 'q' to quit • Press '?' for help",
-        }, "\n")
+        starter.config.footer = starter_footer()
         starter.refresh()
       end
 
