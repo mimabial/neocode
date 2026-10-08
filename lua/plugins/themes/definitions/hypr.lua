@@ -12,7 +12,7 @@ local colors_file = vim.env.HYPR_STATE_HOME
   or vim.env.XDG_STATE_HOME and (vim.env.XDG_STATE_HOME .. "/hypr/active-palette.json")
   or vim.fn.expand("~/.local/state/hypr/active-palette.json")
 
-local function load_pywal_colors()
+local function load_palette_colors()
   if vim.fn.filereadable(colors_file) ~= 1 then
     return nil
   end
@@ -468,11 +468,11 @@ function M.is_available()
 end
 
 function M.get_colors()
-  return load_pywal_colors()
+  return load_palette_colors()
 end
 
 function M.setup(opts)
-  local colors = load_pywal_colors()
+  local colors = load_palette_colors()
   if not colors then
     return nil, "active palette not found or invalid at " .. colors_file
   end
@@ -491,8 +491,8 @@ function M.setup(opts)
 
   -- Other themes get this for free via :colorscheme; we set vim.g.colors_name
   -- manually because we don't go through that command.
-  vim.g.colors_name = "pywal"
-  vim.api.nvim_exec_autocmds("ColorScheme", { pattern = "pywal" })
+  vim.g.colors_name = "hypr"
+  vim.api.nvim_exec_autocmds("ColorScheme", { pattern = "hypr" })
 
   return { variant = opts.variant, background = bg }
 end

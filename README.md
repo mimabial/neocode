@@ -6,7 +6,7 @@ A Neovim configuration built directly on `lazy.nvim` — not a distribution. Des
 
 - **Modular plugin layout** — one file per concern under `lua/plugins/<category>/`, plus per-language LSP/formatter wiring under `lua/plugins/lang/`.
 - **Hyprland theme sync** — picks up theme metadata from `~/.config/hypr/themes/theme.meta` and colors from `~/.local/state/hypr/active-palette.json`, then reapplies on focus/file change.
-- **Hybrid theme catalog** — lockfile-pinned colorscheme plugins load on demand, Aether's custom palettes stay frozen as snapshots, and pywal derives directly from the active Hypr palette.
+- **Hybrid theme catalog** — lockfile-pinned colorscheme plugins load on demand, Aether's custom palettes stay frozen as snapshots, and the hypr theme derives directly from the active Hypr palette.
 - **AI completions + chat** — `codeium.nvim` for inline completion, `avante.nvim` for chat (Claude / GPT / etc.).
 - **LSP via `vim.lsp.config()`** — Neovim 0.11+ native LSP API; `mason-lspconfig` is used only for `automatic_enable = true`. Per-language settings live in `lua/plugins/lang/<lang>.lua` and extend the spec via `opts.servers`.
 - **Bigfile handling** — files >1.5 MB or with single lines >1000 chars get the synthetic `bigfile` filetype: LSP, treesitter, indent guides, illuminate and rainbow delimiters all opt out automatically.
@@ -190,7 +190,7 @@ LSP keymaps only bind when the server supports the capability.
 
 ## 🎨 Themes
 
-Theme definitions live in `lua/plugins/themes/definitions/`. Standard schemes load their lockfile-pinned plugins on demand. Aether's injected palettes remain frozen snapshots, while pywal renders the active Hypr palette without a colorscheme plugin.
+Theme definitions live in `lua/plugins/themes/definitions/`. Standard schemes load their lockfile-pinned plugins on demand. Aether's injected palettes remain frozen snapshots, while hypr renders the active Hypr palette without a colorscheme plugin.
 
 Only Aether has a capture source under `scripts/theme-sources/`. It and `scripts/theme-palettes/` are canonical; never edit generated snapshot data directly. Run `scripts/bootstrap-snapshots.sh` after changing those inputs or capture logic. Ordinary plugin themes require no generated highlight data.
 

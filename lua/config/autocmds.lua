@@ -131,13 +131,7 @@ function M.setup()
     desc = "Disable comment continuation",
   })
 
-  vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-    pattern = "*.theme",
-    callback = function()
-      vim.bo.filetype = "hyprlang"
-    end,
-    desc = "Set filetype for Hyprland .theme files",
-  })
+  vim.filetype.add({ extension = { theme = "hyprlang" } })
 
   -- GTK CSS files use @variable syntax which standard CSS LSP doesn't understand
   vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {

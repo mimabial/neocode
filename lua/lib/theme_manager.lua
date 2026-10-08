@@ -346,7 +346,7 @@ end
 
 -- Apply the active system theme.
 -- Theme metadata may pin a Neovim colorscheme/variant; otherwise the active
--- Hypr palette is applied through the pywal definition.
+-- Hypr palette is applied through the hypr definition.
 function M.apply_system_theme()
   local catalog = get_catalog()
   local settings = M.load_settings()
@@ -371,23 +371,23 @@ function M.apply_system_theme()
   if system_scheme and catalog[system_scheme] then
     if system_variant and not variant_is_valid(catalog[system_scheme], system_variant) then
       vim.notify(
-        ("System variant '%s' is invalid for '%s'; falling back to pywal"):format(system_variant, system_scheme),
+        ("System variant '%s' is invalid for '%s'; falling back to hypr"):format(system_variant, system_scheme),
         vim.log.levels.WARN
       )
     elseif M.apply_theme(system_scheme, system_variant, opts) then
       return true
     else
-      vim.notify("System theme failed; falling back to pywal", vim.log.levels.WARN)
+      vim.notify("System theme failed; falling back to hypr", vim.log.levels.WARN)
     end
   elseif system_scheme then
-    vim.notify("System NVIM_SCHEME not found: " .. system_scheme .. "; falling back to pywal", vim.log.levels.WARN)
+    vim.notify("System NVIM_SCHEME not found: " .. system_scheme .. "; falling back to hypr", vim.log.levels.WARN)
   end
 
-  if not active_palette or not catalog.pywal then
+  if not active_palette or not catalog.hypr then
     return false
   end
 
-  return M.apply_theme("pywal", nil, opts)
+  return M.apply_theme("hypr", nil, opts)
 end
 
 function M.update_system_theme(settings)

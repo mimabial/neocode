@@ -11,7 +11,6 @@ return {
     end
     add("ruby",     { "ruby_lsp", "solargraph" })
     add("elixir",   { "elixirls" })
-    add("cmake",    { "cmake" })
     add("java",     { "jdtls" })
     add("dotnet",   { "omnisharp" })
     add("pwsh",     { "powershell_es" })

@@ -13,10 +13,6 @@ local function has_terminal_ui()
 end
 
 local function send_osc(code, value)
-  if not has_terminal_ui() then
-    return false
-  end
-
   -- Kitty needs ST; everything else accepts BEL.
   local terminator = "\007"
   if vim.env.TERM == "xterm-kitty" or vim.env.KITTY_WINDOW_ID then
@@ -29,7 +25,37 @@ local function send_osc(code, value)
   end
 
   vim.api.nvim_chan_send(2, osc)
-  return true
+end
+
+local function foot_colors()
+  local term = vim.env.TERM
+  if vim.env.TMUX then
+    term = vim.fn.systemlist({ "tmux", "display-message", "-p", "#{client_termname}" })[1]
+  end
+  if term ~= "foot" then
+    return {}
+  end
+
+  local file = io.open((vim.env.XDG_CACHE_HOME or vim.env.HOME .. "/.cache") .. "/hypr/render/foot/colors.ini", "r")
+  if not file then
+    return {}
+  end
+  local colors, active = {}, false
+  for line in file:lines() do
+    if line:sub(1, 1) == "[" then
+      active = line == "[colors-dark]"
+    elseif active then
+      local name, value = line:match("^(%S+)=(.+)$")
+      if name then colors[name] = value end
+    end
+  end
+  file:close()
+  return colors
+end
+
+local function restore_color(code, color)
+  color = color and color:match("^%x%x%x%x%x%x$")
+  send_osc(color and code or code + 100, color and "#" .. color or "")
 end
 
 function M.sync_terminals()
@@ -60,10 +86,12 @@ function M.reset_terminals()
   if not has_terminal_ui() then
     return false
   end
-  send_osc(110, "")
-  send_osc(111, "")
-  send_osc(112, "")
-  send_osc(21, "cursor_text=")
+  local colors = foot_colors()
+  local cursor_text, cursor = (colors.cursor or ""):match("^(%x%x%x%x%x%x)%s+(%x%x%x%x%x%x)$")
+  restore_color(10, colors.foreground)
+  restore_color(11, colors.background)
+  restore_color(12, cursor)
+  send_osc(21, cursor_text and "cursor_text=#" .. cursor_text or "cursor_text=")
   return true
 end
 
