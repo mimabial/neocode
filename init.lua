@@ -1,10 +1,12 @@
+local MINIMUM_NEOVIM = "0.12"
+if vim.fn.has("nvim-" .. MINIMUM_NEOVIM) == 0 then
+  vim.api.nvim_echo({ { "neocode requires Neovim " .. MINIMUM_NEOVIM .. " or newer", "ErrorMsg" } }, true, {})
+  return
+end
+
 -- Set leader key early to ensure keymaps work correctly
 vim.g.mapleader = " "
 vim.g.maplocalleader = ","
-
--- Default tool preferences
-vim.g.default_explorer = "oil"      -- Reserved for future explorer switching logic
-vim.g.default_picker = "telescope"  -- Used by plugins to determine picker preference
 
 -- Disable legacy plugins
 vim.g.loaded_netrw = 1

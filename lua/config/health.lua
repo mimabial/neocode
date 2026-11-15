@@ -4,10 +4,16 @@ M.check_external_tools = function()
   local tools = {
     { name = "git", required = true, desc = "Version control" },
     { name = "rg", required = true, desc = "Ripgrep for telescope" },
+    { name = "curl", required = true, desc = "Mason and Treesitter parser downloads" },
+    { name = "unzip", required = true, desc = "Mason package extraction" },
     { name = "fd", required = false, desc = "Fast file finder" },
     { name = "lazygit", required = false, desc = "Git UI" },
     { name = "node", required = false, desc = "Node.js for LSP servers" },
+    { name = "npm", required = false, desc = "Mason installs of Node-based servers and formatters" },
     { name = "go", required = false, desc = "Go development" },
+    { name = require("lib.c_compiler"), required = false, desc = "C compiler for Treesitter parsers" },
+    { name = "tree-sitter", required = false, desc = "Treesitter parser builds" },
+    { name = "make", required = false, desc = "telescope-fzf-native and LuaSnip jsregexp builds" },
   }
 
   local issues = {}

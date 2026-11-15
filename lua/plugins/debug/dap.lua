@@ -95,6 +95,7 @@ local function setup_dap()
   })
 
   require("mason-nvim-dap").setup({
+    ensure_installed = vim.fn.executable("node") == 1 and { "js" } or {},
     automatic_installation = true,
     handlers = {},
   })
@@ -109,16 +110,14 @@ local function setup_dap()
     dapui.close()
   end
 
-  require("dap-vscode-js").setup({
-    debugger_path = vim.fn.stdpath("data") .. "/lazy/vscode-js-debug",
-    adapters = {
-      'pwa-node',
-      'pwa-chrome',
-      'pwa-msedge',
-      'node-terminal',
-      'pwa-extensionHost'
-    },
-  })
+  for _, adapter in ipairs({ "pwa-node", "pwa-chrome", "pwa-msedge", "node-terminal", "pwa-extensionHost" }) do
+    dap.adapters[adapter] = {
+      type = "server",
+      host = "localhost",
+      port = "${port}",
+      executable = { command = "js-debug-adapter", args = { "${port}" } },
+    }
+  end
 
   for _, language in ipairs({ "typescript", "javascript", "typescriptreact", "javascriptreact" }) do
     dap.configurations[language] = {
@@ -230,18 +229,6 @@ return {
     "jay-babu/mason-nvim-dap.nvim",
     "williamboman/mason.nvim",
     "mfussenegger/nvim-dap-python",
-    {
-      "microsoft/vscode-js-debug",
-      lazy = true,
-      build = function()
-        vim.env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
-        vim.cmd("!npm install --legacy-peer-deps && npx gulp vsDebugServerBundle && mv dist out")
-      end
-    },
-    {
-      "mxsdev/nvim-dap-vscode-js",
-      dependencies = { "mfussenegger/nvim-dap" },
-    },
   },
   config = setup_dap,
   keys = {

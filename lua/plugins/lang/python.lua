@@ -6,7 +6,10 @@ return {
     end
     opts.servers = opts.servers or {}
     opts.ensure_installed = opts.ensure_installed or {}
-    vim.list_extend(opts.ensure_installed, { "pyright", "ruff" })
+    table.insert(opts.ensure_installed, "ruff")
+    if vim.fn.executable("node") == 1 then
+      table.insert(opts.ensure_installed, "pyright")
+    end
     opts.servers.pyright = {
       settings = {
         python = {

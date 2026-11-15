@@ -1,7 +1,7 @@
 -- LSP setup. Per-language configs live in lua/plugins/lang/*.lua and extend
--- this spec via opts.servers (a name -> vim.lsp.Config table) and
--- opts.ensure_installed (servers to install via mason). The config function
--- here just applies them.
+-- this spec via opts.servers (a name -> vim.lsp.Config table),
+-- opts.ensure_installed (servers) and opts.tools (formatters and linters, by
+-- mason package name), both installed via mason. The config function applies them.
 
 return {
   {
@@ -18,11 +18,9 @@ return {
     opts = function(_, opts)
       opts.servers = opts.servers or {}
       opts.ensure_installed = opts.ensure_installed or {}
+      opts.tools = opts.tools or {}
       vim.list_extend(opts.ensure_installed, {
         "marksman",
-        "html",
-        "cssls",
-        "ts_ls",
         "taplo",
         "lemminx",
       })
@@ -55,6 +53,7 @@ return {
         ensure_installed = opts.ensure_installed,
         automatic_enable = true,
       })
+      require("lib.mason_tools").ensure_available(opts.tools)
     end,
   },
 }

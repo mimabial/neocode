@@ -14,10 +14,12 @@ return {
     add("java",     { "jdtls" })
     add("dotnet",   { "omnisharp" })
     add("pwsh",     { "powershell_es" })
-    add("docker",   { "dockerls", "docker_compose_language_service" })
     add("terraform",{ "terraformls" })
     add("helm",     { "helm_ls" })
-    add("sqlite3",  { "sqlls" })
+    if vim.fn.executable("node") == 1 then
+      add("docker",   { "dockerls", "docker_compose_language_service" })
+      add("sqlite3",  { "sqlls" })
+    end
     return opts
   end,
 }

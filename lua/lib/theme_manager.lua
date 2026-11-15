@@ -341,7 +341,7 @@ function M.load_active_palette()
 end
 
 local function active_palette_background(palette)
-  return normalize_background(palette.background) or (is_light_color(palette.bg) and "light" or "dark")
+  return normalize_background(palette.color_variant) or (is_light_color(palette.bg) and "light" or "dark")
 end
 
 -- Apply the active system theme.

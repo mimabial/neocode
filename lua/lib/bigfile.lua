@@ -42,7 +42,7 @@ local function detect(path, buf)
     return true
   end
   if buf and vim.api.nvim_buf_is_valid(buf) then
-    for _, line in ipairs(vim.api.nvim_buf_get_lines(buf, 0, 5, false)) do
+    for _, line in ipairs(vim.api.nvim_buf_get_lines(buf, 0, -1, false)) do
       if #line > M.config.line_length then
         return true
       end

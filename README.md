@@ -15,18 +15,22 @@ A Neovim configuration built directly on `lazy.nvim` — not a distribution. Des
 
 ## 📋 Requirements
 
-- **Neovim 0.11+** (uses `vim.lsp.config`, `vim.lsp.inlay_hint`, `vim.diagnostic.jump`, `vim.hl.on_yank`).
-- **git**, **ripgrep**, **fd** — required.
+- **Neovim 0.12+** (the pinned `nvim-treesitter` requires it; the config also uses `vim.lsp.config`, `vim.lsp.inlay_hint`, `vim.diagnostic.jump`, `vim.hl.on_yank`).
+- **git**, **ripgrep**, **curl**, **unzip** — required. Mason and the Treesitter parser installer download with `curl`; Mason unpacks with `unzip`.
+- **A C compiler** (`cc`, or whatever `$CC` names) — builds Treesitter parsers. Without one, parser installs are skipped.
+- **fd**, **make** — optional. `fd` speeds up file finding; `make` builds the native fzf sorter and LuaSnip's regex transforms.
 - **lazygit** — for `<leader>gg`.
 - **A nerd font** — JetBrains Mono Nerd Font recommended.
-- **Node** — unlocks tailwindcss, emmet, vue, svelte, astro language servers (auto-detected).
-- Per-language runtimes (`go`, `rustc`, `python3`, `php`, `clang`, etc.) — auto-detected; the matching LSP servers install only when the runtime is present.
+- **Node with npm** — unlocks the Node-based language servers (JSON, YAML, HTML, CSS, TypeScript, ESLint, Bash, Pyright, tailwindcss, emmet, vue, svelte, astro), `prettierd`, `markdownlint` and the JS debug adapter (auto-detected).
+- Per-language runtimes (`go`, `rustc`, `python3`, `php`, `clang`, etc.) — auto-detected; the matching LSP servers and formatters install only when the runtime is present.
+
+Mason installs the rest on first launch: language servers, formatters, linters, the `tree-sitter` CLI (when none is on `PATH`) and the JS debug adapter. `:ConfigHealth` reports which of the tools above are missing.
 
 ## 🚀 Installation
 
 ```bash
 mv ~/.config/nvim ~/.config/nvim.bak    # backup if you have an existing config
-git clone <your-repo-url> ~/neocode
+git clone https://github.com/mimabial/neocode.git ~/neocode
 ln -s ~/neocode ~/.config/nvim
 nvim                                     # plugins install on first launch
 ```
@@ -37,7 +41,6 @@ nvim                                     # plugins install on first launch
 ~/.config/nvim/  →  ~/neocode/
 ├── init.lua
 ├── lazy-lock.json
-├── lazyvim.json                         # not used; LazyVim is not loaded
 └── lua/
     ├── config/
     │   ├── autocmds.lua                 # diagnostics, line numbers, filetype tweaks
@@ -52,10 +55,11 @@ nvim                                     # plugins install on first launch
     ├── lib/
     │   ├── autoclose.lua                # auto-:q when only special wins remain
     │   ├── bigfile.lua                  # synthetic bigfile filetype
+    │   ├── c_compiler.lua               # the C compiler command ($CC or cc)
     │   ├── colors.lua                   # pull current theme bg/fg/etc. from highlights
     │   ├── icons.lua                    # central icon registry (diagnostics, kinds, …)
     │   ├── live_theme.lua               # shared adapter for lazy-loaded colorschemes
-    │   ├── root.lua                     # project-root resolver (.git → markers → cwd)
+    │   ├── mason_tools.lua              # installs missing Mason packages
     │   ├── snapshot.lua                 # runtime for frozen custom palettes
     │   └── theme_manager.lua            # Hyprland sync, theme commands
     ├── types/
@@ -220,14 +224,14 @@ Tunable from `lua/lib/bigfile.lua`; thresholds are settable via `require("lib.bi
 
 ## 🛠️ Customizing
 
-- **Add a language**: drop a file in `lua/plugins/lang/<lang>.lua` that extends `nvim-lspconfig`'s `opts.servers` and `opts.ensure_installed`. Mirror an existing one (e.g. `python.lua`).
+- **Add a language**: drop a file in `lua/plugins/lang/<lang>.lua` that extends `nvim-lspconfig`'s `opts.servers`, `opts.ensure_installed` and `opts.tools` (formatters and linters, by Mason package name). Mirror an existing one (e.g. `go.lua`).
 - **Add a plugin**: any file in the matching `lua/plugins/<category>/` returning a lazy spec is picked up by the `{ import = "plugins.<category>" }` line in `lua/config/lazy.lua`.
 - **Add a theme**: register its plugin in `lua/plugins/themes/colorscheme.lua`, then add a small live definition using `lib.live_theme`.
 - **Change icons globally**: edit `lua/lib/icons.lua` — single source of truth for diagnostic / git / completion-kind / lazy / mason / notify icons.
 
 ## 📦 Notes on architecture
 
-- LSP servers are configured via `vim.lsp.config()` (Neovim 0.11 native API). Mason-lspconfig is used only for `automatic_enable = true` and `ensure_installed`. The main spec at `lua/plugins/lsp/lspconfig.lua` iterates `opts.servers` from the per-language files.
+- LSP servers are configured via `vim.lsp.config()` (Neovim 0.11 native API). Mason-lspconfig is used only for `automatic_enable = true` and `ensure_installed`. The main spec at `lua/plugins/lsp/lspconfig.lua` iterates `opts.servers` from the per-language files and installs their `opts.tools` through `lua/lib/mason_tools.lua`.
 - Ordinary themes follow their upstream plugins at the revisions pinned in `lazy-lock.json`; snapshots are reserved for custom palettes that need fully frozen highlights.
 - `vim.notify` is wrapped at startup to filter Codeium network errors.
 - Backup, swap, and undo dirs live under `stdpath("state")` so lua_ls (which scans the data tree) doesn't index `*.lua~` backup files and double-count type annotations.

@@ -6,7 +6,11 @@ return {
     end
     opts.servers = opts.servers or {}
     opts.ensure_installed = opts.ensure_installed or {}
-    table.insert(opts.ensure_installed, "intelephense")
+    opts.tools = opts.tools or {}
+    table.insert(opts.tools, "php-cs-fixer")
+    if vim.fn.executable("node") == 1 then
+      table.insert(opts.ensure_installed, "intelephense")
+    end
     opts.servers.intelephense = {
       settings = {
         intelephense = {

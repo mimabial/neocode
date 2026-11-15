@@ -3,7 +3,9 @@ return {
   opts = function(_, opts)
     opts.servers = opts.servers or {}
     opts.ensure_installed = opts.ensure_installed or {}
+    opts.tools = opts.tools or {}
     table.insert(opts.ensure_installed, "lua_ls")
+    table.insert(opts.tools, "stylua")
     opts.servers.lua_ls = {
       settings = {
         Lua = {

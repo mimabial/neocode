@@ -5,6 +5,7 @@
 return {
   "mfussenegger/nvim-lint",
   event = { "BufReadPre", "BufNewFile" },
+  dependencies = { "williamboman/mason.nvim" },
   opts = {
     linters_by_ft = {
       sh = { "shellcheck" },
@@ -47,9 +48,11 @@ return {
     end
 
     vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
-      callback = function()
+      callback = function(args)
         local ft = vim.bo.filetype
-        if linters_by_ft[ft] and #linters_by_ft[ft] > 0 then
+        local saved_to_disk = args.event == "BufWritePost"
+        if linters_by_ft[ft] and #linters_by_ft[ft] > 0 and (saved_to_disk or vim.b.linted_changedtick ~= vim.b.changedtick) then
+          vim.b.linted_changedtick = vim.b.changedtick
           lint.try_lint()
         end
       end,

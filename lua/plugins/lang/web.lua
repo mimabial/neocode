@@ -7,7 +7,7 @@ return {
     opts = function(_, opts)
       opts.servers = opts.servers or {}
       opts.ensure_installed = opts.ensure_installed or {}
-      vim.list_extend(opts.ensure_installed, { "jsonls", "yamlls", "eslint" })
+      opts.tools = opts.tools or {}
 
       opts.servers.jsonls = {
         filetypes = { "json", "jsonc" },
@@ -27,8 +27,10 @@ return {
 
 	      if vim.fn.executable("node") == 1 then
 	        vim.list_extend(opts.ensure_installed, {
+	          "jsonls", "yamlls", "eslint", "html", "cssls", "ts_ls",
 	          "tailwindcss", "emmet_ls", "vuels", "svelte", "astro",
 	        })
+	        vim.list_extend(opts.tools, { "prettierd", "markdownlint" })
 
 	        local tailwind_root_files = {
 	          -- Generic

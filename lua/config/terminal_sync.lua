@@ -3,6 +3,12 @@
 
 local M = {}
 
+local OSC_FOREGROUND = 10
+local OSC_BACKGROUND = 11
+local OSC_CURSOR = 12
+local OSC_KITTY_COLORS = 21
+local OSC_RESET_OFFSET = 100
+
 local function has_terminal_ui()
   for _, ui in ipairs(vim.api.nvim_list_uis()) do
     if ui.stdout_tty then
@@ -53,9 +59,24 @@ local function foot_colors()
   return colors
 end
 
+local function set_or_reset_color(code, hex)
+  if hex then
+    send_osc(code, "#" .. hex)
+  else
+    send_osc(code + OSC_RESET_OFFSET, "")
+  end
+end
+
+local function set_or_reset_cursor_text(hex)
+  send_osc(OSC_KITTY_COLORS, "cursor_text=" .. (hex and "#" .. hex or ""))
+end
+
+local function hex_from_rgb(rgb)
+  return rgb and string.format("%06x", rgb)
+end
+
 local function restore_color(code, color)
-  color = color and color:match("^%x%x%x%x%x%x$")
-  send_osc(color and code or code + 100, color and "#" .. color or "")
+  set_or_reset_color(code, color and color:match("^%x%x%x%x%x%x$"))
 end
 
 function M.sync_terminals()
@@ -63,22 +84,10 @@ function M.sync_terminals()
     return false
   end
   local normal = vim.api.nvim_get_hl(0, { name = "Normal", link = false })
-  if normal.fg then
-    send_osc(10, string.format("#%06x", normal.fg))
-  else
-    send_osc(110, "")
-  end
-  if normal.bg then
-    send_osc(11, string.format("#%06x", normal.bg))
-  else
-    send_osc(111, "")
-  end
+  set_or_reset_color(OSC_FOREGROUND, hex_from_rgb(normal.fg))
+  set_or_reset_color(OSC_BACKGROUND, hex_from_rgb(normal.bg))
   local cursor = vim.api.nvim_get_hl(0, { name = "Cursor", link = false })
-  if cursor.fg then
-    send_osc(21, string.format("cursor_text=#%06x", cursor.fg))
-  else
-    send_osc(21, "cursor_text=")
-  end
+  set_or_reset_cursor_text(hex_from_rgb(cursor.fg))
   return true
 end
 
@@ -88,10 +97,10 @@ function M.reset_terminals()
   end
   local colors = foot_colors()
   local cursor_text, cursor = (colors.cursor or ""):match("^(%x%x%x%x%x%x)%s+(%x%x%x%x%x%x)$")
-  restore_color(10, colors.foreground)
-  restore_color(11, colors.background)
-  restore_color(12, cursor)
-  send_osc(21, cursor_text and "cursor_text=#" .. cursor_text or "cursor_text=")
+  restore_color(OSC_FOREGROUND, colors.foreground)
+  restore_color(OSC_BACKGROUND, colors.background)
+  restore_color(OSC_CURSOR, cursor)
+  set_or_reset_cursor_text(cursor_text)
   return true
 end
 

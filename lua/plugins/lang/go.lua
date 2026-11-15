@@ -6,7 +6,9 @@ return {
     end
     opts.servers = opts.servers or {}
     opts.ensure_installed = opts.ensure_installed or {}
+    opts.tools = opts.tools or {}
     table.insert(opts.ensure_installed, "gopls")
+    vim.list_extend(opts.tools, { "goimports", "gofumpt" })
     opts.servers.gopls = {
       settings = {
         gopls = {

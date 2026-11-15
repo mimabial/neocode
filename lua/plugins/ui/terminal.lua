@@ -50,26 +50,7 @@ return {
           return " Terminal"
         end
 
-        local title = term.display_name or term.name
-        local icon = ""
-
-        if term.cmd:match("go") then
-          icon = ""
-        elseif term.cmd:match("npm") or term.cmd:match("yarn") or term.cmd:match("pnpm") then
-          icon = ""
-        elseif term.cmd:match("git") or term.cmd:match("lazygit") then
-          icon = ""
-        elseif term.cmd:match("docker") then
-          icon = ""
-        elseif term.cmd:match("node") then
-          icon = ""
-        elseif term.cmd:match("python") then
-          icon = ""
-        else
-          icon = ""
-        end
-
-        return icon .. " " .. title
+        return " " .. (term.display_name or term.name)
       end,
     },
   },

@@ -9,26 +9,37 @@ return {
     -- jsonc has no dedicated parser on the nvim-treesitter main branch; reuse json.
     vim.treesitter.language.register("json", "jsonc")
 
-    require("nvim-treesitter").setup()
+    local treesitter = require("nvim-treesitter")
+    treesitter.setup()
 
-    require("nvim-treesitter").install({
-      "bash",
-      "css",
-      "html",
-      "htmldjango",
-      "hyprlang",
-      "javascript",
-      "json",
-      "lua",
-      "markdown",
-      "python",
-      "ron",
-      "tsx",
-      "typescript",
-      "vim",
-      "vimdoc",
-      "yaml",
-    })
+    local function install_parsers()
+      treesitter.install({
+        "bash",
+        "css",
+        "html",
+        "htmldjango",
+        "hyprlang",
+        "javascript",
+        "json",
+        "lua",
+        "markdown",
+        "python",
+        "ron",
+        "tsx",
+        "typescript",
+        "vim",
+        "vimdoc",
+        "yaml",
+      })
+    end
+
+    if vim.fn.executable(require("lib.c_compiler")) == 1 then
+      if vim.fn.executable("tree-sitter") == 1 then
+        install_parsers()
+      else
+        require("lib.mason_tools").ensure_available({ "tree-sitter-cli" }, install_parsers)
+      end
+    end
 
     -- main no longer wires highlight/indent on its own.
     vim.api.nvim_create_autocmd("FileType", {

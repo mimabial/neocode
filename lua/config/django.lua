@@ -87,11 +87,15 @@ local function detect_django(root)
   return false
 end
 
+local function detect_project(root)
+  state.root = root
+  state.is_django = detect_django(root)
+end
+
 local function refresh_state(cwd)
   local root = resolve_root_dir(cwd)
   if root ~= state.root then
-    state.root = root
-    state.is_django = detect_django(root)
+    detect_project(root)
   end
 end
 
@@ -172,7 +176,7 @@ function M.setup()
 
   vim.api.nvim_create_user_command("DjangoAuto", function()
     set_mode("auto")
-    refresh_state(vim.fn.getcwd())
+    detect_project(resolve_root_dir(vim.fn.getcwd()))
     apply_to_open_buffers()
     vim.notify("Django mode set to auto", vim.log.levels.INFO)
   end, { desc = "Auto-detect Django projects" })
