@@ -86,12 +86,12 @@ function M.setup(opts)
   vim.filetype.add({
     pattern = {
       [".*"] = {
-        priority = math.huge,
         function(path, buf)
           if detect(path, buf) then
             return "bigfile"
           end
         end,
+        { priority = math.huge },
       },
     },
   })

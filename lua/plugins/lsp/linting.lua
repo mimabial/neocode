@@ -10,7 +10,7 @@ return {
     linters_by_ft = {
       sh = { "shellcheck" },
       bash = { "shellcheck" },
-      zsh = { "shellcheck" },
+      zsh = { "zsh" },
       markdown = { "markdownlint" },
     },
     linters = {},
@@ -22,9 +22,9 @@ return {
       return type(cmd) == "string" and vim.fn.executable(cmd) == 1
     end
 
-    local function filter_linters(list)
+    local function installed_linters(ft)
       local out = {}
-      for _, name in ipairs(list) do
+      for _, name in ipairs(opts.linters_by_ft[ft] or {}) do
         local l = lint.linters[name]
         if l and is_executable(l.cmd) then
           table.insert(out, name)
@@ -32,12 +32,6 @@ return {
       end
       return out
     end
-
-    local linters_by_ft = {}
-    for ft, linters_for_ft in pairs(opts.linters_by_ft) do
-      linters_by_ft[ft] = filter_linters(linters_for_ft)
-    end
-    lint.linters_by_ft = linters_by_ft
 
     for name, config in pairs(opts.linters) do
       if lint.linters[name] then
@@ -49,17 +43,20 @@ return {
 
     vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
       callback = function(args)
-        local ft = vim.bo.filetype
         local saved_to_disk = args.event == "BufWritePost"
-        if linters_by_ft[ft] and #linters_by_ft[ft] > 0 and (saved_to_disk or vim.b.linted_changedtick ~= vim.b.changedtick) then
+        if not saved_to_disk and vim.b.linted_changedtick == vim.b.changedtick then
+          return
+        end
+        local linters = installed_linters(vim.bo.filetype)
+        if #linters > 0 then
           vim.b.linted_changedtick = vim.b.changedtick
-          lint.try_lint()
+          lint.try_lint(linters)
         end
       end,
     })
 
     vim.keymap.set("n", "<leader>cL", function()
-      lint.try_lint()
+      lint.try_lint(installed_linters(vim.bo.filetype))
       vim.notify("Triggered linting", vim.log.levels.INFO)
     end, { desc = "Trigger linting" })
   end,

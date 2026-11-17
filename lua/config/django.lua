@@ -1,9 +1,6 @@
 local M = {}
 
-local state = {
-  root = nil,
-  is_django = false,
-}
+local django_by_root = {}
 
 local function normalize_mode(mode)
   if mode == "on" or mode == "off" or mode == "auto" then
@@ -33,7 +30,7 @@ local function file_contains(path, needle)
   return false
 end
 
-local function resolve_root_dir(cwd)
+local function resolve_root_dir(dir)
   local markers = {
     ".git",
     "manage.py",
@@ -41,11 +38,11 @@ local function resolve_root_dir(cwd)
     "requirements.txt",
     "Pipfile",
   }
-  local marker = vim.fs.find(markers, { path = cwd, upward = true })[1]
+  local marker = vim.fs.find(markers, { path = dir, upward = true })[1]
   if marker then
     return vim.fs.dirname(marker)
   end
-  return cwd
+  return dir
 end
 
 local function detect_django(root)
@@ -87,51 +84,26 @@ local function detect_django(root)
   return false
 end
 
-local function detect_project(root)
-  state.root = root
-  state.is_django = detect_django(root)
-end
-
-local function refresh_state(cwd)
-  local root = resolve_root_dir(cwd)
-  if root ~= state.root then
-    detect_project(root)
+local function is_django_root(root)
+  if django_by_root[root] == nil then
+    django_by_root[root] = detect_django(root)
   end
+  return django_by_root[root]
 end
 
-local function is_template_path(path)
-  return path:match("[/\\\\]templates[/\\\\].+%.html$")
-end
-
-local function should_enable()
+local function template_filetype(path)
   local mode = get_mode()
-  if mode == "on" then
-    return true
-  end
-  if mode == "off" then
-    return false
-  end
-  refresh_state(vim.fn.getcwd())
-  return state.is_django
+  local enabled = mode == "on" or mode == "auto" and is_django_root(resolve_root_dir(vim.fs.dirname(path)))
+  return enabled and "htmldjango" or "html"
 end
 
-local function apply_to_buffer(bufnr)
-  local name = vim.api.nvim_buf_get_name(bufnr)
-  if name == "" or not is_template_path(name) then
-    return
-  end
-
-  if should_enable() then
-    vim.bo[bufnr].filetype = "htmldjango"
-  elseif vim.bo[bufnr].filetype == "htmldjango" then
-    vim.bo[bufnr].filetype = "html"
-  end
-end
-
-local function apply_to_open_buffers()
+local function redetect_html_buffers()
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_loaded(buf) then
-      apply_to_buffer(buf)
+    local filetype = vim.bo[buf].filetype
+    if vim.api.nvim_buf_is_loaded(buf) and (filetype == "html" or filetype == "htmldjango") then
+      vim.api.nvim_buf_call(buf, function()
+        vim.cmd("filetype detect")
+      end)
     end
   end
 end
@@ -141,52 +113,32 @@ function M.setup()
     vim.g.django_mode = "auto"
   end
 
-  local group = vim.api.nvim_create_augroup("DjangoTemplateDetect", { clear = true })
-
-  vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-    group = group,
-    callback = function(args)
-      apply_to_buffer(args.buf)
-    end,
-    desc = "Set htmldjango for Django templates",
-  })
-
-  vim.api.nvim_create_autocmd({ "VimEnter", "DirChanged" }, {
-    group = group,
-    callback = function()
-      if get_mode() == "auto" then
-        refresh_state(vim.fn.getcwd())
-      end
-      apply_to_open_buffers()
-    end,
-    desc = "Refresh Django template detection",
-  })
+  vim.filetype.add({ pattern = { [".*[/\\]templates[/\\].+%.html"] = template_filetype } })
 
   vim.api.nvim_create_user_command("DjangoEnable", function()
     set_mode("on")
-    apply_to_open_buffers()
+    redetect_html_buffers()
     vim.notify("Django mode enabled", vim.log.levels.INFO)
   end, { desc = "Enable Django template detection" })
 
   vim.api.nvim_create_user_command("DjangoDisable", function()
     set_mode("off")
-    apply_to_open_buffers()
+    redetect_html_buffers()
     vim.notify("Django mode disabled", vim.log.levels.INFO)
   end, { desc = "Disable Django template detection" })
 
   vim.api.nvim_create_user_command("DjangoAuto", function()
     set_mode("auto")
-    detect_project(resolve_root_dir(vim.fn.getcwd()))
-    apply_to_open_buffers()
+    django_by_root = {}
+    redetect_html_buffers()
     vim.notify("Django mode set to auto", vim.log.levels.INFO)
   end, { desc = "Auto-detect Django projects" })
 
   vim.api.nvim_create_user_command("DjangoStatus", function()
-    refresh_state(vim.fn.getcwd())
     local mode = get_mode()
     local status = mode
     if mode == "auto" then
-      status = state.is_django and "auto (detected)" or "auto (not detected)"
+      status = is_django_root(resolve_root_dir(vim.fn.getcwd())) and "auto (detected)" or "auto (not detected)"
     end
     vim.notify("Django mode: " .. status, vim.log.levels.INFO)
   end, { desc = "Show Django mode status" })

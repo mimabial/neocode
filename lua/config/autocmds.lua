@@ -71,8 +71,11 @@ function M.setup()
     desc = "Enable relative numbers on normal/focus",
   })
 
+  local editor_grp = vim.api.nvim_create_augroup("EditorEvents", { clear = true })
+
   -- Visual Feedback
   vim.api.nvim_create_autocmd("TextYankPost", {
+    group = editor_grp,
     callback = function()
       vim.hl.on_yank({ timeout = 300 })
     end,
@@ -81,13 +84,19 @@ function M.setup()
 
   -- Window Management
   vim.api.nvim_create_autocmd("VimResized", {
+    group = editor_grp,
     callback = function()
-      vim.cmd("tabdo wincmd =")
+      for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+        vim.api.nvim_win_call(vim.api.nvim_tabpage_get_win(tab), function()
+          vim.cmd("wincmd =")
+        end)
+      end
     end,
     desc = "Equalize window sizes on resize",
   })
 
   vim.api.nvim_create_autocmd("BufReadPost", {
+    group = editor_grp,
     callback = function()
       local mark = vim.api.nvim_buf_get_mark(0, '"')
       if mark[1] > 0 and mark[1] <= vim.api.nvim_buf_line_count(0) then
@@ -98,6 +107,7 @@ function M.setup()
   })
 
   vim.api.nvim_create_autocmd({ "BufEnter", "BufFilePost", "VimResume" }, {
+    group = editor_grp,
     callback = function()
       local name = vim.fn.expand("%:t")
       vim.opt.titlestring = (name ~= "" and name or "Neovim") .. " - NVIM"
@@ -125,31 +135,28 @@ function M.setup()
   end
 
   vim.api.nvim_create_autocmd("FileType", {
+    group = editor_grp,
     callback = function()
       vim.opt_local.formatoptions:remove({ "c", "r", "o" })
     end,
     desc = "Disable comment continuation",
   })
 
-  vim.filetype.add({ extension = { theme = "hyprlang" } })
-
   -- GTK CSS files use @variable syntax which standard CSS LSP doesn't understand
-  vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+  vim.filetype.add({
+    extension = { theme = "hyprlang" },
     pattern = {
-      "*/.config/swaync/*.css",
-      "*/.config/waybar/*.css",
-      "*/.config/rofi/*.css",
-      "*/.config/wofi/*.css",
-      "*/gtk-3.0/*.css",
-      "*/gtk-4.0/*.css",
+      [".*/%.config/swaync/.*%.css"] = "css.gtk",
+      [".*/%.config/waybar/.*%.css"] = "css.gtk",
+      [".*/%.config/rofi/.*%.css"] = "css.gtk",
+      [".*/%.config/wofi/.*%.css"] = "css.gtk",
+      [".*/gtk%-3%.0/.*%.css"] = "css.gtk",
+      [".*/gtk%-4%.0/.*%.css"] = "css.gtk",
     },
-    callback = function()
-      vim.bo.filetype = "css.gtk"
-    end,
-    desc = "Set GTK CSS filetype to avoid standard CSS LSP errors",
   })
 
   vim.api.nvim_create_autocmd("FileType", {
+    group = editor_grp,
     pattern = { "Trouble", "trouble", "qf", "help", "grug-far", "grug-far-history", "grug-far-help" },
     callback = function()
       vim.wo.winfixbuf = true
@@ -161,6 +168,7 @@ function M.setup()
   -- Note: <C-h/j/k/l> navigation lives in plugins/ui/terminal.lua;
   -- directory-browsing in plugins/ui/explorer.lua (Oil).
   vim.api.nvim_create_autocmd("TermOpen", {
+    group = editor_grp,
     callback = function()
       vim.opt_local.number = false
       vim.opt_local.relativenumber = false
@@ -172,6 +180,7 @@ function M.setup()
   })
 
   vim.api.nvim_create_autocmd("TermClose", {
+    group = editor_grp,
     pattern = "*lazygit",
     callback = function()
       pcall(function()
@@ -183,6 +192,7 @@ function M.setup()
 
   -- Command-line Window
   vim.api.nvim_create_autocmd("CmdwinEnter", {
+    group = editor_grp,
     callback = function()
       vim.keymap.set("n", "<Esc>", "<cmd>quit<cr>", { buffer = true, silent = true })
       vim.keymap.set("n", "q", "<cmd>quit<cr>", { buffer = true, silent = true })
