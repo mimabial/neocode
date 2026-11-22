@@ -37,8 +37,10 @@ return {
       vim.keymap.set("i", "<C-k>", function()
         if luasnip.choice_active() then
           luasnip.change_choice(1)
+        elseif #vim.lsp.get_clients({ bufnr = 0, method = "textDocument/signatureHelp" }) > 0 then
+          vim.lsp.buf.signature_help()
         end
-      end, { desc = "Next choice in snippet" })
+      end, { desc = "Next snippet choice or signature help" })
 
       vim.keymap.set("i", "<C-j>", function()
         if luasnip.choice_active() then

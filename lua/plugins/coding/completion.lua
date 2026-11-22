@@ -108,23 +108,19 @@ return {
           { name = "emoji" },
         }),
         formatting = {
-          format = function(entry, vim_item)
-            local menu_icons = {
+          format = lspkind.cmp_format({
+            mode = "symbol_text",
+            maxwidth = 50,
+            ellipsis_char = "...",
+            menu = {
               buffer = " Buffer",
               nvim_lsp = " LSP",
               luasnip = " Snippet",
               nvim_lua = " Lua",
               path = " Path",
               emoji = " Emoji",
-            }
-
-            return lspkind.cmp_format({
-              mode = "symbol_text",
-              maxwidth = 50,
-              ellipsis_char = "...",
-              menu = menu_icons,
-            })(entry, vim_item)
-          end,
+            },
+          }),
         },
       }
 

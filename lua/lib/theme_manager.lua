@@ -7,6 +7,8 @@ local set_background = require("lib.background").set
 
 local M = {}
 local background_variants = {}
+local settings_memo
+local palette_memo
 
 M.cache_dir = vim.fn.stdpath("cache")
 M.settings_file = M.cache_dir .. "/theme_settings.json"
@@ -62,7 +64,7 @@ local function normalize_apply_options(options)
   }
 end
 
-local function read_json_file(path)
+local function read_json_object(path)
   if vim.fn.filereadable(path) ~= 1 then
     return nil
   end
@@ -73,7 +75,7 @@ local function read_json_file(path)
   end
 
   local success, data = pcall(vim.json.decode, table.concat(content, "\n"))
-  if success then
+  if success and type(data) == "table" then
     return data
   end
   return nil
@@ -97,14 +99,8 @@ end
 
 -- Load theme settings from cache
 function M.load_settings()
-  local ok, content = pcall(vim.fn.readfile, M.settings_file)
-  if ok and content[1] then
-    local success, data = pcall(vim.json.decode, content[1])
-    if success then
-      return normalize_settings(data)
-    end
-  end
-  return normalize_settings(nil)
+  settings_memo = settings_memo or normalize_settings(read_json_object(M.settings_file))
+  return settings_memo
 end
 
 -- Save theme settings to cache
@@ -115,6 +111,7 @@ function M.save_settings(settings)
     vim.notify("Failed to save theme settings", vim.log.levels.WARN)
     return false
   end
+  settings_memo = normalized
   return true
 end
 
@@ -178,8 +175,7 @@ local function apply_transparency()
   if not base then
     return
   end
-  for group in pairs(vim.api.nvim_get_hl(0, {})) do
-    local spec = vim.api.nvim_get_hl(0, { name = group })
+  for group, spec in pairs(vim.api.nvim_get_hl(0, {})) do
     if spec.bg == base then
       spec.bg = "NONE"
       vim.api.nvim_set_hl(0, group, spec)
@@ -272,23 +268,18 @@ function M.apply_theme(theme_name, variant, options)
 end
 
 -- Read variables from theme.meta (Hyprland format: $VAR = value)
-local function read_theme_conf(var_name)
+local function read_theme_conf()
+  local values = {}
   if vim.fn.filereadable(M.system_theme_file) ~= 1 then
-    return nil
+    return values
   end
-  local content = vim.fn.readfile(M.system_theme_file)
-  for _, line in ipairs(content) do
-    if line:match("^%s*%$" .. var_name) then
-      local match = line:match("=%s*(.+)")
-      if match then
-        local value = match:gsub("%s+$", "")
-        if value ~= "" then
-          return value
-        end
-      end
+  for _, line in ipairs(vim.fn.readfile(M.system_theme_file)) do
+    local name, value = line:match("^%s*%$([%w_]+)%s*=%s*(.-)%s*$")
+    if name and value ~= "" and values[name] == nil then
+      values[name] = value
     end
   end
-  return nil
+  return values
 end
 
 normalize_background = function(value)
@@ -333,11 +324,11 @@ local function is_light_color(hex)
 end
 
 function M.load_active_palette()
-  local palette = read_json_file(M.active_palette_file)
-  if not palette or not palette.bg or not palette.fg or type(palette.colors) ~= "table" then
-    return nil
+  if not palette_memo then
+    local palette = read_json_object(M.active_palette_file)
+    palette_memo = palette and palette.bg and palette.fg and type(palette.colors) == "table" and palette or nil
   end
-  return palette
+  return palette_memo
 end
 
 local function active_palette_background(palette)
@@ -352,11 +343,12 @@ function M.apply_system_theme()
   local settings = M.load_settings()
 
   local active_palette = M.load_active_palette()
-  local system_scheme = normalize_conf_string(read_theme_conf("NVIM_SCHEME"))
-  local system_variant = normalize_conf_string(read_theme_conf("NVIM_VARIANT"))
-  local conf_background = normalize_background(read_theme_conf("NVIM_BACKGROUND"))
-    or normalize_background(read_theme_conf("COLOR_SCHEME"))
-  local conf_transparency = parse_conf_transparency(read_theme_conf("NVIM_TRANSPARENCY"))
+  local theme_conf = read_theme_conf()
+  local system_scheme = normalize_conf_string(theme_conf.NVIM_SCHEME)
+  local system_variant = normalize_conf_string(theme_conf.NVIM_VARIANT)
+  local conf_background = normalize_background(theme_conf.NVIM_BACKGROUND)
+    or normalize_background(theme_conf.COLOR_SCHEME)
+  local conf_transparency = parse_conf_transparency(theme_conf.NVIM_TRANSPARENCY)
 
   local background = conf_background or active_palette and active_palette_background(active_palette) or settings.background
   if background then
@@ -451,6 +443,7 @@ function M.sync(force)
   if not force and not changed then
     return true
   end
+  palette_memo = nil
   local applied = M.apply_system_theme()
   if applied then
     M._watch_snapshots = snapshots
@@ -498,7 +491,9 @@ function M.setup_focus_sync()
   -- Watch parent directories so atomic file replacement still produces events.
   local watchers = {}
   local watch_dirs = {}
+  local watched_names = {}
   for _, file in ipairs(M._watch_files) do
+    watched_names[vim.fs.basename(file)] = true
     local dir = vim.fs.dirname(file)
     if dir and vim.fn.isdirectory(dir) == 1 then
       watch_dirs[dir] = true
@@ -509,8 +504,8 @@ function M.setup_focus_sync()
     local watcher = vim.uv.new_fs_event()
     if watcher then
       local ok = pcall(function()
-        watcher:start(dir, {}, vim.schedule_wrap(function(err)
-          if not err then
+        watcher:start(dir, {}, vim.schedule_wrap(function(err, filename)
+          if not err and (not filename or watched_names[filename]) then
             request_sync()
           end
         end))
@@ -804,8 +799,9 @@ function M.register_commands()
       return
     end
 
-    local scheme = normalize_conf_string(read_theme_conf("NVIM_SCHEME"))
-    local variant = normalize_conf_string(read_theme_conf("NVIM_VARIANT"))
+    local theme_conf = read_theme_conf()
+    local scheme = normalize_conf_string(theme_conf.NVIM_SCHEME)
+    local variant = normalize_conf_string(theme_conf.NVIM_VARIANT)
 
     if scheme then
       local msg = "System theme: " .. scheme

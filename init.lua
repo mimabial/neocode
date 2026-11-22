@@ -12,8 +12,8 @@ vim.g.maplocalleader = ","
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
--- Bigfile detection: register before lazy bootstrap so the filetype matcher
--- catches files opened on startup (e.g. `nvim huge.log`).
+-- Bigfile detection: register before lazy sources filetype.lua, so its
+-- BufReadPost runs ahead of filetype detection for every file read.
 pcall(function() require("lib.bigfile").setup() end)
 
 -- Bootstrap lazy.nvim

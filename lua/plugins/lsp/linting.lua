@@ -13,13 +13,28 @@ return {
       zsh = { "zsh" },
       markdown = { "markdownlint" },
     },
-    linters = {},
+    linters = {
+      shellcheck = { reads_saved_file = true },
+    },
   },
   config = function(_, opts)
     local lint = require("lint")
 
     local function is_executable(cmd)
       return type(cmd) == "string" and vim.fn.executable(cmd) == 1
+    end
+
+    local function reads_saved_file(name)
+      local linter = lint.linters[name]
+      return linter.reads_saved_file or not linter.stdin
+    end
+
+    local function sees_buffer_content(name)
+      return not vim.bo.modified or not reads_saved_file(name)
+    end
+
+    local function buffer_digest()
+      return vim.fn.sha256(table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n"))
     end
 
     local function installed_linters(ft)
@@ -47,16 +62,23 @@ return {
         if not saved_to_disk and vim.b.linted_changedtick == vim.b.changedtick then
           return
         end
-        local linters = installed_linters(vim.bo.filetype)
-        if #linters > 0 then
-          vim.b.linted_changedtick = vim.b.changedtick
-          lint.try_lint(linters)
+        local linters = vim.tbl_filter(sees_buffer_content, installed_linters(vim.bo.filetype))
+        if #linters == 0 then
+          return
         end
+        local digest = buffer_digest()
+        local content_linted = vim.b.linted_digest == digest
+        vim.b.linted_changedtick = vim.b.changedtick
+        vim.b.linted_digest = digest
+        if content_linted and not (saved_to_disk and vim.iter(linters):any(reads_saved_file)) then
+          return
+        end
+        lint.try_lint(linters)
       end,
     })
 
     vim.keymap.set("n", "<leader>cL", function()
-      lint.try_lint(installed_linters(vim.bo.filetype))
+      lint.try_lint(vim.tbl_filter(sees_buffer_content, installed_linters(vim.bo.filetype)))
       vim.notify("Triggered linting", vim.log.levels.INFO)
     end, { desc = "Trigger linting" })
   end,

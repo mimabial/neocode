@@ -13,6 +13,7 @@ return {
         -- Exclude specific filetypes if needed
         "!lazy",
         "!mason",
+        "!bigfile",
       },
       user_default_options = {
         RGB = true,

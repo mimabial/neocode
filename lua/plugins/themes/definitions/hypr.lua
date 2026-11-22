@@ -7,27 +7,9 @@ M.icon = ""
 M.variants = { "dark", "light" }
 M.variant_for_background = function(background) return background end
 
-local colors_file = vim.env.HYPR_STATE_HOME
-    and (vim.env.HYPR_STATE_HOME .. "/active-palette.json")
-  or vim.env.XDG_STATE_HOME and (vim.env.XDG_STATE_HOME .. "/hypr/active-palette.json")
-  or vim.fn.expand("~/.local/state/hypr/active-palette.json")
-
 local function load_palette_colors()
-  if vim.fn.filereadable(colors_file) ~= 1 then
-    return nil
-  end
-
-  local ok, content = pcall(vim.fn.readfile, colors_file)
-  if not ok or not content[1] then
-    return nil
-  end
-
-  local success, data = pcall(vim.json.decode, table.concat(content, "\n"))
-  if not success or not data then
-    return nil
-  end
-
-  if not data.bg or not data.fg or type(data.colors) ~= "table" then
+  local data = require("lib.theme_manager").load_active_palette()
+  if not data then
     return nil
   end
 
@@ -463,18 +445,10 @@ local function apply_highlights(colors, transparent)
   vim.g.terminal_color_15 = c.color15
 end
 
-function M.is_available()
-  return vim.fn.filereadable(colors_file) == 1
-end
-
-function M.get_colors()
-  return load_palette_colors()
-end
-
 function M.setup(opts)
   local colors = load_palette_colors()
   if not colors then
-    return nil, "active palette not found or invalid at " .. colors_file
+    return nil, "active palette not found or invalid at " .. require("lib.theme_manager").active_palette_file
   end
 
   local bg = opts.background

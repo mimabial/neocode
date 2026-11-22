@@ -137,25 +137,40 @@ return {
       }
     end
 
+    local function disk_size_label()
+      local f = vim.fn.expand("%:p")
+      if f == "" or vim.bo.buftype ~= "" then
+        return ""
+      end
+      local size = vim.fn.getfsize(f)
+      if size <= 0 then
+        return ""
+      end
+
+      local units = { "B", "K", "M", "G" }
+      local idx = 1
+      while size > 1024 and idx < #units do
+        size = size / 1024
+        idx = idx + 1
+      end
+      return string.format("%.1f%s", size, units[idx])
+    end
+
     local function file_size()
+      vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost", "BufFilePost", "FileChangedShellPost" }, {
+        group = vim.api.nvim_create_augroup("StatuslineDiskSize", { clear = true }),
+        callback = function(event)
+          vim.b[event.buf].statusline_disk_size = nil
+        end,
+      })
       return {
         function()
-          local f = vim.fn.expand("%:p")
-          if f == "" or vim.bo.buftype ~= "" then
-            return ""
+          local label = vim.b.statusline_disk_size
+          if label == nil then
+            label = disk_size_label()
+            vim.b.statusline_disk_size = label
           end
-          local size = vim.fn.getfsize(f)
-          if size <= 0 then
-            return ""
-          end
-
-          local units = { "B", "K", "M", "G" }
-          local idx = 1
-          while size > 1024 and idx < #units do
-            size = size / 1024
-            idx = idx + 1
-          end
-          return string.format("%.1f%s", size, units[idx])
+          return label
         end,
         color = { bg = bar_bg },
       }
@@ -317,16 +332,18 @@ return {
   end,
 
   config = function(_, opts)
-    require("lualine").setup(opts)
-
-    local function rebuild_lualine()
-      local new_opts = require("plugins.ui.statusline").opts()
-      require("lualine").setup(new_opts)
+    local function setup_as_only_theme_reloader(lualine_opts)
+      require("lualine").setup(lualine_opts)
+      vim.api.nvim_clear_autocmds({ group = "lualine", event = { "ColorScheme", "OptionSet" } })
     end
+
+    setup_as_only_theme_reloader(opts)
 
     vim.api.nvim_create_autocmd("ColorScheme", {
       callback = function()
-        vim.schedule(rebuild_lualine)
+        vim.schedule(function()
+          setup_as_only_theme_reloader(require("plugins.ui.statusline").opts())
+        end)
       end,
     })
 

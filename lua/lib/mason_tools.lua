@@ -30,4 +30,17 @@ function M.ensure_available(package_names, on_available)
   end))
 end
 
+function M.update_installed()
+  local registry = require("mason-registry")
+  registry.refresh(vim.schedule_wrap(function()
+    local outdated = vim.tbl_filter(function(pkg)
+      return pkg:get_installed_version() ~= pkg:get_latest_version()
+    end, registry.get_installed_packages())
+    for _, pkg in ipairs(outdated) do
+      pkg:install()
+    end
+    vim.notify(("Updating %d Mason packages"):format(#outdated), vim.log.levels.INFO, { title = "Mason" })
+  end))
+end
+
 return M

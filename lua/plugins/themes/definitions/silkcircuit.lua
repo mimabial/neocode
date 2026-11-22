@@ -22,8 +22,7 @@ return live.definition({
     if replacement then
       local wrong = tonumber("12101a", 16)
       local right = tonumber(replacement:sub(2), 16)
-      for group in pairs(vim.api.nvim_get_hl(0, {})) do
-        local spec = vim.api.nvim_get_hl(0, { name = group })
+      for group, spec in pairs(vim.api.nvim_get_hl(0, {})) do
         local changed = false
         for _, key in ipairs({ "bg", "fg", "sp" }) do
           if spec[key] == wrong then

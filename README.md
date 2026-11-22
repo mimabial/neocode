@@ -44,7 +44,7 @@ nvim                                     # plugins install on first launch
 └── lua/
     ├── config/
     │   ├── autocmds.lua                 # diagnostics, line numbers, filetype tweaks
-    │   ├── commands.lua                 # :Layout, :PluginCheck, :ReloadConfig, …
+    │   ├── commands.lua                 # :Layout, :PluginCheck, :UpdateAll, …
     │   ├── django.lua                   # Django project detection / commands
     │   ├── health.lua                   # :ConfigHealth
     │   ├── keymaps.lua                  # global + LspAttach keymaps
@@ -59,7 +59,7 @@ nvim                                     # plugins install on first launch
     │   ├── colors.lua                   # pull current theme bg/fg/etc. from highlights
     │   ├── icons.lua                    # central icon registry (diagnostics, kinds, …)
     │   ├── live_theme.lua               # shared adapter for lazy-loaded colorschemes
-    │   ├── mason_tools.lua              # installs missing Mason packages
+    │   ├── mason_tools.lua              # installs missing / upgrades outdated Mason packages
     │   ├── snapshot.lua                 # runtime for frozen custom palettes
     │   └── theme_manager.lua            # Hyprland sync, theme commands
     ├── types/
@@ -71,7 +71,7 @@ nvim                                     # plugins install on first launch
         ├── editor/  comment, harpoon, illuminate, indentation, kitty/tmux navigators, oil/nvim-tree
         ├── git/     gitsigns, lazygit, octo
         ├── lang/    one file per language: c, go, lua, php, python, rust, shell, web, extras
-        ├── lsp/     lspconfig, mason, formatting (conform), linting (nvim-lint), signature
+        ├── lsp/     lspconfig, mason, formatting (conform), linting (nvim-lint)
         ├── search/  telescope, hlslens
         ├── themes/  colorscheme.lua + per-theme definitions/
         └── ui/      bufferline, lualine, mini.starter, navic, noice, notifications,
@@ -233,7 +233,7 @@ Tunable from `lua/lib/bigfile.lua`; thresholds are settable via `require("lib.bi
 
 - LSP servers are configured via `vim.lsp.config()` (Neovim 0.11 native API). Mason-lspconfig is used only for `automatic_enable = true` and `ensure_installed`. The main spec at `lua/plugins/lsp/lspconfig.lua` iterates `opts.servers` from the per-language files and installs their `opts.tools` through `lua/lib/mason_tools.lua`.
 - Ordinary themes follow their upstream plugins at the revisions pinned in `lazy-lock.json`; snapshots are reserved for custom palettes that need fully frozen highlights.
-- `vim.notify` is wrapped at startup to filter Codeium network errors.
+- A Noice route (loaded on `VeryLazy`) skips Codeium network-error notifications.
 - Backup, swap, and undo dirs live under `stdpath("state")` so lua_ls (which scans the data tree) doesn't index `*.lua~` backup files and double-count type annotations.
 - `lua/types/notify.lua` is a `---@meta` stub that adds the `__call` overload nvim-notify installs at runtime but lua_ls can't infer.
 

@@ -10,7 +10,7 @@ return {
       typescript = { "string", "template_string" },
       go = { "string" },
     },
-    disable_filetype = { "TelescopePrompt", "vim" },
+    disable_filetype = { "TelescopePrompt", "vim", "bigfile" },
     fast_wrap = {
       map = "<M-e>",
       chars = { "{", "[", "(", '"', "'" },

@@ -13,7 +13,6 @@ return live.definition({
       term_colors = true,
       transparent_background = opts.transparency,
     })
-    require("catppuccin").compile()
     vim.cmd.colorscheme("catppuccin-" .. variant)
   end,
 })

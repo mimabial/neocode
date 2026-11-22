@@ -6,7 +6,10 @@ return {
     dependencies = { "kevinhwang91/promise-async" },
     event = "BufReadPost",
     opts = {
-      provider_selector = function()
+      provider_selector = function(bufnr)
+        if require("lib.bigfile").is_big(bufnr) then
+          return ""
+        end
         return { "treesitter", "indent" }
       end,
       fold_virt_text_handler = function(virtText, lnum, endLnum, width, truncate)

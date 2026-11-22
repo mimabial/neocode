@@ -9,6 +9,7 @@ function M.setup()
 
   -- LSP Keymaps (set up via autocmd)
   vim.api.nvim_create_autocmd("LspAttach", {
+    group = vim.api.nvim_create_augroup("LspKeymaps", { clear = true }),
     callback = function(args)
       if vim.b[args.buf].bigfile then
         return
@@ -38,7 +39,7 @@ function M.setup()
       bind_if("implementation", "n", "gi", vim.lsp.buf.implementation, "Go to implementation")
       bind_if("typeDefinition", "n", "gt", vim.lsp.buf.type_definition, "Go to type definition")
 
-      -- Note: <C-k> signature help handled by lsp_signature.nvim plugin
+      -- Note: insert-mode <C-k> signature help shares LuaSnip's choice key (plugins/coding/snippets.lua)
       bind_if("hover", "n", "K", function()
         vim.lsp.buf.hover({ border = "single" })
       end, "Show hover information")
@@ -144,7 +145,15 @@ function M.setup()
   map("n", "<leader>ws", "<cmd>split<cr>", { desc = "Split horizontal" })
   map("n", "<leader>wc", "<cmd>close<cr>", { desc = "Close window" })
   map("n", "<leader>wo", "<cmd>only<cr>", { desc = "Close other windows" })
-  map("n", "<leader>wf", "<cmd>noautocmd w<cr>", { desc = "Save without formatting" })
+  map("n", "<leader>wf", function()
+    local autoformat_disabled = vim.b.disable_autoformat
+    vim.b.disable_autoformat = true
+    local ok, err = pcall(vim.cmd.write)
+    vim.b.disable_autoformat = autoformat_disabled
+    if not ok then
+      vim.notify(err, vim.log.levels.ERROR)
+    end
+  end, { desc = "Save without formatting" })
 
   map("n", "<C-Up>", ":resize -2<CR>", { desc = "Decrease window height" })
   map("n", "<C-Down>", ":resize +2<CR>", { desc = "Increase window height" })
@@ -192,8 +201,6 @@ function M.setup()
   map("n", "<leader>tw", "<cmd>set wrap!<CR>", { desc = "Toggle line wrap" })
 
   -- AI / Navic / Layouts
-  map("n", "<leader>as", "<cmd>AIStatus<cr>", { desc = "Show active AI provider" })
-  map("n", "<leader>at", "<cmd>AIToggle<cr>", { desc = "Toggle AI provider" })
   map("n", "<leader>nb", "<cmd>NavicToggle<cr>", { desc = "Toggle breadcrumbs" })
   map("n", "<leader>L1", "<cmd>Layout coding<cr>", { desc = "Coding Layout" })
   map("n", "<leader>L2", "<cmd>Layout terminal<cr>", { desc = "Terminal Layout" })

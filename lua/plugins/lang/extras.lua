@@ -9,7 +9,7 @@ return {
         vim.list_extend(opts.ensure_installed, servers)
       end
     end
-    add("ruby",     { "ruby_lsp", "solargraph" })
+    add("ruby",     { "ruby_lsp" })
     add("elixir",   { "elixirls" })
     add("java",     { "jdtls" })
     add("dotnet",   { "omnisharp" })

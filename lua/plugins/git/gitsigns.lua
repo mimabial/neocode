@@ -24,6 +24,9 @@ return {
       },
       current_line_blame_formatter = "<author>, <author_time:%Y-%m-%d> - <summary>",
       on_attach = function(bufnr)
+        if require("lib.bigfile").is_big(bufnr) then
+          return false
+        end
         local gs = package.loaded.gitsigns
         local map = function(mode, lhs, rhs, opts)
           opts = opts or {}

@@ -2,6 +2,12 @@
 
 local M = {}
 
+local function open_explorer_beside_editor()
+  vim.cmd("topleft vsplit")
+  require("oil").open()
+  vim.cmd("wincmd p")
+end
+
 function M.setup()
   vim.api.nvim_create_user_command("ExplorerToggle", function()
     require("oil").open()
@@ -32,17 +38,16 @@ function M.setup()
     local layout = opts.args
 
     if layout == "coding" then
-      require("oil").open()
-      vim.api.nvim_command("wincmd l")
+      open_explorer_beside_editor()
     elseif layout == "terminal" then
-      require("oil").open()
-      vim.api.nvim_command("wincmd l")
+      open_explorer_beside_editor()
       require("toggleterm").toggle(1, 15, nil, "horizontal")
     elseif layout == "writing" then
       vim.api.nvim_command("only")
       vim.opt_local.wrap = true
       vim.opt_local.linebreak = true
     elseif layout == "debug" then
+      require("lazy").load({ plugins = { "nvim-dap" } })
       vim.api.nvim_command("only")
       require("dapui").open()
     else
@@ -57,9 +62,7 @@ function M.setup()
   -- Plugin Management
   vim.api.nvim_create_user_command("UpdateAll", function()
     vim.cmd("Lazy update")
-    if package.loaded["mason"] then
-      vim.cmd("MasonUpdate")
-    end
+    require("lib.mason_tools").update_installed()
   end, { desc = "Update all plugins and Mason packages" })
 
   vim.api.nvim_create_user_command("PluginCheck", function()
@@ -81,16 +84,6 @@ function M.setup()
       )
     end
   end, { desc = "Check for plugin errors" })
-
-  vim.api.nvim_create_user_command("ReloadConfig", function()
-    for name, _ in pairs(package.loaded) do
-      if name:match("^config%.") or name:match("^plugins%.") then
-        package.loaded[name] = nil
-      end
-    end
-    dofile(vim.fn.stdpath("config") .. "/init.lua")
-    vim.notify("Nvim configuration reloaded!", vim.log.levels.INFO, { title = "Config" })
-  end, { desc = "Reload Neovim configuration" })
 end
 
 return M

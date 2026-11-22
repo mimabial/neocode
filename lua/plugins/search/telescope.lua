@@ -1,12 +1,24 @@
 -- Telescope: owner of the <leader>f* namespace for find/search.
 -- Also remaps q: / q/ / q? to picker-based history.
 
-local telescope_layout_file = vim.fn.stdpath("data") .. "/telescope_layout.json"
+local IVORY_MIN_COLUMNS = 120
 
-local function save_telescope_layout(layout)
-  local data = vim.fn.json_encode({ layout = layout })
-  vim.fn.mkdir(vim.fn.fnamemodify(telescope_layout_file, ":h"), "p")
-  vim.fn.writefile({ data }, telescope_layout_file)
+local function layout_for_width()
+  return vim.o.columns < IVORY_MIN_COLUMNS and "ebony" or "ivory"
+end
+
+local function apply_layout(layout)
+  vim.g.telescope_layout = layout
+  local config = package.loaded["telescope.config"]
+  if config then
+    config.values.layout_strategy = layout
+    config.values.borderchars = vim.g.telescope_borders[layout]
+  end
+end
+
+local function toggle_layout()
+  apply_layout(vim.g.telescope_layout == "ivory" and "ebony" or "ivory")
+  vim.notify("Telescope: " .. vim.g.telescope_layout)
 end
 
 return {
@@ -22,27 +34,7 @@ return {
   keys = function()
     local builtin = require("telescope.builtin")
 
-    local layout_data = { layout = "ivory" }
-    if vim.fn.filereadable(telescope_layout_file) == 1 then
-      local file_content = vim.fn.readfile(telescope_layout_file)
-      if file_content and #file_content > 0 then
-        local ok, data = pcall(vim.fn.json_decode, file_content[1])
-        if ok and data and data.layout then
-          layout_data = data
-        end
-      end
-    end
-
-    vim.g.telescope_layout = layout_data.layout
-
-    local max_columns = vim.o.columns
-    if max_columns < 120 and vim.g.telescope_layout ~= "ebony" then
-      vim.g.telescope_layout = "ebony"
-      save_telescope_layout("ebony")
-    elseif max_columns >= 120 and vim.g.telescope_layout ~= "ivory" then
-      vim.g.telescope_layout = "ivory"
-      save_telescope_layout("ivory")
-    end
+    vim.g.telescope_layout = layout_for_width()
 
     -- Order: { top, right, bottom, left, top_left, top_right, bottom_right, bottom_left }
     vim.g.telescope_borders = {
@@ -59,19 +51,7 @@ return {
     }
 
     return {
-      {
-        "<leader>fl",
-        function()
-          local layout = vim.g.telescope_layout == "ivory" and "ebony" or "ivory"
-          vim.g.telescope_layout = layout
-          local config = require("telescope.config")
-          config.values.layout_strategy = layout
-          config.values.borderchars = vim.g.telescope_borders[layout]
-          save_telescope_layout(layout)
-          vim.notify("Telescope: " .. layout)
-        end,
-        desc = "Toggle Layout",
-      },
+      { "<leader>fl", toggle_layout, desc = "Toggle Layout" },
       { "<leader>ff", builtin.find_files, desc = "Find Files" },
       { "<leader>ft", builtin.live_grep, desc = "Find Text (Grep)" },
       { "<leader>fb", builtin.buffers, desc = "Find Buffers" },
@@ -233,13 +213,13 @@ return {
         path_display = { "filename_first" },
         selection_strategy = "reset",
         sorting_strategy = "ascending",
-        layout_strategy = vim.g.telescope_layout or "ivory",
+        layout_strategy = vim.g.telescope_layout,
         layout_config = {
           ivory = {
             height = 1,
             width = 1.0,
             prompt_position = "top",
-            preview_cutoff = 120,
+            preview_cutoff = IVORY_MIN_COLUMNS,
           },
           ebony = {
             width = 1.0,
@@ -249,11 +229,7 @@ return {
           },
         },
 
-        borderchars = {
-          prompt = { "─", " ", " ", " ", "╶", "╴", " ", " " },
-          results = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-          preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-        },
+        borderchars = vim.g.telescope_borders[vim.g.telescope_layout],
 
         preview = {
           timeout = 1000,
@@ -416,33 +392,15 @@ return {
 
     vim.api.nvim_create_autocmd("VimResized", {
       callback = function()
-        local max_columns = vim.o.columns
-        local current_layout = vim.g.telescope_layout or "ivory"
-        local target_layout = nil
-
-        if max_columns < 120 and current_layout ~= "ebony" then
-          target_layout = "ebony"
-        elseif max_columns >= 120 and current_layout ~= "ivory" then
-          target_layout = "ivory"
-        end
-
-        if target_layout then
-          vim.g.telescope_layout = target_layout
-          local config = require("telescope.config")
-          config.values.layout_strategy = target_layout
-          config.values.borderchars = vim.g.telescope_borders[target_layout]
-          save_telescope_layout(target_layout)
-          vim.notify("Telescope auto-switched to " .. target_layout .. " layout", vim.log.levels.INFO)
+        local layout = layout_for_width()
+        if layout ~= vim.g.telescope_layout then
+          apply_layout(layout)
+          vim.notify("Telescope auto-switched to " .. layout .. " layout", vim.log.levels.INFO)
         end
       end,
     })
 
-    vim.api.nvim_create_user_command("TelescopeToggleLayout", function()
-      vim.g.telescope_layout = (vim.g.telescope_layout == "ivory") and "ebony" or "ivory"
-      local layout = vim.g.telescope_layout
-      save_telescope_layout(layout)
-      vim.notify("Telescope layout: " .. layout .. " (saved)")
-    end, {})
+    vim.api.nvim_create_user_command("TelescopeToggleLayout", toggle_layout, {})
 
     vim.api.nvim_create_autocmd("User", {
       pattern = "TelescopePreviewerLoaded",

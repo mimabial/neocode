@@ -27,13 +27,9 @@ return {
       }
     end,
     init = function()
-      local notify = require("notify")
       ---@diagnostic disable-next-line: duplicate-set-field
       vim.notify = function(msg, level, opts)
-        if type(msg) == "string" and msg:match("Codeium.*request failed") then
-          return
-        end
-        notify(msg, level, opts)
+        require("notify")(msg, level, opts)
       end
     end,
   },
@@ -162,6 +158,10 @@ return {
         lsp_doc_border = true,
       },
       routes = {
+        {
+          filter = { event = "notify", find = "Codeium.*request failed" },
+          opts = { skip = true },
+        },
         {
           filter = {
             event = "msg_show",

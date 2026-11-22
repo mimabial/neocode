@@ -3,10 +3,10 @@
 -- Detect oversized or minified-line files early and short-circuit expensive
 -- plugin behavior to keep the editor responsive. The mechanism:
 --
---   1. vim.filetype.add registers a high-priority pattern that returns the
---      synthetic filetype "bigfile" when the file is over the size threshold
---      or contains very long lines. Most plugins gate themselves on filetype
---      via denylists/excludes, so they opt out automatically.
+--   1. A BufReadPost autocmd, registered before filetype detection exists, sets
+--      the synthetic filetype "bigfile" when the file is over the size threshold
+--      or contains very long lines; detection's :setfiletype then keeps it. Most
+--      plugins gate themselves on filetype via denylists/excludes and opt out.
 --
 --   2. A FileType=bigfile autocmd sets vim.b.bigfile = true for plugins that
 --      don't gate on filetype, and disables buffer-local features that aren't
@@ -18,6 +18,7 @@
 --   require("lib.bigfile").is_big(bufnr)  -- predicate for plugin gates
 
 local M = {}
+local LINES_PER_SCAN_CHUNK = 1024
 
 M.config = {
   -- File-size threshold in bytes.
@@ -33,22 +34,24 @@ function M.is_big(buf)
   return vim.b[buf or 0].bigfile == true
 end
 
-local function detect(path, buf)
-  if not path or path == "" or path:find("://") then
-    return false
-  end
-  local stat = (vim.uv or vim.loop).fs_stat(path)
-  if stat and stat.size > M.config.size then
-    return true
-  end
-  if buf and vim.api.nvim_buf_is_valid(buf) then
-    for _, line in ipairs(vim.api.nvim_buf_get_lines(buf, 0, -1, false)) do
+local function has_long_line(buf)
+  for first = 0, vim.api.nvim_buf_line_count(buf) - 1, LINES_PER_SCAN_CHUNK do
+    for _, line in ipairs(vim.api.nvim_buf_get_lines(buf, first, first + LINES_PER_SCAN_CHUNK, false)) do
       if #line > M.config.line_length then
         return true
       end
     end
   end
   return false
+end
+
+local function detect(buf)
+  local path = vim.api.nvim_buf_get_name(buf)
+  if path == "" or path:find("://") then
+    return false
+  end
+  local stat = vim.uv.fs_stat(path)
+  return stat and stat.size > M.config.size or has_long_line(buf)
 end
 
 local function disable(buf)
@@ -83,21 +86,18 @@ end
 function M.setup(opts)
   M.config = vim.tbl_extend("force", M.config, opts or {})
 
-  vim.filetype.add({
-    pattern = {
-      [".*"] = {
-        function(path, buf)
-          if detect(path, buf) then
-            return "bigfile"
-          end
-        end,
-        { priority = math.huge },
-      },
-    },
+  local group = vim.api.nvim_create_augroup("BigFile", { clear = true })
+  vim.api.nvim_create_autocmd("BufReadPost", {
+    group = group,
+    callback = function(args)
+      if detect(args.buf) then
+        vim.bo[args.buf].filetype = "bigfile"
+      end
+    end,
   })
 
   vim.api.nvim_create_autocmd("FileType", {
-    group = vim.api.nvim_create_augroup("BigFile", { clear = true }),
+    group = group,
     pattern = "bigfile",
     callback = function(args)
       disable(args.buf)

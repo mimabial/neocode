@@ -23,7 +23,7 @@ return {
     providers = {
       claude = {
         endpoint = "https://api.anthropic.com",
-        model = "claude-opus-4-5-20250414",
+        model = "claude-opus-4-5-20251101",
         extra_request_body = {
           temperature = 0,
           max_tokens = 4096,

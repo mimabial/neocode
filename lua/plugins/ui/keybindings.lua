@@ -103,7 +103,6 @@ return {
           { "gi", desc = "Go to Implementation", buffer = args.buf },
           { "gr", desc = "Find References", buffer = args.buf },
           { "K", desc = "Hover Documentation", buffer = args.buf },
-          { "<C-k>", desc = "Signature Help", buffer = args.buf },
           { "[d", desc = "Previous Diagnostic", buffer = args.buf },
           { "]d", desc = "Next Diagnostic", buffer = args.buf },
         })

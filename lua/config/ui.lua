@@ -67,6 +67,7 @@ end
 function M.setup()
   setup_highlights()
   vim.api.nvim_create_autocmd("ColorScheme", {
+    group = vim.api.nvim_create_augroup("UiHighlights", { clear = true }),
     callback = function()
       vim.schedule(setup_highlights)
     end,

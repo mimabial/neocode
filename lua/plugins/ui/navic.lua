@@ -1,13 +1,10 @@
+local MIN_WINBAR_WINDOW_HEIGHT = 5
+local MIN_WINBAR_WINDOW_WIDTH = 20
+
 return {
   "SmiteshP/nvim-navic",
-  dependencies = {
-    "neovim/nvim-lspconfig",
-  },
   lazy = false,
   opts = {
-    lsp = {
-      auto_attach = true,
-    },
     highlight = true,
     separator = " ",
     depth_limit = 4,
@@ -57,34 +54,87 @@ return {
     setup_highlights()
     vim.api.nvim_create_autocmd("ColorScheme", { callback = setup_highlights })
 
-    vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+    local winbar = "%{%v:lua.require('nvim-navic').get_location()%}"
+    local navic_group = vim.api.nvim_create_augroup("navic", { clear = false })
+    local enabled = true
+
+    local function attach(client, buf)
+      local attached_name = vim.b[buf].navic_client_name
+      if client.server_capabilities.documentSymbolProvider and (attached_name == nil or attached_name == client.name) then
+        navic.attach(client, buf)
+      end
+    end
+
+    local function detach(buf)
+      vim.api.nvim_clear_autocmds({ group = navic_group, buffer = buf })
+      vim.b[buf].navic_client_id = nil
+      vim.b[buf].navic_client_name = nil
+    end
+
+    local function update_winbar(win)
+      local shows_breadcrumbs = enabled
+        and vim.b[vim.api.nvim_win_get_buf(win)].navic_client_id ~= nil
+        and vim.api.nvim_win_get_config(win).relative == ""
+        and vim.api.nvim_win_get_height(win) >= MIN_WINBAR_WINDOW_HEIGHT
+        and vim.api.nvim_win_get_width(win) >= MIN_WINBAR_WINDOW_WIDTH
+      if shows_breadcrumbs then
+        vim.wo[win].winbar = winbar
+      elseif vim.wo[win].winbar == winbar then
+        vim.wo[win].winbar = ""
+      end
+    end
+
+    local function update_buffer_winbars(buf)
+      for _, win in ipairs(vim.fn.win_findbuf(buf)) do
+        update_winbar(win)
+      end
+    end
+
+    vim.api.nvim_create_autocmd("LspAttach", {
       callback = function(event)
-        local buf = event.buf
-        if vim.bo[buf].buftype ~= "" then
+        if enabled then
+          attach(vim.lsp.get_client_by_id(event.data.client_id), event.buf)
+          update_buffer_winbars(event.buf)
+        end
+      end,
+    })
+
+    vim.api.nvim_create_autocmd("LspDetach", {
+      callback = function(event)
+        if vim.b[event.buf].navic_client_id ~= event.data.client_id then
           return
         end
-        local ft = vim.bo[buf].filetype
-        if vim.tbl_contains({ "oil", "NvimTree", "neo-tree", "Trouble", "lazy", "mason", "TelescopePrompt" }, ft) then
-          return
+        detach(event.buf)
+        for _, client in ipairs(vim.lsp.get_clients({ bufnr = event.buf })) do
+          if client.id ~= event.data.client_id and not vim.b[event.buf].navic_client_id then
+            attach(client, event.buf)
+          end
         end
-        if vim.api.nvim_win_get_config(0).relative ~= "" then
-          return
-        end
-        if vim.api.nvim_win_get_height(0) < 5 or vim.api.nvim_win_get_width(0) < 20 then
-          return
-        end
-        vim.wo.winbar = "%{%v:lua.require('nvim-navic').get_location()%}"
+        update_buffer_winbars(event.buf)
+      end,
+    })
+
+    vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+      callback = function()
+        update_winbar(vim.api.nvim_get_current_win())
       end,
     })
 
     vim.api.nvim_create_user_command("NavicToggle", function()
-      if vim.wo.winbar and vim.wo.winbar:find("navic") then
-        vim.wo.winbar = ""
-        vim.notify("Navic disabled", vim.log.levels.INFO)
-      else
-        vim.wo.winbar = "%{%v:lua.require('nvim-navic').get_location()%}"
-        vim.notify("Navic enabled", vim.log.levels.INFO)
+      enabled = not enabled
+      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if enabled then
+          for _, client in ipairs(vim.lsp.get_clients({ bufnr = buf })) do
+            attach(client, buf)
+          end
+        else
+          detach(buf)
+        end
       end
-    end, { desc = "Toggle navic breadcrumbs in winbar" })
+      for _, win in ipairs(vim.api.nvim_list_wins()) do
+        update_winbar(win)
+      end
+      vim.notify("Navic " .. (enabled and "enabled" or "disabled"), vim.log.levels.INFO)
+    end, { desc = "Toggle navic breadcrumbs and symbol tracking" })
   end,
 }

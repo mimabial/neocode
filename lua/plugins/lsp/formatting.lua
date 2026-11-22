@@ -1,4 +1,4 @@
-local FORMAT_MAX_FILE_BYTES = 1000000
+local FORMAT_MAX_BUFFER_BYTES = 1000000
 local SYNC_FORMAT_MAX_LINES = 1000
 
 local format_excluded_filetypes = {
@@ -10,14 +10,23 @@ local format_excluded_filetypes = {
 }
 
 local function buffer_allows_formatting(bufnr)
-  if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+  if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat or require("lib.bigfile").is_big(bufnr) then
     return false
   end
   if format_excluded_filetypes[vim.bo[bufnr].filetype] then
     return false
   end
-  local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(bufnr))
-  return not (ok and stats and stats.size > FORMAT_MAX_FILE_BYTES)
+  return vim.api.nvim_buf_get_offset(bufnr, vim.api.nvim_buf_line_count(bufnr)) <= FORMAT_MAX_BUFFER_BYTES
+end
+
+local function go_module_path(dirname)
+  local go_mod = vim.fs.find("go.mod", { path = dirname, upward = true, type = "file" })[1]
+  for _, line in ipairs(go_mod and vim.fn.readfile(go_mod) or {}) do
+    local module_path = line:match('^module%s+"?([^"%s]+)')
+    if module_path then
+      return module_path
+    end
+  end
 end
 
 return {
@@ -63,10 +72,28 @@ return {
           vim.log.levels.INFO
         )
       end, {})
+
+      vim.api.nvim_create_user_command("Format", function(args)
+        local range = args.range > 0
+            and {
+              start = { args.line1, 0 },
+              ["end"] = { args.line2, #vim.fn.getline(args.line2) },
+            }
+          or nil
+        require("conform").format({ async = true, lsp_format = "fallback", range = range })
+      end, { range = true, desc = "Format buffer or range" })
+
+      vim.api.nvim_create_user_command("FormatWith", function(args)
+        require("conform").format({ async = true, formatters = { args.args } })
+      end, {
+        nargs = 1,
+        complete = function()
+          return vim.tbl_keys(require("conform").formatters)
+        end,
+        desc = "Format with specific formatter",
+      })
     end,
     opts = function()
-      local util = require("conform.util")
-
       return {
         format_on_save = function(bufnr)
           if not buffer_allows_formatting(bufnr) or vim.api.nvim_buf_line_count(bufnr) > SYNC_FORMAT_MAX_LINES then
@@ -87,7 +114,6 @@ return {
           -- Shell
           sh = { "shfmt" },
           bash = { "shfmt" },
-          zsh = { "shfmt" },
 
           -- Web Development
           javascript = { "prettierd", "prettier", stop_after_first = true },
@@ -205,11 +231,8 @@ return {
           -- Go
           goimports = {
             prepend_args = function(_, ctx)
-              local go_mod = util.root_file({ "go.mod" })(ctx.buf)
-              if go_mod then
-                return { "-local", "." }
-              end
-              return {}
+              local module_path = go_module_path(ctx.dirname)
+              return module_path and { "-local", module_path } or {}
             end,
           },
           gofumpt = {
@@ -248,43 +271,9 @@ return {
               "--rules=@PSR12",
             },
           },
-
-          -- Rust (uses rustfmt from toolchain)
-          rustfmt = {
-            command = "rustfmt",
-            args = { "--edition", "2021" },
-          },
         },
         notify_on_error = true,
       }
-    end,
-    config = function(_, opts)
-      local conform = require("conform")
-      conform.setup(opts)
-
-      vim.api.nvim_create_user_command("Format", function(args)
-        local range = args.range > 0
-            and {
-              start = { args.line1, 0 },
-              ["end"] = { args.line2, 999999 },
-            }
-          or nil
-        conform.format({ async = true, lsp_format = "fallback", range = range })
-      end, { range = true, desc = "Format buffer or range" })
-
-      vim.api.nvim_create_user_command("FormatWith", function(args)
-        if not args.args or args.args == "" then
-          vim.notify("Formatter name required", vim.log.levels.ERROR)
-          return
-        end
-        conform.format({ async = true, formatters = { args.args } })
-      end, {
-        nargs = 1,
-        complete = function()
-          return vim.tbl_keys(require("conform").formatters)
-        end,
-        desc = "Format with specific formatter",
-      })
     end,
   },
 }
