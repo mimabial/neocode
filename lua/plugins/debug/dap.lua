@@ -1,5 +1,7 @@
 ---@diagnostic disable: missing-fields
 
+local DAP_SOURCE_BY_RUNTIME = { node = "js", python3 = "python" }
+
 local function toggle_dap_breakpoint()
   require("dap").toggle_breakpoint()
 end
@@ -94,8 +96,14 @@ local function setup_dap()
     },
   })
 
+  local dap_sources = {}
+  for runtime, source in pairs(DAP_SOURCE_BY_RUNTIME) do
+    if vim.fn.executable(runtime) == 1 then
+      table.insert(dap_sources, source)
+    end
+  end
   require("mason-nvim-dap").setup({
-    ensure_installed = vim.fn.executable("node") == 1 and { "js" } or {},
+    ensure_installed = dap_sources,
     automatic_installation = true,
     handlers = {},
   })
@@ -228,7 +236,6 @@ return {
     "theHamsta/nvim-dap-virtual-text",
     "jay-babu/mason-nvim-dap.nvim",
     "williamboman/mason.nvim",
-    "mfussenegger/nvim-dap-python",
   },
   config = setup_dap,
   keys = {

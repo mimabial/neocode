@@ -96,7 +96,8 @@ if #requested > 1 and not no_glob then
     print(("dispatch %s / %s / %s (fresh process)"):format(scheme, r.variant or "-", r.background or "-"))
     -- Arg list + env overlay: no shell, so variant/background never need quoting.
     -- SNAPSHOT_NO_GLOB stops the child from re-expanding packs and re-dispatching.
-    local res = vim.system({ "nvim", "--headless", "-c", "luafile " .. script, "-c", "qa" }, {
+    local run_script_or_fail = ("lua local ok, err = pcall(dofile, %q) if not ok then io.stderr:write(err, '\\n') os.exit(1) end"):format(script)
+    local res = vim.system({ "nvim", "--headless", "-c", run_script_or_fail, "-c", "qa" }, {
       env = {
         SNAPSHOT_SCHEME = scheme,
         SNAPSHOT_VARIANTS = r.variant or "",

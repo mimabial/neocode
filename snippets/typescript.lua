@@ -6,6 +6,13 @@ local i = ls.insert_node
 local f = ls.function_node
 
 local snippets = {
+  -- Next.js API route
+  s("napi", {
+    t({"export async function GET(request: Request) {", "  "}),
+    i(1, "// Handle GET request"),
+    t({"", "  return Response.json({ message: 'Hello from API route!' });", "}", ""}),
+  }),
+  
   -- Next.js API handler with multiple HTTP methods
   s("napi-methods", {
     t({"export async function GET(request: Request) {", "  "}),
@@ -17,20 +24,11 @@ local snippets = {
   
   -- Next.js dynamic API route
   s("napi-dynamic", {
-    t({"export async function GET(", "  request: Request,", "  { params }: { params: { "}),
+    t({"export async function GET(", "  request: Request,", "  { params }: { params: Promise<{ "}),
     i(1, "id"),
-    t({": string } }", ") {", "  "}),
-    t({"const "}), f(function(args) return args[1][1] end, {1}), t({" = params."}), f(function(args) return args[1][1] end, {1}), t({";", "  ", "  return Response.json({ "}),
+    t({": string }> }", ") {", "  "}),
+    t({"const { "}), f(function(args) return args[1][1] end, {1}), t({" } = await params;", "  ", "  return Response.json({ "}),
     f(function(args) return args[1][1] end, {1}), t({" });", "}", ""}),
-  }),
-  
-  -- TypeScript React component type
-  s("tscomp", {
-    t({"import React from 'react';", "", "type "}), i(1, "Component"), t({"Props = {", "  "}), i(2, "children: React.ReactNode"), t({"", "};", "", "export default function "}), 
-    f(function(args) return args[1][1] end, {1}), 
-    t({" ({ "}), i(3, "children"), t({" }: "}), f(function(args) return args[1][1] end, {1}), t({"Props) {", "  return (", "    "}), 
-    i(0, "<div>{children}</div>"), 
-    t({"", "  );", "}", ""})
   }),
 }
 

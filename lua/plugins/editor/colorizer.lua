@@ -34,8 +34,6 @@ return {
   -- Tailwind colorizer for completion menu
   {
     "roobert/tailwindcss-colorizer-cmp.nvim",
-    config = function()
-      require("tailwindcss-colorizer-cmp").setup({ color_square_width = 2 })
-    end,
+    opts = { color_square_width = 2 },
   },
 }

@@ -4,7 +4,7 @@ local M = {}
 
 -- Extract a specific attribute from a highlight group
 local function hl_color(group, attr, fallback)
-  local hl = vim.api.nvim_get_hl(0, { name = group })
+  local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
   local val = hl[attr]
   if not val then
     return fallback
@@ -39,8 +39,6 @@ function M.extract_all()
     select_bg = hl_color("PmenuSel", "bg", "#45403d"),
     select_fg = hl_color("PmenuSel", "fg", "#dcd7ba"),
     popup_bg = hl_color("Pmenu", "bg", bg),
-
-    codeium = "#09B6A2",
   }
 end
 

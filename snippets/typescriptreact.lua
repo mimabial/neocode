@@ -23,7 +23,7 @@ local snippets = {
   
   -- Next.js server component
   s("nserver", {
-    t({"import { headers } from 'next/headers';", "", "export default async function ServerComponent() {", "  const headersList = headers();", "  ", "  return (", "    "}),
+    t({"import { headers } from 'next/headers';", "", "export default async function ServerComponent() {", "  const headersList = await headers();", "  ", "  return (", "    "}),
     i(1, "<div>Server Component</div>"),
     t({"", "  );", "}", ""}),
   }),
@@ -37,18 +37,13 @@ local snippets = {
     t({"", "  );", "}", ""}),
   }),
   
-  -- Next.js API route
-  s("napi", {
-    t({"export async function GET(request: Request) {", "  "}),
-    i(1, "// Handle GET request"),
-    t({"", "  return Response.json({ message: 'Hello from API route!' });", "}", ""}),
-  }),
-  
   -- Next.js with route params
   s("nparams", {
-    t({"interface PageProps {","  params: {","    "}),
+    t({"interface PageProps {","  params: Promise<{","    "}),
     i(1, "id"),
-    t({": string","  }","}","","export default function Page({ params }: PageProps) {","  return (","    <div>","      Dynamic parameter: {params."}),
+    t({": string","  }>","}","","export default async function Page({ params }: PageProps) {","  const { "}),
+    f(function(args) return args[1][1] end, {1}),
+    t({" } = await params;","  return (","    <div>","      Dynamic parameter: {"}),
     f(function(args) return args[1][1] end, {1}),
     t({"}","    </div>","  );","}",""}),
   }),
@@ -56,8 +51,10 @@ local snippets = {
   
   -- Next.js with search params
   s("nsearch", {
-    t({"export default function Page({","  searchParams,","}: {","  searchParams: { [key: string]: string | string[] | undefined };","}) {","  return (","    <div>","      Search param: {searchParams."}),
+    t({"export default async function Page({","  searchParams,","}: {","  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;","}) {","  const { "}),
     i(1, "query"),
+    t({" } = await searchParams;","  return (","    <div>","      Search param: {"}),
+    f(function(args) return args[1][1] end, {1}),
     t({" as string}","    </div>","  );","}",""}),
   }),
   
@@ -123,6 +120,15 @@ local snippets = {
     t({"',", "  description: '"}),
     i(2, "Page Description"),
     t({"',", "};", ""}),
+  }),
+
+  -- TypeScript React component type
+  s("tscomp", {
+    t({"import React from 'react';", "", "type "}), i(1, "Component"), t({"Props = {", "  "}), i(2, "children: React.ReactNode"), t({"", "};", "", "export default function "}),
+    f(function(args) return args[1][1] end, {1}),
+    t({" ({ "}), i(3, "children"), t({" }: "}), f(function(args) return args[1][1] end, {1}), t({"Props) {", "  return (", "    "}),
+    i(0, "<div>{children}</div>"),
+    t({"", "  );", "}", ""})
   }),
 }
 

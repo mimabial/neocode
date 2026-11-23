@@ -8,9 +8,9 @@ return live.definition({
   apply = function(_, opts)
     vim.cmd.colorscheme("oxocarbon")
     if opts.transparency then
-      for _, group in ipairs({ "Normal", "NormalFloat", "NormalNC" }) do
-        vim.api.nvim_set_hl(0, group, { bg = "none" })
-      end
+      local float = vim.api.nvim_get_hl(0, { name = "NormalFloat", link = false })
+      float.bg = nil
+      vim.api.nvim_set_hl(0, "NormalFloat", float)
     end
   end,
 })

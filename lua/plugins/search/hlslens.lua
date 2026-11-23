@@ -3,12 +3,6 @@ return {
   "kevinhwang91/nvim-hlslens",
   event = "BufReadPost",
   priority = 60,
-  keys = {
-    { "n", desc = "Next search result" },
-    { "N", desc = "Previous search result" },
-    { "*", desc = "Search word under cursor" },
-    { "#", desc = "Search word backward" },
-  },
   config = function()
     local hlslens = require("hlslens")
     local colors_lib = require("lib.colors")
@@ -27,19 +21,19 @@ return {
       end,
     })
 
-    local map = vim.keymap.set
-    local opts = { silent = true, noremap = true }
-    local function lens(cmd)
-      return string.format("<Cmd>execute('normal! ' . v:count1 . '%s')<CR><Cmd>lua require('hlslens').start()<CR>", cmd)
+    local function map(lhs, keys, desc)
+      vim.keymap.set("n", lhs, keys .. "<Cmd>lua require('hlslens').start()<CR>", { silent = true, desc = desc })
+    end
+    local function counted(key)
+      return ("<Cmd>execute('normal! ' . v:count1 . '%s')<CR>"):format(key)
     end
 
-    map("n", "n", lens("n"), opts)
-    map("n", "N", lens("N"), opts)
-    map("n", "*", "*<Cmd>lua require('hlslens').start()<CR>", opts)
-    map("n", "#", "#<Cmd>lua require('hlslens').start()<CR>", opts)
-    map("n", "g*", "g*<Cmd>lua require('hlslens').start()<CR>", opts)
-    map("n", "g#", "g#<Cmd>lua require('hlslens').start()<CR>", opts)
-    map("n", "<Esc>", "<Cmd>noh<CR><Esc>", opts)
+    map("n", counted("n") .. "zzzv", "Next search result (centered)")
+    map("N", counted("N") .. "zzzv", "Previous search result (centered)")
+    map("*", "*zzzv", "Search word forward (centered)")
+    map("#", "#zzzv", "Search word backward (centered)")
+    map("g*", "g*", "Search partial word forward")
+    map("g#", "g#", "Search partial word backward")
 
     local function set_hlslens_highlights()
       local colors = colors_lib.extract_all()

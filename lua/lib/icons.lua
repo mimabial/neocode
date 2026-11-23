@@ -82,7 +82,6 @@ M.kinds = {
   Event = "󰉁",
   Operator = "󰆕",
   TypeParameter = "󰅲",
-  Codeium = "󰚩",
 }
 
 return M

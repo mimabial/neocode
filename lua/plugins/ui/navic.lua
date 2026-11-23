@@ -1,5 +1,6 @@
 local MIN_WINBAR_WINDOW_HEIGHT = 5
 local MIN_WINBAR_WINDOW_WIDTH = 20
+local WINBAR_ROWS = 1
 
 return {
   "SmiteshP/nvim-navic",
@@ -71,11 +72,16 @@ return {
       vim.b[buf].navic_client_name = nil
     end
 
+    local function text_height_with_winbar(win)
+      local info = vim.fn.getwininfo(win)[1]
+      return info.height + info.winbar - WINBAR_ROWS
+    end
+
     local function update_winbar(win)
       local shows_breadcrumbs = enabled
         and vim.b[vim.api.nvim_win_get_buf(win)].navic_client_id ~= nil
         and vim.api.nvim_win_get_config(win).relative == ""
-        and vim.api.nvim_win_get_height(win) >= MIN_WINBAR_WINDOW_HEIGHT
+        and text_height_with_winbar(win) >= MIN_WINBAR_WINDOW_HEIGHT
         and vim.api.nvim_win_get_width(win) >= MIN_WINBAR_WINDOW_WIDTH
       if shows_breadcrumbs then
         vim.wo[win].winbar = winbar
@@ -117,6 +123,14 @@ return {
     vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
       callback = function()
         update_winbar(vim.api.nvim_get_current_win())
+      end,
+    })
+
+    vim.api.nvim_create_autocmd("WinResized", {
+      callback = function()
+        for _, win in ipairs(vim.v.event.windows) do
+          update_winbar(win)
+        end
       end,
     })
 

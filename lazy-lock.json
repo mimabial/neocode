@@ -17,6 +17,7 @@
   "cmp-path": { "branch": "main", "commit": "c642487086dbd9a93160e1679a1327be111cbc25" },
   "cmp_luasnip": { "branch": "master", "commit": "98d9cb5c2c38532bd9bdb481067b20fea8f32e90" },
   "conform.nvim": { "branch": "master", "commit": "016802de402556da54c36bd7359b441266b01cdd" },
+  "copilot.lua": { "branch": "master", "commit": "d1570ddc00fc4fc4caf7422803805ee22cca14ff" },
   "cyberdream.nvim": { "branch": "main", "commit": "b3f4ef5e9b8ee370c913a48b63e130b730ee8782" },
   "darkvoid.nvim": { "branch": "master", "commit": "45be993a5617e05811b6b293c05e6aded7003cc9" },
   "decay.nvim": { "branch": "main", "commit": "457014541ebcfb29bd660592a0b02f22c9e2d0e2" },
@@ -57,10 +58,8 @@
   "nvim-cmp": { "branch": "main", "commit": "2ffe79f1f021def8dd1fcd81deb16f1bb0d989f3" },
   "nvim-colorizer.lua": { "branch": "master", "commit": "72a05f62c52241bc7441c820eb53946f92b2e6a4" },
   "nvim-dap": { "branch": "master", "commit": "cfa2d58f4537aca6ca83e2de1a0d9f1491121264" },
-  "nvim-dap-python": { "branch": "master", "commit": "1808458eba2b18f178f990e01376941a42c7f93b" },
   "nvim-dap-ui": { "branch": "master", "commit": "cc9dd33aade7f20bae414d0cba163bc60d4d4b43" },
   "nvim-dap-virtual-text": { "branch": "master", "commit": "fbdb48c2ed45f4a8293d0d483f7730d24467ccb6" },
-  "nvim-dap-vscode-js": { "branch": "main", "commit": "03bd29672d7fab5e515fc8469b7d07cc5994bbf6" },
   "nvim-hlslens": { "branch": "main", "commit": "be2d7b2be01860b5445a007ff2bc72b29896db6b" },
   "nvim-lint": { "branch": "master", "commit": "3d55c8f67c6ae5c15e1042571e107c7a3d5c5f4e" },
   "nvim-lspconfig": { "branch": "master", "commit": "3e8d598d3b5f8338a41699c436e5fa11d2666cf0" },
@@ -100,8 +99,6 @@
   "vim-illuminate": { "branch": "master", "commit": "1cc33d347c574c3bd21a4852fc9ffed677c1c58c" },
   "vim-kitty-navigator": { "branch": "master", "commit": "c40c7d6181fa44fade771980952c60c1d89c28ea" },
   "vim-tmux-navigator": { "branch": "master", "commit": "e41c431a0c7b7388ae7ba341f01a0d217eb3a432" },
-  "vscode-js-debug": { "branch": "main", "commit": "6259fb8956788de61df8ff007b9bc1eedea3c7dc" },
   "which-key.nvim": { "branch": "main", "commit": "3aab2147e74890957785941f0c1ad87d0a44c15a" },
-  "windsurf.nvim": { "branch": "main", "commit": "821b570b526dbb05b57aa4ded578b709a704a38a" },
   "zenbones": { "branch": "main", "commit": "8304d8df9b823ff11e103afa62f38c39f534abe6" }
 }

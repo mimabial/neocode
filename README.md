@@ -7,11 +7,11 @@ A Neovim configuration built directly on `lazy.nvim` — not a distribution. Des
 - **Modular plugin layout** — one file per concern under `lua/plugins/<category>/`, plus per-language LSP/formatter wiring under `lua/plugins/lang/`.
 - **Hyprland theme sync** — picks up theme metadata from `~/.config/hypr/themes/theme.meta` and colors from `~/.local/state/hypr/active-palette.json`, then reapplies on focus/file change.
 - **Hybrid theme catalog** — lockfile-pinned colorscheme plugins load on demand, Aether's custom palettes stay frozen as snapshots, and the hypr theme derives directly from the active Hypr palette.
-- **AI completions + chat** — `codeium.nvim` for inline completion, `avante.nvim` for chat (Claude / GPT / etc.).
+- **AI completions + chat** — `copilot.lua` for inline completion, `avante.nvim` for chat (Claude / GPT / etc.).
 - **LSP via `vim.lsp.config()`** — Neovim 0.11+ native LSP API; `mason-lspconfig` is used only for `automatic_enable = true`. Per-language settings live in `lua/plugins/lang/<lang>.lua` and extend the spec via `opts.servers`.
 - **Bigfile handling** — files >1.5 MB or with single lines >1000 chars get the synthetic `bigfile` filetype: LSP, treesitter, indent guides, illuminate and rainbow delimiters all opt out automatically.
 - **Capability-gated LSP keymaps** — `gd`/`gr`/`K`/`<leader>ca` etc. are only bound on a buffer when the attaching server actually supports the method.
-- **Telescope with two custom layouts** — `ivory` (bottom pane) for wide windows, `ebony` (vertical) for narrow; auto-switches at the 120-column threshold and persists the choice.
+- **Telescope with two custom layouts** — `ivory` (bottom pane) for wide windows, `ebony` (vertical) for narrow; auto-switches when the width crosses 120 columns; a manual `<leader>fl` choice holds until the next crossing (per session).
 
 ## 📋 Requirements
 
@@ -24,7 +24,7 @@ A Neovim configuration built directly on `lazy.nvim` — not a distribution. Des
 - **Node with npm** — unlocks the Node-based language servers (JSON, YAML, HTML, CSS, TypeScript, ESLint, Bash, Pyright, tailwindcss, emmet, vue, svelte, astro), `prettierd`, `markdownlint` and the JS debug adapter (auto-detected).
 - Per-language runtimes (`go`, `rustc`, `python3`, `php`, `clang`, etc.) — auto-detected; the matching LSP servers and formatters install only when the runtime is present.
 
-Mason installs the rest on first launch: language servers, formatters, linters, the `tree-sitter` CLI (when none is on `PATH`) and the JS debug adapter. `:ConfigHealth` reports which of the tools above are missing.
+Mason installs the rest on first launch: language servers, formatters, linters, the `tree-sitter` CLI (when none is on `PATH`) and the JS / Python debug adapters (when `node` / `python3` exist). `:ConfigHealth` reports which of the tools above are missing.
 
 ## 🚀 Installation
 
@@ -65,7 +65,7 @@ nvim                                     # plugins install on first launch
     ├── types/
     │   └── notify.lua                   # ---@meta stub for nvim-notify
     └── plugins/
-        ├── ai/      avante.lua, codeium.lua
+        ├── ai/      avante.lua, copilot.lua
         ├── coding/  autopairs, completion, search-replace, snippets, textobjects, treesitter
         ├── debug/   nvim-dap + adapters
         ├── editor/  comment, harpoon, illuminate, indentation, kitty/tmux navigators, oil/nvim-tree
@@ -149,12 +149,14 @@ LSP keymaps only bind when the server supports the capability.
 
 ### AI
 
+Run `:Copilot auth` once to sign in with your GitHub account for Copilot Free.
+
 | Key | Action |
 |---|---|
 | `<leader>aa` `<leader>ae` `<leader>ar` | Avante: ask / edit / refresh |
-| `<leader>ac` | Codeium: open chat |
-| `<C-y>` | Accept Windsurf ghost-text completion (insert mode) |
-| `<M-[>` / `<M-]>` | Previous / next Windsurf completion (insert mode) |
+| `<M-l>` | Accept Copilot ghost-text completion (insert mode) |
+| `<M-[>` / `<M-]>` | Previous / next Copilot completion (insert mode) |
+| `<C-]>` | Dismiss Copilot completion (insert mode) |
 
 ### UI / Theme (`<leader>u*`)
 
@@ -233,7 +235,6 @@ Tunable from `lua/lib/bigfile.lua`; thresholds are settable via `require("lib.bi
 
 - LSP servers are configured via `vim.lsp.config()` (Neovim 0.11 native API). Mason-lspconfig is used only for `automatic_enable = true` and `ensure_installed`. The main spec at `lua/plugins/lsp/lspconfig.lua` iterates `opts.servers` from the per-language files and installs their `opts.tools` through `lua/lib/mason_tools.lua`.
 - Ordinary themes follow their upstream plugins at the revisions pinned in `lazy-lock.json`; snapshots are reserved for custom palettes that need fully frozen highlights.
-- A Noice route (loaded on `VeryLazy`) skips Codeium network-error notifications.
 - Backup, swap, and undo dirs live under `stdpath("state")` so lua_ls (which scans the data tree) doesn't index `*.lua~` backup files and double-count type annotations.
 - `lua/types/notify.lua` is a `---@meta` stub that adds the `__call` overload nvim-notify installs at runtime but lua_ls can't infer.
 

@@ -4,15 +4,8 @@ local set_background = require("lib.background").set
 local M = {}
 
 M.icon = ""
-M.variants = { "dark", "light" }
-M.variant_for_background = function(background) return background end
 
-local function load_palette_colors()
-  local data = require("lib.theme_manager").load_active_palette()
-  if not data then
-    return nil
-  end
-
+local function load_palette_colors(data)
   local colors = {}
   for i = 0, 15 do
     local value = data.colors[i + 1] or data.colors["color" .. i]
@@ -32,18 +25,6 @@ local function load_palette_colors()
     },
     colors = colors,
   }
-end
-
-local function is_light_color(hex)
-  if not hex or not hex:match("^#%x%x%x%x%x%x$") then
-    return false
-  end
-  local r = tonumber(hex:sub(2, 3), 16)
-  local g = tonumber(hex:sub(4, 5), 16)
-  local b = tonumber(hex:sub(6, 7), 16)
-  -- Relative luminance.
-  local luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
-  return luminance > 0.5
 end
 
 local function blend(fg, bg, alpha)
@@ -446,20 +427,14 @@ local function apply_highlights(colors, transparent)
 end
 
 function M.setup(opts)
-  local colors = load_palette_colors()
+  local manager = require("lib.theme_manager")
+  local palette = manager.load_active_palette()
+  local colors = palette and load_palette_colors(palette)
   if not colors then
-    return nil, "active palette not found or invalid at " .. require("lib.theme_manager").active_palette_file
+    return nil, "active palette not found or invalid at " .. manager.active_palette_file
   end
 
-  local bg = opts.background
-  if opts.variant == "light" then
-    bg = "light"
-  elseif opts.variant == "dark" then
-    bg = "dark"
-  elseif not bg then
-    bg = is_light_color(colors.special.background) and "light" or "dark"
-  end
-
+  local bg = manager.active_palette_background(palette)
   set_background(bg)
   apply_highlights(colors, opts.transparency)
 
@@ -468,7 +443,7 @@ function M.setup(opts)
   vim.g.colors_name = "hypr"
   vim.api.nvim_exec_autocmds("ColorScheme", { pattern = "hypr" })
 
-  return { variant = opts.variant, background = bg }
+  return { background = bg }
 end
 
 return M

@@ -21,7 +21,7 @@ for src in "$here"/scripts/theme-sources/*.lua; do
 
   echo ">> ${scheme}: ${variants}"
   SNAPSHOT_SCHEME="$scheme" SNAPSHOT_VARIANTS="$variants" \
-    nvim --headless -c "luafile $here/scripts/snapshot_theme.lua" -c 'qa'
+    nvim --headless -c "lua local ok, err = pcall(dofile, [[$here/scripts/snapshot_theme.lua]]) if not ok then io.stderr:write(err, '\n') os.exit(1) end" -c 'qa'
 done
 
 echo "bootstrap complete."

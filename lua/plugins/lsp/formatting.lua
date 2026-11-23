@@ -261,16 +261,6 @@ return {
             command = "terraform",
             args = { "fmt", "-" },
           },
-
-          -- PHP
-          php_cs_fixer = {
-            command = "php-cs-fixer",
-            args = {
-              "fix",
-              "$FILENAME",
-              "--rules=@PSR12",
-            },
-          },
         },
         notify_on_error = true,
       }

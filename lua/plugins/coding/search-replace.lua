@@ -1,3 +1,7 @@
+local function grug_path(path)
+  return (path:gsub(" ", "\\ "))
+end
+
 return {
   "MagicDuck/grug-far.nvim",
   cmd = "GrugFar",
@@ -19,7 +23,7 @@ return {
         require("grug-far").toggle_instance({
           instanceName = "grug-far",
           transient = true,
-          prefills = { paths = vim.fn.fnameescape(vim.fn.expand("%:p")) },
+          prefills = { paths = grug_path(vim.fn.expand("%:p")) },
         })
       end,
       desc = "Search and Replace",
@@ -44,7 +48,7 @@ return {
         end
         require("grug-far").open({
           transient = true,
-          prefills = { paths = vim.fn.fnameescape(git_root) },
+          prefills = { paths = grug_path(git_root) },
         })
       end,
       desc = "Search and Replace GIT",
@@ -54,7 +58,7 @@ return {
       function()
         require("grug-far").open({
           transient = true,
-          prefills = { paths = vim.fn.fnameescape(vim.fn.expand("~")) },
+          prefills = { paths = grug_path(vim.fn.expand("~")) },
         })
       end,
       desc = "Search and Replace HOME",
@@ -67,7 +71,7 @@ return {
           transient = true,
           prefills = {
             search = vim.fn.expand("<cword>"),
-            paths = vim.fn.fnameescape(vim.fn.expand("%:p")),
+            paths = grug_path(vim.fn.expand("%:p")),
           },
         })
       end,
@@ -80,7 +84,7 @@ return {
         require("grug-far").with_visual_selection({
           instanceName = "grug-far",
           transient = true,
-          prefills = { paths = vim.fn.fnameescape(vim.fn.expand("%:p")) },
+          prefills = { paths = grug_path(vim.fn.expand("%:p")) },
         })
       end,
       desc = "Search Selection",
@@ -119,7 +123,7 @@ return {
           transient = true,
           prefills = {
             search = vim.fn.expand("<cword>"),
-            paths = vim.fn.fnameescape(git_root),
+            paths = grug_path(git_root),
           },
         })
       end,
@@ -136,7 +140,7 @@ return {
         end
         require("grug-far").with_visual_selection({
           transient = true,
-          prefills = { paths = vim.fn.fnameescape(git_root) },
+          prefills = { paths = grug_path(git_root) },
         })
       end,
       desc = "Search Selection GIT",
@@ -148,7 +152,7 @@ return {
           transient = true,
           prefills = {
             search = vim.fn.expand("<cword>"),
-            paths = vim.fn.fnameescape(vim.fn.expand("~")),
+            paths = grug_path(vim.fn.expand("~")),
           },
         })
       end,
@@ -160,7 +164,7 @@ return {
       function()
         require("grug-far").with_visual_selection({
           transient = true,
-          prefills = { paths = vim.fn.fnameescape(vim.fn.expand("~")) },
+          prefills = { paths = grug_path(vim.fn.expand("~")) },
         })
       end,
       desc = "Search Selection HOME",

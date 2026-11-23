@@ -1,87 +1,97 @@
 local M = {}
 local diagnostics = require("config.diagnostics")
 
+local LSP_CAPABILITY_MAPS = {
+  { capability = "definition", lhs = "gd", rhs = vim.lsp.buf.definition, desc = "Go to definition" },
+  { capability = "declaration", lhs = "gD", rhs = vim.lsp.buf.declaration, desc = "Go to declaration" },
+  { capability = "references", lhs = "gr", rhs = vim.lsp.buf.references, desc = "Find references" },
+  { capability = "implementation", lhs = "gi", rhs = vim.lsp.buf.implementation, desc = "Go to implementation" },
+  { capability = "typeDefinition", lhs = "gt", rhs = vim.lsp.buf.type_definition, desc = "Go to type definition" },
+  {
+    capability = "hover",
+    lhs = "K",
+    rhs = function()
+      vim.lsp.buf.hover({ border = "single" })
+    end,
+    desc = "Show hover information",
+  },
+  { capability = "codeAction", lhs = "<leader>ca", rhs = vim.lsp.buf.code_action, desc = "Code actions" },
+  { capability = "rename", lhs = "<leader>cr", rhs = vim.lsp.buf.rename, desc = "Rename symbol" },
+}
+
+local function enter_diagnostics_float()
+  vim.diagnostic.open_float(nil, {
+    focus_id = "diagnostic",
+    focusable = true,
+    focus = true,
+    scope = "cursor",
+    border = "single",
+    source = true,
+    prefix = " ",
+    close_events = {},
+  })
+  -- open_floating_preview only auto-focuses an *existing* float; for a
+  -- fresh open it returns the winid without switching. Switch manually.
+  local floatwin = vim.b.lsp_floating_preview
+  if floatwin and vim.api.nvim_win_is_valid(floatwin) and vim.api.nvim_get_current_win() ~= floatwin then
+    vim.api.nvim_set_current_win(floatwin)
+  end
+end
+
 function M.setup()
   local function map(mode, lhs, rhs, opts)
     opts = vim.tbl_extend("force", { noremap = true, silent = true }, opts or {})
     vim.keymap.set(mode, lhs, rhs, opts)
   end
 
-  -- LSP Keymaps (set up via autocmd)
+  local lsp_keymaps = vim.api.nvim_create_augroup("LspKeymaps", { clear = true })
+
+  local function supports(client, capability_map)
+    return client.server_capabilities[capability_map.capability .. "Provider"]
+  end
+
   vim.api.nvim_create_autocmd("LspAttach", {
-    group = vim.api.nvim_create_augroup("LspKeymaps", { clear = true }),
+    group = lsp_keymaps,
     callback = function(args)
       if vim.b[args.buf].bigfile then
         return
       end
-      local opts = { buffer = args.buf, silent = true }
-
       local client = vim.lsp.get_client_by_id(args.data.client_id)
       if not client then
         return
-      end
-
-      -- Bind a keymap only when the attaching server advertises the capability,
-      -- so e.g. K doesn't open empty hovers on servers without `hoverProvider`.
-      local function bind_if(capability, mode, lhs, rhs, desc)
-        if client.server_capabilities[capability .. "Provider"] then
-          map(mode, lhs, rhs, vim.tbl_extend("force", opts, { desc = desc }))
-        end
       end
 
       if client.server_capabilities.inlayHintProvider then
         vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
       end
 
-      bind_if("definition", "n", "gd", vim.lsp.buf.definition, "Go to definition")
-      bind_if("declaration", "n", "gD", vim.lsp.buf.declaration, "Go to declaration")
-      bind_if("references", "n", "gr", vim.lsp.buf.references, "Find references")
-      bind_if("implementation", "n", "gi", vim.lsp.buf.implementation, "Go to implementation")
-      bind_if("typeDefinition", "n", "gt", vim.lsp.buf.type_definition, "Go to type definition")
-
-      -- Note: insert-mode <C-k> signature help shares LuaSnip's choice key (plugins/coding/snippets.lua)
-      bind_if("hover", "n", "K", function()
-        vim.lsp.buf.hover({ border = "single" })
-      end, "Show hover information")
-
-      bind_if("codeAction", "n", "<leader>ca", vim.lsp.buf.code_action, "Code actions")
-      bind_if("rename", "n", "<leader>cr", vim.lsp.buf.rename, "Rename symbol")
-
-      local function open_diagnostics_float(focus)
-        vim.diagnostic.open_float(nil, {
-          focus_id = "diagnostic",
-          focusable = true,
-          focus = focus,
-          scope = "cursor",
-          border = "single",
-          source = true,
-          prefix = " ",
-          close_events = {},
-        })
-        if not focus then
-          return
-        end
-        -- open_floating_preview only auto-focuses an *existing* float; for a
-        -- fresh open it returns the winid without switching. Switch manually.
-        local bufnr = vim.api.nvim_get_current_buf()
-        local floatwin = vim.b[bufnr].lsp_floating_preview
-        if floatwin and vim.api.nvim_win_is_valid(floatwin) and vim.api.nvim_get_current_win() ~= floatwin then
-          vim.api.nvim_set_current_win(floatwin)
+      for _, capability_map in ipairs(LSP_CAPABILITY_MAPS) do
+        if supports(client, capability_map) then
+          map("n", capability_map.lhs, capability_map.rhs, { buffer = args.buf, desc = capability_map.desc })
         end
       end
-
-      map("n", "<leader>cd", vim.diagnostic.open_float, vim.tbl_extend("force", opts, { desc = "Show diagnostics" }))
-      map("n", "<leader>cj", function()
-        open_diagnostics_float(true)
-      end, vim.tbl_extend("force", opts, { desc = "Show diagnostics + jump in" }))
-      map("n", "[d", function()
-        vim.diagnostic.jump({ count = -1 })
-      end, vim.tbl_extend("force", opts, { desc = "Previous diagnostic" }))
-      map("n", "]d", function()
-        vim.diagnostic.jump({ count = 1 })
-      end, vim.tbl_extend("force", opts, { desc = "Next diagnostic" }))
     end,
   })
+
+  vim.api.nvim_create_autocmd("LspDetach", {
+    group = lsp_keymaps,
+    callback = function(args)
+      local remaining_clients = vim.tbl_filter(function(client)
+        return client.id ~= args.data.client_id
+      end, vim.lsp.get_clients({ bufnr = args.buf }))
+      for _, capability_map in ipairs(LSP_CAPABILITY_MAPS) do
+        local still_supported = vim.iter(remaining_clients):any(function(client)
+          return supports(client, capability_map)
+        end)
+        if not still_supported then
+          pcall(vim.keymap.del, "n", capability_map.lhs, { buffer = args.buf })
+        end
+      end
+    end,
+  })
+
+  map("n", "<leader>cd", vim.diagnostic.open_float, { desc = "Show diagnostics" })
+  map("n", "<leader>cj", enter_diagnostics_float, { desc = "Show diagnostics + jump in" })
 
   -- General/Plugin Management
   map("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy Plugin Manager" })
@@ -127,8 +137,6 @@ function M.setup()
 
   map("n", "<C-d>", "<C-d>zz", { desc = "Scroll down (centered)" })
   map("n", "<C-u>", "<C-u>zz", { desc = "Scroll up (centered)" })
-  map("n", "<C-f>", "<C-f>zz", { desc = "Page down (centered)" })
-  map("n", "<C-b>", "<C-b>zz", { desc = "Page up (centered)" })
 
   map("n", "J", "mzJ`z", { desc = "Join lines (keep cursor)" })
   map("n", "n", "nzzzv", { desc = "Next search result (centered)" })

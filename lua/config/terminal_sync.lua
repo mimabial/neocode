@@ -27,7 +27,7 @@ local function send_osc(code, value)
 
   local osc = string.format("\027]%s;%s%s", code, value, terminator)
   if os.getenv("TMUX") then
-    osc = string.format("\027Ptmux;\027%s\027\\", osc:gsub("\027", "\027\027"))
+    osc = string.format("\027Ptmux;%s\027\\", (osc:gsub("\027", "\027\027")))
   end
 
   vim.api.nvim_chan_send(2, osc)

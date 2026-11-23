@@ -2,14 +2,18 @@ local set_background = require("lib.background").set
 
 local M = {}
 
-local function variant_for_background(spec, background, transparency)
+local function variant_for_background(spec, background, transparency, preferred)
   if not background or type(spec.background) ~= "function" then
     return nil
   end
   local function matches(variant)
-    return spec.background(variant, { transparency = transparency }) == background
+    return variant ~= nil
+      and spec.background(variant, { background = background, transparency = transparency }) == background
   end
-  if spec.default and matches(spec.default) then
+  if matches(preferred) then
+    return preferred
+  end
+  if matches(spec.default) then
     return spec.default
   end
   for _, variant in ipairs(spec.variants or {}) do
@@ -27,8 +31,8 @@ function M.definition(spec)
     icon = spec.icon or "",
     variants = spec.variants,
     plugin = spec.plugin,
-    variant_for_background = function(background)
-      return variant_for_background(spec, background, false)
+    variant_for_background = function(background, preferred)
+      return variant_for_background(spec, background, false, preferred)
     end,
     setup = function(opts)
       local variant = opts.variant or variant_for_background(spec, opts.background, opts.transparency) or spec.default

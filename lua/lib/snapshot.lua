@@ -52,8 +52,9 @@ function M.definition(name, icon, source, variants)
     icon = icon,
     -- theme_manager reads nil as "no variant axis".
     variants = has_variants and variants or nil,
-    variant_for_background = function(background)
-      local capture = find(function(c) return c.background == background end)
+    variant_for_background = function(background, preferred)
+      local capture = find(function(c) return c.background == background and c.variant == preferred end)
+        or find(function(c) return c.background == background end)
       return capture and capture.variant
     end,
     setup = function(opts)

@@ -21,6 +21,7 @@ return {
       { "saadparwaiz1/cmp_luasnip" },
       { "onsails/lspkind.nvim" },
       { "L3MON4D3/LuaSnip" },
+      { "roobert/tailwindcss-colorizer-cmp.nvim" },
     },
 
     config = function()
@@ -109,6 +110,7 @@ return {
         }),
         formatting = {
           format = lspkind.cmp_format({
+            before = require("tailwindcss-colorizer-cmp").formatter,
             mode = "symbol_text",
             maxwidth = 50,
             ellipsis_char = "...",

@@ -6,6 +6,7 @@
 local set_background = require("lib.background").set
 
 local M = {}
+local DEFAULT_THEME = "catppuccin"
 local background_variants = {}
 local settings_memo
 local palette_memo
@@ -43,7 +44,7 @@ end
 
 local function normalize_settings(data)
   return {
-    theme = data and data.theme or "catppuccin",
+    theme = data and data.theme or DEFAULT_THEME,
     variant = data and data.variant or nil,
     background = normalize_background(data and data.background) or "dark",
     transparency = normalize_transparency(data and data.transparency),
@@ -267,6 +268,14 @@ function M.apply_theme(theme_name, variant, options)
   return true, settings
 end
 
+function M.apply_saved_theme()
+  local settings = M.load_settings()
+  local options = options_from_settings(settings, settings.background)
+  local theme = get_catalog()[settings.theme]
+  return theme and M.apply_theme(settings.theme, sanitize_variant(theme, settings.variant), options)
+    or M.apply_theme(DEFAULT_THEME, nil, options)
+end
+
 -- Read variables from theme.meta (Hyprland format: $VAR = value)
 local function read_theme_conf()
   local values = {}
@@ -331,7 +340,7 @@ function M.load_active_palette()
   return palette_memo
 end
 
-local function active_palette_background(palette)
+function M.active_palette_background(palette)
   return normalize_background(palette.color_variant) or (is_light_color(palette.bg) and "light" or "dark")
 end
 
@@ -350,7 +359,7 @@ function M.apply_system_theme()
     or normalize_background(theme_conf.COLOR_SCHEME)
   local conf_transparency = parse_conf_transparency(theme_conf.NVIM_TRANSPARENCY)
 
-  local background = conf_background or active_palette and active_palette_background(active_palette) or settings.background
+  local background = conf_background or active_palette and M.active_palette_background(active_palette) or settings.background
   if background then
     set_background(background)
   end
@@ -452,7 +461,7 @@ function M.sync(force)
 end
 
 local function close_watchers()
-  for _, watcher in ipairs(M._file_watchers or {}) do
+  for _, watcher in pairs(M._file_watchers or {}) do
     pcall(function()
       watcher:stop()
       watcher:close()
@@ -489,40 +498,41 @@ function M.setup_focus_sync()
   end
 
   -- Watch parent directories so atomic file replacement still produces events.
-  local watchers = {}
   local watch_dirs = {}
   local watched_names = {}
   for _, file in ipairs(M._watch_files) do
     watched_names[vim.fs.basename(file)] = true
-    local dir = vim.fs.dirname(file)
-    if dir and vim.fn.isdirectory(dir) == 1 then
-      watch_dirs[dir] = true
-    end
+    watch_dirs[vim.fs.dirname(file)] = true
   end
+  local on_dir_event = vim.schedule_wrap(function(err, filename)
+    if not err and (not filename or watched_names[filename]) then
+      request_sync()
+    end
+  end)
 
-  for dir, _ in pairs(watch_dirs) do
-    local watcher = vim.uv.new_fs_event()
-    if watcher then
-      local ok = pcall(function()
-        watcher:start(dir, {}, vim.schedule_wrap(function(err, filename)
-          if not err and (not filename or watched_names[filename]) then
-            request_sync()
-          end
-        end))
-      end)
-      if ok then
-        table.insert(watchers, watcher)
+  -- Store watchers to prevent garbage collection
+  M._file_watchers = {}
+  local function watch_existing_dirs()
+    for dir in pairs(watch_dirs) do
+      if not M._file_watchers[dir] and vim.fn.isdirectory(dir) == 1 then
+        local watcher = vim.uv.new_fs_event()
+        if watcher and watcher:start(dir, {}, on_dir_event) then
+          M._file_watchers[dir] = watcher
+        elseif watcher then
+          watcher:close()
+        end
       end
     end
   end
-
-  -- Store watchers to prevent garbage collection
-  M._file_watchers = watchers
+  watch_existing_dirs()
 
   vim.api.nvim_create_autocmd("FocusGained", {
     group = group,
-    callback = request_sync,
-    desc = "Repair theme sync after focus returns",
+    callback = function()
+      watch_existing_dirs()
+      request_sync()
+    end,
+    desc = "Watch theme directories created since startup and repair theme sync",
   })
 
   -- Cleanup on exit
@@ -741,7 +751,7 @@ function M.register_commands()
     background_variants[settings.theme] = remembered
     remembered[current_bg] = settings.variant
     local variant = remembered[new_bg]
-      or theme and theme.variant_for_background and theme.variant_for_background(new_bg)
+      or theme and theme.variant_for_background and theme.variant_for_background(new_bg, settings.variant)
     variant = sanitize_variant(theme, variant)
     if M.apply_theme(settings.theme, variant, options_from_settings(settings, new_bg)) then
       local actual = vim.o.background

@@ -38,7 +38,6 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "CmpItemMenu", { fg = colors.gray, italic = true })
   vim.api.nvim_set_hl(0, "CmpItemAbbrMatch", { fg = colors.blue })
   vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzy", { fg = colors.purple })
-  vim.api.nvim_set_hl(0, "CmpItemKindCodeium", { fg = colors.green })
 
   vim.api.nvim_set_hl(0, "FloatTitle", { fg = colors.red, bg = colors.bg, bold = true })
 

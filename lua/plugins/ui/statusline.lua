@@ -101,16 +101,14 @@ return {
     local function lsp_status()
       return {
         function()
-          local buf_clients = vim.lsp.get_clients({ bufnr = 0 })
-          if #buf_clients == 0 then
-            return "no lsp"
-          end
-
           local lsp_names = {}
-          for _, client in ipairs(buf_clients) do
-            if not vim.tbl_contains({ "conform" }, client.name) then
+          for _, client in ipairs(vim.lsp.get_clients({ bufnr = 0 })) do
+            if client.name ~= "conform" and client.name ~= "copilot" then
               table.insert(lsp_names, client.name)
             end
+          end
+          if #lsp_names == 0 then
+            return "no lsp"
           end
 
           local names_str = table.concat(lsp_names, ", ")
@@ -127,11 +125,12 @@ return {
     local function ai_indicators()
       return {
         function()
-          local codeium = package.loaded.codeium
-          if not codeium then
+          local copilot = package.loaded["copilot.client"]
+          if not copilot then
             return ""
           end
-          return codeium.s and codeium.s:is_healthy() and "windsurf" or "windsurf!"
+          local status = package.loaded["copilot.status"].data.status
+          return copilot.get() and (status == "Normal" or status == "InProgress") and "copilot" or "copilot!"
         end,
         color = { fg = colors.purple, bg = bar_bg },
       }
@@ -235,13 +234,8 @@ return {
             padding = { left = 1, right = 1 },
           },
           {
-            function()
-              local lazy_status = require("lazy.status")
-              return lazy_status.has_updates() and lazy_status.updates() or ""
-            end,
-            cond = function()
-              return package.loaded["lazy.status"] and require("lazy.status").has_updates()
-            end,
+            require("lazy.status").updates,
+            cond = require("lazy.status").has_updates,
             color = function()
               return { fg = colors.fg, bg = bar_bg }
             end,

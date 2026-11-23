@@ -5,8 +5,8 @@ return live.definition({
   plugin = "silkcircuit",
   variants = { "neon", "vibrant", "soft", "glow", "dawn" },
   default = "soft",
-  background = function(variant, opts)
-    return opts.background or (variant == "dawn" and "light" or "dark")
+  background = function(variant)
+    return variant == "dawn" and "light" or "dark"
   end,
   apply = function(variant, opts)
     require("silkcircuit").setup({

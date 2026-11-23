@@ -50,14 +50,15 @@ function M.setup()
   })
 
   vim.api.nvim_create_user_command("PluginSync", function()
-    for name, _ in pairs(package.loaded) do
-      if name:match("^plugins%.") then
-        package.loaded[name] = nil
-      end
-    end
-    vim.cmd("Lazy sync")
-    vim.notify("Plugins synchronized", vim.log.levels.INFO)
-  end, { desc = "Synchronize plugins and reload configurations" })
+    vim.api.nvim_create_autocmd("User", {
+      pattern = "LazySync",
+      once = true,
+      callback = function()
+        vim.notify("Plugins synchronized; restart Neovim to run updated plugin code", vim.log.levels.INFO)
+      end,
+    })
+    lazy.sync()
+  end, { desc = "Synchronize plugins" })
 end
 
 return M

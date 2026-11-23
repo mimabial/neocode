@@ -1,3 +1,15 @@
+local NOICE_SCROLL_LINES = 4
+
+local function scroll_docs_or_page(page_key, lines)
+  return function()
+    local ok, lsp = pcall(require, "noice.lsp")
+    if ok and lsp.scroll(lines) then
+      return
+    end
+    return vim.api.nvim_get_mode().mode == "n" and page_key .. "zz" or page_key
+  end
+end
+
 return {
   {
     "rcarriga/nvim-notify",
@@ -27,9 +39,15 @@ return {
       }
     end,
     init = function()
+      local builtin_notify = vim.notify
       ---@diagnostic disable-next-line: duplicate-set-field
-      vim.notify = function(msg, level, opts)
-        require("notify")(msg, level, opts)
+      vim.notify = function(...)
+        vim.notify = builtin_notify
+        local loaded, notify = pcall(require, "notify")
+        if loaded then
+          vim.notify = notify
+        end
+        return vim.notify(...)
       end
     end,
   },
@@ -64,30 +82,18 @@ return {
       },
       {
         "<C-f>",
-        function()
-          local ok, lsp = pcall(require, "noice.lsp")
-          if ok and lsp.scroll(4) then
-            return
-          end
-          return "<C-f>"
-        end,
+        scroll_docs_or_page("<C-f>", NOICE_SCROLL_LINES),
         expr = true,
         silent = true,
-        desc = "Scroll forward in Noice or fallback",
+        desc = "Scroll forward in Noice or page down (centered)",
         mode = { "i", "n", "s" },
       },
       {
         "<C-b>",
-        function()
-          local ok, lsp = pcall(require, "noice.lsp")
-          if ok and lsp.scroll(-4) then
-            return
-          end
-          return "<C-b>"
-        end,
+        scroll_docs_or_page("<C-b>", -NOICE_SCROLL_LINES),
         expr = true,
         silent = true,
-        desc = "Scroll backward in Noice or fallback",
+        desc = "Scroll backward in Noice or page up (centered)",
         mode = { "i", "n", "s" },
       },
     },
@@ -158,10 +164,6 @@ return {
         lsp_doc_border = true,
       },
       routes = {
-        {
-          filter = { event = "notify", find = "Codeium.*request failed" },
-          opts = { skip = true },
-        },
         {
           filter = {
             event = "msg_show",

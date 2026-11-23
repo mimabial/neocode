@@ -1,3 +1,10 @@
+local ITEM_NAME_FORMAT = "%d. %s"
+local ITEM_NUMBER_PATTERN = "(%d+)%. "
+
+local function current_item_number()
+  return tonumber(vim.api.nvim_get_current_line():match(ITEM_NUMBER_PATTERN)) or 1
+end
+
 local function starter_footer()
   local stats = require("lazy").stats()
   local version = vim.version()
@@ -114,9 +121,8 @@ return {
         })
 
         vim.list_extend(all_items, {
-          { action = "LazyGit",      name = "LazyGit",    section = "Git" },
-          { action = "Git status",   name = "Git Status", section = "Git" },
-          { action = "DiffviewOpen", name = "Diff View",  section = "Git" },
+          { action = "LazyGit",              name = "LazyGit",    section = "Git" },
+          { action = "Telescope git_status", name = "Git Status", section = "Git" },
         })
 
         vim.list_extend(all_items, {
@@ -130,7 +136,7 @@ return {
         for i, item in ipairs(all_items) do
           table.insert(items, {
             action = item.action,
-            name = string.format("%d. %s", i, item.name),
+            name = ITEM_NAME_FORMAT:format(i, item.name),
             section = item.section,
           })
         end
@@ -160,17 +166,28 @@ return {
         vim.api.nvim_set_hl(0, "MiniStarterQuery", { fg = colors.red, bold = true })
       end
 
+      local function starter_items()
+        return starter.config.items or opts.items or {}
+      end
+
       local function get_section_starts()
-        local items = starter.config.items or opts.items or {}
         local starts = {}
         local previous_section = nil
-        for idx, item in ipairs(items) do
+        for idx, item in ipairs(starter_items()) do
           if item.section ~= previous_section then
             table.insert(starts, idx)
             previous_section = item.section
           end
         end
         return starts
+      end
+
+      local function move_to_item(target)
+        local current = current_item_number()
+        local direction = target > current and "next" or "prev"
+        for _ = 1, math.abs(target - current) do
+          starter.update_current_item(direction)
+        end
       end
 
       vim.api.nvim_create_user_command("Starter", function()
@@ -202,36 +219,25 @@ return {
           end, { buffer = true, desc = "Previous item" })
 
           vim.keymap.set("n", "<C-f>", function()
-            local section_starts = get_section_starts()
-            local current_idx = vim.b.ministarter_current or 1
-            for _, start_idx in ipairs(section_starts) do
-              if start_idx > current_idx then
-                for _ = 1, start_idx - current_idx do
-                  starter.update_current_item("next")
-                end
-                return
+            local current = current_item_number()
+            for _, start in ipairs(get_section_starts()) do
+              if start > current then
+                return move_to_item(start)
               end
             end
-            starter.update_current_item("last")
+            move_to_item(#starter_items())
           end, { buffer = true, desc = "Next section" })
 
           vim.keymap.set("n", "<C-b>", function()
-            local section_starts = get_section_starts()
-            local current_idx = vim.b.ministarter_current or 1
-            local prev_start = 1
-            for _, start_idx in ipairs(section_starts) do
-              if start_idx >= current_idx then
+            local current = current_item_number()
+            local target = 1
+            for _, start in ipairs(get_section_starts()) do
+              if start >= current then
                 break
               end
-              prev_start = start_idx
+              target = start
             end
-            if prev_start < current_idx then
-              for _ = 1, current_idx - prev_start do
-                starter.update_current_item("prev")
-              end
-            else
-              starter.update_current_item("first")
-            end
+            move_to_item(target)
           end, { buffer = true, desc = "Previous section" })
 
           -- Sections vary 2-7 items, so 4 reliably crosses most boundaries.
@@ -248,11 +254,11 @@ return {
           end, { buffer = true, desc = "Half page up" })
 
           vim.keymap.set("n", "gg", function()
-            starter.update_current_item("first")
+            move_to_item(1)
           end, { buffer = true, desc = "First item" })
 
           vim.keymap.set("n", "G", function()
-            starter.update_current_item("last")
+            move_to_item(#starter_items())
           end, { buffer = true, desc = "Last item" })
 
           vim.keymap.set("n", "R", refresh, { buffer = true, desc = "Refresh starter" })
@@ -349,9 +355,6 @@ return {
           end, { buffer = true, desc = "Show help" })
 
           set_starter_highlights()
-          vim.opt_local.showtabline = 0
-          vim.opt_local.timeout = true
-          vim.opt_local.timeoutlen = 300
 
           vim.keymap.set("n", "<leader>ff", "<cmd>Telescope find_files<cr>",
             { buffer = true, desc = "Find files from Dashboard" })

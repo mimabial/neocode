@@ -12,16 +12,8 @@ function M.setup()
   vim.g.neocode_theme_sync = true
 
   if not manager.sync(true) then
-    local settings = manager.load_settings()
-    if settings.background then
-      require("lib.background").set(settings.background)
-    end
-    manager.apply_theme(settings.theme, settings.variant, {
-      background = settings.background,
-      transparency = settings.transparency,
-    })
+    manager.apply_saved_theme()
   end
-
 end
 
 return M

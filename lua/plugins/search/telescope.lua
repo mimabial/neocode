@@ -3,22 +3,43 @@
 
 local IVORY_MIN_COLUMNS = 120
 
+local BORDERS = {
+  ivory = {
+    prompt = { "─", " ", " ", " ", "╶", "╴", " ", " " },
+    results = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+    preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+  },
+  ebony = {
+    preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+    prompt = { " ", " ", " ", " ", " ", " ", " ", " " },
+    results = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+  },
+}
+
+local current_layout
+
 local function layout_for_width()
   return vim.o.columns < IVORY_MIN_COLUMNS and "ebony" or "ivory"
 end
 
 local function apply_layout(layout)
-  vim.g.telescope_layout = layout
+  current_layout = layout
   local config = package.loaded["telescope.config"]
   if config then
     config.values.layout_strategy = layout
-    config.values.borderchars = vim.g.telescope_borders[layout]
+    config.values.borderchars = BORDERS[layout]
   end
 end
 
 local function toggle_layout()
-  apply_layout(vim.g.telescope_layout == "ivory" and "ebony" or "ivory")
-  vim.notify("Telescope: " .. vim.g.telescope_layout)
+  apply_layout(current_layout == "ivory" and "ebony" or "ivory")
+  vim.notify("Telescope: " .. current_layout)
+end
+
+local function picker(name)
+  return function()
+    require("telescope.builtin")[name]()
+  end
 end
 
 return {
@@ -31,50 +52,31 @@ return {
   },
   event = "VeryLazy",
   cmd = "Telescope",
-  keys = function()
-    local builtin = require("telescope.builtin")
-
-    vim.g.telescope_layout = layout_for_width()
-
-    -- Order: { top, right, bottom, left, top_left, top_right, bottom_right, bottom_left }
-    vim.g.telescope_borders = {
-      ivory = {
-        prompt = { "─", " ", " ", " ", "╶", "╴", " ", " " },
-        results = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-        preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-      },
-      ebony = {
-        preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-        prompt = { " ", " ", " ", " ", " ", " ", " ", " " },
-        results = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-      },
-    }
-
-    return {
-      { "<leader>fl", toggle_layout, desc = "Toggle Layout" },
-      { "<leader>ff", builtin.find_files, desc = "Find Files" },
-      { "<leader>ft", builtin.live_grep, desc = "Find Text (Grep)" },
-      { "<leader>fb", builtin.buffers, desc = "Find Buffers" },
-      { "<leader>fr", builtin.oldfiles, desc = "Recent Files" },
-      { "<leader>fh", builtin.help_tags, desc = "Find Help" },
-      { "<leader>fw", builtin.grep_string, desc = "Find Current Word" },
-      { "<leader>fc", builtin.command_history, desc = "Command History" },
-      { "<leader>f/", builtin.search_history, desc = "Search History" },
-      { "q:", builtin.command_history, desc = "Command History" },
-      { "q/", builtin.search_history, desc = "Search History" },
-      { "q?", builtin.search_history, desc = "Search History" },
-      { "<leader>fgc", builtin.git_commits, desc = "Git Commits" },
-      { "<leader>fgb", builtin.git_branches, desc = "Git Branches" },
-      { "<leader>fgs", builtin.git_status, desc = "Git Status" },
-      { "<leader>fgf", builtin.git_files, desc = "Git Files" },
-      { "<leader>fd", "<cmd>Telescope diagnostics bufnr=0<cr>", desc = "Document Diagnostics" },
-      { "<leader>fD", builtin.diagnostics, desc = "Workspace Diagnostics" },
-      { "<leader>fs", builtin.treesitter, desc = "Symbols" },
-      { "<leader>fk", builtin.keymaps, desc = "Keymaps" },
-    }
-  end,
+  keys = {
+    { "<leader>fl", toggle_layout, desc = "Toggle Layout" },
+    { "<leader>ff", picker("find_files"), desc = "Find Files" },
+    { "<leader>ft", picker("live_grep"), desc = "Find Text (Grep)" },
+    { "<leader>fb", picker("buffers"), desc = "Find Buffers" },
+    { "<leader>fr", picker("oldfiles"), desc = "Recent Files" },
+    { "<leader>fh", picker("help_tags"), desc = "Find Help" },
+    { "<leader>fw", picker("grep_string"), desc = "Find Current Word" },
+    { "<leader>fc", picker("command_history"), desc = "Command History" },
+    { "<leader>f/", picker("search_history"), desc = "Search History" },
+    { "q:", picker("command_history"), desc = "Command History" },
+    { "q/", picker("search_history"), desc = "Search History" },
+    { "q?", picker("search_history"), desc = "Search History" },
+    { "<leader>fgc", picker("git_commits"), desc = "Git Commits" },
+    { "<leader>fgb", picker("git_branches"), desc = "Git Branches" },
+    { "<leader>fgs", picker("git_status"), desc = "Git Status" },
+    { "<leader>fgf", picker("git_files"), desc = "Git Files" },
+    { "<leader>fd", "<cmd>Telescope diagnostics bufnr=0<cr>", desc = "Document Diagnostics" },
+    { "<leader>fD", picker("diagnostics"), desc = "Workspace Diagnostics" },
+    { "<leader>fs", picker("treesitter"), desc = "Symbols" },
+    { "<leader>fk", picker("keymaps"), desc = "Keymaps" },
+  },
 
   config = function()
+    current_layout = layout_for_width()
     -- IMPORTANT: Register custom layout strategies FIRST before any setup
     local layout_strategies = require("telescope.pickers.layout_strategies")
     local telescope = require("telescope")
@@ -85,7 +87,7 @@ return {
     layout_strategies.ebony = function(picker, max_columns, max_lines)
       local has_previewer = picker.previewer ~= nil and picker.previewer ~= false
 
-      local borders = vim.g.telescope_borders.ebony
+      local borders = BORDERS.ebony
       local preview_height = has_previewer and math.floor(max_lines * 0.4) or 0
       local prompt_line = has_previewer and (preview_height + 3) or 1
 
@@ -213,7 +215,7 @@ return {
         path_display = { "filename_first" },
         selection_strategy = "reset",
         sorting_strategy = "ascending",
-        layout_strategy = vim.g.telescope_layout,
+        layout_strategy = current_layout,
         layout_config = {
           ivory = {
             height = 1,
@@ -229,7 +231,7 @@ return {
           },
         },
 
-        borderchars = vim.g.telescope_borders[vim.g.telescope_layout],
+        borderchars = BORDERS[current_layout],
 
         preview = {
           timeout = 1000,
@@ -390,10 +392,12 @@ return {
       },
     })
 
+    local width_layout = current_layout
     vim.api.nvim_create_autocmd("VimResized", {
       callback = function()
         local layout = layout_for_width()
-        if layout ~= vim.g.telescope_layout then
+        if layout ~= width_layout then
+          width_layout = layout
           apply_layout(layout)
           vim.notify("Telescope auto-switched to " .. layout .. " layout", vim.log.levels.INFO)
         end

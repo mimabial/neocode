@@ -56,7 +56,7 @@ return {
       desc = "Harpoon: Next file",
     },
     {
-      "<leader>hp",
+      "<leader>hN",
       function()
         require("harpoon"):list():prev()
       end,

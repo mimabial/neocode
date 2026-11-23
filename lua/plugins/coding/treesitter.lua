@@ -1,3 +1,22 @@
+local PARSERS = {
+  "bash",
+  "css",
+  "html",
+  "htmldjango",
+  "hyprlang",
+  "javascript",
+  "json",
+  "lua",
+  "markdown",
+  "python",
+  "ron",
+  "tsx",
+  "typescript",
+  "vim",
+  "vimdoc",
+  "yaml",
+}
+
 return {
   "nvim-treesitter/nvim-treesitter",
   branch = "main",
@@ -12,25 +31,29 @@ return {
     local treesitter = require("nvim-treesitter")
     treesitter.setup()
 
+    local function attach(buf)
+      if vim.b[buf].bigfile then
+        return
+      end
+      if pcall(vim.treesitter.start, buf) then
+        vim.bo[buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+      end
+    end
+
+    local function attach_buffers_missing_highlighter()
+      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if
+          vim.api.nvim_buf_is_loaded(buf)
+          and vim.bo[buf].filetype ~= ""
+          and not vim.treesitter.highlighter.active[buf]
+        then
+          attach(buf)
+        end
+      end
+    end
+
     local function install_parsers()
-      treesitter.install({
-        "bash",
-        "css",
-        "html",
-        "htmldjango",
-        "hyprlang",
-        "javascript",
-        "json",
-        "lua",
-        "markdown",
-        "python",
-        "ron",
-        "tsx",
-        "typescript",
-        "vim",
-        "vimdoc",
-        "yaml",
-      })
+      treesitter.install(PARSERS):await(vim.schedule_wrap(attach_buffers_missing_highlighter))
     end
 
     if vim.fn.executable(require("lib.c_compiler")) == 1 then
@@ -44,12 +67,7 @@ return {
     -- main no longer wires highlight/indent on its own.
     vim.api.nvim_create_autocmd("FileType", {
       callback = function(args)
-        if vim.b[args.buf].bigfile then
-          return
-        end
-        if pcall(vim.treesitter.start, args.buf) then
-          vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-        end
+        attach(args.buf)
       end,
     })
   end,

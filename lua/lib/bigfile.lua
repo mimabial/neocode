@@ -83,6 +83,13 @@ local function disable(buf)
   end)
 end
 
+local function restore(buf)
+  vim.b[buf].bigfile = nil
+  vim.api.nvim_buf_call(buf, function()
+    vim.cmd("setlocal swapfile< undolevels< foldmethod< spell< list<")
+  end)
+end
+
 function M.setup(opts)
   M.config = vim.tbl_extend("force", M.config, opts or {})
 
@@ -92,6 +99,8 @@ function M.setup(opts)
     callback = function(args)
       if detect(args.buf) then
         vim.bo[args.buf].filetype = "bigfile"
+      elseif M.is_big(args.buf) then
+        restore(args.buf)
       end
     end,
   })

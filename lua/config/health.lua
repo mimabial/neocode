@@ -74,17 +74,17 @@ M.check_lsp = function()
 end
 
 M.check_keybindings = function()
-  local issues = {}
-  local keymaps = vim.api.nvim_get_keymap("n")
-  local seen = {}
-
-  for _, map in ipairs(keymaps) do
-    if seen[map.lhs] then
-      table.insert(issues, "⚠️  Duplicate keymap: " .. map.lhs)
-    end
-    seen[map.lhs] = true
+  local global_lhs = {}
+  for _, map in ipairs(vim.api.nvim_get_keymap("n")) do
+    global_lhs[map.lhs] = true
   end
 
+  local issues = {}
+  for _, map in ipairs(vim.api.nvim_buf_get_keymap(0, "n")) do
+    if global_lhs[map.lhs] then
+      table.insert(issues, "⚠️  Buffer keymap shadows global keymap: " .. map.lhs)
+    end
+  end
   return issues
 end
 

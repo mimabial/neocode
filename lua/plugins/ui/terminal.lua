@@ -1,6 +1,7 @@
 return {
   "akinsho/toggleterm.nvim",
   version = "*",
+  cmd = { "ToggleTerm", "FloatTerm", "Terminals" },
   keys = {
     { "<leader>tf", "<cmd>ToggleTerm direction=float<cr>",      desc = "Terminal (float)" },
     { "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", desc = "Terminal (horizontal)" },
